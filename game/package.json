@@ -1,0 +1,10 @@
+{
+  "name": "the-divide-game",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/*", "apps/*", "tools/*"],
+  "scripts": {
+    "test": "npm run test -w @divide/engine",
+    "sim": "npm run sim -w @divide/sim"
+  }
+}

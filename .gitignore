@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+.wrangler/
+dist/
+.dev.vars
+*.tar
+*.tar.gz
+sim-report.*
