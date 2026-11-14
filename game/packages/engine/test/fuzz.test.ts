@@ -19,6 +19,7 @@ describe('bot games run to completion', () => {
         const s = g.state;
         const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
         if (s.carriedSeed) zones.push(s.carriedSeed);
+        zones.push(...s.row);
         expect(new Set(zones).size).toBe(zones.length);
         expect(zones.length).toBe(63);
       }
@@ -36,4 +37,25 @@ describe('replay is deterministic', () => {
       expect(viewFor(r.state, 0).log.length).toBe(viewFor(g.state, 0).log.length);
     }
   });
+});
+
+describe('experimental rules run cleanly', () => {
+  const sets = [['two-rounds'], ['secret-offering'], ['face-up-row'], ['draw2keep1'], ['offer-choice'], ['celestial-draft'],
+    ['two-rounds', 'face-up-row', 'draw2keep1', 'offer-choice', 'secret-offering', 'celestial-draft']];
+  for (const variants of sets) {
+    it(variants.join('+'), () => {
+      for (let seed = 1; seed <= 60; seed++) {
+        const n = 3 + (seed % 4);
+        const g = playBotGame({ ...cfg(seed * 13 + n, n), variants });
+        const s = g.state;
+        const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.row, ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
+        if (s.carriedSeed) zones.push(s.carriedSeed);
+        expect(new Set(zones).size).toBe(zones.length);
+        expect(zones.length).toBe(63);
+        expect(s.result).not.toBeNull();
+        const r = Game.replay(g.config, g.inputs);
+        expect(r.state.result).toEqual(s.result);
+      }
+    });
+  }
 });

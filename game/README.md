@@ -20,7 +20,9 @@ npm run sim -- --games 20000 --players 3,4 # balance report
 cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a rule variant
 ```
 
-The engine supports experimental rule `variants` in the game config for A/B testing. The five balance changes tested on November 14 were adopted as permanent V34 card text, so no variants are defined right now. See `reports/balance-proposals-2026-11-14.md`.
+The engine supports experimental rule `variants` in the game config for A/B testing. The five balance changes tested on November 14 were adopted as permanent V34 card text (see `reports/balance-proposals-2026-11-14.md`).
+
+Current experimental rules (see `reports/decision-variants-2026-11-14.md`): `two-rounds`, `secret-offering`, `face-up-row`, `draw2keep1`, `offer-choice`, `celestial-draft`, `catchup-order`. Measure them with `cd tools/sim && npx tsx variants.ts 3000 out.json B FDO RFD`.
 
 ## Engine rulings to confirm
 

@@ -4,7 +4,7 @@ import {
   activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
   canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
   eventOn, gain, handLimit, hasActive, isCelestial, log, lose, makeRoom, markToday, opposite, pay, pname, seatFromOpt,
-  seatOpt, stat, transfer, usedToday, yesNo, CHOIR_LIMIT,
+  seatOpt, stat, transfer, usedToday, yesNo, CHOIR_LIMIT, variant,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
@@ -27,7 +27,7 @@ export function createState(cfg: GameConfig): GameState {
     config: cfg, rng: cfg.seed | 0, day: 0, phase: 'setup', players: [], hostDeck: [], discard: [], altar: [],
     eventDeck: [], eventDiscard: [], currentEvent: null, firstPlayer: 0, active: null, tides: [], lastAlignColor: {},
     carriedSeed: null, pacts: [], bonds: [], scapegoats: [], anathema: [], confession: [], morningStar: [],
-    day_: freshDay(), turnUsed: [], log: [], stats: [], seq: 0, decisionSeq: 0, result: null,
+    day_: freshDay(), turnUsed: [], log: [], stats: [], seq: 0, decisionSeq: 0, result: null, row: [], celestialPool: [],
   };
   const hosts = HOSTS.filter((h) => !OPEN_SET_ASIDE_HOSTS.includes(h.id as any)).map((h) => h.id);
   const events = EVENTS.filter((e) => !OPEN_SET_ASIDE_EVENTS.includes(e.id as any)).map((e) => e.id);
@@ -38,10 +38,12 @@ export function createState(cfg: GameConfig): GameState {
     seat, name: p.name, isBot: p.isBot, celestial: p.celestial ?? pool.pop()!, hand: [], choir: [], glory: 0,
   }));
   for (const p of s.players) {
-    const n = p.celestial === C.dominion ? 4 : 3;
+    const n = p.celestial === C.dominion && !variant(s, 'celestial-draft') ? 4 : 3;
     for (let i = 0; i < n; i++) p.hand.push(drawHost(s)!);
     for (let i = 0; i < 3; i++) p.choir.push({ id: drawHost(s)!, facedown: false, used: false });
   }
+  s.celestialPool = pool;
+  if (variant(s, 'face-up-row')) for (let i = 0; i < 3; i++) s.row.push(drawHost(s)!);
   s.firstPlayer = randInt(s, s.players.length);
   log(s, 'setup', `A ${s.players.length}-player Open Game begins. ${pname(s, s.firstPlayer)} is the first player.`);
   return s;
@@ -50,6 +52,7 @@ export function createState(cfg: GameConfig): GameState {
 // ---------------------------------------------------------------- main loop
 
 export function* runGame(s: GameState): Gen<void> {
+  if (variant(s, 'celestial-draft')) yield* celestialDraft(s);
   // Raguel cards dealt into a starting Choir bind a player at the start.
   for (const p of s.players) if (p.choir.some((c) => c.id === H.raguel)) {
     p.choir = p.choir.filter((c) => c.id !== H.raguel);
@@ -58,16 +61,54 @@ export function* runGame(s: GameState): Gen<void> {
   for (let d = 1; d <= DAYS; d++) {
     s.day = d;
     s.day_ = freshDay();
+    s.turnUsed = [];
+    if (variant(s, 'catchup-order') && d > 1) {
+      // The player with the least Glory acts last (ties: the one who would otherwise act earliest).
+      const n0 = s.players.length;
+      const rot = Array.from({ length: n0 }, (_, i) => (s.firstPlayer + i) % n0);
+      const min = Math.min(...s.players.map((p) => p.glory));
+      const last = rot.find((x) => s.players[x].glory === min)!;
+      s.firstPlayer = (last + 1) % n0;
+    }
     yield* unveiling(s);
+    if (variant(s, 'secret-offering')) yield* secretOffering(s);
     s.phase = 'turns';
     const n = s.players.length;
-    for (let i = 0; i < n; i++) yield* takeTurn(s, (s.firstPlayer + i) % n);
+    const rounds = variant(s, 'two-rounds') ? 2 : 1;
+    for (let r = 0; r < rounds; r++) for (let i = 0; i < n; i++) yield* takeTurn(s, (s.firstPlayer + i) % n);
     s.active = null;
     s.phase = 'evening';
     yield* evening(s, d === DAYS);
     s.firstPlayer = (s.firstPlayer + 1) % n;
   }
   yield* endGame(s);
+}
+
+// ---------------------------------------------------------------- experimental rules
+
+/** Celestial draft: each player is offered two Celestials and keeps one. */
+function* celestialDraft(s: GameState): Gen<void> {
+  const picks = yield* askAll(s, s.players.map((p) => {
+    const alt = s.celestialPool.pop()!;
+    return { seat: p.seat, tag: 'celestial.pick', prompt: 'Choose your Celestial.', options: [p.celestial, alt].map((c) => ({ id: c, label: cardName(c), card: c })), min: 1, max: 1 };
+  }));
+  s.players.forEach((p, i) => {
+    p.celestial = picks[i][0];
+    if (p.celestial === C.dominion) p.hand.push(drawHost(s)!);
+  });
+  log(s, 'draft', 'Every player chose their Celestial.');
+}
+
+/** Secret Offering: before turns, every player places 1 card from hand facedown on the Altar. */
+function* secretOffering(s: GameState): Gen<void> {
+  const ps = s.players.filter((p) => p.hand.length);
+  const picks = yield* askAll(s, ps.map((p) => ({ seat: p.seat, tag: 'secret.offer', prompt: 'Secret Offering: place 1 card from your hand facedown on the Altar. It is revealed in the Evening.', options: p.hand.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: 1, max: 1 })));
+  ps.forEach((p, k) => {
+    const [c] = p.hand.splice(Number(picks[k][0]), 1);
+    s.altar.push({ id: c, facedown: true, offeredBy: p.seat, day: s.day });
+    stat(s, { type: 'action', seat: p.seat, card: c, source: 'secret.offer' });
+  });
+  log(s, 'secret', 'Every player made a secret Offering.');
 }
 
 // ---------------------------------------------------------------- Unveiling
@@ -177,7 +218,8 @@ function* eventOnReveal(s: GameState, ev: string): Gen<void> {
 
 export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
   s.active = seat;
-  s.turnUsed = [];
+  // Two rounds per Day: each Choir card still activates at most once per Day.
+  if (!variant(s, 'two-rounds')) s.turnUsed = [];
   s.morningStar = s.morningStar.filter((m) => m.seat !== seat);
   s.anathema = s.anathema.filter((a) => a.by !== seat);
   const p = s.players[seat];
@@ -272,6 +314,10 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const units = cantor ? cards.length : 1;
   for (let u = 0; u < units; u++) {
     const offered = cantor ? [cards[u]] : cards;
+    if (variant(s, 'offer-choice')) {
+      const r = yield* chooseOne(s, seat, 'offer.reward', 'Offer reward: gain 1 Glory, or draw 1 card?', [{ id: 'glory', label: 'Gain 1 Glory' }, { id: 'card', label: 'Draw 1 card' }]);
+      if (r === 'card') { yield* drawTo(s, seat, 1); log(s, 'offer', `${p.name} drew a card instead of gaining Glory.`); continue; }
+    }
     // Raphael / Azazel: forgo this Glory to destroy an opposing card on the Altar.
     let forgone = false;
     for (const [hid, mine, theirs] of [[H.raphael, 'light', 'dark'], [H.azazel, 'dark', 'light']] as const) {
@@ -311,6 +357,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
 function* doGather(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
   const opts = altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id }));
+  s.row.forEach((c, i) => opts.push({ id: 'row:' + i, label: `From the face-up row: ${cardName(c)}`, card: c }));
   if (s.hostDeck.length || s.discard.length) opts.push({ id: 'deck', label: hasActive(s, seat, H.temptation) ? 'From the top of the Host deck (Temptation: look at 2)' : 'From the top of the Host deck', card: undefined });
   if (hasActive(s, seat, H.forger) && s.discard.length && canActivate(s, seat, H.forger)) opts.push({ id: 'discard', label: `From the discard pile (Forger): ${cardName(s.discard[s.discard.length - 1])}`, card: s.discard[s.discard.length - 1] });
   if (hasActive(s, seat, H.favor) && canActivate(s, seat, H.favor)) for (const o of s.players) if (o.seat !== seat && o.hand.length) opts.push({ id: 'favor:' + o.seat, label: `From ${o.name}'s hand (Favor)`, card: undefined });
@@ -324,6 +371,10 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
     s.altar.splice(s.altar.indexOf(a), 1);
     card = a.id;
     fromAltar = { offeredBy: a.offeredBy, day: a.day };
+  } else if (src.startsWith('row:')) {
+    card = s.row.splice(Number(src.slice(4)), 1)[0];
+    const refill = drawHost(s);
+    if (refill) s.row.push(refill);
   } else if (src === 'deck') {
     if (hasActive(s, seat, H.temptation)) {
       const top: string[] = [];
@@ -521,6 +572,24 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
       const idx = picks[k].map(Number).sort((a, b) => b - a);
       for (const i of idx) s.discard.push(...p.hand.splice(i, 1));
     });
+  }
+  if (variant(s, 'draw2keep1')) {
+    const drawn: Record<number, string[]> = {};
+    for (const p of s.players) {
+      const need = Math.max(0, baseHandLimit(s, p.seat) - p.hand.length);
+      if (!need) continue;
+      drawn[p.seat] = [];
+      for (let i = 0; i <= need; i++) { const c = drawHost(s); if (c) drawn[p.seat].push(c); }
+    }
+    const ps = s.players.filter((p) => drawn[p.seat]?.length);
+    const picks = yield* askAll(s, ps.map((p) => ({ seat: p.seat, tag: 'upkeep.keep', prompt: 'Upkeep: you drew one extra card. Choose 1 of the new cards to discard.', options: drawn[p.seat].map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: 1, max: 1 })));
+    ps.forEach((p, k) => {
+      const d = drawn[p.seat];
+      const [gone] = d.splice(Number(picks[k][0]), 1);
+      s.discard.push(gone);
+      p.hand.push(...d);
+    });
+    return;
   }
   for (const p of s.players) yield* drawTo(s, p.seat, Math.max(0, baseHandLimit(s, p.seat) - p.hand.length));
 }

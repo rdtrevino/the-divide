@@ -179,4 +179,7 @@ export interface GameState {
   seq: number;
   decisionSeq: number;
   result: GameResult | null;
+  /** Face-up row of Host cards (experimental rule). */
+  row: string[];
+  celestialPool: string[];
 }

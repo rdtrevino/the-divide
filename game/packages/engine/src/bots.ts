@@ -16,9 +16,9 @@ function rand(seed: number) {
 const val = (s: GameState, id: string | undefined) => (id ? baseValue(s, id) : { light: 0, dark: 0 });
 const signed = (s: GameState, id: string | undefined) => { const v = val(s, id); return v.light - v.dark; };
 
-function altarNet(s: GameState) {
+function altarNet(s: GameState, viewer?: Seat) {
   let n = 0;
-  for (const a of s.altar) if (!a.facedown) n += signed(s, a.id);
+  for (const a of s.altar) if (!a.facedown || a.offeredBy === viewer) n += signed(s, a.id);
   return n;
 }
 
@@ -72,12 +72,12 @@ export function botAnswer(s: GameState, d: Decision): Answer {
   const r = rand(d.id * 7919 + d.seat * 104729 + (s.config.seed | 0));
   const seat = d.seat;
   const net = alignment(s, seat);
-  const want = net !== 0 ? net : altarNet(s) || 1;
+  const want = net !== 0 ? net : altarNet(s, seat) || 1;
   const wantDir: Dir = dirOf(want);
   const one = (id: string) => [id];
   const has = (id: string) => d.options.some((o) => o.id === id);
   const byId = (pred: (o: Option) => boolean) => d.options.find(pred);
-  const altar = altarNet(s);
+  const altar = altarNet(s, seat);
   const later = laterPlayers(s, seat);
   const w = later === 0 ? 1 : later === 1 ? 0.75 : 0.55;
 
@@ -125,11 +125,18 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const choice = pickBest(ids, (x) => scores[x] + r * 0.4);
       return one(choice);
     }
+    case 'offer.reward':
+      return one(s.players[seat].hand.length <= 1 && r < 0.6 ? 'card' : 'glory');
+    case 'celestial.pick': {
+      const pref = ['celestial-the-eclipse', 'celestial-the-arbiter', 'celestial-the-whisper', 'celestial-the-dominion', 'celestial-the-cantor', 'celestial-the-echo', 'celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-patron'];
+      return one(pickBest(d.options, (o) => -pref.indexOf(o.id)).id);
+    }
+    case 'secret.offer':
     case 'offer.card':
     case 'exalt.card': {
       const o = pickBest(d.options, (o) => {
         const v = signed(s, o.card);
-        if (d.tag === 'offer.card') return reapValue(net, altar + v, w) + (dirOf(v) === wantDir ? 0.5 : dirOf(v) === 'neutral' ? 0.1 : -0.3);
+        if (d.tag === 'offer.card' || d.tag === 'secret.offer') return reapValue(net, altar + v, w) + (dirOf(v) === wantDir ? 0.5 : dirOf(v) === 'neutral' ? 0.1 : -0.3);
         return want >= 0 ? v : -v;
       });
       return one(o.id);
@@ -151,6 +158,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       });
       return one(o.id);
     }
+    case 'upkeep.keep':
     case 'choir.discard':
     case 'plague':
     case 'patron.discard':
