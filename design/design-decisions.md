@@ -1,6 +1,6 @@
 # The Divide: Design Decisions
 
-The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 13, 2026, to match card data V33 and rulebook v4.
+The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 14, 2026, to match card data V34 and rulebook v4.1.
 
 ## Governing rules
 
@@ -67,10 +67,15 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 | Shroud | Its value is the opposite of the previous Day's Tide, on the Altar and in the Choir. At game end it uses Day 5's Tide. |
 | The Whisper | Predicts direction. A correct call means the Choir gains its net value instead of losing it (cap 3). A net-zero Choir gains nothing. Payoff At the Reaping. |
 | The Eclipse | "At the Reaping, once per Day, treat one Host card in your Choir as Neutral." Fallback if too strong: declare before the Tide is set. |
-| The Arbiter, Mammon | If no eligible player has Glory, the ability yields nothing. |
+| The Arbiter | V34: "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to a player of your choice." Applies only to Alignment scoring; if no rival has Glory, the gain comes from the Pot. |
+| Mammon | If no other player has Glory to take, the ability yields nothing. |
+| Confession | V34: the Glory is earned only if the revealed hand holds no Dark card (Nephilim counts as Dark). |
+| Covenant | V34: forbids only Offer or Gather, and names a player who has not yet taken their turn this Day. |
+| Heresy | V34: optional reversal, chosen at the Reaping after the Tide is set; an activation (Tithe, Silence). |
+| Raguel | V34: only the holder's Reaping loss is shared with the Bound player. |
 | Tithe | Every Host ability you activate costs 1, on your turn, in the Evening, or at the Reaping. Always-on abilities are never activated and are free. If you cannot pay, you cannot activate. |
 | Silence | Responds after an ability is announced and before it resolves. Costs already paid, including Tithe, are lost. |
-| Raguel | The Bound player is chosen when Raguel enters your Choir. |
+| Raguel (entry) | The Bound player is chosen when Raguel enters your Choir. |
 | Raphael, Azazel | No Once per Day limit on either (mirror pair). |
 | Covenant | Imposed on the named player; no consent. |
 | Forger | On Gather, may take the top of the discard pile. |
@@ -101,15 +106,31 @@ These were made for consistency while building V33. Revert any you disagree with
 - **Remnant** now opens with "Before the Altar is Refreshed:" so its timing label names its real moment.
 - **Prophecy** keeps the phrase "Target Alignment" from V32. It is not Targeting in the keyword sense; consider rewording to "declare an Alignment" at the next print.
 
-## Playtest watch list (Open Game)
+## Balance changes adopted (November 14, 2026)
 
+Tested on 20,000 bot games each against V33 (win ratio 1.00 = fair), then adopted as permanent card changes in V34.
+
+| Card | V33 | V34 (re-measured with all five changes) |
+|---|---|---|
+| The Arbiter | 1.84 | 1.19 |
+| Confession | 1.61 | 1.18 |
+| Covenant | 1.22 (1.67 Glory per game) | 1.00 |
+| Heresy | 0.59 | 0.94 |
+| Raguel | 0.61 | 0.75 |
+
+Details and rejected alternatives: `game/reports/balance-proposals-2026-11-14.md`.
+
+## Playtest watch list (Open Game, V34)
+
+- **The Eclipse (1.28)** is now the strongest Celestial. Fallback: declare before the Tide is set.
+- **Leviathan (1.45)** pays 1 Glory per rival who loses at the Reaping, which rarely misses in a three-way race.
+- **Fig Leaves (0.75)** lost ground to the new Heresy, which also protects against a bad Tide.
+- **Raguel (0.75)** improved but is still weak.
+- **The Patron (0.80), the Oracle (0.88), the Tempest (0.88)** may be undervalued by the bots; confirm with people.
 - **Hubris removal.** Does the open deck play better without it?
 - **Final-Day gift ban.** Does it remove kingmaking without flattening Day 6 negotiation?
 - **Raphael and Azazel without Once per Day.** Watch for Altar wipes with Hymn or Lamentation.
-- **The Arbiter's slow start.** Its Offers earn nothing until a rival has Glory.
-- **The Eclipse at the Reaping.** Move the declaration before the Tide if it dominates.
-- **The odd player out.** Two players often lean the same way and the third loses that Day. Counters: Heresy, Fig Leaves, the Eclipse, Morning Star.
-- **Direct Glory theft is worth double** in an open race: the Arbiter, Mammon, Envy, Leviathan, Winnowing.
+- **Snowballing.** The sole leader after Day 3 wins 65% of 3-player bot games (chance: 33%); the winner was not leading entering Day 6 in 17%.
 - **Days feel separate.** Only Shroud and Apple carry the previous Day forward.
 - **Thin Altar** at 3 players; the 2-Seed option is in the rules.
 - **The 4-player default.** Which mode do 4-player tables prefer?

@@ -50,12 +50,18 @@ describe('The Reaping', () => {
     reap(s);
     expect(s.players[0].glory).toBe(2);
   });
-  it('Heresy reverses scoring', () => {
+  it('Heresy (V34): you may score in reverse, chosen after the Tide is known', () => {
     const s = blank();
     choir(s, 0, H.heresy, H.moloch); // Dark 1 under a Light Tide
     altar(s, H.wisdom);
-    reap(s);
+    reap(s, { heresy: ['yes'] });
     expect(s.players[0].glory).toBe(1);
+    const t = blank();
+    choir(t, 0, H.heresy, H.moloch);
+    t.players[0].glory = 2;
+    altar(t, H.wisdom);
+    reap(t, { heresy: ['no'] });
+    expect(t.players[0].glory).toBe(1);
   });
   it('a correct Whisper scores as if aligned; a net-zero Choir gains nothing', () => {
     const s = blank(3, [C.whisper]);
@@ -109,15 +115,23 @@ describe('The Reaping', () => {
     reap(s);
     expect(glory(s)).toEqual([5, 5, 4]);
   });
-  it('Raguel: if either Bound player loses, both lose the greater amount', () => {
+  it('Raguel (V34): only the holder\'s loss is shared with the Bound player', () => {
     const s = blank();
-    choir(s, 0, H.raguel, H.wisdom); // Light 1
-    choir(s, 1, H.moloch, H.envy); // Dark 2
+    choir(s, 0, H.raguel, H.moloch); // Dark 1
+    choir(s, 1, H.wisdom); // Light 1
     s.bonds.push({ owner: 0, bound: 1 });
     s.players.forEach((p) => (p.glory = 5));
-    altar(s, H.confession);
+    altar(s, H.confession); // Light Tide
     reap(s);
-    expect(glory(s).slice(0, 2)).toEqual([4, 3]); // 0 gains 1 then loses 2; 1 loses 2
+    expect(glory(s).slice(0, 2)).toEqual([4, 5]); // 0 loses 1; 1 gains 1, then loses 1 (Bound)
+    const t = blank();
+    choir(t, 0, H.raguel, H.wisdom); // Light 1: gains
+    choir(t, 1, H.moloch, H.envy); // Dark 2: loses 2
+    t.bonds.push({ owner: 0, bound: 1 });
+    t.players.forEach((p) => (p.glory = 5));
+    altar(t, H.confession);
+    reap(t);
+    expect(glory(t).slice(0, 2)).toEqual([6, 3]); // the Bound player's loss is not shared back
   });
   it('Famine skips Alignment scoring; Purgatory pays Neutral Choirs', () => {
     const s = blank();
@@ -277,16 +291,49 @@ describe('Protection and reactions', () => {
   });
 });
 
+describe('V34 card changes', () => {
+  it('Confession pays only when the revealed hand holds no Dark card', () => {
+    const run = (cards: string[]) => {
+      const s = blank();
+      choir(s, 0, H.confession);
+      hand(s, 0, ...cards);
+      drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: (d) => [d.options.find((o) => o.card === H.confession)?.id ?? 'end'] });
+      return s.players[0].glory;
+    };
+    expect(run([H.wisdom, H.twilight])).toBe(1);
+    expect(run([H.wisdom, H.moloch])).toBe(0);
+    expect(run([H.nephilim])).toBe(0); // Nephilim counts as Dark
+  });
+  it('Covenant forbids only Offer or Gather and names a player who has not yet acted', () => {
+    const s = blank();
+    choir(s, 1, H.covenant);
+    s.day_.actionsTaken.push({ seat: 0, action: 'offer' });
+    const { asked } = drive(s, takeTurn(s, 1), { action: ['gather'], 'gather.source': ['deck'], activate: (d) => [d.options.find((o) => o.card === H.covenant)?.id ?? 'end'] });
+    const act = asked.find((d) => d.tag === 'covenant.action')!;
+    expect(act.options.map((o) => o.id)).toEqual(['offer', 'gather']);
+    expect(s.pacts).toHaveLength(1);
+    expect(s.pacts[0].b).toBe(2); // seat 0 already acted, so only seat 2 can be named
+  });
+});
+
 describe('Glory routing', () => {
-  it('the Arbiter gains nothing when no one has Glory, and takes from a rival otherwise', () => {
+  it('the Arbiter (V34): at the Reaping, takes 1 of its gain from a rival (from the Pot if no one has Glory)', () => {
     const s = blank(3, [C.arbiter]);
-    choir(s, 0, H.wisdom);
+    choir(s, 0, H.wisdom, H.gabriel); // Light 2
     altar(s, H.confession);
     reap(s);
-    expect(glory(s)).toEqual([0, 0, 0]);
+    expect(glory(s)).toEqual([2, 0, 0]);
     s.players[2].glory = 4;
     reap(s);
-    expect(glory(s)).toEqual([1, 0, 3]);
+    expect(glory(s)).toEqual([4, 0, 3]);
+  });
+  it('the Arbiter (V34): gives 1 of its Reaping loss to a player of its choice', () => {
+    const s = blank(3, [C.arbiter]);
+    choir(s, 0, H.moloch, H.envy); // Dark 2
+    s.players[0].glory = 5;
+    altar(s, H.confession);
+    reap(s, { 'arbiter.give': ['p2'] });
+    expect(glory(s)).toEqual([3, 0, 1]);
   });
   it('Glory gifts are blocked on Babel and on the final Day', () => {
     const g = new Game({ seed: 3, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });

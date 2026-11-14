@@ -3,7 +3,7 @@
 *A game of divine ambition, open rivalry, and hidden loyalties.*
 
 **Created by:** Robert Treviño
-**Version:** Rulebook v4, matched to card data V33 (November 13, 2026)
+**Version:** Rulebook v4.1, matched to card data V34 (November 14, 2026)
 **Players:** 3 to 6 | **Play Time:** 30 to 60 minutes
 **Mechanisms:** Tableau Building, Negotiation, Variable Player Powers; Hidden Allegiance, Social Deduction, and Tug-of-War in Hidden Roles
 
@@ -257,7 +257,7 @@ Each player commands one Celestial, a public, asymmetric power. A Celestial powe
 | **VI. The Echo** | Once per Day, copy the ability of a Host currently in another player's Choir. |
 | **VII. The Dominion** | Your hand limit is 4 instead of 3. Begin the game with 4 cards in hand. |
 | **VIII. The Whisper** | During the Unveiling, publicly predict the direction of the Tide. At the Reaping, if correct, your Choir scores as if aligned with the Tide. |
-| **IX. The Arbiter** | You never pull or pay Glory to the pot. If you gain Glory, choose a player to take from; if you lose, a player to give to. |
+| **IX. The Arbiter** | At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to a player of your choice. |
 
 ---
 
@@ -302,7 +302,13 @@ These clarify how specific cards work. The card text is always the starting poin
 
 **The Eclipse.** Used at the Reaping, after the Tide is known.
 
-**The Arbiter and Mammon.** If no eligible player has Glory to take, the ability yields nothing.
+**The Arbiter.** Applies only to the Glory gained or lost from your Choir's Alignment at the Reaping. If no other player has Glory, the whole gain comes from the Pot.
+
+**Mammon.** If no other player has Glory to take, the ability yields nothing.
+
+**Heresy.** You decide whether to reverse your scoring after the Tide is set. Choosing to reverse is an activation: it costs 1 Glory on a Tithe Day and can be negated by Silence.
+
+**Raguel.** Only the Raguel holder's Reaping loss is shared. If the Bound player loses Glory, the holder is unaffected.
 
 **Tithe.** Every Host ability you activate costs 1 Glory, whether on your turn, in the Evening, or at the Reaping. Always-on abilities (such as Cherubim, Veil, and Tribute) are never activated and cost nothing. If you cannot pay, you cannot activate.
 

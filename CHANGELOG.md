@@ -1,8 +1,20 @@
 # Changelog
 
+## V34 cards and Rulebook v4.1 (November 14, 2026)
+
+Five balance changes, each tested on 20,000 simulated games before adoption. See `game/reports/balance-proposals-2026-11-14.md`.
+
+- **The Arbiter:** "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to a player of your choice." (was: all Glory gained or lost routed through players). Win ratio 1.84 to 1.19.
+- **Confession:** gain the Glory only if your revealed hand holds no Dark card. 1.61 to 1.18.
+- **Covenant:** forbid only Offer or Gather, and name a player who has not yet taken their turn this Day. 1.22 to 1.00.
+- **Heresy:** "At the Reaping: You may score your Alignment in reverse." (was mandatory). 0.59 to 0.94.
+- **Raguel:** only the holder's Reaping loss is shared with the Bound player (was: both lose the greater amount). 0.61 to 0.75.
+
+**Reprints:** all five join the rules-changed reprint list, which now has 19 cards (see the Reprint List tab in `cards/The_Divide_Cards_V34.xlsx`).
+
 ## V33 cards and Rulebook v4 (November 13, 2026)
 
-A full review of every Divide file against the design decisions to date. Every card-level change is listed with its old and new text in the **V32 to V33 Changes** tab of `cards/The_Divide_Cards_V33.xlsx`.
+A full review of every Divide file against the design decisions to date. Every card-level change is listed with its old and new text in the **V32 to V33 Changes** tab of `sources/card-data/The_Divide_Cards_V33.xlsx` (archived).
 
 ### Rules
 

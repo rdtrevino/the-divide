@@ -14,12 +14,13 @@ The online version of The Divide. Everything here is TypeScript.
 
 ```
 npm install
-npm test                                   # run the rules tests and 600 bot games
+npm test                                   # run 34 rules tests and 600 bot games
+cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements
 npm run sim -- --games 20000 --players 3,4 # balance report
-cd tools/sim && npx tsx ab.ts --games 20000 --variants confession-pure,covenant-strict  # A/B test rule variants
+cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a rule variant
 ```
 
-Balance variants (switch on with `variants` in the game config): `arbiter-reaping-only`, `arbiter-cap1`, `arbiter-catchup`, `confession-pure`, `covenant-strict`, `heresy-optional`, `heresy-shield`, `raguel-oneway`. See `reports/balance-proposals-2026-11-14.md`.
+The engine supports experimental rule `variants` in the game config for A/B testing. The five balance changes tested on November 14 were adopted as permanent V34 card text, so no variants are defined right now. See `reports/balance-proposals-2026-11-14.md`.
 
 ## Engine rulings to confirm
 
@@ -33,5 +34,5 @@ These are calls the engine makes where the card text leaves room. Each is easy t
 - **The Flood and Let There Be Light** block only abilities a player chooses to activate; automatic effects such as Uriel still work.
 - **Favor**: the Gathering player chooses "at random" or "they choose".
 - **Hubris** (Hidden Roles only): every tied leader who gains Glory gives 1.
-- **Arbiter**: the endgame bonus is also taken from rivals, since it is Glory gained.
+- **Arbiter** (V34): routes 1 Glory only for Alignment scoring at the Reaping, not for other Reaping-step abilities such as Firmament.
 - A once-per-game card that leaves a Choir is no longer "used" if it returns later.

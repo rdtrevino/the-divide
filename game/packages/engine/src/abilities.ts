@@ -5,7 +5,7 @@ import {
   activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
   drawHost, drawTo, enterChoir, gain, handLimit, hasActive, log, lose, markToday, others, payTribute, peekHost,
   pname, protectedFrom, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, CHOIR_LIMIT,
-  colorsOf, activation, variant,
+  colorsOf, activation,
 } from './core';
 import { randInt } from './rng';
 import type { Gen, GameState, Seat } from './types';
@@ -82,7 +82,8 @@ export const TURN: Record<string, TurnAbility> = {
       s.confession = s.confession.filter((c) => c.seat !== seat);
       s.confession.push({ seat, endsAfterTurnOf: seat, turnsLeft: 2 });
       log(s, 'confession', `${pname(s, seat)} revealed their hand: ${s.players[seat].hand.map(cardName).join(', ') || 'no cards'}.`);
-      if (variant(s, 'confession-pure') && s.players[seat].hand.some((c) => colorsOf(s, null, c).dark)) return;
+      // V34: the Glory is earned only if the revealed hand holds no Dark card.
+      if (s.players[seat].hand.some((c) => colorsOf(s, null, c).dark)) return;
       yield* gain(s, seat, 1, H.confession);
     },
   },
@@ -115,10 +116,9 @@ export const TURN: Record<string, TurnAbility> = {
   [H.covenant]: {
     can: (s, seat) => covenantTargets(s, seat).length > 0,
     *run(s, seat) {
-      const strict = variant(s, 'covenant-strict');
-      const act = (yield* chooseOne(s, seat, 'covenant.action', 'Covenant: forbid one action until the next Evening.', [
-        { id: 'offer', label: 'Offer' }, { id: 'gather', label: 'Gather' }, ...(strict ? [] : [{ id: 'exalt', label: 'Exalt' }]),
-      ])) as 'offer' | 'gather' | 'exalt';
+      const act = (yield* chooseOne(s, seat, 'covenant.action', 'Covenant: forbid Offer or Gather until the next Evening.', [
+        { id: 'offer', label: 'Offer' }, { id: 'gather', label: 'Gather' },
+      ])) as 'offer' | 'gather';
       const t = yield* chooseOne(s, seat, 'covenant.player', 'Covenant: name another player.', covenantTargets(s, seat).map((p) => seatOpt(s, p.seat)));
       if (!t) return;
       const b = seatFromOpt(t);
@@ -401,10 +401,10 @@ function reactivator(color: 'light' | 'dark'): TurnAbility {
   };
 }
 
-/** Covenant targets. In the strict variant, only players who have not yet taken their turn this Day. */
+/** Covenant (V34): name another player who has not yet taken their turn this Day. */
 function covenantTargets(s: GameState, seat: Seat) {
   const acted = new Set(s.day_.actionsTaken.map((a) => a.seat));
-  return others(s, seat).filter((p) => !hasActive(s, p.seat, H.lilith) && (!variant(s, 'covenant-strict') || !acted.has(p.seat)));
+  return others(s, seat).filter((p) => !hasActive(s, p.seat, H.lilith) && !acted.has(p.seat));
 }
 
 function patronTargets(s: GameState, seat: Seat): Seat[] {

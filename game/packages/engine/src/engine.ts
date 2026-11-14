@@ -4,7 +4,7 @@ import {
   activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
   canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
   eventOn, gain, handLimit, hasActive, isCelestial, log, lose, makeRoom, markToday, opposite, pay, pname, seatFromOpt,
-  seatOpt, stat, transfer, usedToday, yesNo, CHOIR_LIMIT, variant,
+  seatOpt, stat, transfer, usedToday, yesNo, CHOIR_LIMIT,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
@@ -15,7 +15,7 @@ export const OPEN_SET_ASIDE_HOSTS = [H.revelation, H.knowledge, H.bounty, H.flam
 export const OPEN_SET_ASIDE_EVENTS = [E.sabbath, E.equilibrium, E.armageddon];
 
 function freshDay(): GameState['day_'] {
-  return { usedToday: {}, ordeal: [], mercy: [], defiance: [], prophecy: {}, lots: {}, actionsTaken: [], eclipsed: {}, figLeaves: [], handLimitBonus: 0 };
+  return { usedToday: {}, ordeal: [], mercy: [], defiance: [], prophecy: {}, lots: {}, actionsTaken: [], eclipsed: {}, figLeaves: [], heresy: [], handLimitBonus: 0 };
 }
 
 // ---------------------------------------------------------------- setup
@@ -565,6 +565,15 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
         });
       }
     }
+    if (hasActive(s, seat, H.heresy) && canActivate(s, seat, H.heresy) && tide.dir !== 'neutral') {
+      const net = alignment(s, seat, { reaping: true });
+      if (net !== 0 && (yield* yesNo(s, seat, 'heresy', `Heresy: the Tide is ${tide.dir} and your Alignment is ${net > 0 ? 'Light' : 'Dark'} ${Math.abs(net)}. Score your Alignment in reverse this Reaping?`))) {
+        yield* activation(s, seat, H.heresy, function* () {
+          s.day_.heresy.push(seat);
+          log(s, 'heresy', `${p.name} scores in reverse this Reaping (Heresy).`);
+        });
+      }
+    }
     if (hasActive(s, seat, H.figLeaves) && canActivate(s, seat, H.figLeaves)) {
       const net = alignment(s, seat, { reaping: true });
       if (net !== 0 && (yield* yesNo(s, seat, 'figLeaves', `Fig Leaves: the Tide is ${tide.dir} and your Alignment is ${net > 0 ? 'Light' : 'Dark'} ${Math.abs(net)}. Treat your Choir as Neutral this Reaping?`))) {
@@ -590,7 +599,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (eventOn(s, E.falseProphecy, seat)) dir = opposite(dir);
     if (dir === 'neutral' || net === 0) { delta[seat] = 0; continue; }
     let match = dirOf(net) === dir;
-    if (hasActive(s, seat, H.heresy)) match = variant(s, 'heresy-optional') ? true : !match;
+    if (s.day_.heresy.includes(seat)) match = !match;
     if (p.celestial === C.whisper && s.day_.whisperCall && s.day_.whisperCall === tide.dir) match = true;
     let d = match ? Math.abs(net) : -Math.abs(net);
     if (s.day_.ordeal.includes(seat)) d *= 2;
@@ -599,7 +608,6 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
       if (last && last !== 'neutral' && dirOf(net) === opposite(last)) d *= 2;
     }
     delta[seat] = Math.max(-3, Math.min(3, d));
-    if (variant(s, 'heresy-shield') && hasActive(s, seat, H.heresy)) delta[seat] = Math.max(-1, delta[seat]);
   }
   for (const p of s.players) s.lastAlignColor[p.seat] = dirOf(nets[p.seat]);
 
@@ -619,12 +627,11 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   }
   for (const b of s.bonds) {
     if (!hasActive(s, b.owner, H.raguel)) continue;
-    if (variant(s, 'raguel-oneway')) {
-      if (loss[b.owner] > 0) { loss[b.bound] = Math.max(loss[b.bound], loss[b.owner]); log(s, 'raguel', `${pname(s, b.bound)} shares ${pname(s, b.owner)}'s loss (Raguel).`); }
-      continue;
+    // V34: only the Raguel holder's loss is shared with the Bound player.
+    if (loss[b.owner] > 0) {
+      loss[b.bound] = Math.max(loss[b.bound], loss[b.owner]);
+      log(s, 'raguel', `${pname(s, b.bound)} is Bound to ${pname(s, b.owner)} and loses ${loss[b.owner]} as well (Raguel).`);
     }
-    const L = Math.max(loss[b.owner], loss[b.bound]);
-    if (L > 0) { loss[b.owner] = L; loss[b.bound] = L; log(s, 'raguel', `${pname(s, b.owner)} and ${pname(s, b.bound)} are Bound: both lose ${L}.`); }
   }
   for (const seat of s.day_.mercy) loss[seat] = 0;
 

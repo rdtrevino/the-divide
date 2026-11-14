@@ -1,5 +1,7 @@
 # Balance proposals (November 14, 2026)
 
+**Status: all five adopted as permanent card changes in V34.** Re-measured together on V34: the Arbiter 1.19, Confession 1.18, Covenant 1.00, Heresy 0.94, Raguel 0.75. The variant flags below were retired once the changes became the default rules.
+
 Each proposal was tested against the current V33 rules on the same 20,000 bot games (Open Game, 3 and 4 players). **Win ratio** is actual wins divided by wins expected by chance; 1.00 is fair. Bots are heuristic, so these are leads for playtesting, not verdicts. Every proposal is available as an engine variant, so it can be switched on for real games without editing the cards.
 
 | Card | Today | Proposal | Tested result | Variant flag |

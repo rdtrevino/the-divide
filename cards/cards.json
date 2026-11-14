@@ -1,6 +1,6 @@
 {
-  "version": "V33",
-  "date": "2026-11-13",
+  "version": "V34",
+  "date": "2026-11-14",
   "hosts": [
     {
       "id": "host-michael",
@@ -57,7 +57,7 @@
     {
       "id": "host-confession",
       "name": "Confession",
-      "text": "On your turn: Reveal your hand to the table and keep it revealed until the end of your next turn. Gain 1 Glory.",
+      "text": "On your turn: Reveal your hand to the table and keep it revealed until the end of your next turn. If it holds no Dark card, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/05-confession.jpg",
       "plate": "art/plates/host/05-confession.jpg",
@@ -174,7 +174,7 @@
     {
       "id": "host-covenant",
       "name": "Covenant",
-      "text": "On your turn: Forbid one action (Offer, Gather, or Exalt) and name another player. Neither of you may take that action before the next Evening. If the pact holds, you each gain 1 Glory in the Evening; if either of you breaks it, you each lose 1.",
+      "text": "On your turn: Forbid Offer or Gather and name another player who has not yet taken their turn this Day. Neither of you may take that action before the next Evening. If the pact holds, you each gain 1 Glory in the Evening; if either of you breaks it, you each lose 1.",
       "openGame": true,
       "face": "art/faces/host/14-covenant.jpg",
       "plate": "art/plates/host/14-covenant.jpg",
@@ -330,7 +330,7 @@
     {
       "id": "host-raguel",
       "name": "Raguel",
-      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At each Reaping, if either of you loses Glory, you both lose the greater amount.",
+      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At each Reaping, if you lose Glory, your Bound player loses the same amount.",
       "openGame": true,
       "face": "art/faces/host/26-raguel.jpg",
       "plate": "art/plates/host/26-raguel.jpg",
@@ -473,7 +473,7 @@
     {
       "id": "host-heresy",
       "name": "Heresy",
-      "text": "At the Reaping: Your Alignment scores in reverse. Gain Glory equal to your net Alignment if it opposes the Tide; lose that much if it matches.",
+      "text": "At the Reaping: You may score your Alignment in reverse. Gain Glory equal to your net Alignment if it opposes the Tide; lose that much if it matches.",
       "openGame": true,
       "face": "art/faces/host/37-heresy.jpg",
       "plate": "art/plates/host/37-heresy.jpg",
@@ -976,7 +976,7 @@
     {
       "id": "celestial-the-arbiter",
       "name": "The Arbiter",
-      "text": "You never pull or pay Glory to the pot. If you gain Glory, choose a player to take from; if you lose, a player to give to.",
+      "text": "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to a player of your choice.",
       "openGame": true,
       "face": "art/faces/celestial/IX-the-arbiter.jpg",
       "plate": "art/plates/celestial/IX-the-arbiter.jpg",

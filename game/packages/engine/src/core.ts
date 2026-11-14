@@ -314,51 +314,42 @@ function addRaw(s: GameState, seat: Seat, n: number, source: GlorySource) {
   stat(s, { type: 'glory', seat, amount: n, source });
 }
 
-/** Gain Glory from the Pot. The Arbiter takes it from a chosen player instead. */
+/**
+ * Gain Glory from the Pot.
+ * The Arbiter (V34): at the Reaping, 1 of the Glory it gains is taken from a player of its choice.
+ */
 export function* gain(s: GameState, seat: Seat, n: number, source: GlorySource): Gen<number> {
   if (n <= 0) return 0;
-  if (isCelestial(s, seat, C.arbiter) && !(variant(s, 'arbiter-reaping-only') && source !== 'reaping')) {
-    const catchup = variant(s, 'arbiter-catchup');
-    const rich = others(s, seat).filter((p) => p.glory > (catchup ? s.players[seat].glory : 0));
-    if (!rich.length && catchup) {
-      addRaw(s, seat, n, source);
+  if (isCelestial(s, seat, C.arbiter) && source === 'reaping') {
+    const rich = others(s, seat).filter((p) => p.glory > 0);
+    if (rich.length) {
+      const t = yield* chooseOne(s, seat, 'arbiter.take', `The Arbiter: you gain ${n} Glory at the Reaping. Choose a player to take 1 of it from.`, rich.map((p) => seatOpt(s, p.seat)));
+      const from = seatFromOpt(t!);
+      addRaw(s, from, -1, 'arbiter');
+      addRaw(s, seat, 1, 'arbiter');
+      addRaw(s, seat, n - 1, source);
+      log(s, 'glory', `${pname(s, seat)} took 1 Glory from ${pname(s, from)} (the Arbiter).`);
       return n;
     }
-    if (!rich.length) {
-      log(s, 'arbiter', `The Arbiter (${pname(s, seat)}) would gain ${n} Glory, but no one has Glory to take.`);
-      return 0;
-    }
-    const t = yield* chooseOne(s, seat, 'arbiter.take', `The Arbiter: you gain ${n} Glory. Choose a player to take it from.`, rich.map((p) => seatOpt(s, p.seat)));
-    const from = seatFromOpt(t!);
-    if (variant(s, 'arbiter-cap1') && n > 1) {
-      const took = Math.min(1, s.players[from].glory);
-      addRaw(s, from, -took, 'arbiter');
-      addRaw(s, seat, n, source);
-      log(s, 'glory', `${pname(s, seat)} took ${took} Glory from ${pname(s, from)} and ${n - took} from the Pot (the Arbiter).`);
-      return n;
-    }
-    const amt = Math.min(n, s.players[from].glory);
-    addRaw(s, from, -amt, 'arbiter');
-    addRaw(s, seat, amt, source);
-    log(s, 'glory', `${pname(s, seat)} took ${amt} Glory from ${pname(s, from)} (the Arbiter).`);
-    return amt;
   }
   addRaw(s, seat, n, source);
   return n;
 }
 
-/** Lose Glory to the Pot (never below 0). The Arbiter gives it to a chosen player instead. */
+/**
+ * Lose Glory to the Pot (never below 0).
+ * The Arbiter (V34): at the Reaping, 1 of the Glory it loses goes to a player of its choice.
+ */
 export function* lose(s: GameState, seat: Seat, n: number, source: GlorySource): Gen<number> {
   const amt = Math.min(n, s.players[seat].glory);
   if (amt <= 0) return 0;
   addRaw(s, seat, -amt, source);
-  if (isCelestial(s, seat, C.arbiter) && !(variant(s, 'arbiter-reaping-only') && source !== 'reaping')) {
-    const poorer = variant(s, 'arbiter-catchup') ? others(s, seat).filter((p) => p.glory < s.players[seat].glory) : others(s, seat);
-    const t = yield* chooseOne(s, seat, 'arbiter.give', `The Arbiter: you lose ${amt} Glory. Choose a player to give it to.`, poorer.map((p) => seatOpt(s, p.seat)));
+  if (isCelestial(s, seat, C.arbiter) && source === 'reaping') {
+    const t = yield* chooseOne(s, seat, 'arbiter.give', `The Arbiter: you lose ${amt} Glory at the Reaping. Choose a player to give 1 of it to.`, others(s, seat).map((p) => seatOpt(s, p.seat)));
     if (t) {
       const to = seatFromOpt(t);
-      addRaw(s, to, amt, 'arbiter');
-      log(s, 'glory', `${pname(s, seat)} gave ${amt} lost Glory to ${pname(s, to)} (the Arbiter).`);
+      addRaw(s, to, 1, 'arbiter');
+      log(s, 'glory', `${pname(s, seat)} gave 1 lost Glory to ${pname(s, to)} (the Arbiter).`);
     }
   }
   return amt;

@@ -71,10 +71,7 @@ function leaderSeats(s: GameState, except?: Seat) {
 export function botAnswer(s: GameState, d: Decision): Answer {
   const r = rand(d.id * 7919 + d.seat * 104729 + (s.config.seed | 0));
   const seat = d.seat;
-  // Heresy reverses scoring, so a Heresy holder wants the Tide to run against its Choir.
-  const heresy = s.players[seat].choir.some((c) => c.id === H.heresy && !c.facedown);
-  const rawNet = alignment(s, seat);
-  const net = heresy ? -rawNet : rawNet;
+  const net = alignment(s, seat);
   const want = net !== 0 ? net : altarNet(s) || 1;
   const wantDir: Dir = dirOf(want);
   const one = (id: string) => [id];
@@ -193,6 +190,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const actor = s.players.find((p) => actorMatch && p.name === actorMatch[1]);
       return one(actor && actor.seat === leader && r < 0.5 ? 'yes' : r < 0.1 ? 'yes' : 'no');
     }
+    case 'heresy':
     case 'figLeaves': {
       const t = s.tides[s.tides.length - 1];
       return one(t && t.dir !== dirOf(net) ? 'yes' : 'no');

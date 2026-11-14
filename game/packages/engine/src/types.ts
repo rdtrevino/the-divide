@@ -143,6 +143,7 @@ export interface DayFlags {
   eternityKeep?: { seat: Seat; card: string };
   eclipsed: Record<number, string>;
   figLeaves: Seat[];
+  heresy: Seat[];
   handLimitBonus: number;
 }
 
