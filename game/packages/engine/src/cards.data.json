@@ -1,6 +1,6 @@
 {
-  "version": "V35",
-  "date": "2026-11-15",
+  "version": "V36",
+  "date": "2026-11-16",
   "hosts": [
     {
       "id": "host-michael",
@@ -733,7 +733,7 @@
     {
       "id": "host-mammon",
       "name": "Mammon",
-      "text": "Once per Day: When you Offer, take 1 Glory from a player of your choice instead of the pot; or when you Exalt, pay the Glory cost to a player of your choosing.",
+      "text": "Once per Day: When you Offer, take 1 Glory from a player of your choice instead of the pot; or when you Exalt, pay the Glory cost to the player, other than you, with the least Glory.",
       "openGame": true,
       "face": "art/faces/host/57-mammon.jpg",
       "plate": "art/plates/host/57-mammon.jpg",
@@ -1015,7 +1015,7 @@
     {
       "id": "celestial-the-arbiter",
       "name": "The Arbiter",
-      "text": "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to a player of your choice.",
+      "text": "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to the player, other than you, with the least Glory.",
       "openGame": true,
       "face": "art/faces/celestial/IX-the-arbiter.jpg",
       "plate": "art/plates/celestial/IX-the-arbiter.jpg",

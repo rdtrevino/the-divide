@@ -42,7 +42,7 @@ function gloryAfterDay(s: GameState, day: number) {
 const results: any[] = [];
 for (const code of CONFIGS) {
   const variants = code.split('+').flatMap((t) => (t === 'B' ? [] : /^T\d+$/.test(t) ? ['target-' + t.slice(1)] : /^M\d+$/.test(t) ? ['maxdays-' + t.slice(1)] : t.split('').map((c) => CODES[c])));
-  const row: any = { code, variants: variants.join('+') || 'baseline (V35)' };
+  const row: any = { code, variants: variants.join('+') || 'baseline (V36)' };
   for (const n of [3, 4]) {
     const t0 = Date.now();
     const counts = { all: Array(n).fill(0), core: Array(n).fill(0) };

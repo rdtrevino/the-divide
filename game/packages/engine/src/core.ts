@@ -340,12 +340,19 @@ export function* gain(s: GameState, seat: Seat, n: number, source: GlorySource):
  * Lose Glory to the Pot (never below 0).
  * The Arbiter (V34): at the Reaping, 1 of the Glory it loses goes to a player of its choice.
  */
+/** The other players tied for the least Glory (V36: the Arbiter and Mammon give to them; the user chooses among ties). */
+export function leastGloryOthers(s: GameState, seat: Seat) {
+  const os = others(s, seat);
+  const min = Math.min(...os.map((p) => p.glory));
+  return os.filter((p) => p.glory === min);
+}
+
 export function* lose(s: GameState, seat: Seat, n: number, source: GlorySource): Gen<number> {
   const amt = Math.min(n, s.players[seat].glory);
   if (amt <= 0) return 0;
   addRaw(s, seat, -amt, source);
   if (isCelestial(s, seat, C.arbiter) && source === 'reaping') {
-    const t = yield* chooseOne(s, seat, 'arbiter.give', `The Arbiter: you lose ${amt} Glory at the Reaping. Choose a player to give 1 of it to.`, others(s, seat).map((p) => seatOpt(s, p.seat)));
+    const t = yield* chooseOne(s, seat, 'arbiter.give', `The Arbiter: you lose ${amt} Glory at the Reaping. Give 1 of it to the player with the least Glory (choose among ties).`, leastGloryOthers(s, seat).map((p) => seatOpt(s, p.seat)));
     if (t) {
       const to = seatFromOpt(t);
       addRaw(s, to, 1, 'arbiter');

@@ -4,7 +4,7 @@ import {
   activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
   canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
   eventOn, gain, handLimit, hasActive, isCelestial, log, lose, makeRoom, markToday, opposite, pay, pname, seatFromOpt,
-  seatOpt, stat, transfer, usedToday, yesNo, CHOIR_LIMIT, variant,
+  seatOpt, stat, transfer, usedToday, yesNo, CHOIR_LIMIT, variant, leastGloryOthers,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
@@ -12,9 +12,12 @@ import type { Dir, GameConfig, GameState, Gen, Seat, TideRecord } from './types'
 
 export const DAYS = 6;
 /** Safety cap on game length in the Glory race. */
-export const MAX_DAYS = 12;
-/** The Glory target from a 'target-N' variant, or 0. */
-export const gloryTarget = (s: GameState) => Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? 0);
+/** The Open Game ends after the Reaping of the first Day on which any player has this much Glory (V36). */
+export const GLORY_TARGET = 10;
+/** Engine safety cap only; the rules have no Day limit. */
+export const MAX_DAYS = 40;
+/** The Glory target: 10 by default, 'target-N' to test others, 0 with 'six-days' (the V35 fixed-length game). */
+export const gloryTarget = (s: GameState) => (variant(s, 'six-days') ? 0 : Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? GLORY_TARGET));
 export const OPEN_SET_ASIDE_HOSTS = [H.revelation, H.knowledge, H.bounty, H.flamingSword, H.belial, H.hubris];
 export const OPEN_SET_ASIDE_EVENTS = [E.sabbath, E.equilibrium, E.armageddon];
 
@@ -67,8 +70,8 @@ export function* runGame(s: GameState): Gen<void> {
     const early = n0 === 4 ? [1, 2] : [2];
     for (const k of early) { const p = s.players[(s.firstPlayer + k) % n0]; p.glory += 1; log(s, 'setup', `${p.name} starts with 1 Glory for their seat.`); }
   }
-  // Glory race (experimental, 'target-N'): the game ends after the Reaping of the first Day on which
-  // any player has N or more Glory, or after MAX_DAYS. Otherwise it lasts DAYS Days.
+  // V36: the game ends after the Reaping of the first Day on which any player has 10 or more Glory.
+  // 'six-days' restores the fixed 6-Day game; 'maxdays-N' adds a Day cap for testing.
   const target = gloryTarget(s);
   const maxDays = Number((s.config.variants ?? []).find((v) => v.startsWith('maxdays-'))?.slice(8) ?? MAX_DAYS);
   const last = (d: number) => (target ? d >= maxDays || s.players.some((p) => p.glory >= target) : d === DAYS);
@@ -443,7 +446,7 @@ function* doExalt(s: GameState, seat: Seat): Gen<void> {
   if (!(yield* makeRoom(s, seat, 'Exalt'))) { p.hand.push(card); return; }
   let paidTo: Seat | undefined;
   if (cost > 0 && hasActive(s, seat, H.mammon) && !usedToday(s, seat, 'mammon') && canActivate(s, seat, H.mammon)) {
-    const pick = yield* chooseOne(s, seat, 'mammon.exalt', 'Mammon: pay your Exalt cost to a player of your choosing instead of the Pot?', s.players.filter((o) => o.seat !== seat).map((o) => seatOpt(s, o.seat)), true);
+    const pick = yield* chooseOne(s, seat, 'mammon.exalt', 'Mammon: pay your Exalt cost to the player with the least Glory instead of the Pot (choose among ties)?', leastGloryOthers(s, seat).map((o) => seatOpt(s, o.seat)), true);
     if (pick) {
       markToday(s, seat, 'mammon');
       if (yield* activation(s, seat, H.mammon, function* () {})) paidTo = seatFromOpt(pick);

@@ -1,6 +1,6 @@
 # The Divide: Design Decisions
 
-The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 15, 2026, to match card data V35 and rulebook v5.
+The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 16, 2026, to match card data V36 and rulebook v6.
 
 ## Governing rules
 
@@ -18,7 +18,7 @@ The Divide has two modes on one deck and one Day structure.
 | 3 or 4 | Open Game |
 | 5 or 6 | Hidden Roles |
 
-**The Open Game is the main focus.** Players compete in the open for the most Glory over six fixed Days. There is no Balance, no Fates, and no Turn. Each Day's Tide scores every public Choir once (capped at 3), and the final Tide also sets an endgame bonus of 1 Glory per matching card in hand and Choir. Ties go to the player with more matching cards, then are shared. Optional: 2 Seeds per Day if Tides feel thin.
+**The Open Game is the main focus.** Players race in the open to 10 Glory (V36): the game ends after the first Reaping at which any player has 10 or more, with no Day limit. There is no Balance, no Fates, and no Turn. Each Day's Tide scores every public Choir once (capped at 3), and the final Tide also sets an endgame bonus of 1 Glory per matching card in hand and Choir. Reaching 10 ends the game but does not win it; the most Glory after the bonus wins. Ties go to the player with more matching cards, then are shared. Optional: 2 Seeds per Day if Tides feel thin.
 
 **Hidden Roles** is the original design: secret Fates (Faithful, Fallen, Forsaken), the 11-space Balance with an early end at either extreme, the Turn, and faction victory plus most Glory within the faction.
 
@@ -46,7 +46,8 @@ That leaves **66 Host cards: 22 Light, 21 Dark, 21 Neutral, and 2 Variable**, wi
 - **Starting position:** a hidden hand of 3 and a face-up Choir of 3 random cards. Choir limit 3 for everyone. Hand limit 3 (the Dominion has 4 and starts with 4).
 - **Reaping cap:** 3 Glory gained or lost per Reaping, applied after doubling. Effects outside Alignment scoring (Leviathan and similar) are not capped.
 - **Deck reshuffle:** when the Host deck runs out, shuffle the discard pile.
-- **Glory:** never below 0; may be given freely, except that **no Glory may be given on the final Day of the Open Game** (prevents an eliminated player from choosing the winner).
+- **Glory:** never below 0; may be given freely at any time. V36 removed the final-Day gift ban, because no one knows which Day is last; a gift that pushes someone to 10 ends the game, and Robert likes the tension when everyone is near 10.
+- **Most or least Glory ties:** when a card names the player with the most or least Glory and players are tied, the user of the card chooses, unless the card says otherwise (Envy).
 - **Once-per-game cards** stay in the starting deal and carry +2. Light: Free Will, Mercy, Revelation, Knowledge, Deliverance. Dark: Bounty, Abaddon, Silence, Scapegoat, Defiance.
 
 ## Terminology
@@ -65,11 +66,11 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 | Card | Ruling |
 |---|---|
 | Nephilim | Counts as both Light +1 and Dark +1 for other cards (alone it satisfies Twilight). Always scores 0, even beside Uriel or Beelzebub, and never earns the endgame bonus. |
-| Shroud | Its value is the opposite of the previous Day's Tide, on the Altar and in the Choir. At game end it uses Day 5's Tide. |
+| Shroud | Its value is the opposite of the previous Day's Tide, on the Altar and in the Choir. At game end it uses the second-to-last Day's Tide. |
 | The Whisper | Predicts direction. A correct call means the Choir gains its net value instead of losing it (cap 3). A net-zero Choir gains nothing. Payoff At the Reaping. |
 | The Eclipse | "At the Reaping, once per Day, treat one Host card in your Choir as Neutral." Fallback if too strong: declare before the Tide is set. |
-| The Arbiter | V34: "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to a player of your choice." Applies only to Alignment scoring; if no rival has Glory, the gain comes from the Pot. |
-| Mammon | If no other player has Glory to take, the ability yields nothing. |
+| The Arbiter | V36: "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to the player, other than you, with the least Glory." Applies only to Alignment scoring; if no rival has Glory, the gain comes from the Pot. |
+| Mammon | If no other player has Glory to take, the ability yields nothing. V36: the Exalt payment goes to the player, other than you, with the least Glory. |
 | Confession | V34: the Glory is earned only if the revealed hand holds no Dark card (Nephilim counts as Dark). |
 | Covenant | V34: forbids only Offer or Gather, and names a player who has not yet taken their turn this Day. |
 | Heresy | V34: optional reversal, chosen at the Reaping after the Tide is set; an activation (Tithe, Silence). |
@@ -135,7 +136,19 @@ Measured on the same seeds as the V34 decision report (3 players; 4 players in b
 
 Rejected the same day: the face-up row of 3 Host cards and "draw 2, keep 1" at Upkeep (Robert did not like them). Still available as tested options: the Long Game (two rounds of turns each Day) and the Celestial draft.
 
-## Playtest watch list (Open Game, V35)
+## Race to 10 adopted (November 16, 2026)
+
+Tested against the fixed 6 Days: average length 6.4 Days (59% end by Day 6, 93% by Day 10), skill edge 2.46 to 2.81 at 3 players, seat spread 0.20 to 0.08 at 4 players. Robert chose no Day limit. Cards that let a player pick who receives Glory (the Arbiter, Mammon) now give to the player with the least Glory, so no card can crown a winner. Details: `game/reports/v36-race-to-10-2026-11-16.md`.
+
+Rejected the same day: two rounds of turns per Day (in the same order, or snake order 1-2-3-3-2-1), a Day 8 cap on the race, and a rule that no gift may bring a player to 10.
+
+## Playtest watch list (Open Game, V36)
+
+- **Leviathan (1.67), Michael (1.41), Tree of Life (1.35), Envy (1.29), Tribute (1.29), Mammon (1.28)** are the strongest Host cards in the race. Leviathan needs a decision.
+- **Covenant** can be aimed at a player at 9 Glory: if the pact holds, both gain 1. Does it get used as kingmaking?
+- **Apple (0.68), Morning Star (0.69), Eternity (0.73)** are slow setup cards that the race punishes.
+- **Long games.** About 1 game in 14 runs past Day 10. Does the table ever stall?
+- **Gifts near 10.** Does the open gift rule create fun brinkmanship or kingmaking?
 
 - **Bluffing.** The bots cannot bluff, so they undervalue the hidden Altar. Does the table read First Fruits and facedown Offers, or just guess?
 - **Ithuriel, Urim, Asmadai, Mirage.** Bots rate them 0.98, 0.78, 0.92, 0.73 (Neutral cards normally sit between 0.68 and 0.84). Is Urim's private look worth a card slot? Is Asmadai's swap too strong late in the Day?
@@ -146,8 +159,7 @@ Rejected the same day: the face-up row of 3 Host cards and "draw 2, keep 1" at U
 - **Raguel (0.78 in V35)** improved but is still weak.
 - **The Patron (0.86), the Oracle (0.87), the Echo (0.86)** may be undervalued by the bots; confirm with people.
 - **Hubris removal.** Does the open deck play better without it?
-- **Final-Day gift ban.** Does it remove kingmaking without flattening Day 6 negotiation?
 - **Raphael and Azazel without Once per Day.** Watch for Altar wipes with Hymn or Lamentation.
-- **Snowballing.** The sole leader after Day 3 wins 62% of 3-player bot games in V35 (65% in V34; chance: 33%); the winner was not leading entering Day 6 in 19%.
+- **Snowballing.** The sole leader after Day 3 wins 64% of 3-player bot games in V36 (62% in V35; chance: 33%); the winner was not leading before the last Day in 14%.
 - **Days feel separate.** Only Shroud and Apple carry the previous Day forward.
 - **Thin Altar** at 3 players; the 2-Seed option is in the rules.

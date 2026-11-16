@@ -10,7 +10,7 @@ describe('bot games run to completion', () => {
       for (let seed = 1; seed <= 150; seed++) {
         const g = playBotGame(cfg(seed * 31 + n, n));
         expect(g.state.result).not.toBeNull();
-        expect(g.state.tides).toHaveLength(6);
+        expect(g.state.tides).toHaveLength(g.state.day);
         for (const p of g.state.players) {
           expect(p.glory).toBeGreaterThanOrEqual(0);
           expect(p.choir.length).toBeLessThanOrEqual(3);
@@ -39,7 +39,7 @@ describe('replay is deterministic', () => {
 });
 
 describe('experimental rules run cleanly', () => {
-  const sets = [[], ['two-rounds'], ['catchup-order'], ['celestial-draft'], ['two-rounds', 'catchup-order', 'celestial-draft'], ['snake-rounds'], ['snake-rounds', 'celestial-draft']];
+  const sets = [[], ['two-rounds'], ['catchup-order'], ['celestial-draft'], ['two-rounds', 'catchup-order', 'celestial-draft'], ['snake-rounds'], ['snake-rounds', 'celestial-draft'], ['six-days'], ['six-days', 'catchup-order']];
   for (const variants of sets) {
     it(variants.join('+'), () => {
       for (let seed = 1; seed <= 60; seed++) {

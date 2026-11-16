@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alignment } from '../src/core';
+import { alignment, lose } from '../src/core';
 import { C, E, H } from '../src/data';
 import { endGame, evening, reaping, setTide, takeTurn, unveiling } from '../src/engine';
 import { Game } from '../src/game';
@@ -338,8 +338,8 @@ describe('Glory routing', () => {
     reap(s, { 'arbiter.give': ['p2'] });
     expect(glory(s)).toEqual([3, 0, 1]);
   });
-  it('Glory gifts are blocked on Babel and on the final Day', () => {
-    const g = new Game({ seed: 3, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+  it('Glory gifts are blocked on Babel; the final-Day ban applies only to the six-Day game', () => {
+    const g = new Game({ seed: 3, mode: 'open', variants: ['six-days'], players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
     g.state.players[0].glory = 2;
     expect(g.canGift(0, 1, 1)).toBeNull();
     g.state.currentEvent = E.babel;
@@ -347,6 +347,10 @@ describe('Glory routing', () => {
     g.state.currentEvent = E.creation;
     g.state.day = 6;
     expect(g.canGift(0, 1, 1)).toMatch(/final Day/);
+    const r = new Game({ seed: 3, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+    r.state.players[0].glory = 2;
+    r.state.day = 6;
+    expect(r.canGift(0, 1, 1)).toBeNull();
   });
 });
 
@@ -485,7 +489,7 @@ describe('V35: First Fruits and facedown Offers', () => {
         g.answer(d.seat, d.id, botAnswer(g.state, d));
       }
     }
-    expect(n).toBe(18);
+    expect(n).toBe(3 * g.state.day);
     expect(g.state.stats.filter((x) => x.type === 'glory' && x.source === 'fruits')).toHaveLength(0);
   });
   it('Open Game is 3 or 4 players', () => {
@@ -500,5 +504,37 @@ describe('snake rounds', () => {
     const order = g.state.stats.filter((e) => e.day === 1 && e.type === 'action' && ['offer', 'gather', 'exalt'].includes(e.source ?? '')).map((e) => e.seat!);
     const f = order[0];
     expect(order).toEqual([f, (f + 1) % 3, (f + 2) % 3, (f + 2) % 3, (f + 1) % 3, f]);
+  });
+});
+
+describe('V36: first to 10 Glory', () => {
+  it('ends after the Reaping of the first Day on which someone has 10 Glory', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const g = new Game({ seed, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+      while (g.pending.length) for (const d of g.pending) g.answer(d.seat, d.id, botAnswer(g.state, d));
+      const s = g.state;
+      expect(s.tides).toHaveLength(s.day);
+      // Before the endgame bonus, someone had reached 10 at the final Reaping, and nobody had before it.
+      const byDay = (day: number) => s.players.map((p) => s.stats.filter((e) => e.type === 'glory' && e.seat === p.seat && e.day <= day && e.source !== 'bonus').reduce((a, e) => a + (e.amount ?? 0), 0));
+      if (s.day > 1) expect(Math.max(...byDay(s.day - 1))).toBeLessThan(10);
+    }
+  });
+  it('the Arbiter gives to the other player with the least Glory; ties are the holder\'s choice', () => {
+    const s = blank();
+    s.players[0].celestial = C.arbiter;
+    s.players[0].glory = 5;
+    s.players[1].glory = 2;
+    s.players[2].glory = 2;
+    const { asked } = drive(s, lose(s, 0, 2, 'reaping'), { 'arbiter.give': (d) => [d.options[1].id] });
+    const d = asked.find((x) => x.tag === 'arbiter.give')!;
+    expect(d.options.map((o) => o.seat)).toEqual([1, 2]);
+    expect(s.players[2].glory).toBe(3);
+    const t = blank();
+    t.players[0].celestial = C.arbiter;
+    t.players[0].glory = 5;
+    t.players[1].glory = 4;
+    t.players[2].glory = 1;
+    drive(t, lose(t, 0, 2, 'reaping'));
+    expect(t.players[2].glory).toBe(2);
   });
 });

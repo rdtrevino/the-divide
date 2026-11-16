@@ -1,5 +1,16 @@
 # Changelog
 
+## V36 cards and Rulebook v6 (November 16, 2026)
+
+- **The race to 10.** The Open Game ends after the first Reaping at which any player has 10 or more Glory, with no Day limit. The endgame bonus is still scored, and the most Glory wins. Hidden Roles still lasts 6 Days.
+- **Gifts:** the final-Day gift ban is removed.
+- **The Arbiter:** the Glory it gives when you lose now goes to the player, other than you, with the least Glory.
+- **Mammon:** its Exalt payment now goes to the player, other than you, with the least Glory.
+- **New ruling:** when a card names the player with the most or least Glory and players tie, the user chooses among them, unless the card says otherwise.
+- **Shroud** at game end uses the second-to-last Day's Tide.
+
+Measured: average length 6.4 Days, skill edge 2.81 (was 2.46) at 3 players, 4-player seat spread 0.08 (was 0.20). See `game/reports/v36-race-to-10-2026-11-16.md`. Also tested and not adopted: two rounds of turns per Day, snake order, catch-up turn order, and a Day 8 cap.
+
 ## V35 cards and Rulebook v5 (November 15, 2026)
 
 More hidden information and more choices, measured on simulated games before adoption. See `game/reports/v35-facedown-offerings-2026-11-15.md`.
