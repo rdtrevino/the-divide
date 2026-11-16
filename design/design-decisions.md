@@ -149,12 +149,10 @@ Rejected the same day: two rounds of turns per Day (in the same order, or snake 
 - **Apple (0.68), Morning Star (0.69), Eternity (0.73)** are slow setup cards that the race punishes.
 - **Long games.** About 1 game in 14 runs past Day 10. Does the table ever stall?
 - **Gifts near 10.** Does the open gift rule create fun brinkmanship or kingmaking?
-
 - **Bluffing.** The bots cannot bluff, so they undervalue the hidden Altar. Does the table read First Fruits and facedown Offers, or just guess?
 - **Ithuriel, Urim, Asmadai, Mirage.** Bots rate them 0.98, 0.78, 0.92, 0.73 (Neutral cards normally sit between 0.68 and 0.84). Is Urim's private look worth a card slot? Is Asmadai's swap too strong late in the Day?
 - **Blind Gathers.** Do players ever Gather a facedown card, or does the Gather action shrink?
-- **The Eclipse (1.26 in V35)** is the strongest Celestial. Fallback: declare before the Tide is set.
-- **Leviathan (1.54 in V35)** pays 1 Glory per rival who loses at the Reaping, which rarely misses in a three-way race.
+- **The Eclipse (1.26 in V36)** is the strongest Celestial. Fallback: declare before the Tide is set.
 - **Fig Leaves** recovered to 0.97 in V35 (0.75 in V34).
 - **Raguel (0.78 in V35)** improved but is still weak.
 - **The Patron (0.86), the Oracle (0.87), the Echo (0.86)** may be undervalued by the bots; confirm with people.
