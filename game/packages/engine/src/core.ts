@@ -146,11 +146,13 @@ export function alignment(s: GameState, seat: Seat, opts: AlignOpts = {}): numbe
   const p = s.players[seat];
   let light = 0;
   let dark = 0;
-  const uriel = opts.reaping && hasActive(s, seat, H.uriel);
-  const beel = opts.reaping && hasActive(s, seat, H.beelzebub);
+  // V38: Uriel and Beelzebub double only on a Reaping where their holder paid 1 Glory for them.
+  const paid: string[] = (s.day_ as any).doublerPaid?.[seat] ?? [];
+  const uriel = opts.reaping && hasActive(s, seat, H.uriel) && paid.includes(H.uriel);
+  const beel = opts.reaping && hasActive(s, seat, H.beelzebub) && paid.includes(H.beelzebub);
   for (const c of p.choir) {
     if (c.facedown || !c.id.startsWith('host-')) continue;
-    if (c.id === H.nephilim) continue; // its two values always cancel to 0
+    if (c.id === H.nephilim) continue; // its two values are Neutral
     if (opts.reaping && s.day_.eclipsed[seat] === c.id) continue;
     let v = baseValue(s, c.id);
     if (s.morningStar.some((m) => m.seat === seat && m.card === c.id)) v = { light: v.dark, dark: v.light };
@@ -320,7 +322,8 @@ function addRaw(s: GameState, seat: Seat, n: number, source: GlorySource) {
  */
 export function* gain(s: GameState, seat: Seat, n: number, source: GlorySource): Gen<number> {
   if (n <= 0) return 0;
-  if (isCelestial(s, seat, C.arbiter) && source === 'reaping') {
+  // V38: the Arbiter takes from a player only when it gains 2 or more at once.
+  if (isCelestial(s, seat, C.arbiter) && source === 'reaping' && n >= 2) {
     const rich = others(s, seat).filter((p) => p.glory > 0);
     if (rich.length) {
       const t = yield* chooseOne(s, seat, 'arbiter.take', `The Arbiter: you gain ${n} Glory at the Reaping. Choose a player to take 1 of it from.`, rich.map((p) => seatOpt(s, p.seat)));
@@ -406,8 +409,9 @@ export function canAffordTribute(s: GameState, actor: Seat, owner: Seat): boolea
 export function* payTribute(s: GameState, actor: Seat, owner: Seat): Gen<boolean> {
   if (actor === owner || !hasActive(s, owner, H.tribute)) return true;
   if (!canSpend(s, actor, 1)) return false;
-  yield* pay(s, actor, 1, H.tribute, owner);
-  log(s, 'tribute', `${pname(s, actor)} paid 1 Glory Tribute to ${pname(s, owner)}.`);
+  // V37: Tribute is paid to the Pot (was to Tribute's owner).
+  yield* pay(s, actor, 1, H.tribute);
+  log(s, 'tribute', `${pname(s, actor)} paid 1 Glory to the Pot to Target ${pname(s, owner)}'s Choir (Tribute).`);
   return true;
 }
 

@@ -8,13 +8,13 @@ The online version of The Divide. Everything here is TypeScript.
 | `tools/sim` | The balance simulator. Plays thousands of all-bot games and reports win rates by Celestial and card. |
 | `reports/` | Saved simulator reports. |
 | `apps/server` | Cloudflare Worker: live game rooms (Durable Objects) and the stats database. The D1 database `divide-stats` (id `2cd15db7-cb25-4b41-8800-8215ff8e7943`) is created and its schema applied from `migrations/0001_init.sql`. Server code is next. |
-| `apps/web` | (next) The website, styled after the printed cards. |
+| `apps/web` | (next) The website, styled after the printed cards. The starting brief is `BUILD_NOTES.md`. |
 
 ## Commands
 
 ```
 npm install
-npm test                                   # run 53 tests, including about 1,000 bot games
+npm test                                   # run 79 tests, including about 1,500 bot games
 cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements
 npm run sim -- --games 20000 --players 3,4 # balance report
 cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a rule variant
@@ -23,6 +23,8 @@ cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a 
 The engine supports experimental rule `variants` in the game config for A/B testing. The five balance changes tested on November 14 were adopted as permanent V34 card text (see `reports/balance-proposals-2026-11-14.md`).
 
 V35 (November 15) made First Fruits, facedown Offers, and the Offer reward choice the standard rules (see `reports/v35-facedown-offerings-2026-11-15.md`). The face-up row, draw 2 keep 1, and the secret offering experiments were removed. V36 (November 16) made the race to 10 Glory the standard ending (`reports/v36-race-to-10-2026-11-16.md`); `six-days` restores the fixed 6-Day game. Remaining experimental rules: `two-rounds` (the Long Game), `snake-rounds`, `celestial-draft`, `catchup-order`, the seat-fairness tests `final-catchup`, `first-draw`, `seat-glory`, and other Glory targets `target-N` with an optional `maxdays-N` cap (see `reports/glory-race-2026-11-15.md`) (see `reports/seat-fairness-2026-11-15.md`; measure with `cd tools/sim && npx tsx seats.ts 6000 base catchup-order`). Measure them with `cd tools/sim && npx tsx variants.ts 3000 out.json B R C RC`.
+
+V37 (November 16) adopted nine card changes for the strongest and weakest cards (`reports/v37-balance-2026-11-16.md`). V38 (November 16) changed Michael and 15 more cards toward Robert's target of every card between 0.75 and 1.25 (`reports/v38-balance-2026-11-16.md`); the trial variants were removed once adopted. Measure every card on fixed seeds with `cd tools/sim && npx tsx ab3.ts 20000 0 out.json base` (run several offsets in parallel and merge the counts).
 
 ## Engine rulings to confirm
 

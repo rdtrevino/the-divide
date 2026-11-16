@@ -1,0 +1,43 @@
+{
+  "version": "V37",
+  "date": "2026-11-16",
+  "previous": "V36",
+  "changes": {
+    "Leviathan": {
+      "text": "At the Reaping: If your Alignment did not gain you Glory, gain 1 Glory if any other player loses Glory this Reaping.",
+      "why": "Pays only when your own Alignment gained nothing (V37 balance)"
+    },
+    "Tree of Life": {
+      "text": "On your turn: Take the top card of the discard pile into your hand, then discard a card from your hand.",
+      "why": "Top card of the discard pile only, was any card (V37 balance)"
+    },
+    "Envy": {
+      "text": "On your turn: If the player with the most Glory has at least 3 more Glory than you, they lose 1 Glory. Each tied leader loses 1.",
+      "why": "Only when the leader is 3 or more Glory ahead of you (V37 balance)"
+    },
+    "Tribute": {
+      "text": "Other players must pay 1 Glory to the Pot before they may Target any card in your Choir with an ability.",
+      "why": "Payment goes to the Pot, not to you (V37 balance)"
+    },
+    "Watchers": {
+      "text": "On your turn: Look at the top 3 cards of the Host deck. Put 1 into your hand and discard a card from your hand, then return the rest in any order.",
+      "why": "Keep 1 of the 3, then discard a card (V37 balance)"
+    },
+    "Forger": {
+      "text": "When you Gather, you may take any Host card from the discard pile instead of a card from the Altar or the deck.",
+      "why": "Any card from the discard pile, was the top card (V37 balance)"
+    },
+    "Apple": {
+      "text": "At the Reaping: If your Choir's Alignment is the opposite color from the previous Day's Tide, gain 1 Glory.",
+      "why": "Gain 1 when you lean against yesterday's Tide, was a doubled gain (V37 balance)"
+    },
+    "Council": {
+      "text": "On your turn: You may replace another card in your Choir with a card from your hand. Then each other player may do the same by paying you 1 Glory. Replaced cards are discarded.",
+      "why": "No vote; others pay you 1 Glory to join (V37 balance)"
+    },
+    "Mirage": {
+      "text": "Your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening. When the Altar is revealed, if any of your facedown Offerings is still on it, draw 1 card.",
+      "why": "Adds a card draw when your facedown Offering survives to the reveal (V37 balance)"
+    }
+  }
+}

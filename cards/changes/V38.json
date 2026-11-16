@@ -1,0 +1,79 @@
+{
+  "version": "V38",
+  "date": "2026-11-16",
+  "previous": "V37",
+  "changes": {
+    "Michael": {
+      "text": "On your turn: Flip a Host card in a player's Choir Facedown. It turns face up after the Reaping, or sooner if its owner pays 1 Glory.",
+      "why": "The card returns after the Reaping; its owner may pay 1 Glory at any time before then (V38 balance)"
+    },
+    "Uriel": {
+      "text": "At the Reaping: You may pay 1 Glory to make the Light Offering values in your Choir count double when calculating your Alignment.",
+      "why": "Doubling now costs 1 Glory each Reaping (V38 balance)"
+    },
+    "Beelzebub": {
+      "text": "At the Reaping: You may pay 1 Glory to make the Dark Offering values in your Choir count double when calculating your Alignment.",
+      "why": "Doubling now costs 1 Glory each Reaping, mirroring Uriel (V38 balance)"
+    },
+    "Mammon": {
+      "text": "Once per Day: When you Offer a Dark card, take 1 Glory from a player of your choice instead of the Pot; or when you Exalt, pay the Glory cost to the player, other than you, with the least Glory.",
+      "why": "Takes Glory only when you Offer a Dark card (V38 balance)"
+    },
+    "Scapegoat": {
+      "text": "Once per game: Choose a player. If you would lose Glory at this Day's Reaping, they lose it instead. You lose nothing.",
+      "why": "Covers only the Day it is used (V38 balance)"
+    },
+    "Vessel": {
+      "text": "On your turn: You may place a card from your hand on the Altar facedown, then gain 1 Glory or draw 1 card, as with an Offer. This is not an Offer.",
+      "why": "Places a card from your hand and takes the Offer reward, was the top card of the deck (V38)"
+    },
+    "Urim": {
+      "text": "On your turn: Secretly look at up to 3 facedown cards on the Altar.",
+      "why": "Looks at up to 3, was 2 (V38)"
+    },
+    "Nephilim": {
+      "text": "This card counts as both Light +1 and Dark +1 at once. It satisfies any effect requiring a Light card and any requiring a Dark card. For your Alignment and the Tide, its two values are Neutral.",
+      "why": "Wording: values are Neutral, was cancel to 0 (V38)",
+      "wording": true
+    },
+    "Morning Star": {
+      "text": "At the Reaping: You may pay 1 Glory to treat 1 Host card in your Choir as the opposite alignment for this Reaping. Neutral cards are unaffected.",
+      "why": "Used at the Reaping for 1 Glory, was on your turn until your next turn (V38 balance)",
+      "cadence": "At the Reaping"
+    },
+    "Eternity": {
+      "text": "In the Evening: You may take 1 card from the Altar into your hand.",
+      "why": "Takes a card into your hand, was keeping it as the next Seed (V38 balance)"
+    },
+    "Raguel": {
+      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At each Reaping, if you lose Glory, your Bound player loses 1 Glory, and you lose 1 less.",
+      "why": "Bound player loses 1, was the same amount; the holder loses 1 less (V38)"
+    },
+    "Outcast": {
+      "text": "When you Exalt, if you have the lowest Glory at the table or are tied for lowest, you pay no Glory. At the Reaping, if you have the lowest Glory or are tied for it, gain 1 Glory.",
+      "why": "Adds 1 Glory at the Reaping while you have the least (V38 balance)"
+    },
+    "Mirage": {
+      "text": "Your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening. At the Reaping, if a card you Offered facedown is still on the Altar and matches the Tide, gain 1 Glory.",
+      "why": "Gains 1 Glory when a surviving facedown Offering matches the Tide, replacing the V37 card draw (V38 balance)"
+    },
+    "Prophecy": {
+      "text": "During the Unveiling: Publicly declare a Target Alignment, Light or Dark. At the Reaping, if the Tide matches, gain 1 Glory; otherwise, including a Neutral Tide, lose 1 Glory.",
+      "why": "A Neutral Tide now counts as a miss (V38 balance)"
+    },
+    "Providence": {
+      "text": "In the Evening: Before Setting the Tide, you may pay 1 Glory to exchange 1 face-up card on the Altar with 1 card from your Choir.",
+      "why": "Now costs 1 Glory (V38 balance)"
+    }
+  },
+  "celestials": {
+    "The Eclipse": {
+      "text": "In the Evening, before the Altar is revealed, once per Day, treat one Host card in your Choir as Neutral for this Day's Reaping.",
+      "why": "Chosen before the reveal, was after the Tide was known (V38 balance)"
+    },
+    "The Arbiter": {
+      "text": "At the Reaping, if you gain 2 or more Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to the player, other than you, with the least Glory.",
+      "why": "Takes from a player only on a gain of 2 or more (V38 balance)"
+    }
+  }
+}

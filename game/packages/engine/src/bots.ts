@@ -2,7 +2,7 @@
 // play toward a Tide that pays them, and answer every kind of decision sensibly.
 import { alignment, baseValue, dirOf } from './core';
 import { exaltCost as exaltCostFor } from './engine';
-import { H } from './data';
+import { H, cardName as cardNameOf } from './data';
 import type { Answer, Decision, Dir, GameState, Option, Seat } from './types';
 
 /** Small deterministic PRNG per decision, so simulations are reproducible without touching game RNG. */
@@ -122,6 +122,9 @@ export function botAnswer(s: GameState, d: Decision): Answer {
           const newNet = net + v - (room ? 0 : worst?.v ?? 0);
           best = Math.max(best, reapValue(newNet, altar - v, w) + 0.15);
         }
+        if (p.choir.some((c) => c.id === H.forger && !c.facedown)) {
+          for (const c of new Set(s.discard)) best = Math.max(best, reapValue(net + signed(s, c) - (room ? 0 : worst?.v ?? 0), altar, w) + 0.15);
+        }
         scores.gather = best;
       }
       if (has('exalt')) {
@@ -177,12 +180,14 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     case 'absolution.discard':
     case 'temptation.discard':
     case 'treeOfLife.discard':
+    case 'watchers.discard':
     case 'remnant.discard':
     case 'favor.give': {
       const o = pickBest(d.options, (o) => -(want >= 0 ? signed(s, o.card) : -signed(s, o.card)));
       return one(o.id);
     }
     case 'temptation':
+    case 'watchers.take':
     case 'treeOfLife.take': {
       const o = pickBest(d.options, (o) => (want >= 0 ? signed(s, o.card) : -signed(s, o.card)));
       return one(o.id);
@@ -194,11 +199,15 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         if (o.card === H.abaddon) return dirOf(altar) !== wantDir && altar !== 0;
         if (o.card === H.moloch) return s.players[seat].choir.some((c) => c.id !== H.moloch && (want >= 0 ? signed(s, c.id) < 0 : signed(s, c.id) > 0));
         if (o.card === H.mercy) return dirOf(altar) !== wantDir && altar !== 0 && later <= 1;
+        if (o.card === H.scapegoat) return dirOf(altar) !== wantDir && altar !== 0 && later <= 1;
         if (o.card === H.defiance) return r < 0.3;
         if (o.card === H.deliverance) return r < 0.25;
-        if (o.card === H.council) return r < 0.2;
+        if (o.card === H.council) {
+          const p = s.players[seat];
+          return p.choir.filter((c) => c.id.startsWith('host-')).some((c) => p.hand.some((h) => (want >= 0 ? 1 : -1) * (signed(s, h) - signed(s, c.id)) > 0));
+        }
         if (o.card === H.ordeal) return dirOf(altar) === wantDir && later <= 1;
-        if (o.id.startsWith('restore')) return true;
+        if (o.id.startsWith('restore')) return false; // V38: wait for the Reaping, when the Tide is known
         return true;
       });
       if (!opts.length || r < 0.08) return one('end');
@@ -246,8 +255,6 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const o = pickBest(d.options.filter((x) => x.card), (x) => reapValue(net, base - signed(s, seen) + signed(s, x.card), w) + (want >= 0 ? signed(s, seen) : -signed(s, seen)) * 0.2);
       return one(o && reapValue(net, base - signed(s, seen) + signed(s, o.card), w) > keep + 0.2 ? o.id : 'none');
     }
-    case 'council.vote':
-      return one(r < 0.5 ? 'yes' : 'no');
     case 'wisdom': {
       const top = d.reveal?.[0];
       return one(top && dirOf(signed(s, top)) !== wantDir ? 'yes' : 'no');
@@ -258,6 +265,41 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     case 'lots': {
       const opts = ['light', 'dark', 'neutral'];
       return one(r < 0.5 ? (wantDir === 'neutral' ? 'light' : wantDir) : opts[Math.floor(r * 3) % 3]);
+    }
+    case 'eclipse.early': {
+      if (altar === 0) return one('none');
+      const bad = byId((o) => o.card !== undefined && dirOf(signed(s, o.card)) !== dirOf(altar) && dirOf(signed(s, o.card)) !== 'neutral');
+      return one(bad ? bad.id : 'none');
+    }
+    case 'morningStar.reap': {
+      const t = s.tides[s.tides.length - 1];
+      if (!t || t.dir === 'neutral') return one('none');
+      const score = (n: number) => (n === 0 ? 0 : (dirOf(n) === t.dir ? 1 : -1) * Math.min(3, Math.abs(n)));
+      const now = alignment(s, seat, { reaping: true });
+      let best = 'none', bv = score(now) + 1.5; // costs 1 Glory
+      for (const o of d.options) { if (!o.card) continue; const v = signed(s, o.card); const sc = score(now - 2 * v); if (sc > bv) { bv = sc; best = o.id; } }
+      return one(best);
+    }
+    case 'vessel.hand': {
+      const o = pickBest(d.options.filter((x) => x.card), (x) => (want >= 0 ? signed(s, x.card) : -signed(s, x.card)));
+      return one(o ? o.id : 'none'); // the reward makes Vessel always worth using
+    }
+    case 'doubler.pay': {
+      const t = s.tides[s.tides.length - 1];
+      if (!t || t.dir === 'neutral') return one('no');
+      const score = (n: number) => (n === 0 ? 0 : (dirOf(n) === t.dir ? 1 : -1) * Math.min(3, Math.abs(n)));
+      const now = alignment(s, seat, { reaping: true });
+      const id = d.prompt.startsWith('Uriel') ? H.uriel : H.beelzebub;
+      const store = ((s.day_ as any).doublerPaid ??= {});
+      const before = store[seat];
+      store[seat] = [...(before ?? []), id];
+      const doubled = alignment(s, seat, { reaping: true });
+      if (before) store[seat] = before; else delete store[seat];
+      return one(score(doubled) - score(now) >= 2 ? 'yes' : 'no');
+    }
+    case 'eternity.hand': {
+      const o = pickBest(d.options.filter((x) => x.card), (x) => -(want >= 0 ? signed(s, x.card) : -signed(s, x.card)));
+      return one(o && (want >= 0 ? signed(s, o.card) : -signed(s, o.card)) < 0 ? o.id : 'none');
     }
     case 'eclipse': {
       const t = s.tides[s.tides.length - 1];
@@ -285,6 +327,15 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       // Giving Glory away: hand it to whoever is least threatening.
       const o = pickBest(d.options, (x) => -(s.players[x.seat ?? 0]?.glory ?? 0));
       return one(o.id);
+    }
+    case 'michael.restore': {
+      const t = s.tides[s.tides.length - 1];
+      const card = /Flip (.*) face up/.exec(d.prompt)?.[1];
+      const c = s.players[seat].choir.find((x) => x.facedown && cardNameOf(x.id) === card);
+      if (!t || !c) return one('no');
+      const now = alignment(s, seat, { reaping: true });
+      const score = (n: number) => (t.dir === 'neutral' || n === 0 ? 0 : (dirOf(n) === t.dir ? 1 : -1) * Math.min(3, Math.abs(n)));
+      return one(score(now + signed(s, c.id)) - score(now) >= 2 ? 'yes' : 'no');
     }
     case 'michael.target': {
       const o = pickBest(d.options, (x) => {
@@ -328,6 +379,19 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         const tOut = d.tag === 'providence' ? x.id.split('|')[1] : out;
         const gainV = (want >= 0 ? 1 : -1) * (signed(s, tIn) - signed(s, tOut));
         return gainV;
+      });
+      if (d.tag === 'providence' && o.id !== 'none') { // Providence costs 1 Glory
+        const [i, out] = o.id.split('|');
+        const g = (want >= 0 ? 1 : -1) * (signed(s, s.altar[Number(i)]?.id) - signed(s, out));
+        if (g < 2) return one('none');
+      }
+      return one(o.id);
+    }
+    case 'council.tollswap': {
+      const o = pickBest(d.options, (x) => {
+        if (x.id === 'skip') return 0;
+        const [out, inn] = x.id.split('|');
+        return (want >= 0 ? 1 : -1) * (signed(s, inn) - signed(s, out)) - 1.25;
       });
       return one(o.id);
     }

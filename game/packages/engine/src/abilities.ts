@@ -5,7 +5,7 @@ import {
   activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
   drawHost, drawTo, enterChoir, gain, handLimit, hasActive, log, lose, markToday, others, payTribute, peekHost,
   pname, protectedFrom, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, CHOIR_LIMIT,
-  colorsOf, activation, altarShielded, altarPeekable,
+  colorsOf, activation, altarShielded, altarPeekable, canSpend, pay, variant, makeRoom,
 } from './core';
 import { randInt } from './rng';
 import type { Gen, GameState, Seat } from './types';
@@ -49,8 +49,8 @@ export const TURN: Record<string, TurnAbility> = {
       const owner = Number(o);
       if (!(yield* payTribute(s, seat, owner))) return;
       const c = s.players[owner].choir.find((x) => x.id === id);
-      if (c) c.facedown = true;
-      log(s, 'michael', `${pname(s, seat)} turned ${cardName(id)} in ${pname(s, owner)}'s Choir Facedown.`);
+      if (c) { c.facedown = true; (c as any).michael = true; }
+      log(s, 'michael', `${pname(s, seat)} turned ${cardName(id)} in ${pname(s, owner)}'s Choir Facedown until the Reaping ends.`);
     },
   },
   [H.wisdom]: {
@@ -88,18 +88,19 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.treeOfLife]: {
-    can: (s) => s.discard.some((c) => c.startsWith('host-')),
+    // V37: the top card of the discard pile only (was any Host card in it).
+    can: (s) => s.discard.length > 0 && s.discard[s.discard.length - 1].startsWith('host-'),
     *run(s, seat) {
-      const pick = yield* chooseOne(s, seat, 'treeOfLife.take', 'Tree of Life: take any Host card from the discard pile into your hand.', [...new Set(s.discard)].map((c) => cardOpt(c)));
-      if (!pick) return;
-      s.discard.splice(s.discard.indexOf(pick), 1);
-      s.players[seat].hand.push(pick);
+      const top = s.discard[s.discard.length - 1];
+      if (!top || !top.startsWith('host-')) return;
+      s.discard.pop();
+      s.players[seat].hand.push(top);
       const d = yield* chooseOne(s, seat, 'treeOfLife.discard', 'Tree of Life: discard a card from your hand.', s.players[seat].hand.map((c) => cardOpt(c)));
       if (d) {
         s.players[seat].hand.splice(s.players[seat].hand.indexOf(d), 1);
         s.discard.push(d);
       }
-      log(s, 'treeOfLife', `${pname(s, seat)} took ${cardName(pick)} from the discard pile.`);
+      log(s, 'treeOfLife', `${pname(s, seat)} took ${cardName(top)} from the top of the discard pile.`);
     },
   },
   [H.seraphim]: reactivator('light'),
@@ -126,24 +127,20 @@ export const TURN: Record<string, TurnAbility> = {
       log(s, 'covenant', `${pname(s, seat)} bound ${pname(s, b)} in a Covenant: neither may ${act} before the Evening.`);
     },
   },
-  [H.morningStar]: {
-    can: (s, seat) => hostCardsOf(s, seat).some((c) => !c.facedown && c.id !== H.nephilim && (colorsOf(s, null, c.id).light || colorsOf(s, null, c.id).dark)),
-    *run(s, seat) {
-      const opts = hostCardsOf(s, seat).filter((c) => !c.facedown && c.id !== H.nephilim && (colorsOf(s, null, c.id).light || colorsOf(s, null, c.id).dark));
-      const pick = yield* chooseOne(s, seat, 'morningStar', 'Morning Star: choose a card in your Choir to treat as the opposite alignment until your next turn.', opts.map((c) => cardOpt(c.id)));
-      if (!pick) return;
-      s.morningStar = s.morningStar.filter((m) => m.seat !== seat);
-      s.morningStar.push({ seat, card: pick });
-      log(s, 'morningStar', `${pname(s, seat)} inverted ${cardName(pick)} with Morning Star until their next turn.`);
-    },
-  },
+  // V38: Morning Star now acts At the Reaping (see engine.ts reaping()).
   [H.vessel]: {
-    can: (s) => s.hostDeck.length + s.discard.length > 0,
+    // V38: place a card from your hand on the Altar facedown and take the Offer reward. It is not an Offer.
+    can: (s, seat) => s.players[seat].hand.length > 0,
     *run(s, seat) {
-      const c = drawHost(s);
-      if (!c) return;
-      s.altar.push({ id: c, facedown: true, offeredBy: null, day: s.day, kind: 'vessel' });
-      log(s, 'vessel', `${pname(s, seat)} added the top card of the Host deck to the Altar facedown (Vessel).`);
+      const h = s.players[seat].hand;
+      const pick = yield* chooseOne(s, seat, 'vessel.hand', 'Vessel: place a card from your hand on the Altar facedown, then gain 1 Glory or draw 1 card?', h.map((c) => cardOpt(c)), true);
+      if (!pick) return;
+      h.splice(h.indexOf(pick), 1);
+      s.altar.push({ id: pick, facedown: true, offeredBy: seat, day: s.day, kind: 'vessel' });
+      const r = yield* chooseOne(s, seat, 'offer.reward', 'Vessel: gain 1 Glory, or draw 1 card?', [{ id: 'glory', label: 'Gain 1 Glory' }, { id: 'card', label: 'Draw 1 card' }]);
+      if (r === 'card') yield* drawTo(s, seat, 1);
+      else yield* gain(s, seat, 1, H.vessel);
+      log(s, 'vessel', `${pname(s, seat)} placed a card on the Altar facedown (Vessel).`);
     },
   },
   [H.ordeal]: {
@@ -154,37 +151,50 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.council]: {
+    // V37: you may replace another card in your Choir with a card from your hand; then each other
+    // player may do the same by paying you 1 Glory (was: a unanimous vote, then everyone swaps).
     can: () => true,
     *run(s, seat) {
-      log(s, 'council', `${pname(s, seat)} called a Council vote.`);
-      const votes = yield* askAll(s, s.players.map((p) => ({ seat: p.seat, tag: 'council.vote', prompt: `${pname(s, seat)} called a Council: if every player votes yes, each player may swap 1 Choir card for 1 hand card.`, options: [{ id: 'yes', label: 'Vote yes' }, { id: 'no', label: 'Vote no' }], min: 1, max: 1 })));
-      const yes = votes.every((v) => v[0] === 'yes');
-      log(s, 'council', yes ? 'The Council passed unanimously.' : 'The Council failed.');
-      if (!yes) return;
-      const swaps = yield* askAll(s, s.players.map((p) => ({
-        seat: p.seat, tag: 'council.swap', prompt: 'Council: choose a Choir card and a hand card to swap, or skip.',
-        options: [{ id: 'skip', label: 'Skip' }, ...p.choir.filter((c) => c.id.startsWith('host-')).flatMap((c) => p.hand.map((h) => ({ id: `${c.id}|${h}`, label: `${cardName(c.id)} out, ${cardName(h)} in`, card: h })))],
+      log(s, 'council', `${pname(s, seat)} called a Council.`);
+      const who = s.players.filter((p) => p.seat === seat || canSpend(s, p.seat, 1));
+      const sw = yield* askAll(s, who.map((p) => ({
+        seat: p.seat, tag: p.seat === seat ? 'council.swap' : 'council.tollswap',
+        prompt: p.seat === seat ? 'Council: replace another card in your Choir with a card from your hand, or skip.' : `Council: pay ${pname(s, seat)} 1 Glory to replace a card in your Choir with a card from your hand, or skip.`,
+        options: [{ id: 'skip', label: 'Skip' }, ...p.choir.filter((c) => c.id.startsWith('host-') && !(p.seat === seat && c.id === H.council)).flatMap((c) => p.hand.map((h) => ({ id: `${c.id}|${h}`, label: `${cardName(c.id)} out, ${cardName(h)} in`, card: h })))],
         min: 1, max: 1,
       })));
-      for (const p of s.players) {
-        const a = swaps[p.seat][0];
+      for (const [i, p] of who.entries()) {
+        const a = sw[i]?.[0];
         if (!a || a === 'skip') continue;
+        if (p.seat !== seat && !(yield* pay(s, p.seat, 1, H.council, seat))) continue;
         const [out, inn] = a.split('|');
         p.hand.splice(p.hand.indexOf(inn), 1);
         yield* discardFromChoir(s, p.seat, out, 'Council');
         yield* enterChoir(s, p.seat, inn);
-        log(s, 'council', `${p.name} swapped ${cardName(out)} for ${cardName(inn)}.`);
+        log(s, 'council', p.seat === seat ? `${p.name} swapped ${cardName(out)} for ${cardName(inn)} (Council).` : `${p.name} paid ${pname(s, seat)} 1 Glory and swapped ${cardName(out)} for ${cardName(inn)} (Council).`);
       }
     },
   },
   [H.watchers]: {
     can: (s) => s.hostDeck.length + s.discard.length > 1,
     *run(s, seat) {
-      const top = peekHost(s, 3);
+      // V37: take 1 of the top 3 into your hand, discard a card from your hand, then order the rest.
+      let top = peekHost(s, 3);
+      if (top.length) {
+        const t = yield* chooseOne(s, seat, 'watchers.take', 'Watchers: take 1 of the top 3 cards into your hand.', top.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), false, top);
+        const i = Number(t);
+        const card = top[i];
+        s.hostDeck.splice(i, 1);
+        s.players[seat].hand.push(card);
+        const h = s.players[seat].hand;
+        const d = yield* chooseOne(s, seat, 'watchers.discard', 'Watchers: discard a card from your hand.', h.map((c) => cardOpt(c)));
+        if (d) { h.splice(h.indexOf(d), 1); s.discard.push(d); }
+        top = s.hostDeck.slice(0, top.length - 1);
+      }
       const n = top.length;
       const order: string[] = [];
       let rest = [...top];
-      log(s, 'peek', `${pname(s, seat)} looked at the top ${n} cards of the Host deck.`);
+      log(s, 'peek', `${pname(s, seat)} took a card from the top of the Host deck and returned ${n} (Watchers).`);
       while (rest.length > 1) {
         const pick = yield* chooseOne(s, seat, 'watchers.order', `Watchers: choose the card to place ${order.length === 0 ? 'on top' : 'next'}.`, rest.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), false, top);
         const i = Number(pick);
@@ -235,7 +245,8 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.envy]: {
-    can: () => true,
+    // V37: only if the player with the most Glory has at least 3 more than you.
+    can: (s, seat) => Math.max(...s.players.map((p) => p.glory)) - s.players[seat].glory >= 3,
     *run(s, seat) {
       for (const p of leaders(s)) {
         const n = yield* lose(s, p.seat, 1, H.envy);
@@ -314,7 +325,7 @@ export const TURN: Record<string, TurnAbility> = {
     *run(s, seat) {
       const t = yield* chooseOne(s, seat, 'scapegoat', 'Scapegoat: choose a player. The next time you would lose Glory at a Reaping, they lose it instead.', others(s, seat).filter((p) => !hasActive(s, p.seat, H.lilith)).map((p) => seatOpt(s, p.seat)));
       if (!t) return;
-      s.scapegoats.push({ from: seat, to: seatFromOpt(t) });
+      s.scapegoats.push({ from: seat, to: seatFromOpt(t), day: s.day } as any);
       log(s, 'scapegoat', `${pname(s, seat)} named ${pname(s, seatFromOpt(t))} as their Scapegoat.`);
     },
   },
@@ -353,14 +364,17 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.urim]: {
+    // V38: up to 3 facedown cards (was 2).
     can: (s, seat) => altarPeekable(s, seat).some((a) => a.offeredBy !== seat),
     *run(s, seat) {
       const t = altarPeekable(s, seat).filter((a) => a.offeredBy !== seat);
-      const picks = yield* ask(s, { seat, tag: 'urim', prompt: 'Urim: secretly look at up to 2 facedown cards on the Altar.', options: t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), min: 1, max: Math.min(2, t.length) });
-      const seen = picks.map((i) => s.altar[Number(i)]);
-      for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
-      log(s, 'urim', `${pname(s, seat)} looked at ${seen.length} facedown card(s) on the Altar (Urim).`);
-      log(s, 'peek', `Urim: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}.`, [seat], { reveal: seen.map((a) => a.id) });
+      {
+        const picks = yield* ask(s, { seat, tag: 'urim', prompt: 'Urim: secretly look at up to 3 facedown cards on the Altar.', options: t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), min: 1, max: Math.min(3, t.length) });
+        const seen = picks.map((i) => s.altar[Number(i)]);
+        for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
+        log(s, 'urim', `${pname(s, seat)} looked at ${seen.length} facedown card(s) on the Altar (Urim).`);
+        log(s, 'peek', `Urim: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}.`, [seat], { reveal: seen.map((a) => a.id) });
+      }
     },
   },
   [H.asmadai]: {

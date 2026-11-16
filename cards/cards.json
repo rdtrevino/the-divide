@@ -1,11 +1,11 @@
 {
-  "version": "V36",
+  "version": "V38",
   "date": "2026-11-16",
   "hosts": [
     {
       "id": "host-michael",
       "name": "Michael",
-      "text": "On your turn: Flip a Host card in a player's Choir Facedown. That player may pay 1 Glory on their turn to Flip it face up.",
+      "text": "On your turn: Flip a Host card in a player's Choir Facedown. It turns face up after the Reaping, or sooner if its owner pays 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/01-michael.jpg",
       "plate": "art/plates/host/01-michael.jpg",
@@ -44,7 +44,7 @@
     {
       "id": "host-providence",
       "name": "Providence",
-      "text": "In the Evening: Before Setting the Tide, exchange 1 face-up card on the Altar with 1 card from your Choir.",
+      "text": "In the Evening: Before Setting the Tide, you may pay 1 Glory to exchange 1 face-up card on the Altar with 1 card from your Choir.",
       "openGame": true,
       "face": "art/faces/host/04-providence.jpg",
       "plate": "art/plates/host/04-providence.jpg",
@@ -70,7 +70,7 @@
     {
       "id": "host-tree-of-life",
       "name": "Tree of Life",
-      "text": "On your turn: Take any Host card from the discard pile into your hand, then discard a card from your hand.",
+      "text": "On your turn: Take the top card of the discard pile into your hand, then discard a card from your hand.",
       "openGame": true,
       "face": "art/faces/host/06-tree-of-life.jpg",
       "plate": "art/plates/host/06-tree-of-life.jpg",
@@ -148,7 +148,7 @@
     {
       "id": "host-uriel",
       "name": "Uriel",
-      "text": "At the Reaping: The Light Offering values in your Choir count double when calculating your Alignment.",
+      "text": "At the Reaping: You may pay 1 Glory to make the Light Offering values in your Choir count double when calculating your Alignment.",
       "openGame": true,
       "face": "art/faces/host/12-uriel.jpg",
       "plate": "art/plates/host/12-uriel.jpg",
@@ -187,7 +187,7 @@
     {
       "id": "host-tribute",
       "name": "Tribute",
-      "text": "Other players must pay you 1 Glory before they may Target any card in your Choir with an ability.",
+      "text": "Other players must pay 1 Glory to the Pot before they may Target any card in your Choir with an ability.",
       "openGame": true,
       "face": "art/faces/host/15-tribute.jpg",
       "plate": "art/plates/host/15-tribute.jpg",
@@ -239,14 +239,14 @@
     {
       "id": "host-morning-star",
       "name": "Morning Star",
-      "text": "On your turn: Choose 1 Host card in your Choir. Until your next turn, treat it as the opposite alignment. Neutral cards are unaffected.",
+      "text": "At the Reaping: You may pay 1 Glory to treat 1 Host card in your Choir as the opposite alignment for this Reaping. Neutral cards are unaffected.",
       "openGame": true,
       "face": "art/faces/host/19-morning-star.jpg",
       "plate": "art/plates/host/19-morning-star.jpg",
       "number": 19,
       "alignment": "light",
       "value": 1,
-      "cadence": "On your turn",
+      "cadence": "At the Reaping",
       "oncePerGame": false
     },
     {
@@ -291,7 +291,7 @@
     {
       "id": "host-vessel",
       "name": "Vessel",
-      "text": "On your turn: You may add the top card of the Host deck to the Altar facedown, without looking at it.",
+      "text": "On your turn: You may place a card from your hand on the Altar facedown, then gain 1 Glory or draw 1 card, as with an Offer. This is not an Offer.",
       "openGame": true,
       "face": "art/faces/host/23-vessel.jpg",
       "plate": "art/plates/host/23-vessel.jpg",
@@ -304,7 +304,7 @@
     {
       "id": "host-eternity",
       "name": "Eternity",
-      "text": "In the Evening: You may keep 1 card from the Altar as the next Day's Seed instead of revealing a new one.",
+      "text": "In the Evening: You may take 1 card from the Altar into your hand.",
       "openGame": true,
       "face": "art/faces/host/24-eternity.jpg",
       "plate": "art/plates/host/24-eternity.jpg",
@@ -330,7 +330,7 @@
     {
       "id": "host-raguel",
       "name": "Raguel",
-      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At each Reaping, if you lose Glory, your Bound player loses the same amount.",
+      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At each Reaping, if you lose Glory, your Bound player loses 1 Glory, and you lose 1 less.",
       "openGame": true,
       "face": "art/faces/host/26-raguel.jpg",
       "plate": "art/plates/host/26-raguel.jpg",
@@ -395,7 +395,7 @@
     {
       "id": "host-nephilim",
       "name": "Nephilim",
-      "text": "This card counts as both Light +1 and Dark +1 at once. It satisfies any effect requiring a Light card and any requiring a Dark card. For your Alignment and the Tide, its two values cancel to 0.",
+      "text": "This card counts as both Light +1 and Dark +1 at once. It satisfies any effect requiring a Light card and any requiring a Dark card. For your Alignment and the Tide, its two values are Neutral.",
       "openGame": true,
       "face": "art/faces/host/31-nephilim.jpg",
       "plate": "art/plates/host/31-nephilim.jpg",
@@ -460,7 +460,7 @@
     {
       "id": "host-outcast",
       "name": "Outcast",
-      "text": "When you Exalt, if you have the lowest Glory at the table or are tied for lowest, you pay no Glory.",
+      "text": "When you Exalt, if you have the lowest Glory at the table or are tied for lowest, you pay no Glory. At the Reaping, if you have the lowest Glory or are tied for it, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/36-outcast.jpg",
       "plate": "art/plates/host/36-outcast.jpg",
@@ -486,7 +486,7 @@
     {
       "id": "host-council",
       "name": "Council",
-      "text": "On your turn: Call a table vote. If every player votes yes, each player may simultaneously replace 1 card in their Choir with 1 card from their hand. Replaced cards are discarded.",
+      "text": "On your turn: You may replace another card in your Choir with a card from your hand. Then each other player may do the same by paying you 1 Glory. Replaced cards are discarded.",
       "openGame": true,
       "face": "art/faces/host/38-council.jpg",
       "plate": "art/plates/host/38-council.jpg",
@@ -499,7 +499,7 @@
     {
       "id": "host-mirage",
       "name": "Mirage",
-      "text": "Your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening.",
+      "text": "Your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening. At the Reaping, if a card you Offered facedown is still on the Altar and matches the Tide, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/39-mirage.jpg",
       "plate": "art/plates/host/39-mirage.jpg",
@@ -525,7 +525,7 @@
     {
       "id": "host-prophecy",
       "name": "Prophecy",
-      "text": "During the Unveiling: Publicly declare a Target Alignment, Light or Dark. At the Reaping, if the Tide matches, gain 1 Glory; if it is the opposite, lose 1 Glory; if it is Neutral, nothing happens.",
+      "text": "During the Unveiling: Publicly declare a Target Alignment, Light or Dark. At the Reaping, if the Tide matches, gain 1 Glory; otherwise, including a Neutral Tide, lose 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/41-prophecy.jpg",
       "plate": "art/plates/host/41-prophecy.jpg",
@@ -538,7 +538,7 @@
     {
       "id": "host-watchers",
       "name": "Watchers",
-      "text": "On your turn: Look at the top 3 cards of the Host deck, then return them in any order.",
+      "text": "On your turn: Look at the top 3 cards of the Host deck. Put 1 into your hand and discard a card from your hand, then return the rest in any order.",
       "openGame": true,
       "face": "art/faces/host/42-watchers.jpg",
       "plate": "art/plates/host/42-watchers.jpg",
@@ -551,7 +551,7 @@
     {
       "id": "host-apple",
       "name": "Apple",
-      "text": "At the Reaping: If your Choir's Alignment is the opposite color from your Alignment at the previous Reaping, double the Glory you gain this Reaping. Losses are not doubled.",
+      "text": "At the Reaping: If your Choir's Alignment is the opposite color from the previous Day's Tide, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/43-apple.jpg",
       "plate": "art/plates/host/43-apple.jpg",
@@ -564,7 +564,7 @@
     {
       "id": "host-forger",
       "name": "Forger",
-      "text": "When you Gather, you may take the top card of the discard pile instead of a card from the Altar or the deck.",
+      "text": "When you Gather, you may take any Host card from the discard pile instead of a card from the Altar or the deck.",
       "openGame": true,
       "face": "art/faces/host/44-forger.jpg",
       "plate": "art/plates/host/44-forger.jpg",
@@ -681,7 +681,7 @@
     {
       "id": "host-beelzebub",
       "name": "Beelzebub",
-      "text": "At the Reaping: The Dark Offering values in your Choir count double when calculating your Alignment.",
+      "text": "At the Reaping: You may pay 1 Glory to make the Dark Offering values in your Choir count double when calculating your Alignment.",
       "openGame": true,
       "face": "art/faces/host/53-beelzebub.jpg",
       "plate": "art/plates/host/53-beelzebub.jpg",
@@ -694,7 +694,7 @@
     {
       "id": "host-leviathan",
       "name": "Leviathan",
-      "text": "At the Reaping: Gain 1 Glory if any other player loses Glory this Reaping.",
+      "text": "At the Reaping: If your Alignment did not gain you Glory, gain 1 Glory if any other player loses Glory this Reaping.",
       "openGame": true,
       "face": "art/faces/host/54-leviathan.jpg",
       "plate": "art/plates/host/54-leviathan.jpg",
@@ -733,7 +733,7 @@
     {
       "id": "host-mammon",
       "name": "Mammon",
-      "text": "Once per Day: When you Offer, take 1 Glory from a player of your choice instead of the pot; or when you Exalt, pay the Glory cost to the player, other than you, with the least Glory.",
+      "text": "Once per Day: When you Offer a Dark card, take 1 Glory from a player of your choice instead of the Pot; or when you Exalt, pay the Glory cost to the player, other than you, with the least Glory.",
       "openGame": true,
       "face": "art/faces/host/57-mammon.jpg",
       "plate": "art/plates/host/57-mammon.jpg",
@@ -746,7 +746,7 @@
     {
       "id": "host-envy",
       "name": "Envy",
-      "text": "On your turn: The player with the most Glory loses 1 Glory. Each tied leader loses 1. You are not immune.",
+      "text": "On your turn: If the player with the most Glory has at least 3 more Glory than you, they lose 1 Glory. Each tied leader loses 1.",
       "openGame": true,
       "face": "art/faces/host/58-envy.jpg",
       "plate": "art/plates/host/58-envy.jpg",
@@ -811,7 +811,7 @@
     {
       "id": "host-scapegoat",
       "name": "Scapegoat",
-      "text": "Once per game: Choose a player. The next time you would lose Glory at a Reaping, they lose it instead. You lose nothing.",
+      "text": "Once per game: Choose a player. If you would lose Glory at this Day's Reaping, they lose it instead. You lose nothing.",
       "openGame": true,
       "face": "art/faces/host/63-scapegoat.jpg",
       "plate": "art/plates/host/63-scapegoat.jpg",
@@ -915,7 +915,7 @@
     {
       "id": "host-urim",
       "name": "Urim",
-      "text": "On your turn: Secretly look at up to 2 facedown cards on the Altar.",
+      "text": "On your turn: Secretly look at up to 3 facedown cards on the Altar.",
       "openGame": true,
       "face": null,
       "plate": null,
@@ -961,7 +961,7 @@
     {
       "id": "celestial-the-eclipse",
       "name": "The Eclipse",
-      "text": "At the Reaping, once per Day, treat one Host card in your Choir as Neutral.",
+      "text": "In the Evening, before the Altar is revealed, once per Day, treat one Host card in your Choir as Neutral for this Day's Reaping.",
       "openGame": true,
       "face": "art/faces/celestial/III-the-eclipse.jpg",
       "plate": "art/plates/celestial/III-the-eclipse.jpg",
@@ -1015,7 +1015,7 @@
     {
       "id": "celestial-the-arbiter",
       "name": "The Arbiter",
-      "text": "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to the player, other than you, with the least Glory.",
+      "text": "At the Reaping, if you gain 2 or more Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to the player, other than you, with the least Glory.",
       "openGame": true,
       "face": "art/faces/celestial/IX-the-arbiter.jpg",
       "plate": "art/plates/celestial/IX-the-arbiter.jpg",

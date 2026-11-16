@@ -1,5 +1,50 @@
 # Changelog
 
+## V38 cards and Rulebook v8 (November 16, 2026)
+
+Working toward every Host card and Celestial between 0.75 and 1.25 (measured over 60,000 bot games). Two cards are outside by Robert's choice: Urim 0.74 and Nephilim 0.74. See `game/reports/v38-balance-2026-11-16.md`.
+
+- **Michael:** "On your turn: Flip a Host card in a player's Choir Facedown. It turns face up after the Reaping, or sooner if its owner pays 1 Glory." 1.47 to 1.11.
+- **Uriel and Beelzebub:** doubling now costs 1 Glory at each Reaping. 1.31 to 1.05; 1.22 to 0.98.
+- **Mammon:** takes Glory only when you Offer a Dark card. 1.32 to 1.05.
+- **Scapegoat:** covers only the Reaping of the Day you use it. 1.27 to 1.08.
+- **The Eclipse:** chosen in the Evening before the Altar is revealed. 1.25 to 1.14.
+- **The Arbiter:** takes from a player only on a gain of 2 or more. 1.24 to 1.21.
+- **Prophecy:** a Neutral Tide is a miss. 1.20 to 1.08.
+- **Providence:** costs 1 Glory. 1.20 to 1.15.
+- **Vessel:** place a card from your hand on the Altar facedown, then gain 1 Glory or draw 1 card, as with an Offer; not an Offer. 0.65 to 1.16.
+- **Morning Star:** at the Reaping, pay 1 Glory to invert one Choir card for that Reaping. 0.72 to 1.15.
+- **Eternity:** in the Evening, take 1 card from the Altar into your hand. 0.78 to 0.90.
+- **Outcast:** also gain 1 Glory at the Reaping while you have the least. 0.80 to 0.92.
+- **Mirage:** at the Reaping, 1 Glory if a card you Offered facedown is still on the Altar and matches the Tide (replaces the V37 draw). 0.76 to 1.17.
+- **Raguel:** "...your Bound player loses 1 Glory, and you lose 1 less." 0.76 to 0.89.
+- **Urim:** look at up to 3 facedown cards (was 2). 0.71 to 0.74.
+- **Nephilim:** wording only, "its two values are Neutral". 0.74.
+- **Veil:** unchanged. 0.76.
+- **Rulebook v8:** new rulings for all of the above.
+- **Tooling:** `apply_changes.py` now handles Celestials, cadence changes and wording-only changes; `tools/sim/ab3.ts` measures every card on fixed seeds.
+
+**Reprints:** 41 cards with rules changes and 22 with wording changes (see `cards/The_Divide_Cards_V38.xlsx`).
+
+## V37 cards and Rulebook v7 (November 16, 2026)
+
+The five strongest and five weakest V36 cards, rebalanced toward a win ratio of 1.00. Each change was tested on 20,000 simulated games. See `game/reports/v37-balance-2026-11-16.md`.
+
+- **Leviathan:** "At the Reaping: If your Alignment did not gain you Glory, gain 1 Glory if any other player loses Glory this Reaping." 1.44 to 1.11.
+- **Tree of Life:** "On your turn: Take the top card of the discard pile into your hand, then discard a card from your hand." (was any card). 1.36 to 1.09.
+- **Envy:** "On your turn: If the player with the most Glory has at least 3 more Glory than you, they lose 1 Glory. Each tied leader loses 1." 1.30 to 1.08.
+- **Tribute:** the 1 Glory is paid to the Pot (was to you). 1.29 to 1.05.
+- **Watchers:** "On your turn: Look at the top 3 cards of the Host deck. Put 1 into your hand and discard a card from your hand, then return the rest in any order." 0.66 to 0.94.
+- **Forger:** may take any Host card from the discard pile when you Gather (was the top card). 0.67 to 0.87.
+- **Apple:** "At the Reaping: If your Choir's Alignment is the opposite color from the previous Day's Tide, gain 1 Glory." (was a doubled gain). 0.67 to 0.99.
+- **Council:** "On your turn: You may replace another card in your Choir with a card from your hand. Then each other player may do the same by paying you 1 Glory. Replaced cards are discarded." (was a unanimous vote). 0.67 to 0.88.
+- **Mirage:** adds "When the Altar is revealed, if any of your facedown Offerings is still on it, draw 1 card." 0.69 to 0.73.
+- **Rulebook v7:** new rulings for Leviathan, Apple, Mirage, Council, Tree of Life and Forger, Envy, and Tribute.
+- **Michael** is unchanged and still open (1.47; options measured in the report).
+- **Card data tooling:** `cards/tools/apply_changes.py` applies a change set such as `cards/changes/V37.json` to `cards.json`, the engine's copy, the spreadsheet, and `cards.csv` in one step.
+
+**Reprints:** all nine cards join the rules-changed reprint list, which now has 34 cards (see the Reprint List tab in `cards/The_Divide_Cards_V37.xlsx`).
+
 ## V36 cards and Rulebook v6 (November 16, 2026)
 
 - **The race to 10.** The Open Game ends after the first Reaping at which any player has 10 or more Glory, with no Day limit. The endgame bonus is still scored, and the most Glory wins. Hidden Roles still lasts 6 Days.
