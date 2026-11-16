@@ -60,7 +60,10 @@
 
 /* Celestials: a jewel-toned field for each. */
 .card.celestial { --frame: var(--c-frame, #e0b74b); --field: var(--c-field, #2d4e6d); --field-edge: color-mix(in srgb, var(--c-field, #2d4e6d) 72%, black); --ink: var(--c-ink, #f5f0e2); --title: var(--c-title, #e6c55e); --quiet: color-mix(in srgb, var(--ink) 50%, transparent); --line: color-mix(in srgb, var(--title) 45%, transparent); }
-.card.celestial .c-art { height: 22.4em; margin: 0 1em; border-color: transparent; }
+.card.celestial .c-art { height: 20.4em; margin: 0 1em; border-color: transparent; }
+/* Celestials have no footer: the text sits centred between the name and the inner frame line,
+   with the same space above and below, and never touches the frame. */
+.card.celestial .c-text { padding: 0.45em 2em 1.2em; }
 .card.celestial .c-name { margin-top: 0.9em; }
 .card.celestial.compact .c-art { height: 22.6em; margin: 0 1em; }
 .card.celestial.compact .c-name.long span { font-size: 1.5em; }

@@ -17,7 +17,7 @@ export function Site(p: { children: ComponentChildren; wide?: boolean }) {
         </nav>
       </header>
       <main class="site-main" style={p.wide ? { maxWidth: 1500 } : undefined}>{p.children}</main>
-      <footer class="site-foot">The Divide, a card game of divine ambition by Robert Treviño. Playtest build.</footer>
+      <footer class="site-foot">The Divide, a card game for 3 to 6 players by Robert Treviño</footer>
     </div>
   );
 }
