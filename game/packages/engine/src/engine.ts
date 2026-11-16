@@ -586,7 +586,9 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
   const tide = setTide(s);
   s.tides.push(tide);
   stat(s, { type: 'tide', data: { ...tide } });
-  log(s, 'tide', tide.dir === 'neutral' ? `The Tide is Neutral (Light ${tide.light}, Dark ${tide.dark}).` : `The Tide runs ${tide.dir === 'light' ? 'Light' : 'Dark'} by ${tide.margin} (Light ${tide.light}, Dark ${tide.dark}).`, 'public', { tide });
+  log(s, 'tide', tide.dir === 'neutral' ? `The Tide is Neutral (Light ${tide.light}, Dark ${tide.dark}).` : `The Tide runs ${tide.dir === 'light' ? 'Light' : 'Dark'} by ${tide.margin} (Light ${tide.light}, Dark ${tide.dark}).`, 'public',
+    // The Altar as it was counted (every card is face up by now), so the site can show the Evening after the fact.
+    { tide, event: s.currentEvent, altar: s.altar.map((a) => ({ id: a.id, offeredBy: a.offeredBy, kind: a.kind })) });
 
   // 3. The Reaping.
   yield* reaping(s, tide, order);

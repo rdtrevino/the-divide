@@ -14,7 +14,7 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 | `art/faces/` | Every card face as last printed (Host, Celestial, Event, Fate and Turn), about 370 DPI. |
 | `art/plates/` | The illustration alone for every card, for the web build. |
 | `art/overview/` | Contact sheets for a quick look at all the art. |
-| `game/` | The online game: rules engine, computer players, balance simulator, and (soon) the live server and website. See `game/README.md`. |
+| `game/` | The online game: rules engine, computer players, balance simulator, the live server and the website. See `game/README.md` and `game/SITE.md`. |
 | `print/` | The scripts that render the Claude Design deck sheets into print PDFs, and how to use them. |
 | `sources/` | Archived originals: earlier card spreadsheets, rulebook drafts, print sheets, the V28 print kit, and the Claude Design HTML bundles. Reference only. |
 | `CHANGELOG.md` | What changed in each version, and which cards need reprinting. |
@@ -34,6 +34,7 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 
 ## Online game
 
+- **Play:** https://thedivide.pages.dev (3 or 4 players, bots fill empty seats). Every finished game is saved to the stats database and shown on the site's Stats page. Guide: `game/SITE.md`.
 - **Engine:** every Open Game rule and card is implemented and tested in `game/packages/engine` (`npm test` runs 79 tests, including about 1,500 full bot games).
 - **Stats database:** Cloudflare D1 database `divide-stats`. The schema and balance views are in `game/apps/server/migrations/0001_init.sql`.
 - **Balance testing:** `game/tools/sim` plays thousands of bot games; `ab.ts`, `ab2.ts` and `ab3.ts` compare rule variants and measure every card on identical seeds.
@@ -41,5 +42,5 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 ## Next
 
 1. Update the Claude Design session with the V38 text, create art for Ithuriel, Urim, and Asmadai, and reprint the cards whose rules changed.
-2. Build the live server and website (start from `game/BUILD_NOTES.md`), and connect this repository to Cloudflare for automatic deploys.
-3. Playtest against the watch list in `design/design-decisions.md`.
+2. Add the two Cloudflare secrets to this repository so every change publishes the site automatically (`game/SITE.md`, Publishing changes).
+3. Playtest online against the watch list in `design/design-decisions.md`, and read the results on the Stats page.

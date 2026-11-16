@@ -1,0 +1,24 @@
+{
+  "name": "@divide/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "art": "node scripts/art.mjs"
+  },
+  "dependencies": {
+    "@divide/engine": "0.1.0",
+    "@divide/protocol": "0.1.0",
+    "marked": "^14.1.0",
+    "preact": "^10.24.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.9.0",
+    "sharp": "^0.33.5",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0"
+  }
+}

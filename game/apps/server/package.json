@@ -1,0 +1,25 @@
+{
+  "name": "@divide/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler d1 migrations apply divide-stats --local && wrangler dev",
+    "test": "node scripts/build-info.mjs && vitest run",
+    "typecheck": "node scripts/build-info.mjs && tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "deploy:kv": "node scripts/deploy-kv.mjs",
+    "migrate": "wrangler d1 migrations apply divide-stats --remote",
+    "deploy:pages": "wrangler pages deploy pages --project-name thedivide --branch main"
+  },
+  "dependencies": {
+    "@divide/engine": "0.1.0",
+    "@divide/protocol": "0.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251011.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "wrangler": "^4.0.0"
+  }
+}

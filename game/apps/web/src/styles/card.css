@@ -1,0 +1,108 @@
+/* Cards, drawn to match the printed deck. Every measure is in em and the font size follows the card
+   width (--w), so one design scales from a thumbnail to the full-size preview. */
+.card {
+  --w: 150px;
+  --frame: #a97d1e;
+  --field: #f7f3e8;
+  --field-edge: #d1cdc2;
+  --ink: #1f1810;
+  --title: #a87c1f;
+  --quiet: rgba(60, 50, 36, 0.55);
+  --line: rgba(168, 124, 31, 0.5);
+  position: relative; width: var(--w); height: calc(var(--w) * 1.4); font-size: calc(var(--w) / 25); flex: none;
+  border-radius: 1em; background: var(--frame); padding: 0.28em; box-shadow: 0 0.3em 1.2em rgba(0, 0, 0, 0.65); user-select: none;
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease), filter 0.2s;
+}
+.card-in {
+  position: relative; width: 100%; height: 100%; border-radius: 0.78em; overflow: hidden; color: var(--ink);
+  background: radial-gradient(ellipse at 50% 55%, var(--field) 55%, var(--field-edge) 130%); display: flex; flex-direction: column;
+}
+/* The fine inner frame with corner ticks. */
+.card-in::before { content: ''; position: absolute; inset: 0.75em; border: 0.06em solid var(--line); border-radius: 0.35em; pointer-events: none; opacity: 0.75; }
+
+.card.neutral { --field: #7a766c; --field-edge: #5f5a54; --ink: #f4eedd; --title: #d9b45c; --quiet: rgba(246, 234, 210, 0.5); --line: rgba(217, 180, 92, 0.45); }
+.card.dark { --field: #1b1714; --field-edge: #100e0b; --ink: #f1e7d0; --title: #c9922a; --quiet: rgba(246, 234, 210, 0.42); --line: rgba(201, 146, 42, 0.45); }
+
+.c-head { display: flex; justify-content: space-between; align-items: baseline; padding: 1.15em 1.75em 0; height: 3.95em; flex: none; }
+.c-num { font-family: var(--font-display); font-weight: 700; font-size: 1.35em; color: var(--title); }
+.c-kind { font-family: var(--font-title); font-size: 0.7em; letter-spacing: 0.32em; color: var(--quiet); text-transform: uppercase; }
+.c-art { margin: 0 1.3em; height: 16.75em; flex: none; border: 0.06em solid var(--line); background: var(--field); overflow: hidden; position: relative; }
+.c-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.c-art.blank { display: grid; place-items: center; }
+.c-art.blank svg { width: 46%; opacity: 0.55; }
+/* A full-width rule under the illustration, as on the printed cards. */
+.c-art + .c-name { border-top: 0.05em solid var(--line); padding-top: 1.05em; margin-top: 0.28em; }
+.c-name { display: flex; align-items: center; gap: 0.6em; padding: 0 1.4em; margin-top: 1.1em; flex: none; }
+.c-name::before, .c-name::after { content: ''; flex: 1; height: 0.05em; background: var(--line); }
+.c-name span { font-family: var(--font-display); font-weight: 700; font-size: 0.98em; letter-spacing: 0.13em; color: var(--title); text-transform: uppercase; white-space: nowrap; }
+.c-text { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0.2em 2.2em 0; font-family: var(--font-body); font-size: 0.98em; line-height: 1.33; }
+.c-text.long { font-size: 0.9em; line-height: 1.3; }
+.c-text.xlong { font-size: 0.8em; line-height: 1.26; }
+.c-foot { flex: none; height: 3.3em; display: flex; align-items: center; justify-content: center; gap: 0.5em; padding-bottom: 1em; font-family: var(--font-title); }
+.c-foot b { font-family: var(--font-display); font-weight: 900; font-size: 1.1em; }
+.c-foot span { font-size: 0.74em; letter-spacing: 0.32em; color: var(--title); font-weight: 600; text-transform: uppercase; }
+.c-foot::before, .c-foot::after { content: ''; width: 3em; height: 0.05em; background: var(--line); }
+
+/* Small cards drop the rules text and enlarge what identifies the card. Hover or long-press shows the full card. */
+.card.compact .c-text { display: none; }
+.card.compact .c-head { height: 4.4em; padding-top: 1.1em; }
+.card.compact .c-num { font-size: 2.3em; }
+.card.compact .c-kind { font-size: 1.25em; letter-spacing: 0.22em; }
+.card.compact .c-art { height: 17.4em; margin: 0 1em; }
+.card.compact .c-art + .c-name { padding-top: 0; margin-top: 0; }
+.card.compact .c-name { flex: 1; margin-top: 0; padding: 0 1.2em; border-top: 0; }
+.card.compact .c-name span { font-size: 2.05em; letter-spacing: 0.06em; }
+.card.compact .c-name.long span { font-size: 1.6em; letter-spacing: 0.02em; }
+.card.compact .c-foot { height: 5.2em; padding-bottom: 1.5em; }
+.card.compact .c-foot b { font-size: 2.6em; }
+.card.compact .c-foot span { font-size: 1.5em; letter-spacing: 0.2em; }
+.card.compact .c-foot::before, .card.compact .c-foot::after { width: 1.6em; }
+
+/* Celestials: a jewel-toned field for each. */
+.card.celestial { --frame: var(--c-frame, #e0b74b); --field: var(--c-field, #2d4e6d); --field-edge: color-mix(in srgb, var(--c-field, #2d4e6d) 72%, black); --ink: var(--c-ink, #f5f0e2); --title: var(--c-title, #e6c55e); --quiet: color-mix(in srgb, var(--ink) 50%, transparent); --line: color-mix(in srgb, var(--title) 45%, transparent); }
+.card.celestial .c-art { height: 20.4em; margin: 0 1em; border-color: transparent; }
+/* Celestials have no footer: the text sits centred between the name and the inner frame line,
+   with the same space above and below, and never touches the frame. */
+.card.celestial .c-text { padding: 0.45em 2em 1.2em; }
+.card.celestial .c-name { margin-top: 0.9em; }
+.card.celestial.compact .c-art { height: 22.6em; margin: 0 1em; }
+.card.celestial.compact .c-name.long span { font-size: 1.5em; }
+.card.celestial.compact .c-name { padding-bottom: 0.9em; }
+
+/* Events are landscape: the scene above a black banner. */
+.card.event { width: var(--w); height: calc(var(--w) * 0.714); font-size: calc(var(--w) / 35); --frame: #2a2118; --field: #171310; --field-edge: #0e0c09; --ink: #f1e7d0; --title: #c9922a; }
+.card.event .card-in::before { display: none; }
+.card.event .c-art { margin: 0; height: 16.2em; border: 0; border-bottom: 0.08em solid var(--gold-deep); }
+.card.event .c-banner { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 2.4em; text-align: center; }
+.card.event .c-eyebrow { display: flex; align-items: center; gap: 1em; font-family: var(--font-title); font-size: 0.72em; letter-spacing: 0.4em; color: var(--gold-soft); }
+.card.event .c-eyebrow::before, .card.event .c-eyebrow::after { content: ''; width: 3.4em; height: 0.07em; background: var(--hair); }
+.card.event .c-title { font-family: var(--font-display); font-weight: 700; font-size: 1.75em; letter-spacing: 0.12em; color: var(--gold); text-transform: uppercase; line-height: 1.25; }
+.card.event .c-etext { font-style: italic; font-size: 0.98em; line-height: 1.25; color: var(--cream); }
+.card.event .c-etext.long { font-size: 0.86em; }
+.card.event.compact .c-etext { display: none; }
+.card.event.compact .c-title { font-size: 2.3em; }
+.card.event.compact .c-eyebrow { font-size: 1.1em; }
+
+/* Card back. */
+.card.back { --frame: #a87c1f; }
+.card.back .card-in { background: radial-gradient(circle at 50% 50%, #2a2118, #14110d 75%); align-items: center; justify-content: center; }
+.card.back .card-in::before { inset: 0.9em; border-color: rgba(201, 146, 42, 0.6); }
+.card.back svg { width: 62%; }
+
+/* States. */
+.card.spent .card-in { filter: saturate(0.35) brightness(0.72); }
+.card.hidden-own .card-in { filter: brightness(0.62) saturate(0.7); }
+.card-tag { position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%); z-index: 2; white-space: nowrap; font-family: var(--font-title); font-weight: 700; font-size: max(8px, 1.5em); letter-spacing: 0.16em; text-transform: uppercase; color: #1a1208; background: var(--gold-bright); padding: 0.22em 0.7em; border-radius: 0.3em; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); }
+.card-tag.cool { background: #cfd4f5; }
+.card-owner { position: absolute; top: -5px; right: -5px; z-index: 2; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--void); background: var(--seat, var(--gold)); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7); }
+
+.card.selectable { cursor: pointer; box-shadow: 0 0 0 2px rgba(232, 200, 74, 0.55), 0 0.3em 1.2em rgba(0, 0, 0, 0.65); animation: beckon 1.8s ease-in-out infinite; }
+.card.selectable:hover { transform: translateY(-6px) scale(1.03); }
+.card.selected { transform: translateY(-10px) scale(1.04); box-shadow: 0 0 0 3px var(--gold-bright), 0 0 26px rgba(232, 200, 74, 0.7), 0 0.6em 1.4em rgba(0, 0, 0, 0.7); animation: none; }
+@keyframes beckon { 0%, 100% { box-shadow: 0 0 0 2px rgba(232, 200, 74, 0.45), 0 0.3em 1.2em rgba(0, 0, 0, 0.65); } 50% { box-shadow: 0 0 0 2px rgba(232, 200, 74, 0.95), 0 0 18px rgba(232, 200, 74, 0.45), 0 0.3em 1.2em rgba(0, 0, 0, 0.65); } }
+
+/* The full-size preview shown on hover or long-press. */
+.zoom { position: fixed; z-index: 200; pointer-events: none; animation: zoom-in 0.14s var(--ease); filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.8)); }
+.zoom .card { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6); }
+.zoom-note { margin-top: 8px; padding: 7px 11px; border-radius: 6px; background: rgba(13, 11, 8, 0.94); border: 1px solid var(--hair); font-size: 14px; line-height: 1.3; color: var(--cream); max-width: 300px; }
+@keyframes zoom-in { from { opacity: 0; transform: scale(0.94); } }

@@ -1,0 +1,34 @@
+// The Divide: one Cloudflare Worker that serves the website, the live game rooms and the stats API.
+// Everything here fits Cloudflare's free plan.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "the-divide",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  // Writes src/build.gen.ts (engine fingerprint and card version) before every dev run and deploy.
+  "build": { "command": "node scripts/build-info.mjs" },
+  // The built website (apps/web/dist). Anything under /api goes to the Worker instead.
+  "assets": {
+    "directory": "../web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // One Durable Object per game room.
+  "durable_objects": { "bindings": [{ "name": "ROOM", "class_name": "Room" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  // The stats database.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "divide-stats",
+      "database_id": "2cd15db7-cb25-4b41-8800-8215ff8e7943",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // The public address. Visits to the Worker's own workers.dev address are redirected here.
+  "vars": { "SITE_ORIGIN": "https://thedivide.pages.dev" },
+  "observability": { "enabled": true }
+}

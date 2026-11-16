@@ -1,5 +1,17 @@
 # Changelog
 
+## Online game site (November 16, 2026)
+
+The Divide is playable online at https://thedivide.pages.dev. No card or rule changes.
+
+- **Tables:** start a table, send the link, fill empty seats with bots, play the Open Game in real time. 3 or 4 players; optional 2 Seeds rule.
+- **Turn timer:** a bot makes a choice when a player's time runs out, and covers the seat after two misses until the player returns. Reconnecting (or switching device under the same name) keeps your seat.
+- **Fair play:** each browser receives only what that seat may see. Every move is checked by the rules engine; every table can rebuild itself from its seed and moves.
+- **Stats:** every finished game is saved to the D1 database `divide-stats` (new tables `day_scores` and `choir_days`, migration `0002_site.sql`). The Stats page shows win ratios for every Celestial and Host card beside the bot numbers, Glory per Day while a card is held, how each card is played, player records, turn order, Tides and Events. Any stored game can be replayed in the browser.
+- **Look:** cards drawn from the current card data in the printed deck's style (fonts, frames and colors from the Claude Design bundles, illustrations from `art/plates/`). Cards, rules (rulebook v8) and stats pages.
+- **Publishing:** free Cloudflare hosting; `.github/workflows/deploy-site.yml` publishes every change to main once two repository secrets are added (`game/SITE.md`).
+- **Engine:** the Tide log entry now records the counted Altar, so the site can show each Evening.
+
 ## V38 cards and Rulebook v8 (November 16, 2026)
 
 Working toward every Host card and Celestial between 0.75 and 1.25 (measured over 60,000 bot games). Two cards are outside by Robert's choice: Urim 0.74 and Nephilim 0.74. See `game/reports/v38-balance-2026-11-16.md`.
