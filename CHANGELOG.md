@@ -2,7 +2,7 @@
 
 ## Online game site (November 16, 2026)
 
-The Divide is playable online at https://the-divide.divide-game.workers.dev. No card or rule changes.
+The Divide is playable online at https://thedivide.pages.dev. No card or rule changes.
 
 - **Tables:** start a table, send the link, fill empty seats with bots, play the Open Game in real time. 3 or 4 players; optional 2 Seeds rule.
 - **Turn timer:** a bot makes a choice when a player's time runs out, and covers the seat after two misses until the player returns. Reconnecting (or switching device under the same name) keeps your seat.

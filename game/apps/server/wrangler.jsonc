@@ -28,5 +28,7 @@
       "migrations_dir": "migrations"
     }
   ],
+  // The public address. Visits to the Worker's own workers.dev address are redirected here.
+  "vars": { "SITE_ORIGIN": "https://thedivide.pages.dev" },
   "observability": { "enabled": true }
 }

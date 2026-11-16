@@ -14,6 +14,7 @@ const botCards = bots.cards as Record<string, number>;
 const botCelestials = bots.celestials as Record<string, number>;
 
 const ratioOf = (r: Ratio | null | undefined) => (r && r.expected > 0 ? r.wins / r.expected : null);
+const shortDate = (s: string) => new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 const fmt = (n: number | null | undefined, d = 2) => (n === null || n === undefined || Number.isNaN(n) ? '–' : n.toFixed(d));
 
 /** A win ratio on a 0 to 2 scale: the shaded band is the 0.75 to 1.25 target, the dot is real games, the tick is the bots. */
@@ -98,12 +99,13 @@ export function Stats() {
           <h1>Stats</h1>
         </div>
         <div class="filters">
-          <label>Card version
-            <select class="field" value={data?.filters.version ?? version} onChange={(e) => setVersion((e.target as HTMLSelectElement).value)}>
-              {!data?.versions.length && <option value="">{data?.filters.version ?? 'Current'}</option>}
-              {data?.versions.map((v) => <option value={v.version}>{v.version} ({v.games} game{v.games === 1 ? '' : 's'})</option>)}
-            </select>
-          </label>
+          {(data?.versions.length ?? 0) > 1 && (
+            <label>Rules
+              <select class="field" value={data?.filters.version ?? version} onChange={(e) => setVersion((e.target as HTMLSelectElement).value)}>
+                {data!.versions.map((v, i) => <option value={v.version}>{i === 0 ? 'Current rules' : `Earlier rules, until ${shortDate(v.lastPlayed)}`} ({v.games} game{v.games === 1 ? '' : 's'})</option>)}
+              </select>
+            </label>
+          )}
           <label>Players
             <select class="field" value={players} onChange={(e) => setPlayers((e.target as HTMLSelectElement).value)}>
               <option value="">3 and 4</option><option value="3">3 players</option><option value="4">4 players</option>
@@ -122,7 +124,7 @@ export function Stats() {
         <>
           <div class="tiles">
             <div class="tile panel"><small>Games</small><b class="num">{s.games}</b><span>{s.humanSeats} of {s.seats} seats played by people</span></div>
-            <div class="tile panel"><small>Average length</small><b class="num">{fmt(s.avgDays, 1)}</b><span>Days (bots average 6.2)</span></div>
+            <div class="tile panel"><small>Average length</small><b class="num">{fmt(s.avgDays, 1)}</b><span>Days per game</span></div>
             <div class="tile panel"><small>Winning Glory</small><b class="num">{fmt(s.avgWinningGlory, 1)}</b><span>average for the winner; {fmt(s.avgGlory, 1)} for everyone</span></div>
             <div class="tile panel"><small>Glory per Day</small><b class="num">{fmt(s.baselineGloryPerDay, 2)}</b><span>average for one player in one Day</span></div>
             <div class="tile panel"><small>Shared wins</small><b class="num">{s.sharedWins}</b><span>games that ended in a tie</span></div>
@@ -133,7 +135,7 @@ export function Stats() {
             <p class="ratio-legend">
               <span><span class="ratio-track demo"><i class="ratio-band" style={{ left: '37.5%', width: '25%' }} /><i class="ratio-mid" style={{ left: '50%' }} /><i class="ratio-bot" style={{ left: '56%' }} /><i class="ratio-dot ok" style={{ left: '44%' }} /></span></span>
               <span><i class="key dot" /> real games on this site</span>
-              <span><i class="key tick" /> the same measure from {bots.games.toLocaleString()} all-bot games ({bots.version})</span>
+              <span><i class="key tick" /> the same measure from {bots.games.toLocaleString()} games between computer players</span>
               <span><i class="key band" /> target range</span>
             </p>
             {s.games < 40 && <p class="muted">With {s.games} game{s.games === 1 ? '' : 's'}, most of what you see here is still luck. A card needs roughly {THIN} or more final Choirs before its ratio means much; until then the bot tick and the “Glory per Day” column (which counts every Day a card was held, not only the last) are the steadier guides.</p>}
@@ -261,7 +263,7 @@ export function GameLine(p: { g: GameSummary }) {
   const { g } = p;
   return (
     <Link href={`/game/${g.id}`} class="recent-game panel">
-      <span class="recent-when">{new Date(g.endedAt.replace(' ', 'T') + 'Z').toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}<small>{g.days} Days · {g.cardVersion}</small></span>
+      <span class="recent-when">{new Date(g.endedAt.replace(' ', 'T') + 'Z').toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}<small>{g.days} Days</small></span>
       <span class="recent-players">
         {g.players.map((x) => (
           <span class={x.winShare > 0 ? 'won' : ''}>{x.winShare > 0 && '★ '}{x.name}{x.isBot ? ' (bot)' : ''} <b class="num">{x.glory}</b><small>{nameOf(x.celestial).replace('The ', '')}</small></span>

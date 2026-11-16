@@ -3,7 +3,6 @@ import { useState } from 'preact/hooks';
 import { Card } from '../components/Card';
 import { Site } from '../components/Site';
 import { CELESTIALS, EVENTS, HOSTS } from '../lib/cards';
-import raw from '@divide/engine/src/cards.data.json';
 
 type Filter = 'all' | 'light' | 'neutral' | 'dark' | 'celestial' | 'event';
 const FILTERS: [Filter, string][] = [['all', 'All'], ['light', 'Light'], ['neutral', 'Neutral'], ['dark', 'Dark'], ['celestial', 'Celestials'], ['event', 'Events']];
@@ -18,7 +17,7 @@ export function Cards() {
     <Site wide>
       <div class="page-head">
         <div>
-          <div class="eyebrow">Card data {(raw as any).version}</div>
+          <div class="eyebrow">Every card, with its current text</div>
           <h1>The Cards</h1>
         </div>
         <div class="chips">

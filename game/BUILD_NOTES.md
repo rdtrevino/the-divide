@@ -1,6 +1,6 @@
 # Build notes: the online game site
 
-> **Status (November 16, 2026): built and live** at https://the-divide.divide-game.workers.dev. The early decisions below were made (see "Decisions made in the first build" in `SITE.md`), and the suggested order of work is done. `SITE.md` is now the guide to the site; this file is kept as the original brief.
+> **Status (November 16, 2026): built and live** at https://thedivide.pages.dev. The early decisions below were made (see "Decisions made in the first build" in `SITE.md`), and the suggested order of work is done. `SITE.md` is now the guide to the site; this file is kept as the original brief.
 
 Written November 16, 2026, at card data V38 and rulebook v8, as the starting brief for building the site where Robert and his friends play The Divide online and every game feeds the balance stats.
 

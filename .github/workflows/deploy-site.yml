@@ -1,6 +1,6 @@
-# Publishes the online game to Cloudflare whenever main changes.
+# Publishes the online game (https://thedivide.pages.dev) to Cloudflare whenever main changes.
 # Needs two repository secrets (Settings > Secrets and variables > Actions):
-#   CLOUDFLARE_API_TOKEN  - a Cloudflare API token with Workers Scripts Edit, Workers KV Storage Edit and D1 Edit
+#   CLOUDFLARE_API_TOKEN  - a Cloudflare API token from the "Edit Cloudflare Workers" template, plus D1 Edit
 #   CLOUDFLARE_ACCOUNT_ID - the Cloudflare account id
 # Until both exist this workflow runs the tests and skips the publish step.
 name: Publish the game site
@@ -8,6 +8,9 @@ name: Publish the game site
 on:
   push:
     branches: [main]
+    paths: ['game/**', 'cards/cards.json', 'rules/**', '.github/workflows/deploy-site.yml']
+  # Pull requests run the tests and build only; nothing is published until the change is in main.
+  pull_request:
     paths: ['game/**', 'cards/cards.json', 'rules/**', '.github/workflows/deploy-site.yml']
   workflow_dispatch:
 
@@ -37,11 +40,11 @@ jobs:
       - name: Build the website
         run: npm run build
       - name: Apply stats database changes
-        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        if: github.event_name != 'pull_request' && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         run: npm run migrate -w @divide/server
       - name: Publish
-        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        if: github.event_name != 'pull_request' && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         run: npm run deploy:kv -w @divide/server
       - name: Note
-        if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
+        if: github.event_name != 'pull_request' && (env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == '')
         run: echo "::notice::Tests passed. Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets to publish automatically."

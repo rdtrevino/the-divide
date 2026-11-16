@@ -34,7 +34,7 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 
 ## Online game
 
-- **Play:** https://the-divide.divide-game.workers.dev (3 or 4 players, bots fill empty seats). Every finished game is saved to the stats database and shown on the site's Stats page. Guide: `game/SITE.md`.
+- **Play:** https://thedivide.pages.dev (3 or 4 players, bots fill empty seats). Every finished game is saved to the stats database and shown on the site's Stats page. Guide: `game/SITE.md`.
 - **Engine:** every Open Game rule and card is implemented and tested in `game/packages/engine` (`npm test` runs 79 tests, including about 1,500 full bot games).
 - **Stats database:** Cloudflare D1 database `divide-stats`. The schema and balance views are in `game/apps/server/migrations/0001_init.sql`.
 - **Balance testing:** `game/tools/sim` plays thousands of bot games; `ab.ts`, `ab2.ts` and `ab3.ts` compare rule variants and measure every card on identical seeds.

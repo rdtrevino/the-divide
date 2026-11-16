@@ -38,7 +38,7 @@ export function Replay(p: { id: string }) {
     <Site>
       <div class="page-head">
         <div>
-          <div class="eyebrow">{new Date(detail.endedAt.replace(' ', 'T') + 'Z').toLocaleString()} · {detail.days} Days · card data {detail.cardVersion}</div>
+          <div class="eyebrow">{new Date(detail.endedAt.replace(' ', 'T') + 'Z').toLocaleString()} · {detail.days} Days</div>
           <h1>Game record</h1>
         </div>
         <Link class="btn quiet" href="/stats">All stats</Link>

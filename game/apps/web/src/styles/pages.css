@@ -25,12 +25,13 @@ section > h2.rule { font-size: 14px; letter-spacing: 0.3em; text-transform: uppe
 
 /* Home */
 .home { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr); gap: clamp(20px, 4vw, 54px); align-items: center; padding-top: clamp(8px, 4vh, 50px); }
-.home-mark { font-size: clamp(40px, 7.2vw, 86px); line-height: 1.05; margin: 8px 0 14px; }
-.home-lede { font-size: clamp(18px, 2vw, 22px); line-height: 1.4; max-width: 30em; color: var(--cream); margin: 0; }
+.home-mark { font-size: clamp(40px, 7.2vw, 86px); line-height: 1.05; margin: 0 0 16px; }
+.home-lede { font-size: clamp(18px, 2vw, 22px); line-height: 1.45; max-width: 29em; color: var(--cream); margin: 0; font-style: italic; }
+.home-sub { margin: 14px 0 0; font-family: var(--font-title); font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-soft); }
 .home-fan { display: flex; justify-content: flex-start; align-items: flex-end; margin-top: 34px; padding-left: 20px; }
-.home-fan .card:nth-child(1) { transform: rotate(-9deg) translate(24px, 10px); }
+.home-fan .card:nth-child(1) { transform: rotate(-8deg) translate(30px, 14px); }
 .home-fan .card:nth-child(2) { z-index: 2; }
-.home-fan .card:nth-child(3) { transform: rotate(9deg) translate(-24px, 10px); }
+.home-fan .card:nth-child(3) { transform: rotate(8deg) translate(-30px, 14px); }
 .home-play { display: flex; flex-direction: column; gap: 12px; }
 .home-play p { margin: 0; }
 .home-play .rule { margin: 8px 0 2px; }
@@ -41,6 +42,7 @@ section > h2.rule { font-size: 14px; letter-spacing: 0.3em; text-transform: uppe
 .home-link b { font-family: var(--font-title); letter-spacing: 0.24em; text-transform: uppercase; font-size: 14px; color: var(--gold); }
 .home-link:hover { border-color: var(--gold); transform: translateY(-2px); color: var(--cream); }
 @media (max-width: 860px) { .home { grid-template-columns: 1fr; } .home-links { grid-template-columns: 1fr; } .home-fan { justify-content: center; padding-left: 0; } }
+@media (max-width: 560px) { .home-fan .card { --w: 31vw !important; } .home-fan .card:nth-child(2) { --w: 34vw !important; } }
 
 /* Lobby */
 .lobby { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr); gap: 22px; align-items: start; }

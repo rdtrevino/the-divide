@@ -13,6 +13,8 @@ export interface Env {
   /** The website's files in Workers KV, when published with scripts/deploy-kv.mjs. */
   SITE?: KVNamespace;
   SITE_MANIFEST?: string;
+  /** The public address of the site, e.g. https://thedivide.pages.dev. */
+  SITE_ORIGIN?: string;
 }
 
 // No I, L or O, so a code read aloud or typed from a phone is never ambiguous.
@@ -24,6 +26,9 @@ export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
     const path = url.pathname;
+    // The site's address is SITE_ORIGIN (thedivide.pages.dev). Anyone who opens the Worker's own
+    // workers.dev address is sent there, so there is only ever one link to share.
+    if (env.SITE_ORIGIN && url.hostname.endsWith('.workers.dev')) return Response.redirect(env.SITE_ORIGIN + path + url.search, 301);
     if (!path.startsWith('/api/')) return env.ASSETS ? env.ASSETS.fetch(req) : serveSite(req, env);
     try {
       if (path === '/api/health') return json({ ok: true, engine: ENGINE_VERSION, cards: CARD_VERSION });

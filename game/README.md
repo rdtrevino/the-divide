@@ -11,7 +11,7 @@ The online version of The Divide. Everything here is TypeScript.
 | `apps/server` | The Cloudflare Worker: live game tables (one Durable Object each), bots and the turn timer, and the stats database (D1 `divide-stats`, schema in `migrations/`). |
 | `apps/web` | The website, drawn after the printed cards: lobby, game table, cards, rules, stats and game records. |
 
-**The site is live at https://the-divide.divide-game.workers.dev.** How to play, how it works, what the stats record, and how to publish changes: `SITE.md`.
+**The site is live at https://thedivide.pages.dev.** How to play, how it works, what the stats record, and how to publish changes: `SITE.md`.
 
 ## Commands
 

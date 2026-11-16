@@ -23,23 +23,25 @@
 .card.neutral { --field: #7a766c; --field-edge: #5f5a54; --ink: #f4eedd; --title: #d9b45c; --quiet: rgba(246, 234, 210, 0.5); --line: rgba(217, 180, 92, 0.45); }
 .card.dark { --field: #1b1714; --field-edge: #100e0b; --ink: #f1e7d0; --title: #c9922a; --quiet: rgba(246, 234, 210, 0.42); --line: rgba(201, 146, 42, 0.45); }
 
-.c-head { display: flex; justify-content: space-between; align-items: baseline; padding: 1.25em 1.9em 0; height: 3.75em; flex: none; }
-.c-num { font-family: var(--font-display); font-weight: 700; font-size: 1.5em; color: var(--title); }
-.c-kind { font-family: var(--font-title); font-size: 0.82em; letter-spacing: 0.34em; color: var(--quiet); text-transform: uppercase; }
-.c-art { margin: 0 1.25em; height: 16.6em; flex: none; border: 0.06em solid var(--line); background: var(--field); overflow: hidden; position: relative; }
+.c-head { display: flex; justify-content: space-between; align-items: baseline; padding: 1.15em 1.75em 0; height: 3.95em; flex: none; }
+.c-num { font-family: var(--font-display); font-weight: 700; font-size: 1.35em; color: var(--title); }
+.c-kind { font-family: var(--font-title); font-size: 0.7em; letter-spacing: 0.32em; color: var(--quiet); text-transform: uppercase; }
+.c-art { margin: 0 1.3em; height: 16.75em; flex: none; border: 0.06em solid var(--line); background: var(--field); overflow: hidden; position: relative; }
 .c-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .c-art.blank { display: grid; place-items: center; }
 .c-art.blank svg { width: 46%; opacity: 0.55; }
-.c-name { display: flex; align-items: center; gap: 0.7em; padding: 0 2em; margin-top: 1.25em; flex: none; }
+/* A full-width rule under the illustration, as on the printed cards. */
+.c-art + .c-name { border-top: 0.05em solid var(--line); padding-top: 1.05em; margin-top: 0.28em; }
+.c-name { display: flex; align-items: center; gap: 0.6em; padding: 0 1.4em; margin-top: 1.1em; flex: none; }
 .c-name::before, .c-name::after { content: ''; flex: 1; height: 0.05em; background: var(--line); }
-.c-name span { font-family: var(--font-display); font-weight: 700; font-size: 1.22em; letter-spacing: 0.14em; color: var(--title); text-transform: uppercase; white-space: nowrap; }
-.c-text { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0.2em 2.1em 0; font-family: var(--font-body); font-size: 1.12em; line-height: 1.32; }
-.c-text.long { font-size: 0.98em; line-height: 1.27; }
-.c-text.xlong { font-size: 0.86em; line-height: 1.24; }
-.c-foot { flex: none; height: 3.2em; display: flex; align-items: center; justify-content: center; gap: 0.55em; padding-bottom: 0.9em; font-family: var(--font-title); }
-.c-foot b { font-family: var(--font-display); font-weight: 900; font-size: 1.2em; }
-.c-foot span { font-size: 0.82em; letter-spacing: 0.34em; color: var(--title); font-weight: 600; text-transform: uppercase; }
-.c-foot::before, .c-foot::after { content: ''; width: 2.6em; height: 0.05em; background: var(--line); }
+.c-name span { font-family: var(--font-display); font-weight: 700; font-size: 0.98em; letter-spacing: 0.13em; color: var(--title); text-transform: uppercase; white-space: nowrap; }
+.c-text { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0.2em 2.2em 0; font-family: var(--font-body); font-size: 0.98em; line-height: 1.33; }
+.c-text.long { font-size: 0.9em; line-height: 1.3; }
+.c-text.xlong { font-size: 0.8em; line-height: 1.26; }
+.c-foot { flex: none; height: 3.3em; display: flex; align-items: center; justify-content: center; gap: 0.5em; padding-bottom: 1em; font-family: var(--font-title); }
+.c-foot b { font-family: var(--font-display); font-weight: 900; font-size: 1.1em; }
+.c-foot span { font-size: 0.74em; letter-spacing: 0.32em; color: var(--title); font-weight: 600; text-transform: uppercase; }
+.c-foot::before, .c-foot::after { content: ''; width: 3em; height: 0.05em; background: var(--line); }
 
 /* Small cards drop the rules text and enlarge what identifies the card. Hover or long-press shows the full card. */
 .card.compact .c-text { display: none; }
@@ -47,7 +49,8 @@
 .card.compact .c-num { font-size: 2.3em; }
 .card.compact .c-kind { font-size: 1.25em; letter-spacing: 0.22em; }
 .card.compact .c-art { height: 17.4em; margin: 0 1em; }
-.card.compact .c-name { flex: 1; margin-top: 0; padding: 0 1.2em; }
+.card.compact .c-art + .c-name { padding-top: 0; margin-top: 0; }
+.card.compact .c-name { flex: 1; margin-top: 0; padding: 0 1.2em; border-top: 0; }
 .card.compact .c-name span { font-size: 2.05em; letter-spacing: 0.06em; }
 .card.compact .c-name.long span { font-size: 1.6em; letter-spacing: 0.02em; }
 .card.compact .c-foot { height: 5.2em; padding-bottom: 1.5em; }
@@ -57,8 +60,8 @@
 
 /* Celestials: a jewel-toned field for each. */
 .card.celestial { --frame: var(--c-frame, #e0b74b); --field: var(--c-field, #2d4e6d); --field-edge: color-mix(in srgb, var(--c-field, #2d4e6d) 72%, black); --ink: var(--c-ink, #f5f0e2); --title: var(--c-title, #e6c55e); --quiet: color-mix(in srgb, var(--ink) 50%, transparent); --line: color-mix(in srgb, var(--title) 45%, transparent); }
-.card.celestial .c-art { height: 20.6em; margin: 0 2.05em; }
-.card.celestial .c-name { margin-top: 1.1em; }
+.card.celestial .c-art { height: 22.4em; margin: 0 1em; border-color: transparent; }
+.card.celestial .c-name { margin-top: 0.9em; }
 .card.celestial.compact .c-art { height: 22.6em; margin: 0 1em; }
 .card.celestial.compact .c-name.long span { font-size: 1.5em; }
 .card.celestial.compact .c-name { padding-bottom: 0.9em; }

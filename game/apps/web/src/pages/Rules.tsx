@@ -2,7 +2,10 @@
 import { marked } from 'marked';
 import { useEffect, useMemo } from 'preact/hooks';
 import { Site } from '../components/Site';
-import raw from '../../../../../rules/The_Divide_Rulebook_v8.md?raw';
+import source from '../../../../../rules/The_Divide_Rulebook_v8.md?raw';
+
+// The rulebook's version line is for the designer, not for players.
+const raw = source.replace(/^\*\*Version:\*\*.*\n/m, '');
 
 const slug = (text: string) => text.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 

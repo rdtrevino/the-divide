@@ -9,7 +9,8 @@
     "typecheck": "node scripts/build-info.mjs && tsc --noEmit",
     "deploy": "wrangler deploy",
     "deploy:kv": "node scripts/deploy-kv.mjs",
-    "migrate": "wrangler d1 migrations apply divide-stats --remote"
+    "migrate": "wrangler d1 migrations apply divide-stats --remote",
+    "deploy:pages": "wrangler pages deploy pages --project-name thedivide --branch main"
   },
   "dependencies": {
     "@divide/engine": "0.1.0",

@@ -1,6 +1,6 @@
 # The online game site
 
-**Address:** https://the-divide.divide-game.workers.dev
+**Address:** https://thedivide.pages.dev
 
 Robert and friends play the Open Game (3 or 4 players) in the browser, in real time, with computer players in any empty seat. Every finished game is saved to the stats database, and the Stats page shows which cards and Celestials win more or less than their share.
 
@@ -25,7 +25,9 @@ At the table:
 
 ## What it costs
 
-Nothing. Everything runs on Cloudflare's free plan: one Worker (the website and the game rooms), Durable Objects (one per table), a D1 database (the stats) and Workers KV (the website's files). A group of friends playing every day uses a small fraction of the free limits. Cloudflare does not charge on the free plan; if a limit were ever reached, the site would pause until the next day rather than bill anyone.
+Nothing. Everything runs on Cloudflare's free plan: the address (a Cloudflare Pages project named `thedivide`), one Worker (`the-divide`: the website files and the game tables), Durable Objects (one per table), a D1 database (the stats) and Workers KV (the website's files). A group of friends playing every day uses a small fraction of the free limits. Cloudflare does not charge on the free plan; if a limit were ever reached, the site would pause until the next day rather than bill anyone.
+
+**How the address works.** `thedivide.pages.dev` is a Pages project whose only content is `apps/server/pages/_worker.js`, a few lines that pass every request to the `the-divide` Worker through a service binding called `GAME` (set on the Pages project). The Worker's own address, `the-divide.divide-game.workers.dev`, redirects to `thedivide.pages.dev`, so there is only one link to share.
 
 ## How it is built
 
@@ -79,12 +81,12 @@ GROUP BY celestial ORDER BY win_ratio DESC;
 
 ## Publishing changes
 
-**Automatic (set up once).** `.github/workflows/deploy-site.yml` tests and publishes the site every time `main` changes in `game/`, `cards/cards.json` or `rules/`. It needs two repository secrets, added once on GitHub under Settings, Secrets and variables, Actions:
+**Automatic.** `.github/workflows/deploy-site.yml` runs on every pull request (tests and build only) and on every change to `main` in `game/`, `cards/cards.json` or `rules/` (tests, build, stats database changes, publish). It needs two repository secrets, added once on GitHub under Settings, Secrets and variables, Actions:
 
-- `CLOUDFLARE_API_TOKEN`: a Cloudflare API token. In the Cloudflare dashboard: My Profile, API Tokens, Create Token, start from **Edit Cloudflare Workers**, and add **D1: Edit** to its permissions.
+- `CLOUDFLARE_API_TOKEN`: a Cloudflare API token. In the Cloudflare dashboard: My Profile, API Tokens, Create Token, use the **Edit Cloudflare Workers** template, and add **Account, D1, Edit** to its permissions.
 - `CLOUDFLARE_ACCOUNT_ID`: shown on the right side of the Workers & Pages overview in the Cloudflare dashboard.
 
-Until both are added the workflow still runs the tests on every change and skips the publish step.
+Until both are added the workflow still runs the tests and skips the publish step. A publish takes about two minutes; the Actions tab on GitHub shows each run.
 
 **By hand**, from `game/` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` set:
 
@@ -100,7 +102,7 @@ npm run migrate -w @divide/server
 npm run deploy
 ```
 
-The publish uploads only the website files that changed, then the Worker. Changing a rule in the engine also needs its tests (`npm test`), which the workflow runs first.
+The publish uploads only the website files that changed, then the Worker. The Pages front door (`apps/server/pages/_worker.js`) never needs republishing; if it ever does, `npm run deploy:pages -w @divide/server`.
 
 ## Working on it
 
