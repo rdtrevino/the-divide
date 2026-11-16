@@ -61,6 +61,7 @@ export const H = {
   winnowing: 'host-winnowing', silence: 'host-silence', scapegoat: 'host-scapegoat',
   defiance: 'host-defiance', bounty: 'host-bounty', abaddon: 'host-abaddon', remnant: 'host-remnant',
   jubilee: 'host-jubilee', snare: 'host-snare',
+  ithuriel: 'host-ithuriel', urim: 'host-urim', asmadai: 'host-asmadai',
 } as const;
 
 export const C = {

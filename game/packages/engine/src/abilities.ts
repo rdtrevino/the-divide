@@ -5,7 +5,7 @@ import {
   activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
   drawHost, drawTo, enterChoir, gain, handLimit, hasActive, log, lose, markToday, others, payTribute, peekHost,
   pname, protectedFrom, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, CHOIR_LIMIT,
-  colorsOf, activation,
+  colorsOf, activation, altarShielded, altarPeekable,
 } from './core';
 import { randInt } from './rng';
 import type { Gen, GameState, Seat } from './types';
@@ -142,8 +142,8 @@ export const TURN: Record<string, TurnAbility> = {
     *run(s, seat) {
       const c = drawHost(s);
       if (!c) return;
-      s.altar.push({ id: c, facedown: false, offeredBy: null, day: s.day });
-      log(s, 'vessel', `${pname(s, seat)} added ${cardName(c)} from the top of the Host deck to the Altar.`);
+      s.altar.push({ id: c, facedown: true, offeredBy: null, day: s.day, kind: 'vessel' });
+      log(s, 'vessel', `${pname(s, seat)} added the top card of the Host deck to the Altar facedown (Vessel).`);
     },
   },
   [H.ordeal]: {
@@ -330,21 +330,64 @@ export const TURN: Record<string, TurnAbility> = {
     once: 'game',
     can: (s, seat) => altarAvailable(s, seat).length > 0,
     *run(s, seat) {
-      const keep = s.altar.filter((a) => a.sanctuary !== undefined && a.sanctuary !== seat);
+      const keep = s.altar.filter((a) => (a.sanctuary !== undefined && a.sanctuary !== seat) || altarShielded(s, a, seat));
       const gone = s.altar.filter((a) => !keep.includes(a));
       s.discard.push(...gone.map((a) => a.id));
-      const fresh = gone.map(() => drawHost(s)).filter((c): c is string => !!c).map((id) => ({ id, facedown: false, offeredBy: null, day: s.day }));
+      const fresh = gone.map(() => drawHost(s)).filter((c): c is string => !!c).map((id) => ({ id, facedown: false, offeredBy: null, day: s.day, kind: 'other' as const }));
       s.altar = [...keep, ...fresh];
       log(s, 'abaddon', `${pname(s, seat)} unleashed Abaddon: ${gone.length} Altar card(s) were replaced from the Host deck.`);
     },
   },
 
   // ----- Celestial turn powers (once per Day)
+  [H.ithuriel]: {
+    can: (s, seat) => altarPeekable(s, seat).length > 0,
+    *run(s, seat) {
+      const t = altarPeekable(s, seat);
+      const pick = yield* chooseOne(s, seat, 'ithuriel', 'Ithuriel: flip a facedown card on the Altar face up.', t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })));
+      if (pick === null) return;
+      const a = s.altar[Number(pick)];
+      a.facedown = false;
+      a.seenBy = undefined;
+      log(s, 'ithuriel', `${pname(s, seat)} revealed ${cardName(a.id)} on the Altar (Ithuriel).`);
+    },
+  },
+  [H.urim]: {
+    can: (s, seat) => altarPeekable(s, seat).some((a) => a.offeredBy !== seat),
+    *run(s, seat) {
+      const t = altarPeekable(s, seat).filter((a) => a.offeredBy !== seat);
+      const picks = yield* ask(s, { seat, tag: 'urim', prompt: 'Urim: secretly look at up to 2 facedown cards on the Altar.', options: t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), min: 1, max: Math.min(2, t.length) });
+      const seen = picks.map((i) => s.altar[Number(i)]);
+      for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
+      log(s, 'urim', `${pname(s, seat)} looked at ${seen.length} facedown card(s) on the Altar (Urim).`);
+      log(s, 'peek', `Urim: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}.`, [seat], { reveal: seen.map((a) => a.id) });
+    },
+  },
+  [H.asmadai]: {
+    can: (s, seat) => altarPeekable(s, seat).length > 0,
+    *run(s, seat) {
+      const t = altarPeekable(s, seat);
+      const pick = yield* chooseOne(s, seat, 'asmadai', 'Asmadai: look at a facedown card on the Altar.', t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })));
+      if (pick === null) return;
+      const a = s.altar[Number(pick)];
+      a.seenBy = [...(a.seenBy ?? []), seat];
+      log(s, 'asmadai', `${pname(s, seat)} looked at a facedown card on the Altar (Asmadai).`);
+      log(s, 'peek', `Asmadai: the card is ${cardName(a.id)}.`, [seat], { reveal: [a.id] });
+      const hand = s.players[seat].hand;
+      if (!hand.length) return;
+      const swap = yield* chooseOne(s, seat, 'asmadai.swap', `Asmadai: the card is ${cardName(a.id)}. Exchange it with a card from your hand? The new card stays facedown.`, hand.map((c) => cardOpt(c)), true, [a.id]);
+      if (!swap) return;
+      hand.splice(hand.indexOf(swap), 1, a.id);
+      a.id = swap;
+      a.seenBy = [seat];
+      log(s, 'asmadai', `${pname(s, seat)} exchanged a facedown card on the Altar with one from their hand (Asmadai).`);
+    },
+  },
   [C.tempest]: {
     once: 'day',
-    can: (s, seat) => altarAvailable(s, seat).length > 0,
+    can: (s, seat) => s.altar.some((a) => (a.sanctuary === undefined || a.sanctuary === seat) && !altarShielded(s, a, seat)),
     *run(s, seat) {
-      const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.sanctuary === undefined || a.sanctuary === seat);
+      const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => (a.sanctuary === undefined || a.sanctuary === seat) && !altarShielded(s, a, seat));
       const pick = yield* chooseOne(s, seat, 'tempest', 'The Tempest: destroy one Host card on the Altar.', opts.map(({ a, i }) => ({ id: String(i), label: altarLabel(s, a, seat), card: a.facedown && a.offeredBy !== seat ? undefined : a.id })));
       if (pick === null) return;
       const [a] = s.altar.splice(Number(pick), 1);

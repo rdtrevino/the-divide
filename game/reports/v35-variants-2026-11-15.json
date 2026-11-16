@@ -1,0 +1,192 @@
+[
+ {
+  "code": "B",
+  "variants": "baseline (V35)",
+  "p3": {
+   "decisions": 45.5,
+   "core": 33.2,
+   "smartVsRandom": 2.46,
+   "randomVsSmart": 0.14,
+   "day3LeaderWins": 62,
+   "finalDayComeback": 19,
+   "margin": 3,
+   "winningGlory": 12.4,
+   "avgGlory": 9.4,
+   "celestialSpread": 0.12,
+   "celestialRange": [
+    0.81,
+    1.2
+   ],
+   "msPerGame": 2.3
+  },
+  "p4": {
+   "decisions": 46.3,
+   "core": 33.4,
+   "smartVsRandom": 2.95,
+   "randomVsSmart": 0.12,
+   "day3LeaderWins": 55,
+   "finalDayComeback": 23,
+   "margin": 2.4,
+   "winningGlory": 12.4,
+   "avgGlory": 8.9,
+   "celestialSpread": 0.16,
+   "celestialRange": [
+    0.82,
+    1.31
+   ],
+   "msPerGame": 1.8
+  }
+ },
+ {
+  "code": "R",
+  "variants": "two-rounds",
+  "p3": {
+   "decisions": 68.7,
+   "core": 54.8,
+   "smartVsRandom": 2.67,
+   "randomVsSmart": 0.1,
+   "day3LeaderWins": 65,
+   "finalDayComeback": 17,
+   "margin": 2.9,
+   "winningGlory": 14,
+   "avgGlory": 11,
+   "celestialSpread": 0.21,
+   "celestialRange": [
+    0.68,
+    1.39
+   ],
+   "msPerGame": 2
+  },
+  "p4": {
+   "decisions": 69.4,
+   "core": 54.9,
+   "smartVsRandom": 3.35,
+   "randomVsSmart": 0.09,
+   "day3LeaderWins": 56,
+   "finalDayComeback": 24,
+   "margin": 2.5,
+   "winningGlory": 13.7,
+   "avgGlory": 10.2,
+   "celestialSpread": 0.23,
+   "celestialRange": [
+    0.62,
+    1.43
+   ],
+   "msPerGame": 2.5
+  }
+ },
+ {
+  "code": "K",
+  "variants": "catchup-order",
+  "p3": {
+   "decisions": 45.5,
+   "core": 33.2,
+   "smartVsRandom": 2.47,
+   "randomVsSmart": 0.14,
+   "day3LeaderWins": 63,
+   "finalDayComeback": 20,
+   "margin": 2.8,
+   "winningGlory": 12.2,
+   "avgGlory": 9.4,
+   "celestialSpread": 0.15,
+   "celestialRange": [
+    0.78,
+    1.23
+   ],
+   "msPerGame": 1.1
+  },
+  "p4": {
+   "decisions": 46.3,
+   "core": 33.4,
+   "smartVsRandom": 2.98,
+   "randomVsSmart": 0.15,
+   "day3LeaderWins": 55,
+   "finalDayComeback": 24,
+   "margin": 2.3,
+   "winningGlory": 12.3,
+   "avgGlory": 8.9,
+   "celestialSpread": 0.15,
+   "celestialRange": [
+    0.77,
+    1.23
+   ],
+   "msPerGame": 1.7
+  }
+ },
+ {
+  "code": "C",
+  "variants": "celestial-draft",
+  "p3": {
+   "decisions": 43.5,
+   "core": 33.1,
+   "smartVsRandom": 2.51,
+   "randomVsSmart": 0.12,
+   "day3LeaderWins": 63,
+   "finalDayComeback": 19,
+   "margin": 2.8,
+   "winningGlory": 12.2,
+   "avgGlory": 9.3,
+   "celestialSpread": 0.15,
+   "celestialRange": [
+    0.78,
+    1.19
+   ],
+   "msPerGame": 1.1
+  },
+  "p4": {
+   "decisions": 44.3,
+   "core": 33.3,
+   "smartVsRandom": 3.06,
+   "randomVsSmart": 0.13,
+   "day3LeaderWins": 53,
+   "finalDayComeback": 25,
+   "margin": 2.3,
+   "winningGlory": 12.2,
+   "avgGlory": 9,
+   "celestialSpread": 0.17,
+   "celestialRange": [
+    0.67,
+    1.18
+   ],
+   "msPerGame": 1.6
+  }
+ },
+ {
+  "code": "RC",
+  "variants": "two-rounds+celestial-draft",
+  "p3": {
+   "decisions": 66.5,
+   "core": 54.8,
+   "smartVsRandom": 2.75,
+   "randomVsSmart": 0.08,
+   "day3LeaderWins": 62,
+   "finalDayComeback": 18,
+   "margin": 2.7,
+   "winningGlory": 13.9,
+   "avgGlory": 11.1,
+   "celestialSpread": 0.16,
+   "celestialRange": [
+    0.71,
+    1.21
+   ],
+   "msPerGame": 1.7
+  },
+  "p4": {
+   "decisions": 67.1,
+   "core": 54.8,
+   "smartVsRandom": 3.39,
+   "randomVsSmart": 0.11,
+   "day3LeaderWins": 53,
+   "finalDayComeback": 26,
+   "margin": 2.3,
+   "winningGlory": 13.5,
+   "avgGlory": 10.3,
+   "celestialSpread": 0.19,
+   "celestialRange": [
+    0.75,
+    1.31
+   ],
+   "msPerGame": 2.2
+  }
+ }
+]

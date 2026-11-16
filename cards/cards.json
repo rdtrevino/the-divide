@@ -1,6 +1,6 @@
 {
-  "version": "V34",
-  "date": "2026-11-14",
+  "version": "V35",
+  "date": "2026-11-15",
   "hosts": [
     {
       "id": "host-michael",
@@ -109,7 +109,7 @@
     {
       "id": "host-hymn",
       "name": "Hymn",
-      "text": "You may Offer up to 2 Light Host cards to the Altar. You do not gain an additional Glory.",
+      "text": "You may Offer up to 2 Light Host cards to the Altar. If you Offer 2, place them face up. You gain only one reward.",
       "openGame": true,
       "face": "art/faces/host/09-hymn.jpg",
       "plate": "art/plates/host/09-hymn.jpg",
@@ -122,7 +122,7 @@
     {
       "id": "host-raphael",
       "name": "Raphael",
-      "text": "When you Offer a Light Host card, you may forgo the Offer's Glory to destroy 1 Dark card on the Altar instead.",
+      "text": "When you Offer a Light Host card, you may turn it face up and forgo its reward to destroy 1 face-up Dark card on the Altar.",
       "openGame": true,
       "face": "art/faces/host/10-raphael.jpg",
       "plate": "art/plates/host/10-raphael.jpg",
@@ -291,7 +291,7 @@
     {
       "id": "host-vessel",
       "name": "Vessel",
-      "text": "On your turn: You may add the top card of the Host deck to the Altar without looking at it.",
+      "text": "On your turn: You may add the top card of the Host deck to the Altar facedown, without looking at it.",
       "openGame": true,
       "face": "art/faces/host/23-vessel.jpg",
       "plate": "art/plates/host/23-vessel.jpg",
@@ -499,14 +499,14 @@
     {
       "id": "host-mirage",
       "name": "Mirage",
-      "text": "When you Offer, you may place the card Facedown on the Altar. Its Offering is secret but counts normally in the Evening, when it is revealed before Setting the Tide.",
+      "text": "Your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening.",
       "openGame": true,
       "face": "art/faces/host/39-mirage.jpg",
       "plate": "art/plates/host/39-mirage.jpg",
       "number": 39,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "When you Offer",
+      "cadence": "Passive",
       "oncePerGame": false
     },
     {
@@ -642,7 +642,7 @@
     {
       "id": "host-lamentation",
       "name": "Lamentation",
-      "text": "You may Offer up to 2 Dark Host cards to the Altar. You do not gain an additional Glory.",
+      "text": "You may Offer up to 2 Dark Host cards to the Altar. If you Offer 2, place them face up. You gain only one reward.",
       "openGame": true,
       "face": "art/faces/host/50-lamentation.jpg",
       "plate": "art/plates/host/50-lamentation.jpg",
@@ -655,7 +655,7 @@
     {
       "id": "host-azazel",
       "name": "Azazel",
-      "text": "When you Offer a Dark Host card, you may forgo the Offer's Glory to destroy 1 Light card on the Altar instead.",
+      "text": "When you Offer a Dark Host card, you may turn it face up and forgo its reward to destroy 1 face-up Light card on the Altar.",
       "openGame": true,
       "face": "art/faces/host/51-azazel.jpg",
       "plate": "art/plates/host/51-azazel.jpg",
@@ -898,6 +898,45 @@
       "value": 1,
       "cadence": "When another player Gathers",
       "oncePerGame": false
+    },
+    {
+      "id": "host-ithuriel",
+      "name": "Ithuriel",
+      "text": "On your turn: Flip one facedown card on the Altar face up.",
+      "openGame": true,
+      "face": null,
+      "plate": null,
+      "number": 70,
+      "alignment": "light",
+      "value": 1,
+      "cadence": "On your turn",
+      "oncePerGame": false
+    },
+    {
+      "id": "host-urim",
+      "name": "Urim",
+      "text": "On your turn: Secretly look at up to 2 facedown cards on the Altar.",
+      "openGame": true,
+      "face": null,
+      "plate": null,
+      "number": 71,
+      "alignment": "neutral",
+      "value": 0,
+      "cadence": "On your turn",
+      "oncePerGame": false
+    },
+    {
+      "id": "host-asmadai",
+      "name": "Asmadai",
+      "text": "On your turn: Look at one facedown card on the Altar. You may exchange it with a card from your hand. The new card stays facedown.",
+      "openGame": true,
+      "face": null,
+      "plate": null,
+      "number": 72,
+      "alignment": "dark",
+      "value": 1,
+      "cadence": "On your turn",
+      "oncePerGame": false
     }
   ],
   "celestials": [
@@ -931,7 +970,7 @@
     {
       "id": "celestial-the-cantor",
       "name": "The Cantor",
-      "text": "During your turn, you can Offer 2 cards to the Altar instead of 1, gaining 1 Glory for each.",
+      "text": "During your turn, you can Offer 2 cards to the Altar instead of 1, with a reward for each.",
       "openGame": true,
       "face": "art/faces/celestial/IV-the-cantor.jpg",
       "plate": "art/plates/celestial/IV-the-cantor.jpg",
@@ -1067,7 +1106,7 @@
     {
       "id": "event-pandemonium",
       "name": "Pandemonium",
-      "text": "All Offers to the Altar are made Facedown, including the Seed, and Gathers are made blind. In the Evening, reveal all Altar cards before Setting the Tide.",
+      "text": "The Seed and First Fruits are placed facedown, and no card on the Altar may be flipped or looked at before the Evening.",
       "openGame": true,
       "face": "art/faces/event/pandemonium.jpg",
       "plate": "art/plates/event/pandemonium.jpg"

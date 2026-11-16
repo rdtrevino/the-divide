@@ -417,6 +417,21 @@ export function altarAvailable(s: GameState, seat: Seat): AltarCard[] {
 }
 
 export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
-  if (a.facedown && a.offeredBy !== viewer) return 'Facedown card';
-  return cardName(a.id) + (a.facedown ? ' (facedown)' : '');
+  const by = a.offeredBy !== null && a.offeredBy >= 0 ? ` (${a.kind === 'fruits' ? 'First Fruits' : 'Offered'} by ${s.players[a.offeredBy]?.name ?? '?'})` : a.kind === 'seed' ? ' (Seed)' : '';
+  if (a.facedown && a.offeredBy !== viewer && !a.seenBy?.includes(viewer)) return 'Facedown card' + by;
+  return cardName(a.id) + (a.facedown ? (a.offeredBy === viewer ? ' (your facedown card)' : ' (facedown, seen by you)') : '') + by;
+}
+
+/** Mirage (V35): a player's facedown Offerings cannot be flipped, looked at, exchanged, or destroyed by others before the Evening. */
+export function altarShielded(s: GameState, a: AltarCard, actor: Seat): boolean {
+  return a.facedown && a.kind === 'offer' && a.offeredBy !== null && a.offeredBy !== actor && hasActive(s, a.offeredBy, H.mirage);
+}
+
+/** Pandemonium (V35): no card on the Altar may be flipped or looked at before the Evening. */
+export const altarSightBlocked = (s: GameState) => s.currentEvent === E.pandemonium;
+
+/** Facedown Altar cards `actor` may flip, look at, or exchange. */
+export function altarPeekable(s: GameState, actor: Seat): AltarCard[] {
+  if (altarSightBlocked(s)) return [];
+  return s.altar.filter((a) => a.facedown && !altarShielded(s, a, actor));
 }

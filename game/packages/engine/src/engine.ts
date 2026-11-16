@@ -22,12 +22,12 @@ function freshDay(): GameState['day_'] {
 
 export function createState(cfg: GameConfig): GameState {
   if (cfg.mode !== 'open') throw new Error('Hidden Roles is not implemented yet.');
-  if (cfg.players.length < 3 || cfg.players.length > 6) throw new Error('The Divide needs 3 to 6 players.');
+  if (cfg.players.length < 3 || cfg.players.length > 4) throw new Error('The Open Game is for 3 or 4 players. Hidden Roles (5 and 6 players) is not implemented yet.');
   const s: GameState = {
     config: cfg, rng: cfg.seed | 0, day: 0, phase: 'setup', players: [], hostDeck: [], discard: [], altar: [],
     eventDeck: [], eventDiscard: [], currentEvent: null, firstPlayer: 0, active: null, tides: [], lastAlignColor: {},
     carriedSeed: null, pacts: [], bonds: [], scapegoats: [], anathema: [], confession: [], morningStar: [],
-    day_: freshDay(), turnUsed: [], log: [], stats: [], seq: 0, decisionSeq: 0, result: null, row: [], celestialPool: [],
+    day_: freshDay(), turnUsed: [], log: [], stats: [], seq: 0, decisionSeq: 0, result: null, celestialPool: [],
   };
   const hosts = HOSTS.filter((h) => !OPEN_SET_ASIDE_HOSTS.includes(h.id as any)).map((h) => h.id);
   const events = EVENTS.filter((e) => !OPEN_SET_ASIDE_EVENTS.includes(e.id as any)).map((e) => e.id);
@@ -43,7 +43,6 @@ export function createState(cfg: GameConfig): GameState {
     for (let i = 0; i < 3; i++) p.choir.push({ id: drawHost(s)!, facedown: false, used: false });
   }
   s.celestialPool = pool;
-  if (variant(s, 'face-up-row')) for (let i = 0; i < 3; i++) s.row.push(drawHost(s)!);
   s.firstPlayer = randInt(s, s.players.length);
   log(s, 'setup', `A ${s.players.length}-player Open Game begins. ${pname(s, s.firstPlayer)} is the first player.`);
   return s;
@@ -71,7 +70,7 @@ export function* runGame(s: GameState): Gen<void> {
       s.firstPlayer = (last + 1) % n0;
     }
     yield* unveiling(s);
-    if (variant(s, 'secret-offering')) yield* secretOffering(s);
+    yield* firstFruits(s);
     s.phase = 'turns';
     const n = s.players.length;
     const rounds = variant(s, 'two-rounds') ? 2 : 1;
@@ -99,16 +98,23 @@ function* celestialDraft(s: GameState): Gen<void> {
   log(s, 'draft', 'Every player chose their Celestial.');
 }
 
-/** Secret Offering: before turns, every player places 1 card from hand facedown on the Altar. */
-function* secretOffering(s: GameState): Gen<void> {
+/**
+ * First Fruits (V35): each Morning, after the Seed, every player chooses a card from hand in secret,
+ * then all are revealed together and placed face up on the Altar, and each player draws 1 card.
+ * No Glory; not the Offer action, so no Offer abilities trigger.
+ */
+function* firstFruits(s: GameState): Gen<void> {
   const ps = s.players.filter((p) => p.hand.length);
-  const picks = yield* askAll(s, ps.map((p) => ({ seat: p.seat, tag: 'secret.offer', prompt: 'Secret Offering: place 1 card from your hand facedown on the Altar. It is revealed in the Evening.', options: p.hand.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: 1, max: 1 })));
+  const dark = s.currentEvent === E.pandemonium;
+  const picks = yield* askAll(s, ps.map((p) => ({ seat: p.seat, tag: 'firstFruits', prompt: dark ? 'First Fruits (Pandemonium): place 1 card from your hand facedown on the Altar.' : 'First Fruits: choose 1 card from your hand. All players reveal theirs together, face up on the Altar.', options: p.hand.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: 1, max: 1 })));
   ps.forEach((p, k) => {
     const [c] = p.hand.splice(Number(picks[k][0]), 1);
-    s.altar.push({ id: c, facedown: true, offeredBy: p.seat, day: s.day });
-    stat(s, { type: 'action', seat: p.seat, card: c, source: 'secret.offer' });
+    s.altar.push({ id: c, facedown: dark, offeredBy: p.seat, day: s.day, kind: 'fruits' });
+    stat(s, { type: 'action', seat: p.seat, card: c, source: 'fruits' });
   });
-  log(s, 'secret', 'Every player made a secret Offering.');
+  // Then each player draws 1 card, so First Fruits never shrinks a hand.
+  for (const p of ps) yield* drawTo(s, p.seat, 1);
+  log(s, 'fruits', dark ? 'Every player placed First Fruits facedown.' : `First Fruits: ${ps.map((p) => `${p.name} ${cardName(s.altar.find((a) => a.kind === 'fruits' && a.offeredBy === p.seat && a.day === s.day)!.id)}`).join(', ')}.`);
 }
 
 // ---------------------------------------------------------------- Unveiling
@@ -178,7 +184,7 @@ export function* unveiling(s: GameState): Gen<void> {
   const facedown = s.currentEvent === E.pandemonium;
   let seeds = (s.currentEvent === E.creation ? 3 : 1) + (s.config.twoSeeds ? 1 : 0);
   if (s.carriedSeed) {
-    s.altar.push({ id: s.carriedSeed, facedown, offeredBy: null, day: s.day });
+    s.altar.push({ id: s.carriedSeed, facedown, offeredBy: null, day: s.day, kind: 'seed' });
     log(s, 'seed', `${cardName(s.carriedSeed)} returns as the Seed (Eternity).`);
     s.carriedSeed = null;
     seeds--;
@@ -186,7 +192,7 @@ export function* unveiling(s: GameState): Gen<void> {
   for (let i = 0; i < seeds; i++) {
     const c = drawHost(s);
     if (!c) break;
-    s.altar.push({ id: c, facedown, offeredBy: null, day: s.day });
+    s.altar.push({ id: c, facedown, offeredBy: null, day: s.day, kind: 'seed' });
     log(s, 'seed', facedown ? 'A Seed is placed facedown on the Altar.' : `The Seed is ${cardName(c)}.`);
   }
 }
@@ -292,52 +298,50 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const col = (id: string) => colorsOf(s, null, id);
   const second = p.hand.filter((c) => cantor || (hymn && col(first).light && col(c).light) || (lam && col(first).dark && col(c).dark));
   if (second.length) {
-    const why = cantor ? 'the Cantor' : hymn && col(first).light ? 'Hymn' : 'Lamentation';
+    const why = cantor ? 'the Cantor' : hymn && col(first).light ? 'Hymn: both go face up' : 'Lamentation: both go face up';
     const pick = yield* chooseOne(s, seat, 'offer.second', `Offer a second card (${why})?`, second.map((c) => cardOpt(c)), true);
     if (pick) {
       cards.push(pick);
       p.hand.splice(p.hand.indexOf(pick), 1);
     }
   }
-  let facedown = eventOn(s, E.pandemonium);
-  if (!facedown && hasActive(s, seat, H.mirage) && canActivate(s, seat, H.mirage)) {
-    if (yield* yesNo(s, seat, 'mirage', 'Mirage: place your Offering facedown on the Altar?')) {
-      yield* activation(s, seat, H.mirage, function* () { facedown = true; });
-    }
-  }
-  for (const c of cards) s.altar.push({ id: c, facedown, offeredBy: seat, day: s.day });
+  // V35: Offers go facedown. Hymn and Lamentation pairs go face up (their color is shown).
+  const facedown = !(cards.length === 2 && !cantor);
+  for (const c of cards) s.altar.push({ id: c, facedown, offeredBy: seat, day: s.day, kind: 'offer' });
   stat(s, { type: 'action', seat, source: 'offer', data: { cards } });
   for (const c of cards) stat(s, { type: 'action', seat, card: c, source: 'offer.card' });
-  log(s, 'offer', facedown ? `${p.name} Offered ${cards.length} card(s) facedown.` : `${p.name} Offered ${cards.map(cardName).join(' and ')}.`);
+  log(s, 'offer', facedown ? `${p.name} Offered ${cards.length === 1 ? 'a card' : `${cards.length} cards`} facedown.` : `${p.name} Offered ${cards.map(cardName).join(' and ')} face up.`);
+  if (facedown) log(s, 'offer', `You Offered ${cards.map(cardName).join(' and ')} facedown.`, [seat]);
 
-  // Glory: 1 for the Offer (the Cantor gains 1 per card).
+  // Rewards: one per Offer (the Cantor gets one per card).
   const units = cantor ? cards.length : 1;
   for (let u = 0; u < units; u++) {
     const offered = cantor ? [cards[u]] : cards;
-    if (variant(s, 'offer-choice')) {
-      const r = yield* chooseOne(s, seat, 'offer.reward', 'Offer reward: gain 1 Glory, or draw 1 card?', [{ id: 'glory', label: 'Gain 1 Glory' }, { id: 'card', label: 'Draw 1 card' }]);
-      if (r === 'card') { yield* drawTo(s, seat, 1); log(s, 'offer', `${p.name} drew a card instead of gaining Glory.`); continue; }
-    }
     // Raphael / Azazel: forgo this Glory to destroy an opposing card on the Altar.
     let forgone = false;
     for (const [hid, mine, theirs] of [[H.raphael, 'light', 'dark'], [H.azazel, 'dark', 'light']] as const) {
       if (forgone || !hasActive(s, seat, hid) || !offered.some((c) => col(c)[mine]) || !canActivate(s, seat, hid)) continue;
       const targets = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !a.facedown && col(a.id)[theirs] && (a.sanctuary === undefined || a.sanctuary === seat));
       if (!targets.length) continue;
-      const pick = yield* chooseOne(s, seat, hid === H.raphael ? 'raphael' : 'azazel', `${cardName(hid)}: forgo 1 Glory to destroy a ${theirs === 'dark' ? 'Dark' : 'Light'} card on the Altar?`, targets.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
+      const pick = yield* chooseOne(s, seat, hid === H.raphael ? 'raphael' : 'azazel', `${cardName(hid)}: turn your Offering face up and forgo its reward to destroy a face-up ${theirs === 'dark' ? 'Dark' : 'Light'} card on the Altar?`, targets.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
       if (pick === null) continue;
       forgone = true;
       const target = s.altar[Number(pick)];
+      const mineOffered = s.altar.find((a) => a.offeredBy === seat && a.kind === 'offer' && a.day === s.day && offered.includes(a.id) && col(a.id)[mine]);
+      if (mineOffered) mineOffered.facedown = false;
       yield* activation(s, seat, hid, function* () {
         const i = s.altar.indexOf(target);
         if (i >= 0) {
           s.altar.splice(i, 1);
           s.discard.push(target.id);
-          log(s, 'destroy', `${p.name} forwent their Glory to destroy ${cardName(target.id)} (${cardName(hid)}).`);
+          log(s, 'destroy', `${p.name} revealed their Offering and forwent its reward to destroy ${cardName(target.id)} (${cardName(hid)}).`);
         }
       });
     }
     if (forgone) continue;
+    // Offer reward (V35): gain 1 Glory or draw 1 card.
+    const r = yield* chooseOne(s, seat, 'offer.reward', 'Offer reward: gain 1 Glory, or draw 1 card?', [{ id: 'glory', label: 'Gain 1 Glory' }, { id: 'card', label: 'Draw 1 card' }]);
+    if (r === 'card') { yield* drawTo(s, seat, 1); log(s, 'offer', `${p.name} drew a card instead of gaining Glory.`); continue; }
     // Mammon: once per Day, take this Glory from a player instead of the Pot.
     if (hasActive(s, seat, H.mammon) && !usedToday(s, seat, 'mammon') && canActivate(s, seat, H.mammon) && s.players.some((o) => o.seat !== seat && o.glory > 0)) {
       const pick = yield* chooseOne(s, seat, 'mammon.offer', 'Mammon: take this Glory from a player instead of the Pot?', s.players.filter((o) => o.seat !== seat && o.glory > 0).map((o) => seatOpt(s, o.seat)), true);
@@ -357,7 +361,6 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
 function* doGather(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
   const opts = altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id }));
-  s.row.forEach((c, i) => opts.push({ id: 'row:' + i, label: `From the face-up row: ${cardName(c)}`, card: c }));
   if (s.hostDeck.length || s.discard.length) opts.push({ id: 'deck', label: hasActive(s, seat, H.temptation) ? 'From the top of the Host deck (Temptation: look at 2)' : 'From the top of the Host deck', card: undefined });
   if (hasActive(s, seat, H.forger) && s.discard.length && canActivate(s, seat, H.forger)) opts.push({ id: 'discard', label: `From the discard pile (Forger): ${cardName(s.discard[s.discard.length - 1])}`, card: s.discard[s.discard.length - 1] });
   if (hasActive(s, seat, H.favor) && canActivate(s, seat, H.favor)) for (const o of s.players) if (o.seat !== seat && o.hand.length) opts.push({ id: 'favor:' + o.seat, label: `From ${o.name}'s hand (Favor)`, card: undefined });
@@ -365,16 +368,12 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
   if (!(yield* makeRoom(s, seat, 'Gather'))) return;
 
   let card: string | null = null;
-  let fromAltar: { offeredBy: Seat | null; day: number } | null = null;
+  let fromAltar: { offeredBy: Seat | null; day: number; kind?: string } | null = null;
   if (src.startsWith('altar:')) {
     const a = s.altar[Number(src.slice(6))];
     s.altar.splice(s.altar.indexOf(a), 1);
     card = a.id;
-    fromAltar = { offeredBy: a.offeredBy, day: a.day };
-  } else if (src.startsWith('row:')) {
-    card = s.row.splice(Number(src.slice(4)), 1)[0];
-    const refill = drawHost(s);
-    if (refill) s.row.push(refill);
+    fromAltar = { offeredBy: a.offeredBy, day: a.day, kind: a.kind };
   } else if (src === 'deck') {
     if (hasActive(s, seat, H.temptation)) {
       const top: string[] = [];
@@ -409,7 +408,7 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
   stat(s, { type: 'action', seat, card, source: 'gather', data: { from: src.split(':')[0] } });
   log(s, 'gather', `${p.name} Gathered ${cardName(card)}${src.startsWith('altar') ? ' from the Altar' : src === 'deck' ? ' from the Host deck' : ''}.`);
   // Snare: the player who Offered this card today gains 1 Glory.
-  if (fromAltar && fromAltar.offeredBy !== null && fromAltar.offeredBy !== seat && fromAltar.day === s.day && hasActive(s, fromAltar.offeredBy, H.snare)) {
+  if (fromAltar && fromAltar.kind === 'offer' && fromAltar.offeredBy !== null && fromAltar.offeredBy !== seat && fromAltar.day === s.day && hasActive(s, fromAltar.offeredBy, H.snare)) {
     yield* gain(s, fromAltar.offeredBy, 1, H.snare);
     log(s, 'snare', `${pname(s, fromAltar.offeredBy)} gained 1 Glory (Snare).`);
   }
@@ -419,8 +418,9 @@ function* doExalt(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
   const cost = exaltCost(s, seat);
   const card = (yield* chooseOne(s, seat, 'exalt.card', `Exalt: choose a card from your hand to play into your Choir (cost ${cost}).`, p.hand.map((c) => cardOpt(c))))!;
-  if (!(yield* makeRoom(s, seat, 'Exalt'))) return;
+  // Set the chosen card aside first, so Absolution's hand discard cannot take it.
   p.hand.splice(p.hand.indexOf(card), 1);
+  if (!(yield* makeRoom(s, seat, 'Exalt'))) { p.hand.push(card); return; }
   let paidTo: Seat | undefined;
   if (cost > 0 && hasActive(s, seat, H.mammon) && !usedToday(s, seat, 'mammon') && canActivate(s, seat, H.mammon)) {
     const pick = yield* chooseOne(s, seat, 'mammon.exalt', 'Mammon: pay your Exalt cost to a player of your choosing instead of the Pot?', s.players.filter((o) => o.seat !== seat).map((o) => seatOpt(s, o.seat)), true);
@@ -481,6 +481,11 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
   const order = Array.from({ length: n }, (_, i) => (s.firstPlayer + i) % n);
   log(s, 'evening', 'Evening falls.');
 
+  // V35: the Altar is revealed first, so Evening abilities act with everything known.
+  const hidden = s.altar.filter((a) => a.facedown);
+  for (const a of s.altar) { a.facedown = false; a.seenBy = undefined; }
+  if (hidden.length) log(s, 'reveal', `The Altar is revealed: ${hidden.map((a) => cardName(a.id)).join(', ')}.`);
+
   // 1. In the Evening.
   for (const seat of order) {
     const p = s.players[seat];
@@ -494,7 +499,7 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
           const a = s.altar[Number(i)];
           const removed = removeChoirCard(s, seat, mid);
           if (!removed || !a) return;
-          s.altar.splice(s.altar.indexOf(a), 1, { id: mid, facedown: false, offeredBy: seat, day: s.day });
+          s.altar.splice(s.altar.indexOf(a), 1, { id: mid, facedown: false, offeredBy: seat, day: s.day, kind: 'other' });
           yield* enterChoir(s, seat, a.id);
           log(s, 'providence', `${p.name} exchanged ${cardName(mid)} for ${cardName(a.id)} on the Altar (Providence).`);
         });
@@ -530,8 +535,6 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
     }
   }
   s.pacts = [];
-  // Facedown Altar cards are revealed before Setting the Tide.
-  for (const a of s.altar) a.facedown = false;
 
   // 2. Set the Tide.
   const tide = setTide(s);
@@ -572,24 +575,6 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
       const idx = picks[k].map(Number).sort((a, b) => b - a);
       for (const i of idx) s.discard.push(...p.hand.splice(i, 1));
     });
-  }
-  if (variant(s, 'draw2keep1')) {
-    const drawn: Record<number, string[]> = {};
-    for (const p of s.players) {
-      const need = Math.max(0, baseHandLimit(s, p.seat) - p.hand.length);
-      if (!need) continue;
-      drawn[p.seat] = [];
-      for (let i = 0; i <= need; i++) { const c = drawHost(s); if (c) drawn[p.seat].push(c); }
-    }
-    const ps = s.players.filter((p) => drawn[p.seat]?.length);
-    const picks = yield* askAll(s, ps.map((p) => ({ seat: p.seat, tag: 'upkeep.keep', prompt: 'Upkeep: you drew one extra card. Choose 1 of the new cards to discard.', options: drawn[p.seat].map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: 1, max: 1 })));
-    ps.forEach((p, k) => {
-      const d = drawn[p.seat];
-      const [gone] = d.splice(Number(picks[k][0]), 1);
-      s.discard.push(gone);
-      p.hand.push(...d);
-    });
-    return;
   }
   for (const p of s.players) yield* drawTo(s, p.seat, Math.max(0, baseHandLimit(s, p.seat) - p.hand.length));
 }

@@ -16,9 +16,19 @@ function rand(seed: number) {
 const val = (s: GameState, id: string | undefined) => (id ? baseValue(s, id) : { light: 0, dark: 0 });
 const signed = (s: GameState, id: string | undefined) => { const v = val(s, id); return v.light - v.dark; };
 
+/** Does `viewer` know this Altar card? */
+const knows = (a: { facedown: boolean; offeredBy: Seat | null; seenBy?: Seat[] }, viewer?: Seat) => !a.facedown || (viewer !== undefined && (a.offeredBy === viewer || !!a.seenBy?.includes(viewer)));
+
+/**
+ * The viewer's estimate of the Altar. Known cards count fully; a facedown Offering from another player
+ * is read as leaning toward that player's own Choir (players tend to Offer toward their own side).
+ */
 function altarNet(s: GameState, viewer?: Seat) {
   let n = 0;
-  for (const a of s.altar) if (!a.facedown || a.offeredBy === viewer) n += signed(s, a.id);
+  for (const a of s.altar) {
+    if (knows(a, viewer)) n += signed(s, a.id);
+    else if (a.offeredBy !== null && a.offeredBy >= 0) n += 0.6 * Math.sign(alignment(s, a.offeredBy));
+  }
   return n;
 }
 
@@ -107,7 +117,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         const room = p.choir.length < 3;
         let best = reapValue(net, altar, w) - 0.1;
         for (const a of s.altar) {
-          if (a.facedown && a.offeredBy !== seat) continue;
+          if (!knows(a, seat)) continue;
           const v = signed(s, a.id);
           const newNet = net + v - (room ? 0 : worst?.v ?? 0);
           best = Math.max(best, reapValue(newNet, altar - v, w) + 0.15);
@@ -131,12 +141,12 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const pref = ['celestial-the-eclipse', 'celestial-the-arbiter', 'celestial-the-whisper', 'celestial-the-dominion', 'celestial-the-cantor', 'celestial-the-echo', 'celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-patron'];
       return one(pickBest(d.options, (o) => -pref.indexOf(o.id)).id);
     }
-    case 'secret.offer':
+    case 'firstFruits':
     case 'offer.card':
     case 'exalt.card': {
       const o = pickBest(d.options, (o) => {
         const v = signed(s, o.card);
-        if (d.tag === 'offer.card' || d.tag === 'secret.offer') return reapValue(net, altar + v, w) + (dirOf(v) === wantDir ? 0.5 : dirOf(v) === 'neutral' ? 0.1 : -0.3);
+        if (d.tag === 'offer.card' || d.tag === 'firstFruits') return reapValue(net, altar + v, w) + (dirOf(v) === wantDir ? 0.5 : dirOf(v) === 'neutral' ? 0.1 : -0.3);
         return want >= 0 ? v : -v;
       });
       return one(o.id);
@@ -152,8 +162,10 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const o = pickBest(d.options, (o) => {
         if (o.id === 'deck') return reapValue(net, altar, w) + 0.05;
         if (o.id.startsWith('favor')) return reapValue(net, altar, w) + 0.1;
-        const v = signed(s, o.card);
         const fromAltar = o.id.startsWith('altar');
+        const ac = fromAltar ? s.altar[Number(o.id.slice(6))] : undefined;
+        // A facedown card we have not seen: estimate it from who Offered it.
+        const v = o.card !== undefined ? signed(s, o.card) : ac && ac.offeredBy !== null && ac.offeredBy >= 0 ? 0.6 * Math.sign(alignment(s, ac.offeredBy)) : 0;
         return reapValue(net + v - (room ? 0 : worst?.v ?? 0), fromAltar ? altar - v : altar, w) + (fromAltar ? 0.1 : 0);
       });
       return one(o.id);
@@ -209,8 +221,31 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       return one('yes');
     case 'oracle':
       return one(r < 0.3 ? 'bury' : 'play');
-    case 'mirage':
-      return one(r < 0.5 ? 'yes' : 'no');
+    case 'ithuriel': {
+      // Reveal the hidden card most likely to work against us (an opponent's Offering).
+      const o = pickBest(d.options, (o) => {
+        const a = s.altar[Number(o.id)];
+        return a.offeredBy !== null && a.offeredBy >= 0 && a.offeredBy !== seat ? 1 - Math.abs(Math.sign(alignment(s, a.offeredBy)) - Math.sign(want)) * 0.3 + r * 0.1 : 0;
+      });
+      return one(o.id);
+    }
+    case 'urim':
+      return d.options.slice(0, d.max).map((o) => o.id);
+    case 'asmadai': {
+      const o = pickBest(d.options, (o) => {
+        const a = s.altar[Number(o.id)];
+        return a.offeredBy === seat ? -1 : a.offeredBy !== null && a.offeredBy >= 0 ? Math.abs(alignment(s, a.offeredBy)) + r * 0.1 : 0.2;
+      });
+      return one(o.id);
+    }
+    case 'asmadai.swap': {
+      const seen = d.reveal?.[0];
+      if (!seen) return one('none');
+      const keep = reapValue(net, altar, w);
+      const base = altar;
+      const o = pickBest(d.options.filter((x) => x.card), (x) => reapValue(net, base - signed(s, seen) + signed(s, x.card), w) + (want >= 0 ? signed(s, seen) : -signed(s, seen)) * 0.2);
+      return one(o && reapValue(net, base - signed(s, seen) + signed(s, o.card), w) > keep + 0.2 ? o.id : 'none');
+    }
     case 'council.vote':
       return one(r < 0.5 ? 'yes' : 'no');
     case 'wisdom': {

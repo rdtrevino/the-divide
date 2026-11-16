@@ -1,6 +1,6 @@
 # The Divide: Design Decisions
 
-The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 14, 2026, to match card data V34 and rulebook v4.1.
+The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 15, 2026, to match card data V35 and rulebook v5.
 
 ## Governing rules
 
@@ -15,15 +15,14 @@ The Divide has two modes on one deck and one Day structure.
 
 | Players | Mode |
 |---|---|
-| 3 | Open Game only |
-| 4 | Table's choice; Open Game is the default |
-| 5 or 6 | Hidden Roles by default; Open Game allowed |
+| 3 or 4 | Open Game |
+| 5 or 6 | Hidden Roles |
 
 **The Open Game is the main focus.** Players compete in the open for the most Glory over six fixed Days. There is no Balance, no Fates, and no Turn. Each Day's Tide scores every public Choir once (capped at 3), and the final Tide also sets an endgame bonus of 1 Glory per matching card in hand and Choir. Ties go to the player with more matching cards, then are shared. Optional: 2 Seeds per Day if Tides feel thin.
 
 **Hidden Roles** is the original design: secret Fates (Faithful, Fallen, Forsaken), the 11-space Balance with an early end at either extreme, the Turn, and faction victory plus most Glory within the faction.
 
-The web build offers both modes at 4 or more players so playtesting can move the line.
+Decided November 15, 2026: the Open Game is for 3 or 4 players, like the 3-player game it grew from; Hidden Roles is for 5 or 6.
 
 ## Open Game deck
 
@@ -36,12 +35,14 @@ The Open Game sets aside 6 Host cards and 3 Events:
 | Hubris | Keeps the Light and Dark Offering totals equal; also a Glory-theft card that gets stronger without factions |
 | The Sabbath, Equilibrium, Armageddon | Move the Balance marker |
 
-That leaves **63 Host cards: 21 Light, 20 Dark, and 22 Neutral or Variable**, with Offering totals of **24 Light and 24 Dark**. The +2 once-per-game cards remaining are three Light (Free Will, Mercy, Deliverance) and four Dark (Abaddon, Silence, Scapegoat, Defiance). The Event deck has 17 cards. Hubris can be restored if testing shows the Offering mirror does not matter.
+That leaves **66 Host cards: 22 Light, 21 Dark, 21 Neutral, and 2 Variable**, with Offering totals of **25 Light and 25 Dark** (V35 added Ithuriel, Urim, and Asmadai). The +2 once-per-game cards remaining are three Light (Free Will, Mercy, Deliverance) and four Dark (Abaddon, Silence, Scapegoat, Defiance). The Event deck has 17 cards. Hubris can be restored if testing shows the Offering mirror does not matter.
 
 ## Shared rules (both modes)
 
-- **Day loop:** Unveiling (Event, Declarations, Seed), one turn each, then the Evening (In the Evening abilities, Set the Tide, the Reaping, Refresh the Altar, Upkeep).
-- **Actions:** Offer (gain 1 Glory), Gather (free; discard from a full Choir), Exalt (flat 1 Glory; discard from a full Choir). Turn exists only in Hidden Roles.
+- **Day loop:** Unveiling (Event, Declarations, Seed, First Fruits), one turn each, then the Evening (Reveal the Altar, In the Evening abilities, Set the Tide, the Reaping, Refresh the Altar, Upkeep).
+- **First Fruits (V35):** each Morning after the Seed, every player secretly picks 1 card from hand, all reveal at once face up on the Altar, then each draws 1. A tithe: no Glory, not the Offer action, triggers no Offer abilities.
+- **Facedown Offers (V35, both modes):** every Offer goes on the Altar facedown. The whole Altar is revealed as the first step of the Evening, so In the Evening abilities see every card. Facedown cards may be Gathered blind.
+- **Actions:** Offer (facedown; reward is 1 Glory or 1 card), Gather (free; discard from a full Choir), Exalt (flat 1 Glory; discard from a full Choir). Turn exists only in Hidden Roles.
 - **Starting position:** a hidden hand of 3 and a face-up Choir of 3 random cards. Choir limit 3 for everyone. Hand limit 3 (the Dominion has 4 and starts with 4).
 - **Reaping cap:** 3 Glory gained or lost per Reaping, applied after doubling. Effects outside Alignment scoring (Leviathan and similar) are not capped.
 - **Deck reshuffle:** when the Host deck runs out, shuffle the discard pile.
@@ -76,7 +77,14 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 | Tithe | Every Host ability you activate costs 1, on your turn, in the Evening, or at the Reaping. Always-on abilities are never activated and are free. If you cannot pay, you cannot activate. |
 | Silence | Responds after an ability is announced and before it resolves. Costs already paid, including Tithe, are lost. |
 | Raguel (entry) | The Bound player is chosen when Raguel enters your Choir. |
-| Raphael, Azazel | No Once per Day limit on either (mirror pair). |
+| Raphael, Azazel | No Once per Day limit (mirror pair). V35: you turn your own Offering face up and forgo its reward; only face-up cards can be destroyed. |
+| Hymn, Lamentation | V35: a two-card Offer goes face up so the shared color is visible; one reward. |
+| Mirage | V35: your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening (blocks Ithuriel, Urim, Asmadai, Abaddon, the Tempest). They can still be Gathered. |
+| Ithuriel, Asmadai | V35 mirror pair. Light reveals a facedown card to everyone; Dark looks privately and may swap it for a hand card. Asmadai's swap keeps the card facedown and still Offered by its original owner. |
+| Urim | V35 Neutral. Look privately at up to 2 facedown cards you did not Offer. What you say about them is up to you. |
+| Vessel | V35: its card goes on the Altar facedown. |
+| Pandemonium | V35: the Seed and First Fruits go facedown, and no Altar card may be flipped or looked at before the Evening. |
+| Snare | Pays only on a Gather of a card you Offered; never First Fruits or the Seed. |
 | Covenant | Imposed on the named player; no consent. |
 | Forger | On Gather, may take the top of the discard pile. |
 | Absolution | Once per Day, a discarded Choir card returns to hand; then discard 1 from hand. |
@@ -87,7 +95,8 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 
 - Few Host cards should give easy Glory every turn.
 - No player should be able to profit by playing only cards of one alignment.
-- Paired cards are designed as mirrors or opposites (the Light and Dark numbering, Cherubim and Veil, Raphael and Azazel).
+- Paired cards are designed as mirrors or opposites (the Light and Dark numbering, Cherubim and Veil, Raphael and Azazel, Ithuriel and Asmadai).
+- Chaos and choice over automatic play: hidden information should create reads and bluffs, not just luck (why V35 rejected the face-up row and draw 2, keep 1).
 - Secret personal objectives were considered for the Open Game and rejected, because they work the same way Fates do.
 
 ## Still to decide (Hidden Roles only)
@@ -120,17 +129,26 @@ Tested on 20,000 bot games each against V33 (win ratio 1.00 = fair), then adopte
 
 Details and rejected alternatives: `game/reports/balance-proposals-2026-11-14.md`.
 
-## Playtest watch list (Open Game, V34)
+## First Fruits and facedown Offers adopted (November 15, 2026)
 
-- **The Eclipse (1.28)** is now the strongest Celestial. Fallback: declare before the Tide is set.
-- **Leviathan (1.45)** pays 1 Glory per rival who loses at the Reaping, which rarely misses in a three-way race.
+Measured on the same seeds as the V34 decision report (3 players; 4 players in brackets). Core decisions per player: V34 21.8 (21.9), V35 33.2 (33.4). Skill edge: 2.37 (2.80) to 2.46 (2.95). Day 3 leader wins: 65% (59%) to 62% (55%). Winning Glory unchanged at 12.4. The first version had no draw after First Fruits; it starved hands and dropped the skill edge to 2.14, so the draw was added. Details: `game/reports/v35-facedown-offerings-2026-11-15.md`.
+
+Rejected the same day: the face-up row of 3 Host cards and "draw 2, keep 1" at Upkeep (Robert did not like them). Still available as tested options: the Long Game (two rounds of turns each Day) and the Celestial draft.
+
+## Playtest watch list (Open Game, V35)
+
+- **Bluffing.** The bots cannot bluff, so they undervalue the hidden Altar. Does the table read First Fruits and facedown Offers, or just guess?
+- **Ithuriel, Urim, Asmadai, Mirage.** Bots rate them 0.98, 0.78, 0.92, 0.73 (Neutral cards normally sit between 0.68 and 0.84). Is Urim's private look worth a card slot? Is Asmadai's swap too strong late in the Day?
+- **Blind Gathers.** Do players ever Gather a facedown card, or does the Gather action shrink?
+
+- **The Eclipse (1.26 in V35)** is the strongest Celestial. Fallback: declare before the Tide is set.
+- **Leviathan (1.54 in V35)** pays 1 Glory per rival who loses at the Reaping, which rarely misses in a three-way race.
 - **Fig Leaves (0.75)** lost ground to the new Heresy, which also protects against a bad Tide.
 - **Raguel (0.75)** improved but is still weak.
-- **The Patron (0.80), the Oracle (0.88), the Tempest (0.88)** may be undervalued by the bots; confirm with people.
+- **The Patron (0.86), the Oracle (0.87), the Echo (0.86)** may be undervalued by the bots; confirm with people.
 - **Hubris removal.** Does the open deck play better without it?
 - **Final-Day gift ban.** Does it remove kingmaking without flattening Day 6 negotiation?
 - **Raphael and Azazel without Once per Day.** Watch for Altar wipes with Hymn or Lamentation.
-- **Snowballing.** The sole leader after Day 3 wins 65% of 3-player bot games (chance: 33%); the winner was not leading entering Day 6 in 17%.
+- **Snowballing.** The sole leader after Day 3 wins 62% of 3-player bot games in V35 (65% in V34; chance: 33%); the winner was not leading entering Day 6 in 19%.
 - **Days feel separate.** Only Shroud and Apple carry the previous Day forward.
 - **Thin Altar** at 3 players; the 2-Seed option is in the rules.
-- **The 4-player default.** Which mode do 4-player tables prefer?

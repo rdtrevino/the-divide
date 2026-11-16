@@ -1,5 +1,30 @@
 # Changelog
 
+## V35 cards and Rulebook v5 (November 15, 2026)
+
+More hidden information and more choices, measured on simulated games before adoption. See `game/reports/v35-facedown-offerings-2026-11-15.md`.
+
+### Rules
+
+- **First Fruits:** a fourth Unveiling step. After the Seed, every player secretly picks 1 card from hand, all reveal at once face up on the Altar, then each draws 1. No Glory; not an Offer.
+- **Facedown Offers** in both modes. The Offer reward is now a choice: 1 Glory or 1 card.
+- **Reveal the Altar** is the new first step of the Evening, before In the Evening abilities.
+- **Player counts:** Open Game at 3 or 4, Hidden Roles at 5 or 6.
+
+### Cards
+
+- **Mirage:** "Your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening."
+- **Raphael / Azazel:** turn your Offering face up and forgo its reward to destroy 1 face-up opposing card.
+- **Hymn / Lamentation:** a two-card Offer goes face up; one reward.
+- **Vessel:** adds its card facedown.
+- **The Cantor:** a reward for each of its two Offers.
+- **Pandemonium:** "The Seed and First Fruits are placed facedown, and no card on the Altar may be flipped or looked at before the Evening."
+- **New:** Ithuriel (Light +1, flip a facedown Altar card), Urim (Neutral, secretly look at up to 2 facedown Altar cards), Asmadai (Dark +1, look at a facedown Altar card and may swap it with one from your hand). The full deck is 72 Host cards; the Open Game uses 66.
+
+### Results (3 players)
+
+Core decisions per player rose from 21.8 to 33.2, the skill edge held (2.37 to 2.46), and the Day 3 leader's win rate fell from 65% to 62%.
+
 ## V34 cards and Rulebook v4.1 (November 14, 2026)
 
 Five balance changes, each tested on 20,000 simulated games before adoption. See `game/reports/balance-proposals-2026-11-14.md`.

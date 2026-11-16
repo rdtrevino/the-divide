@@ -14,7 +14,7 @@ The online version of The Divide. Everything here is TypeScript.
 
 ```
 npm install
-npm test                                   # run 34 rules tests and 600 bot games
+npm test                                   # run 53 tests, including about 1,000 bot games
 cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements
 npm run sim -- --games 20000 --players 3,4 # balance report
 cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a rule variant
@@ -22,7 +22,7 @@ cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a 
 
 The engine supports experimental rule `variants` in the game config for A/B testing. The five balance changes tested on November 14 were adopted as permanent V34 card text (see `reports/balance-proposals-2026-11-14.md`).
 
-Current experimental rules (see `reports/decision-variants-2026-11-14.md`): `two-rounds`, `secret-offering`, `face-up-row`, `draw2keep1`, `offer-choice`, `celestial-draft`, `catchup-order`. Measure them with `cd tools/sim && npx tsx variants.ts 3000 out.json B FDO RFD`.
+V35 (November 15) made First Fruits, facedown Offers, and the Offer reward choice the standard rules (see `reports/v35-facedown-offerings-2026-11-15.md`). The face-up row, draw 2 keep 1, and the secret offering experiments were removed. Remaining experimental rules: `two-rounds` (the Long Game), `celestial-draft`, `catchup-order`. Measure them with `cd tools/sim && npx tsx variants.ts 3000 out.json B R C RC`.
 
 ## Engine rulings to confirm
 
@@ -38,3 +38,5 @@ These are calls the engine makes where the card text leaves room. Each is easy t
 - **Hubris** (Hidden Roles only): every tied leader who gains Glory gives 1.
 - **Arbiter** (V34): routes 1 Glory only for Alignment scoring at the Reaping, not for other Reaping-step abilities such as Firmament.
 - A once-per-game card that leaves a Choir is no longer "used" if it returns later.
+- **Facedown Altar cards** (V35): bots estimate an unseen Offering as leaning toward the Offerer's own Choir. Players who see a card through Urim or Asmadai see it in their own view until the Evening reveal.
+- **Exalt with Absolution** (fixed in V35): the card being Exalted is set aside first, so Absolution's hand discard cannot take it.

@@ -5,10 +5,10 @@ import { Game, botAnswer, type Decision, type GameState } from '@divide/engine';
 
 const N = Number(process.argv[2] ?? 3000);
 const OUT = process.argv[3] ?? 'variants.json';
-const CODES: Record<string, string> = { K: 'catchup-order', R: 'two-rounds', S: 'secret-offering', F: 'face-up-row', D: 'draw2keep1', O: 'offer-choice', C: 'celestial-draft' };
-const CONFIGS = process.argv.slice(4).length ? process.argv.slice(4) : ['B', 'R', 'S', 'F', 'D', 'O', 'C', 'RF', 'RFD', 'RFO', 'SF', 'SFD', 'RS', 'RSF', 'RFC', 'FDO', 'RSFDOC'];
+const CODES: Record<string, string> = { K: 'catchup-order', R: 'two-rounds', C: 'celestial-draft' };
+const CONFIGS = process.argv.slice(4).length ? process.argv.slice(4) : ['B', 'R', 'K', 'C', 'RC'];
 const NAMES = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
-const CORE = new Set(['action', 'offer.card', 'offer.second', 'gather.source', 'exalt.card', 'secret.offer', 'offer.reward', 'upkeep.keep', 'choir.discard', 'activate', 'celestial.pick']);
+const CORE = new Set(['action', 'offer.card', 'offer.second', 'gather.source', 'exalt.card', 'firstFruits', 'offer.reward', 'ithuriel', 'urim', 'asmadai', 'asmadai.swap', 'upkeep.keep', 'choir.discard', 'activate', 'celestial.pick']);
 
 function rnd(seed: number) { let t = (seed + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
 function randomAnswer(d: Decision, salt: number) {
@@ -41,7 +41,7 @@ function gloryAfterDay(s: GameState, day: number) {
 const results: any[] = [];
 for (const code of CONFIGS) {
   const variants = code === 'B' ? [] : code.split('').map((c) => CODES[c]);
-  const row: any = { code, variants: variants.join('+') || 'baseline (V34)' };
+  const row: any = { code, variants: variants.join('+') || 'baseline (V35)' };
   for (const n of [3, 4]) {
     const t0 = Date.now();
     const counts = { all: Array(n).fill(0), core: Array(n).fill(0) };

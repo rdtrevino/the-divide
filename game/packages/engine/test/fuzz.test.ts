@@ -5,7 +5,7 @@ const names = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
 const cfg = (seed: number, n: number) => ({ seed, mode: 'open' as const, players: names.slice(0, n).map((name) => ({ name, isBot: true })) });
 
 describe('bot games run to completion', () => {
-  for (const n of [3, 4, 5, 6]) {
+  for (const n of [3, 4]) {
     it(`${n} players x 150 seeds`, () => {
       for (let seed = 1; seed <= 150; seed++) {
         const g = playBotGame(cfg(seed * 31 + n, n));
@@ -19,9 +19,8 @@ describe('bot games run to completion', () => {
         const s = g.state;
         const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
         if (s.carriedSeed) zones.push(s.carriedSeed);
-        zones.push(...s.row);
         expect(new Set(zones).size).toBe(zones.length);
-        expect(zones.length).toBe(63);
+        expect(zones.length).toBe(66);
       }
     });
   }
@@ -40,18 +39,17 @@ describe('replay is deterministic', () => {
 });
 
 describe('experimental rules run cleanly', () => {
-  const sets = [['two-rounds'], ['secret-offering'], ['face-up-row'], ['draw2keep1'], ['offer-choice'], ['celestial-draft'],
-    ['two-rounds', 'face-up-row', 'draw2keep1', 'offer-choice', 'secret-offering', 'celestial-draft']];
+  const sets = [[], ['two-rounds'], ['catchup-order'], ['celestial-draft'], ['two-rounds', 'catchup-order', 'celestial-draft']];
   for (const variants of sets) {
     it(variants.join('+'), () => {
       for (let seed = 1; seed <= 60; seed++) {
-        const n = 3 + (seed % 4);
+        const n = 3 + (seed % 2);
         const g = playBotGame({ ...cfg(seed * 13 + n, n), variants });
         const s = g.state;
-        const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.row, ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
+        const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
         if (s.carriedSeed) zones.push(s.carriedSeed);
         expect(new Set(zones).size).toBe(zones.length);
-        expect(zones.length).toBe(63);
+        expect(zones.length).toBe(66);
         expect(s.result).not.toBeNull();
         const r = Game.replay(g.config, g.inputs);
         expect(r.state.result).toEqual(s.result);

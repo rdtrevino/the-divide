@@ -1,0 +1,1143 @@
+{
+ "games": 20000,
+ "counts": [
+  3,
+  4
+ ],
+ "celestials": {
+  "celestial-the-dominion": {
+   "seats": 7824,
+   "wins": 2295.8333333333326,
+   "expected": 2238.416666666617,
+   "glory": 73452
+  },
+  "celestial-the-eclipse": {
+   "seats": 7865,
+   "wins": 2831.9166666666683,
+   "expected": 2239.999999999953,
+   "glory": 78770
+  },
+  "celestial-the-arbiter": {
+   "seats": 7754,
+   "wins": 2670.6666666666674,
+   "expected": 2209.7499999999422,
+   "glory": 68046
+  },
+  "celestial-the-cantor": {
+   "seats": 7804,
+   "wins": 2021.8333333333321,
+   "expected": 2229.0833333332794,
+   "glory": 69028
+  },
+  "celestial-the-oracle": {
+   "seats": 7812,
+   "wins": 1948.749999999999,
+   "expected": 2228.5833333332844,
+   "glory": 68956
+  },
+  "celestial-the-tempest": {
+   "seats": 7766,
+   "wins": 2109.166666666665,
+   "expected": 2224.166666666613,
+   "glory": 75628
+  },
+  "celestial-the-echo": {
+   "seats": 7627,
+   "wins": 1873.9166666666652,
+   "expected": 2175.58333333327,
+   "glory": 66792
+  },
+  "celestial-the-whisper": {
+   "seats": 7668,
+   "wins": 2304.249999999999,
+   "expected": 2194.6666666666065,
+   "glory": 71777
+  },
+  "celestial-the-patron": {
+   "seats": 7880,
+   "wins": 1943.666666666665,
+   "expected": 2259.7499999999523,
+   "glory": 65084
+  }
+ },
+ "cardFinal": {
+  "host-veil": {
+   "seats": 1427,
+   "wins": 325.5,
+   "expected": 406.08333333333087,
+   "glory": 12380
+  },
+  "host-free-will": {
+   "seats": 7322,
+   "wins": 2394.9166666666665,
+   "expected": 2103.9999999999163,
+   "glory": 70909
+  },
+  "host-confession": {
+   "seats": 3755,
+   "wins": 1137.6666666666667,
+   "expected": 1070.2500000000164,
+   "glory": 36104
+  },
+  "host-raphael": {
+   "seats": 3693,
+   "wins": 1028.166666666667,
+   "expected": 1055.2500000000198,
+   "glory": 34311
+  },
+  "host-martyr": {
+   "seats": 3225,
+   "wins": 977.0000000000002,
+   "expected": 923.1666666666841,
+   "glory": 30733
+  },
+  "host-sanctuary": {
+   "seats": 3748,
+   "wins": 1063.166666666667,
+   "expected": 1069.1666666666838,
+   "glory": 35192
+  },
+  "host-wisdom": {
+   "seats": 3836,
+   "wins": 1100.8333333333335,
+   "expected": 1096.250000000016,
+   "glory": 36257
+  },
+  "host-remnant": {
+   "seats": 3774,
+   "wins": 1153.0833333333335,
+   "expected": 1077.3333333333508,
+   "glory": 37464
+  },
+  "host-gabriel": {
+   "seats": 3598,
+   "wins": 999.3333333333335,
+   "expected": 1028.416666666691,
+   "glory": 33384
+  },
+  "host-lamentation": {
+   "seats": 3060,
+   "wins": 778.5833333333336,
+   "expected": 872.833333333348,
+   "glory": 26524
+  },
+  "host-asmadai": {
+   "seats": 3143,
+   "wins": 822.3333333333335,
+   "expected": 897.2500000000159,
+   "glory": 27643
+  },
+  "host-absolution": {
+   "seats": 3631,
+   "wins": 999.7500000000006,
+   "expected": 1038.5000000000207,
+   "glory": 33561
+  },
+  "host-defiance": {
+   "seats": 5753,
+   "wins": 1589.249999999999,
+   "expected": 1649.0833333332841,
+   "glory": 51613
+  },
+  "host-silence": {
+   "seats": 5923,
+   "wins": 1637.1666666666658,
+   "expected": 1694.0833333332807,
+   "glory": 52357
+  },
+  "host-tribute": {
+   "seats": 3715,
+   "wins": 1300.7500000000002,
+   "expected": 1061.4166666666856,
+   "glory": 36610
+  },
+  "host-scapegoat": {
+   "seats": 5997,
+   "wins": 2245.1666666666665,
+   "expected": 1720.833333333275,
+   "glory": 57297
+  },
+  "host-urim": {
+   "seats": 1474,
+   "wins": 329.50000000000006,
+   "expected": 419.91666666666356,
+   "glory": 12614
+  },
+  "host-providence": {
+   "seats": 632,
+   "wins": 174.66666666666666,
+   "expected": 181.16666666666708,
+   "glory": 5236
+  },
+  "host-apple": {
+   "seats": 1420,
+   "wins": 319.5,
+   "expected": 405.5833333333305,
+   "glory": 12271
+  },
+  "host-hymn": {
+   "seats": 3668,
+   "wins": 1056.666666666667,
+   "expected": 1048.8333333333528,
+   "glory": 34468
+  },
+  "host-mammon": {
+   "seats": 3082,
+   "wins": 1064.2500000000002,
+   "expected": 878.250000000015,
+   "glory": 26443
+  },
+  "host-tree-of-life": {
+   "seats": 3898,
+   "wins": 1422.9999999999998,
+   "expected": 1114.7500000000132,
+   "glory": 41744
+  },
+  "host-covenant": {
+   "seats": 3714,
+   "wins": 988.2500000000001,
+   "expected": 1058.9166666666863,
+   "glory": 34863
+  },
+  "host-azazel": {
+   "seats": 3142,
+   "wins": 831.416666666667,
+   "expected": 899.9166666666825,
+   "glory": 27460
+  },
+  "host-legion": {
+   "seats": 3085,
+   "wins": 795.6666666666669,
+   "expected": 882.0000000000157,
+   "glory": 26785
+  },
+  "host-moderation": {
+   "seats": 1424,
+   "wins": 358.75,
+   "expected": 407.2499999999973,
+   "glory": 12900
+  },
+  "host-abaddon": {
+   "seats": 5746,
+   "wins": 1607.5833333333321,
+   "expected": 1648.8333333332826,
+   "glory": 51907
+  },
+  "host-serpent": {
+   "seats": 3140,
+   "wins": 848.5000000000003,
+   "expected": 896.0000000000168,
+   "glory": 27343
+  },
+  "host-ordeal": {
+   "seats": 1469,
+   "wins": 346.66666666666663,
+   "expected": 417.08333333333036,
+   "glory": 13084
+  },
+  "host-morning-star": {
+   "seats": 3853,
+   "wins": 884.0000000000002,
+   "expected": 1097.750000000014,
+   "glory": 32766
+  },
+  "host-moloch": {
+   "seats": 3168,
+   "wins": 906.5000000000001,
+   "expected": 903.6666666666832,
+   "glory": 28408
+  },
+  "host-ithuriel": {
+   "seats": 3776,
+   "wins": 1054.0833333333335,
+   "expected": 1076.416666666683,
+   "glory": 35108
+  },
+  "host-mercy": {
+   "seats": 6619,
+   "wins": 2033.4999999999993,
+   "expected": 1902.5833333332553,
+   "glory": 63739
+  },
+  "host-mirage": {
+   "seats": 1445,
+   "wins": 301.91666666666663,
+   "expected": 411.16666666666396,
+   "glory": 12332
+  },
+  "host-beelzebub": {
+   "seats": 2961,
+   "wins": 941.8333333333335,
+   "expected": 846.3333333333463,
+   "glory": 26867
+  },
+  "host-envy": {
+   "seats": 3049,
+   "wins": 1016.5833333333339,
+   "expected": 871.3333333333467,
+   "glory": 26103
+  },
+  "host-favor": {
+   "seats": 3140,
+   "wins": 846.0000000000002,
+   "expected": 895.3333333333486,
+   "glory": 27814
+  },
+  "host-shroud": {
+   "seats": 4085,
+   "wins": 1202.6666666666667,
+   "expected": 1163.666666666673,
+   "glory": 33011
+  },
+  "host-deliverance": {
+   "seats": 6780,
+   "wins": 2073.666666666666,
+   "expected": 1947.4166666665828,
+   "glory": 64275
+  },
+  "host-leviathan": {
+   "seats": 3063,
+   "wins": 1347.7499999999995,
+   "expected": 877.8333333333484,
+   "glory": 32481
+  },
+  "host-snare": {
+   "seats": 3074,
+   "wins": 767.2500000000002,
+   "expected": 879.7500000000157,
+   "glory": 26540
+  },
+  "host-council": {
+   "seats": 1488,
+   "wins": 308.66666666666663,
+   "expected": 422.9999999999966,
+   "glory": 12496
+  },
+  "host-raguel": {
+   "seats": 1734,
+   "wins": 383.99999999999994,
+   "expected": 491.7499999999954,
+   "glory": 14644
+  },
+  "host-michael": {
+   "seats": 3699,
+   "wins": 1398.833333333333,
+   "expected": 1055.5833333333524,
+   "glory": 33847
+  },
+  "host-cherubim": {
+   "seats": 4088,
+   "wins": 1294.333333333333,
+   "expected": 1168.0833333333403,
+   "glory": 38523
+  },
+  "host-outcast": {
+   "seats": 1361,
+   "wins": 291.1666666666667,
+   "expected": 384.41666666666464,
+   "glory": 11904
+  },
+  "host-temptation": {
+   "seats": 3089,
+   "wins": 816.8333333333337,
+   "expected": 880.7500000000151,
+   "glory": 27012
+  },
+  "host-parasite": {
+   "seats": 4965,
+   "wins": 1277.6666666666663,
+   "expected": 1426.2499999999764,
+   "glory": 43378
+  },
+  "host-eternity": {
+   "seats": 1590,
+   "wins": 379.75,
+   "expected": 452.9999999999959,
+   "glory": 14801
+  },
+  "host-seraphim": {
+   "seats": 3774,
+   "wins": 1058.416666666667,
+   "expected": 1083.0000000000175,
+   "glory": 34977
+  },
+  "host-winnowing": {
+   "seats": 3217,
+   "wins": 781.0833333333335,
+   "expected": 916.6666666666827,
+   "glory": 28035
+  },
+  "host-vessel": {
+   "seats": 1503,
+   "wins": 314.83333333333326,
+   "expected": 427.91666666666333,
+   "glory": 12648
+  },
+  "host-twilight": {
+   "seats": 1370,
+   "wins": 323.33333333333337,
+   "expected": 389.1666666666646,
+   "glory": 12063
+  },
+  "host-fig-leaves": {
+   "seats": 1369,
+   "wins": 333.4166666666666,
+   "expected": 390.0833333333312,
+   "glory": 12338
+  },
+  "host-heresy": {
+   "seats": 1461,
+   "wins": 479.2499999999999,
+   "expected": 416.58333333333036,
+   "glory": 14550
+  },
+  "host-firmament": {
+   "seats": 1385,
+   "wins": 391.1666666666665,
+   "expected": 393.74999999999767,
+   "glory": 13163
+  },
+  "host-forger": {
+   "seats": 1553,
+   "wins": 291.8333333333333,
+   "expected": 443.4166666666627,
+   "glory": 13030
+  },
+  "host-prophecy": {
+   "seats": 1381,
+   "wins": 396.5833333333333,
+   "expected": 394.8333333333311,
+   "glory": 12500
+  },
+  "host-anathema": {
+   "seats": 3026,
+   "wins": 893.5000000000003,
+   "expected": 864.4166666666799,
+   "glory": 25545
+  },
+  "host-jubilee": {
+   "seats": 1731,
+   "wins": 380.66666666666663,
+   "expected": 493.4999999999948,
+   "glory": 15544
+  },
+  "host-lilith": {
+   "seats": 3158,
+   "wins": 844.8333333333335,
+   "expected": 903.0833333333513,
+   "glory": 27723
+  },
+  "host-stillness": {
+   "seats": 1466,
+   "wins": 377,
+   "expected": 418.24999999999693,
+   "glory": 13090
+  },
+  "host-uriel": {
+   "seats": 3641,
+   "wins": 1267.3333333333335,
+   "expected": 1037.3333333333549,
+   "glory": 36304
+  },
+  "host-nephilim": {
+   "seats": 1468,
+   "wins": 334.0833333333333,
+   "expected": 417.83333333332996,
+   "glory": 12584
+  },
+  "host-zealot": {
+   "seats": 1479,
+   "wins": 361.75,
+   "expected": 421.33333333333024,
+   "glory": 13024
+  },
+  "host-watchers": {
+   "seats": 1418,
+   "wins": 275.9166666666667,
+   "expected": 405.4166666666636,
+   "glory": 11531
+  }
+ },
+ "cardSource": {
+  "host-jubilee": {
+   "glory": 0,
+   "games": 0,
+   "activations": 11820,
+   "negated": 128
+  },
+  "host-wisdom": {
+   "glory": 0,
+   "games": 0,
+   "activations": 19099,
+   "negated": 170
+  },
+  "host-free-will": {
+   "glory": 0,
+   "games": 0,
+   "activations": 8961,
+   "negated": 80
+  },
+  "host-confession": {
+   "glory": 5237,
+   "games": 2990,
+   "activations": 18795,
+   "negated": 153
+  },
+  "host-sanctuary": {
+   "glory": 0,
+   "games": 0,
+   "activations": 19016,
+   "negated": 138
+  },
+  "host-remnant": {
+   "glory": 0,
+   "games": 0,
+   "activations": 8496,
+   "negated": 55
+  },
+  "host-gabriel": {
+   "glory": 0,
+   "games": 0,
+   "activations": 18149,
+   "negated": 141
+  },
+  "celestial-the-oracle": {
+   "glory": 0,
+   "games": 0,
+   "activations": 46872,
+   "negated": 568
+  },
+  "host-deliverance": {
+   "glory": 0,
+   "games": 0,
+   "activations": 5394,
+   "negated": 53
+  },
+  "host-defiance": {
+   "glory": 0,
+   "games": 0,
+   "activations": 4752,
+   "negated": 74
+  },
+  "host-watchers": {
+   "glory": 0,
+   "games": 0,
+   "activations": 10955,
+   "negated": 152
+  },
+  "host-asmadai": {
+   "glory": 0,
+   "games": 0,
+   "activations": 13124,
+   "negated": 171
+  },
+  "host-silence": {
+   "glory": 0,
+   "games": 0,
+   "activations": 6452,
+   "negated": 0
+  },
+  "celestial-the-tempest": {
+   "glory": 0,
+   "games": 0,
+   "activations": 39551,
+   "negated": 352
+  },
+  "host-scapegoat": {
+   "glory": 0,
+   "games": 0,
+   "activations": 7749,
+   "negated": 127
+  },
+  "host-urim": {
+   "glory": 0,
+   "games": 0,
+   "activations": 5720,
+   "negated": 53
+  },
+  "host-stillness": {
+   "glory": 2168,
+   "games": 1683,
+   "activations": 0,
+   "negated": 0
+  },
+  "host-providence": {
+   "glory": 0,
+   "games": 0,
+   "activations": 10250,
+   "negated": 94
+  },
+  "host-prophecy": {
+   "glory": 7009,
+   "games": 3515,
+   "activations": 13287,
+   "negated": 172
+  },
+  "celestial-the-echo": {
+   "glory": 0,
+   "games": 0,
+   "activations": 35535,
+   "negated": 342
+  },
+  "host-tree-of-life": {
+   "glory": 0,
+   "games": 0,
+   "activations": 18187,
+   "negated": 127
+  },
+  "host-covenant": {
+   "glory": 14234,
+   "games": 4061,
+   "activations": 13191,
+   "negated": 126
+  },
+  "host-ordeal": {
+   "glory": 0,
+   "games": 0,
+   "activations": 5106,
+   "negated": 55
+  },
+  "host-mammon": {
+   "glory": 9822,
+   "games": 4102,
+   "activations": 10057,
+   "negated": 118
+  },
+  "celestial-the-whisper": {
+   "glory": 0,
+   "games": 0,
+   "activations": 45231,
+   "negated": 477
+  },
+  "host-morning-star": {
+   "glory": 0,
+   "games": 0,
+   "activations": 19103,
+   "negated": 171
+  },
+  "host-legion": {
+   "glory": 0,
+   "games": 0,
+   "activations": 3733,
+   "negated": 57
+  },
+  "host-serpent": {
+   "glory": 0,
+   "games": 0,
+   "activations": 16192,
+   "negated": 231
+  },
+  "celestial-the-eclipse": {
+   "glory": 0,
+   "games": 0,
+   "activations": 20272,
+   "negated": 201
+  },
+  "host-abaddon": {
+   "glory": 0,
+   "games": 0,
+   "activations": 3136,
+   "negated": 36
+  },
+  "host-ithuriel": {
+   "glory": 0,
+   "games": 0,
+   "activations": 15261,
+   "negated": 142
+  },
+  "celestial-the-patron": {
+   "glory": 0,
+   "games": 0,
+   "activations": 40105,
+   "negated": 409
+  },
+  "host-envy": {
+   "glory": 0,
+   "games": 0,
+   "activations": 8445,
+   "negated": 67
+  },
+  "host-moloch": {
+   "glory": 5242,
+   "games": 2845,
+   "activations": 3573,
+   "negated": 41
+  },
+  "host-vessel": {
+   "glory": 0,
+   "games": 0,
+   "activations": 11290,
+   "negated": 139
+  },
+  "host-tribute": {
+   "glory": 4472,
+   "games": 2415,
+   "activations": 0,
+   "negated": 0
+  },
+  "host-leviathan": {
+   "glory": 10091,
+   "games": 3764,
+   "activations": 0,
+   "negated": 0
+  },
+  "host-council": {
+   "glory": 0,
+   "games": 0,
+   "activations": 2006,
+   "negated": 21
+  },
+  "host-michael": {
+   "glory": 0,
+   "games": 0,
+   "activations": 18621,
+   "negated": 187
+  },
+  "host-twilight": {
+   "glory": 1686,
+   "games": 888,
+   "activations": 0,
+   "negated": 0
+  },
+  "host-eternity": {
+   "glory": 0,
+   "games": 0,
+   "activations": 12491,
+   "negated": 116
+  },
+  "host-heresy": {
+   "glory": 0,
+   "games": 0,
+   "activations": 2483,
+   "negated": 25
+  },
+  "host-winnowing": {
+   "glory": 0,
+   "games": 0,
+   "activations": 16482,
+   "negated": 230
+  },
+  "host-fig-leaves": {
+   "glory": 0,
+   "games": 0,
+   "activations": 4202,
+   "negated": 53
+  },
+  "host-anathema": {
+   "glory": 0,
+   "games": 0,
+   "activations": 15932,
+   "negated": 214
+  },
+  "host-seraphim": {
+   "glory": 0,
+   "games": 0,
+   "activations": 5860,
+   "negated": 34
+  },
+  "host-firmament": {
+   "glory": 3770,
+   "games": 2531,
+   "activations": 0,
+   "negated": 0
+  },
+  "host-mercy": {
+   "glory": 0,
+   "games": 0,
+   "activations": 2241,
+   "negated": 36
+  },
+  "host-absolution": {
+   "glory": 0,
+   "games": 0,
+   "activations": 6097,
+   "negated": 56
+  },
+  "host-raphael": {
+   "glory": 0,
+   "games": 0,
+   "activations": 1167,
+   "negated": 20
+  },
+  "host-zealot": {
+   "glory": 1368,
+   "games": 980,
+   "activations": 0,
+   "negated": 0
+  },
+  "host-martyr": {
+   "glory": 0,
+   "games": 0,
+   "activations": 2175,
+   "negated": 8
+  },
+  "host-snare": {
+   "glory": 238,
+   "games": 226,
+   "activations": 0,
+   "negated": 0
+  },
+  "host-azazel": {
+   "glory": 0,
+   "games": 0,
+   "activations": 1147,
+   "negated": 16
+  },
+  "host-lilith": {
+   "glory": 0,
+   "games": 0,
+   "activations": 573,
+   "negated": 11
+  },
+  "host-moderation": {
+   "glory": 1607,
+   "games": 802,
+   "activations": 0,
+   "negated": 0
+  },
+  "host-forger": {
+   "glory": 0,
+   "games": 0,
+   "activations": 99,
+   "negated": 0
+  },
+  "host-favor": {
+   "glory": 0,
+   "games": 0,
+   "activations": 158,
+   "negated": 5
+  }
+ },
+ "actions": {
+  "host-absolution": {
+   "offer": 4596,
+   "gather": 2239,
+   "exalt": 115
+  },
+  "host-confession": {
+   "offer": 4508,
+   "gather": 2332,
+   "exalt": 102
+  },
+  "host-hymn": {
+   "offer": 4432,
+   "gather": 2280,
+   "exalt": 90
+  },
+  "host-sanctuary": {
+   "offer": 4618,
+   "gather": 2279,
+   "exalt": 95
+  },
+  "host-outcast": {
+   "offer": 4759,
+   "gather": 1022,
+   "exalt": 119
+  },
+  "host-zealot": {
+   "offer": 4891,
+   "gather": 995,
+   "exalt": 159
+  },
+  "host-remnant": {
+   "offer": 4466,
+   "gather": 2325,
+   "exalt": 101
+  },
+  "host-apple": {
+   "offer": 4876,
+   "gather": 971,
+   "exalt": 130
+  },
+  "host-seraphim": {
+   "offer": 4517,
+   "gather": 2289,
+   "exalt": 97
+  },
+  "host-cherubim": {
+   "offer": 4613,
+   "gather": 2256,
+   "exalt": 95
+  },
+  "host-uriel": {
+   "offer": 4485,
+   "gather": 2289,
+   "exalt": 106
+  },
+  "host-ithuriel": {
+   "offer": 4516,
+   "gather": 2315,
+   "exalt": 86
+  },
+  "host-mercy": {
+   "offer": 3877,
+   "gather": 4916,
+   "exalt": 224
+  },
+  "host-ordeal": {
+   "offer": 4789,
+   "gather": 983,
+   "exalt": 135
+  },
+  "host-envy": {
+   "offer": 4010,
+   "gather": 2026,
+   "exalt": 102
+  },
+  "host-gabriel": {
+   "offer": 4611,
+   "gather": 2215,
+   "exalt": 96
+  },
+  "host-tribute": {
+   "offer": 4615,
+   "gather": 2256,
+   "exalt": 118
+  },
+  "host-raguel": {
+   "offer": 4879,
+   "gather": 996,
+   "exalt": 155
+  },
+  "host-firmament": {
+   "offer": 4871,
+   "gather": 991,
+   "exalt": 136
+  },
+  "host-moloch": {
+   "offer": 4073,
+   "gather": 2062,
+   "exalt": 102
+  },
+  "host-scapegoat": {
+   "offer": 3349,
+   "gather": 3963,
+   "exalt": 239
+  },
+  "host-nephilim": {
+   "offer": 4717,
+   "gather": 1033,
+   "exalt": 131
+  },
+  "host-azazel": {
+   "offer": 4032,
+   "gather": 2044,
+   "exalt": 107
+  },
+  "host-winnowing": {
+   "offer": 3934,
+   "gather": 2090,
+   "exalt": 105
+  },
+  "host-heresy": {
+   "offer": 4861,
+   "gather": 1068,
+   "exalt": 138
+  },
+  "host-vessel": {
+   "offer": 4848,
+   "gather": 1012,
+   "exalt": 144
+  },
+  "host-veil": {
+   "offer": 4920,
+   "gather": 977,
+   "exalt": 126
+  },
+  "host-providence": {
+   "offer": 4731,
+   "gather": 2480,
+   "exalt": 105
+  },
+  "host-fig-leaves": {
+   "offer": 4915,
+   "gather": 987,
+   "exalt": 133
+  },
+  "host-urim": {
+   "offer": 4872,
+   "gather": 1030,
+   "exalt": 123
+  },
+  "host-temptation": {
+   "offer": 3945,
+   "gather": 2078,
+   "exalt": 104
+  },
+  "host-prophecy": {
+   "offer": 4734,
+   "gather": 1070,
+   "exalt": 131
+  },
+  "host-snare": {
+   "offer": 4109,
+   "gather": 2043,
+   "exalt": 102
+  },
+  "host-abaddon": {
+   "offer": 3237,
+   "gather": 4069,
+   "exalt": 232
+  },
+  "host-covenant": {
+   "offer": 4574,
+   "gather": 2197,
+   "exalt": 92
+  },
+  "host-free-will": {
+   "offer": 3860,
+   "gather": 4896,
+   "exalt": 251
+  },
+  "host-favor": {
+   "offer": 4055,
+   "gather": 2089,
+   "exalt": 92
+  },
+  "host-council": {
+   "offer": 4874,
+   "gather": 1013,
+   "exalt": 143
+  },
+  "host-silence": {
+   "offer": 3255,
+   "gather": 4033,
+   "exalt": 246
+  },
+  "host-deliverance": {
+   "offer": 3790,
+   "gather": 4994,
+   "exalt": 215
+  },
+  "host-eternity": {
+   "offer": 4729,
+   "gather": 1013,
+   "exalt": 120
+  },
+  "host-mammon": {
+   "offer": 4035,
+   "gather": 2040,
+   "exalt": 102
+  },
+  "host-raphael": {
+   "offer": 4536,
+   "gather": 2237,
+   "exalt": 104
+  },
+  "host-martyr": {
+   "offer": 4699,
+   "gather": 2366,
+   "exalt": 106
+  },
+  "host-twilight": {
+   "offer": 4936,
+   "gather": 951,
+   "exalt": 125
+  },
+  "host-watchers": {
+   "offer": 4932,
+   "gather": 1035,
+   "exalt": 135
+  },
+  "host-shroud": {
+   "offer": 3262,
+   "gather": 3536,
+   "exalt": 172
+  },
+  "host-lilith": {
+   "offer": 3899,
+   "gather": 2101,
+   "exalt": 94
+  },
+  "host-serpent": {
+   "offer": 4008,
+   "gather": 1977,
+   "exalt": 103
+  },
+  "host-parasite": {
+   "offer": 3780,
+   "gather": 1932,
+   "exalt": 78
+  },
+  "host-beelzebub": {
+   "offer": 4122,
+   "gather": 2001,
+   "exalt": 83
+  },
+  "host-jubilee": {
+   "offer": 4825,
+   "gather": 1070,
+   "exalt": 148
+  },
+  "host-forger": {
+   "offer": 4947,
+   "gather": 1163,
+   "exalt": 129
+  },
+  "host-wisdom": {
+   "offer": 4448,
+   "gather": 2317,
+   "exalt": 127
+  },
+  "host-moderation": {
+   "offer": 4941,
+   "gather": 991,
+   "exalt": 115
+  },
+  "host-lamentation": {
+   "offer": 3937,
+   "gather": 2018,
+   "exalt": 91
+  },
+  "host-legion": {
+   "offer": 3917,
+   "gather": 1984,
+   "exalt": 93
+  },
+  "host-mirage": {
+   "offer": 4834,
+   "gather": 963,
+   "exalt": 133
+  },
+  "host-leviathan": {
+   "offer": 4032,
+   "gather": 2146,
+   "exalt": 115
+  },
+  "host-anathema": {
+   "offer": 4176,
+   "gather": 1860,
+   "exalt": 92
+  },
+  "host-asmadai": {
+   "offer": 3960,
+   "gather": 2057,
+   "exalt": 102
+  },
+  "host-defiance": {
+   "offer": 3262,
+   "gather": 4181,
+   "exalt": 247
+  },
+  "host-morning-star": {
+   "offer": 4594,
+   "gather": 2379,
+   "exalt": 103
+  },
+  "host-stillness": {
+   "offer": 4794,
+   "gather": 1023,
+   "exalt": 135
+  },
+  "host-michael": {
+   "offer": 4460,
+   "gather": 2303,
+   "exalt": 105
+  },
+  "host-tree-of-life": {
+   "offer": 4366,
+   "gather": 2260,
+   "exalt": 111
+  }
+ }
+}

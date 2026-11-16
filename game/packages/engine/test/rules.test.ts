@@ -3,6 +3,8 @@ import { alignment } from '../src/core';
 import { C, E, H } from '../src/data';
 import { endGame, evening, reaping, setTide, takeTurn, unveiling } from '../src/engine';
 import { Game } from '../src/game';
+import { viewFor } from '../src/view';
+import { botAnswer } from '../src/bots';
 import { altar, blank, choir, drive, hand, type Script } from './helpers';
 
 const glory = (s: any) => s.players.map((p: any) => p.glory);
@@ -176,13 +178,13 @@ describe('Actions', () => {
   it('Offer gains 1; the Cantor gains 1 per card; Hymn offers 2 Light for 1', () => {
     const s = blank(3, [C.cantor, C.tempest, C.oracle]);
     hand(s, 0, H.wisdom, H.gabriel);
-    drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.second': (d) => [d.options[0].id] });
+    drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.second': (d) => [d.options[0].id], 'offer.reward': ['glory'] });
     expect(s.players[0].glory).toBe(2);
     expect(s.altar).toHaveLength(2);
     const t = blank(3, [C.tempest, C.oracle, C.cantor]);
     choir(t, 0, H.hymn);
     hand(t, 0, H.wisdom, H.gabriel);
-    drive(t, takeTurn(t, 0), { action: ['offer'], 'offer.second': (d) => [d.options[0].id] });
+    drive(t, takeTurn(t, 0), { action: ['offer'], 'offer.second': (d) => [d.options[0].id], 'offer.reward': ['glory'] });
     expect(t.players[0].glory).toBe(1);
     expect(t.altar).toHaveLength(2);
   });
@@ -194,12 +196,13 @@ describe('Actions', () => {
     drive(s, takeTurn(s, 0), { action: ['offer'], raphael: (d) => [d.options.find((o) => o.card === H.moloch)!.id] });
     expect(s.players[0].glory).toBe(0);
     expect(s.altar.map((a) => a.id)).toEqual([H.wisdom]);
+    expect(s.altar[0].facedown).toBe(false);
   });
   it('Gathering a card a Snare holder Offered today pays them 1', () => {
     const s = blank();
     choir(s, 1, H.snare);
     s.hostDeck = s.hostDeck.filter((x) => x !== H.wisdom);
-    s.altar.push({ id: H.wisdom, facedown: false, offeredBy: 1, day: 1 });
+    s.altar.push({ id: H.wisdom, facedown: true, offeredBy: 1, day: 1, kind: 'offer' });
     drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['altar:0'] });
     expect(s.players[1].glory).toBe(1);
     expect(s.players[0].choir.map((c) => c.id)).toContain(H.wisdom);
@@ -390,5 +393,102 @@ describe('Unveiling', () => {
     drive(s, unveiling(s));
     expect(s.altar).toHaveLength(3);
     expect(s.altar[0].id).toBe(H.wisdom);
+  });
+});
+
+describe('V35: First Fruits and facedown Offers', () => {
+  const pick = (card: string) => (d: any) => [d.options.find((o: any) => o.card === card)?.id ?? 'end'];
+  const fd = (s: any, id: string, by: number) => s.altar.push({ id, facedown: true, offeredBy: by, day: s.day, kind: 'offer' });
+
+  it('Offers go facedown; Hymn pairs go face up', () => {
+    const s = blank();
+    hand(s, 0, H.wisdom);
+    drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.reward': ['glory'] });
+    expect(s.altar[0]).toMatchObject({ id: H.wisdom, facedown: true, kind: 'offer' });
+    const t = blank();
+    choir(t, 0, H.hymn);
+    hand(t, 0, H.wisdom, H.gabriel);
+    drive(t, takeTurn(t, 0), { action: ['offer'], 'offer.second': (d) => [d.options[0].id], 'offer.reward': ['glory'] });
+    expect(t.altar.map((a) => a.facedown)).toEqual([false, false]);
+  });
+  it('the Offer reward can be a card instead of Glory', () => {
+    const s = blank();
+    hand(s, 0, H.wisdom);
+    drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.reward': ['card'] });
+    expect(s.players[0].glory).toBe(0);
+    expect(s.players[0].hand).toHaveLength(1);
+  });
+  it('the Altar is revealed at the start of the Evening', () => {
+    const s = blank();
+    fd(s, H.wisdom, 1);
+    drive(s, evening(s, false));
+    expect(s.log.some((l) => l.text.startsWith('The Altar is revealed'))).toBe(true);
+  });
+  it('Ithuriel flips a facedown card', () => {
+    const s = blank();
+    choir(s, 0, H.ithuriel);
+    hand(s, 0, H.gabriel);
+    fd(s, H.moloch, 1);
+    drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.reward': ['glory'], activate: pick(H.ithuriel), ithuriel: (d) => [d.options.find((o) => s.altar[Number(o.id)].id === H.moloch)!.id] });
+    expect(s.altar.find((a) => a.id === H.moloch)!.facedown).toBe(false);
+  });
+  it('Urim sees up to two facedown cards; they become visible to that player only', () => {
+    const s = blank();
+    choir(s, 0, H.urim);
+    fd(s, H.moloch, 1);
+    fd(s, H.wisdom, 2);
+    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.urim), urim: (d) => d.options.map((o) => o.id) });
+    const v0 = viewFor(s, 0, []), v1 = viewFor(s, 1, []);
+    expect(v0.altar.filter((a) => a.facedown).map((a) => a.id).sort()).toEqual([H.moloch, H.wisdom].sort());
+    expect(v1.altar.find((a) => a.offeredBy === 2)!.id).toBeNull();
+  });
+  it('Asmadai exchanges a facedown card with one from hand, keeping it facedown', () => {
+    const s = blank();
+    choir(s, 0, H.asmadai);
+    hand(s, 0, H.moloch, H.gabriel);
+    fd(s, H.wisdom, 1);
+    drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.card': (d) => [d.options.find((o) => o.card === H.gabriel)!.id], 'offer.reward': ['glory'], activate: pick(H.asmadai), asmadai: (d) => [d.options.find((o) => s.altar[Number(o.id)].id === H.wisdom)!.id], 'asmadai.swap': (d) => [d.options.find((o) => o.card === H.moloch)!.id] });
+    const swapped = s.altar.find((a) => a.offeredBy === 1)!;
+    expect(swapped).toMatchObject({ id: H.moloch, facedown: true });
+    expect(s.players[0].hand).toContain(H.wisdom);
+  });
+  it('Mirage shields facedown Offerings from Ithuriel, Urim and Asmadai', () => {
+    const s = blank();
+    choir(s, 0, H.ithuriel);
+    choir(s, 1, H.mirage);
+    hand(s, 0, H.gabriel);
+    fd(s, H.moloch, 1);
+    const { asked } = drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.reward': ['glory'], activate: pick(H.ithuriel) });
+    expect(asked.some((d) => d.tag === 'ithuriel')).toBe(false);
+    expect(s.altar.find((a) => a.id === H.moloch)!.facedown).toBe(true);
+  });
+  it('Pandemonium blocks flips and looks', () => {
+    const s = blank();
+    s.currentEvent = E.pandemonium;
+    choir(s, 0, H.urim);
+    fd(s, H.moloch, 1);
+    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.urim) });
+    expect(asked.some((d) => d.tag === 'urim')).toBe(false);
+  });
+  it('Vessel adds its card facedown', () => {
+    const s = blank();
+    choir(s, 0, H.vessel);
+    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.vessel), vessel: ['yes'] });
+    expect(s.altar.some((a) => a.kind === 'vessel' && a.facedown)).toBe(true);
+  });
+  it('a full game runs First Fruits every Morning, with no Glory for it', () => {
+    const g = new Game({ seed: 5, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+    let n = 0;
+    while (g.pending.length) {
+      for (const d of g.pending) {
+        if (d.tag === 'firstFruits') n++;
+        g.answer(d.seat, d.id, botAnswer(g.state, d));
+      }
+    }
+    expect(n).toBe(18);
+    expect(g.state.stats.filter((x) => x.type === 'glory' && x.source === 'fruits')).toHaveLength(0);
+  });
+  it('Open Game is 3 or 4 players', () => {
+    expect(() => blank(5)).toThrow();
   });
 });
