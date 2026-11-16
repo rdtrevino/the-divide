@@ -271,7 +271,6 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       return one(o && dirOf(altar) !== wantDir ? o.id : 'none');
     }
     case 'mammon.offer':
-    case 'mammon.exalt':
     case 'arbiter.take':
     case 'anathema':
     case 'winnowing':
@@ -281,7 +280,9 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const o = byId((x) => x.seat !== undefined && leaders.includes(x.seat)) ?? d.options.find((x) => x.id !== 'none');
       return one(o ? o.id : d.options[0].id);
     }
+    case 'mammon.exalt':
     case 'arbiter.give': {
+      // Giving Glory away: hand it to whoever is least threatening.
       const o = pickBest(d.options, (x) => -(s.players[x.seat ?? 0]?.glory ?? 0));
       return one(o.id);
     }

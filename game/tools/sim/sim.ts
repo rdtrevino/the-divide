@@ -7,6 +7,7 @@ const args = Object.fromEntries(process.argv.slice(2).map((a, i, all) => (a.star
 const GAMES = Number(args.games ?? 10000);
 const COUNTS = String(args.players ?? '3,4').split(',').map(Number);
 const OUT = String(args.out ?? 'sim-report');
+const VARIANTS = args.variants ? String(args.variants).split(',') : [];
 const NAMES = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
 
 type Agg = { seats: number; wins: number; expected: number; glory: number };
@@ -22,7 +23,7 @@ const ties = { count: 0 };
 const t0 = Date.now();
 for (let g = 0; g < GAMES; g++) {
   const n = COUNTS[g % COUNTS.length];
-  const game = playBotGame({ seed: 100000 + g, mode: 'open', players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) });
+  const game = playBotGame({ seed: 100000 + g, mode: 'open', variants: VARIANTS, players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) });
   const s = game.state;
   const res = s.result!;
   if (res.winners.length > 1) ties.count++;
