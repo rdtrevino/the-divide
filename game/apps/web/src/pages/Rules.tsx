@@ -4,11 +4,8 @@ import { useEffect, useMemo } from 'preact/hooks';
 import { Site } from '../components/Site';
 import source from '../../../../../rules/The_Divide_Rulebook_v8.md?raw';
 
-// On the site, the rulebook's version line is left out (it is for the designer) and its opening
-// subtitle reads the same as the front page.
-const raw = source
-  .replace(/^\*\*Version:\*\*.*\n/m, '')
-  .replace(/^\*A game of divine ambition[^\n]*\*$/m, '*A card game for 3 to 6 players*');
+// The rulebook's version line is for the designer, not for players.
+const raw = source.replace(/^\*\*Version:\*\*.*\n/m, '');
 
 const slug = (text: string) => text.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
