@@ -1,7 +1,7 @@
 // The Game object: owns the state, the running game loop, and the input log.
 import { eventOn, log, stat } from './core';
 import { E } from './data';
-import { createState, DAYS, runGame } from './engine';
+import { createState, DAYS, gloryTarget, runGame } from './engine';
 import type { Answer, Decision, GameConfig, GameState, Gen, Seat } from './types';
 
 export type Input =
@@ -67,7 +67,7 @@ export class Game {
     if (!Number.isInteger(amount) || amount < 1) return 'Give at least 1 Glory.';
     if (s.players[from].glory < amount) return 'Not enough Glory.';
     if (eventOn(s, E.babel)) return 'Babel: no Glory transfers this Day.';
-    if (s.day === DAYS) return 'No Glory may be given on the final Day.';
+    if (!gloryTarget(s) && s.day === DAYS) return 'No Glory may be given on the final Day.';
     return null;
   }
 

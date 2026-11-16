@@ -22,7 +22,7 @@ cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a 
 
 The engine supports experimental rule `variants` in the game config for A/B testing. The five balance changes tested on November 14 were adopted as permanent V34 card text (see `reports/balance-proposals-2026-11-14.md`).
 
-V35 (November 15) made First Fruits, facedown Offers, and the Offer reward choice the standard rules (see `reports/v35-facedown-offerings-2026-11-15.md`). The face-up row, draw 2 keep 1, and the secret offering experiments were removed. Remaining experimental rules: `two-rounds` (the Long Game), `snake-rounds`, `celestial-draft`, `catchup-order`, and the seat-fairness tests `final-catchup`, `first-draw`, `seat-glory` (see `reports/seat-fairness-2026-11-15.md`; measure with `cd tools/sim && npx tsx seats.ts 6000 base catchup-order`). Measure them with `cd tools/sim && npx tsx variants.ts 3000 out.json B R C RC`.
+V35 (November 15) made First Fruits, facedown Offers, and the Offer reward choice the standard rules (see `reports/v35-facedown-offerings-2026-11-15.md`). The face-up row, draw 2 keep 1, and the secret offering experiments were removed. Remaining experimental rules: `two-rounds` (the Long Game), `snake-rounds`, `celestial-draft`, `catchup-order`, the seat-fairness tests `final-catchup`, `first-draw`, `seat-glory`, and the Glory race `target-N` with an optional `maxdays-N` cap (see `reports/glory-race-2026-11-15.md`) (see `reports/seat-fairness-2026-11-15.md`; measure with `cd tools/sim && npx tsx seats.ts 6000 base catchup-order`). Measure them with `cd tools/sim && npx tsx variants.ts 3000 out.json B R C RC`.
 
 ## Engine rulings to confirm
 

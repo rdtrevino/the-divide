@@ -11,6 +11,10 @@ import { randInt, shuffle } from './rng';
 import type { Dir, GameConfig, GameState, Gen, Seat, TideRecord } from './types';
 
 export const DAYS = 6;
+/** Safety cap on game length in the Glory race. */
+export const MAX_DAYS = 12;
+/** The Glory target from a 'target-N' variant, or 0. */
+export const gloryTarget = (s: GameState) => Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? 0);
 export const OPEN_SET_ASIDE_HOSTS = [H.revelation, H.knowledge, H.bounty, H.flamingSword, H.belial, H.hubris];
 export const OPEN_SET_ASIDE_EVENTS = [E.sabbath, E.equilibrium, E.armageddon];
 
@@ -63,11 +67,16 @@ export function* runGame(s: GameState): Gen<void> {
     const early = n0 === 4 ? [1, 2] : [2];
     for (const k of early) { const p = s.players[(s.firstPlayer + k) % n0]; p.glory += 1; log(s, 'setup', `${p.name} starts with 1 Glory for their seat.`); }
   }
-  for (let d = 1; d <= DAYS; d++) {
+  // Glory race (experimental, 'target-N'): the game ends after the Reaping of the first Day on which
+  // any player has N or more Glory, or after MAX_DAYS. Otherwise it lasts DAYS Days.
+  const target = gloryTarget(s);
+  const maxDays = Number((s.config.variants ?? []).find((v) => v.startsWith('maxdays-'))?.slice(8) ?? MAX_DAYS);
+  const last = (d: number) => (target ? d >= maxDays || s.players.some((p) => p.glory >= target) : d === DAYS);
+  for (let d = 1; target ? d <= maxDays : d <= DAYS; d++) {
     s.day = d;
     s.day_ = freshDay();
     s.turnUsed = [];
-    if ((variant(s, 'catchup-order') && d > 1) || (variant(s, 'final-catchup') && d === DAYS)) {
+    if ((variant(s, 'catchup-order') && d > 1) || (variant(s, 'final-catchup') && !target && d === DAYS)) {
       // The player with the least Glory acts last (ties: the one who would otherwise act earliest).
       const n0 = s.players.length;
       const rot = Array.from({ length: n0 }, (_, i) => (s.firstPlayer + i) % n0);
@@ -86,7 +95,9 @@ export function* runGame(s: GameState): Gen<void> {
     for (let r = 0; r < rounds; r++) for (let i = 0; i < n; i++) yield* takeTurn(s, (s.firstPlayer + (snake && r === 1 ? n - 1 - i : i)) % n);
     s.active = null;
     s.phase = 'evening';
-    yield* evening(s, d === DAYS);
+    let ended = false;
+    yield* evening(s, () => (ended = last(d)));
+    if (ended) break;
     s.firstPlayer = (s.firstPlayer + 1) % n;
   }
   yield* endGame(s);
@@ -485,7 +496,7 @@ function* activationPhase(s: GameState, seat: Seat): Gen<void> {
 
 // ---------------------------------------------------------------- Evening
 
-export function* evening(s: GameState, finalDay: boolean): Gen<void> {
+export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen<void> {
   const n = s.players.length;
   const order = Array.from({ length: n }, (_, i) => (s.firstPlayer + i) % n);
   log(s, 'evening', 'Evening falls.');
@@ -553,7 +564,7 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
 
   // 3. The Reaping.
   yield* reaping(s, tide, order);
-  if (finalDay) return;
+  if (typeof finalDay === 'function' ? finalDay() : finalDay) return;
 
   // 4. Refresh the Altar (Remnant first).
   for (const seat of order) {

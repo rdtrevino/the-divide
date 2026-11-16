@@ -41,19 +41,21 @@ function gloryAfterDay(s: GameState, day: number) {
 
 const results: any[] = [];
 for (const code of CONFIGS) {
-  const variants = code === 'B' ? [] : code.split('').map((c) => CODES[c]);
+  const variants = code.split('+').flatMap((t) => (t === 'B' ? [] : /^T\d+$/.test(t) ? ['target-' + t.slice(1)] : /^M\d+$/.test(t) ? ['maxdays-' + t.slice(1)] : t.split('').map((c) => CODES[c])));
   const row: any = { code, variants: variants.join('+') || 'baseline (V35)' };
   for (const n of [3, 4]) {
     const t0 = Date.now();
     const counts = { all: Array(n).fill(0), core: Array(n).fill(0) };
-    let lead3 = 0, lead3g = 0, comeback = 0, margin = 0, winG = 0, avgG = 0;
+    let lead3 = 0, lead3g = 0, comeback = 0, margin = 0, winG = 0, avgG = 0, days = 0, capped = 0;
+    const dayHist: Record<number, number> = {};
     const cel: Record<string, { w: number; e: number }> = {};
     const posGlory = Array(n).fill(0);
     for (let i = 0; i < N; i++) {
       const firsts: number[] = [];
       const s = play(900000 + i, Array(n).fill('smart'), variants, counts, firsts);
       for (const e of s.stats) if (e.type === 'glory' && e.seat !== undefined && firsts[e.day] !== undefined) posGlory[(e.seat - firsts[e.day] + n) % n] += e.amount ?? 0;
-      const d3 = gloryAfterDay(s, 3), d5 = gloryAfterDay(s, 5);
+      days += s.day; dayHist[s.day] = (dayHist[s.day] ?? 0) + 1; if (s.day >= Number(variants.find((v) => v.startsWith('maxdays-'))?.slice(8) ?? 12) && !s.players.some((p) => p.glory - 0 >= Number(variants.find((v) => v.startsWith('target-'))?.slice(7) ?? 99))) capped++;
+      const d3 = gloryAfterDay(s, 3), d5 = gloryAfterDay(s, s.day - 1);
       const t3 = Math.max(...d3), t5 = Math.max(...d5);
       const l3 = d3.flatMap((g, k) => (g === t3 ? [k] : []));
       const l5 = d5.flatMap((g, k) => (g === t5 ? [k] : []));
@@ -88,7 +90,10 @@ for (const code of CONFIGS) {
       celestialSpread: +sd.toFixed(2),
       celestialRange: [+Math.min(...ratios).toFixed(2), +Math.max(...ratios).toFixed(2)],
       celestials: Object.fromEntries(Object.entries(cel).map(([k, c]) => [k.replace('celestial-', ''), +(c.w / c.e).toFixed(2)])),
-      dayGloryByPosition: posGlory.map((g) => +(g / (N * 6)).toFixed(2)),
+      avgDays: +(days / N).toFixed(2),
+      dayLengths: Object.fromEntries(Object.entries(dayHist).map(([k, v]) => [k, +((v / N) * 100).toFixed(0)])),
+      cappedPct: +((capped / N) * 100).toFixed(1),
+      dayGloryByPosition: posGlory.map((g) => +(g / days).toFixed(2)),
       msPerGame: +ms.toFixed(1),
     };
   }
