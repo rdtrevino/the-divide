@@ -41,8 +41,8 @@ section > h2.rule { font-size: 14px; letter-spacing: 0.3em; text-transform: uppe
 .home-link { padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; color: var(--muted); transition: border-color 0.2s, transform 0.2s var(--ease); }
 .home-link b { font-family: var(--font-title); letter-spacing: 0.24em; text-transform: uppercase; font-size: 14px; color: var(--gold); }
 .home-link:hover { border-color: var(--gold); transform: translateY(-2px); color: var(--cream); }
-@media (max-width: 860px) { .home { grid-template-columns: 1fr; } .home-links { grid-template-columns: 1fr; } .home-fan { justify-content: center; padding-left: 0; } }
-@media (max-width: 560px) { .home-fan .card { --w: 31vw !important; } .home-fan .card:nth-child(2) { --w: 34vw !important; } }
+@media (max-width: 860px) { .home { grid-template-columns: minmax(0, 1fr); } .home-links { grid-template-columns: 1fr; } .home-fan { justify-content: center; padding-left: 0; } }
+@media (max-width: 560px) { .home-lede { font-size: 20px; } .home-sub { font-size: 11px; letter-spacing: 0.24em; } .home-fan .card { --w: 31vw !important; } .home-fan .card:nth-child(2) { --w: 34vw !important; } }
 
 /* Lobby */
 .lobby { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr); gap: 22px; align-items: start; }

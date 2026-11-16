@@ -31,7 +31,7 @@ export function Home() {
       <div class="home">
         <div class="home-hero">
           <h1 class="wordmark home-mark">The Divide</h1>
-          <p class="home-lede">A game of divine ambition</p>
+          <p class="home-lede">A game of divine ambition and hidden loyalties</p>
           <p class="home-sub">A card game for 3 to 6 players</p>
           <div class="home-fan" aria-hidden="true">
             <Card id="host-uriel" w={190} zoom={false} />
