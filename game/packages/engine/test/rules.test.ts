@@ -492,3 +492,13 @@ describe('V35: First Fruits and facedown Offers', () => {
     expect(() => blank(5)).toThrow();
   });
 });
+
+describe('snake rounds', () => {
+  it('runs two rounds per Day, the second in reverse order', () => {
+    const g = new Game({ seed: 11, mode: 'open', variants: ['snake-rounds'], players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+    while (g.pending.length && g.state.day === 1) for (const d of g.pending) g.answer(d.seat, d.id, botAnswer(g.state, d));
+    const order = g.state.stats.filter((e) => e.day === 1 && e.type === 'action' && ['offer', 'gather', 'exalt'].includes(e.source ?? '')).map((e) => e.seat!);
+    const f = order[0];
+    expect(order).toEqual([f, (f + 1) % 3, (f + 2) % 3, (f + 2) % 3, (f + 1) % 3, f]);
+  });
+});

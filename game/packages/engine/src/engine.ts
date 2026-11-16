@@ -73,8 +73,10 @@ export function* runGame(s: GameState): Gen<void> {
     yield* firstFruits(s);
     s.phase = 'turns';
     const n = s.players.length;
-    const rounds = variant(s, 'two-rounds') ? 2 : 1;
-    for (let r = 0; r < rounds; r++) for (let i = 0; i < n; i++) yield* takeTurn(s, (s.firstPlayer + i) % n);
+    const snake = variant(s, 'snake-rounds');
+    const rounds = variant(s, 'two-rounds') || snake ? 2 : 1;
+    // Snake rounds: the second round runs in reverse (1, 2, 3 then 3, 2, 1).
+    for (let r = 0; r < rounds; r++) for (let i = 0; i < n; i++) yield* takeTurn(s, (s.firstPlayer + (snake && r === 1 ? n - 1 - i : i)) % n);
     s.active = null;
     s.phase = 'evening';
     yield* evening(s, d === DAYS);
@@ -225,7 +227,7 @@ function* eventOnReveal(s: GameState, ev: string): Gen<void> {
 export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
   s.active = seat;
   // Two rounds per Day: each Choir card still activates at most once per Day.
-  if (!variant(s, 'two-rounds')) s.turnUsed = [];
+  if (!variant(s, 'two-rounds') && !variant(s, 'snake-rounds')) s.turnUsed = [];
   s.morningStar = s.morningStar.filter((m) => m.seat !== seat);
   s.anathema = s.anathema.filter((a) => a.by !== seat);
   const p = s.players[seat];

@@ -5,7 +5,7 @@ import { Game, botAnswer, type Decision, type GameState } from '@divide/engine';
 
 const N = Number(process.argv[2] ?? 3000);
 const OUT = process.argv[3] ?? 'variants.json';
-const CODES: Record<string, string> = { K: 'catchup-order', R: 'two-rounds', C: 'celestial-draft' };
+const CODES: Record<string, string> = { K: 'catchup-order', R: 'two-rounds', C: 'celestial-draft', N: 'snake-rounds' };
 const CONFIGS = process.argv.slice(4).length ? process.argv.slice(4) : ['B', 'R', 'K', 'C', 'RC'];
 const NAMES = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
 const CORE = new Set(['action', 'offer.card', 'offer.second', 'gather.source', 'exalt.card', 'firstFruits', 'offer.reward', 'ithuriel', 'urim', 'asmadai', 'asmadai.swap', 'upkeep.keep', 'choir.discard', 'activate', 'celestial.pick']);
@@ -18,10 +18,11 @@ function randomAnswer(d: Decision, salt: number) {
   return opts.slice(0, k).map((o) => o.id);
 }
 type Policy = 'smart' | 'random';
-function play(seed: number, policies: Policy[], variants: string[], counts?: { all: number[]; core: number[] }) {
+function play(seed: number, policies: Policy[], variants: string[], counts?: { all: number[]; core: number[] }, firsts?: number[]) {
   const g = new Game({ seed, mode: 'open', variants, players: policies.map((_, i) => ({ name: NAMES[i], isBot: true })) });
   let guard = 0;
   while (!g.over) {
+    if (firsts && firsts[g.state.day] === undefined) firsts[g.state.day] = g.state.firstPlayer;
     for (const d of [...g.pending]) {
       if (!g.pending.includes(d)) continue;
       if (counts) { counts.all[d.seat]++; if (CORE.has(d.tag)) counts.core[d.seat]++; }
@@ -47,8 +48,11 @@ for (const code of CONFIGS) {
     const counts = { all: Array(n).fill(0), core: Array(n).fill(0) };
     let lead3 = 0, lead3g = 0, comeback = 0, margin = 0, winG = 0, avgG = 0;
     const cel: Record<string, { w: number; e: number }> = {};
+    const posGlory = Array(n).fill(0);
     for (let i = 0; i < N; i++) {
-      const s = play(900000 + i, Array(n).fill('smart'), variants, counts);
+      const firsts: number[] = [];
+      const s = play(900000 + i, Array(n).fill('smart'), variants, counts, firsts);
+      for (const e of s.stats) if (e.type === 'glory' && e.seat !== undefined && firsts[e.day] !== undefined) posGlory[(e.seat - firsts[e.day] + n) % n] += e.amount ?? 0;
       const d3 = gloryAfterDay(s, 3), d5 = gloryAfterDay(s, 5);
       const t3 = Math.max(...d3), t5 = Math.max(...d5);
       const l3 = d3.flatMap((g, k) => (g === t3 ? [k] : []));
@@ -83,6 +87,8 @@ for (const code of CONFIGS) {
       avgGlory: +(avgG / N).toFixed(1),
       celestialSpread: +sd.toFixed(2),
       celestialRange: [+Math.min(...ratios).toFixed(2), +Math.max(...ratios).toFixed(2)],
+      celestials: Object.fromEntries(Object.entries(cel).map(([k, c]) => [k.replace('celestial-', ''), +(c.w / c.e).toFixed(2)])),
+      dayGloryByPosition: posGlory.map((g) => +(g / (N * 6)).toFixed(2)),
       msPerGame: +ms.toFixed(1),
     };
   }

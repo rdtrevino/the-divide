@@ -1,0 +1,215 @@
+[
+ {
+  "code": "B",
+  "variants": "baseline (V35)",
+  "p3": {
+   "decisions": 45.5,
+   "core": 33.2,
+   "smartVsRandom": 2.46,
+   "randomVsSmart": 0.14,
+   "day3LeaderWins": 62,
+   "finalDayComeback": 19,
+   "margin": 3,
+   "winningGlory": 12.4,
+   "avgGlory": 9.4,
+   "celestialSpread": 0.12,
+   "celestialRange": [
+    0.81,
+    1.2
+   ],
+   "celestials": {
+    "the-echo": 0.94,
+    "the-oracle": 0.86,
+    "the-tempest": 0.95,
+    "the-dominion": 1.05,
+    "the-arbiter": 1.18,
+    "the-patron": 0.81,
+    "the-cantor": 0.99,
+    "the-whisper": 1.04,
+    "the-eclipse": 1.2
+   },
+   "dayGloryByPosition": [
+    1.52,
+    1.57,
+    1.61
+   ],
+   "msPerGame": 1.5
+  },
+  "p4": {
+   "decisions": 46.3,
+   "core": 33.4,
+   "smartVsRandom": 2.95,
+   "randomVsSmart": 0.12,
+   "day3LeaderWins": 55,
+   "finalDayComeback": 23,
+   "margin": 2.4,
+   "winningGlory": 12.4,
+   "avgGlory": 8.9,
+   "celestialSpread": 0.16,
+   "celestialRange": [
+    0.82,
+    1.31
+   ],
+   "celestials": {
+    "the-echo": 0.92,
+    "the-oracle": 0.82,
+    "the-tempest": 0.97,
+    "the-patron": 0.84,
+    "the-dominion": 1.11,
+    "the-arbiter": 1.2,
+    "the-cantor": 0.84,
+    "the-whisper": 1.02,
+    "the-eclipse": 1.31
+   },
+   "dayGloryByPosition": [
+    1.37,
+    1.47,
+    1.55,
+    1.52
+   ],
+   "msPerGame": 1.6
+  }
+ },
+ {
+  "code": "R",
+  "variants": "two-rounds",
+  "p3": {
+   "decisions": 68.7,
+   "core": 54.8,
+   "smartVsRandom": 2.67,
+   "randomVsSmart": 0.1,
+   "day3LeaderWins": 65,
+   "finalDayComeback": 17,
+   "margin": 2.9,
+   "winningGlory": 14,
+   "avgGlory": 11,
+   "celestialSpread": 0.21,
+   "celestialRange": [
+    0.68,
+    1.39
+   ],
+   "celestials": {
+    "the-echo": 0.89,
+    "the-oracle": 0.83,
+    "the-tempest": 0.87,
+    "the-dominion": 1.39,
+    "the-arbiter": 1.1,
+    "the-patron": 0.68,
+    "the-cantor": 0.91,
+    "the-whisper": 1.08,
+    "the-eclipse": 1.27
+   },
+   "dayGloryByPosition": [
+    1.83,
+    1.84,
+    1.84
+   ],
+   "msPerGame": 1.8
+  },
+  "p4": {
+   "decisions": 69.4,
+   "core": 54.9,
+   "smartVsRandom": 3.35,
+   "randomVsSmart": 0.09,
+   "day3LeaderWins": 56,
+   "finalDayComeback": 24,
+   "margin": 2.5,
+   "winningGlory": 13.7,
+   "avgGlory": 10.2,
+   "celestialSpread": 0.23,
+   "celestialRange": [
+    0.62,
+    1.43
+   ],
+   "celestials": {
+    "the-echo": 0.93,
+    "the-oracle": 0.89,
+    "the-tempest": 0.89,
+    "the-patron": 0.62,
+    "the-dominion": 1.43,
+    "the-arbiter": 1.03,
+    "the-cantor": 0.87,
+    "the-whisper": 1.06,
+    "the-eclipse": 1.29
+   },
+   "dayGloryByPosition": [
+    1.66,
+    1.7,
+    1.73,
+    1.71
+   ],
+   "msPerGame": 2.2
+  }
+ },
+ {
+  "code": "N",
+  "variants": "snake-rounds",
+  "p3": {
+   "decisions": 68.7,
+   "core": 54.8,
+   "smartVsRandom": 2.69,
+   "randomVsSmart": 0.09,
+   "day3LeaderWins": 63,
+   "finalDayComeback": 18,
+   "margin": 2.9,
+   "winningGlory": 13.8,
+   "avgGlory": 10.8,
+   "celestialSpread": 0.21,
+   "celestialRange": [
+    0.72,
+    1.43
+   ],
+   "celestials": {
+    "the-echo": 0.91,
+    "the-oracle": 0.83,
+    "the-tempest": 0.83,
+    "the-dominion": 1.43,
+    "the-arbiter": 1.1,
+    "the-patron": 0.72,
+    "the-cantor": 0.9,
+    "the-whisper": 1.08,
+    "the-eclipse": 1.21
+   },
+   "dayGloryByPosition": [
+    1.85,
+    1.84,
+    1.72
+   ],
+   "msPerGame": 1.7
+  },
+  "p4": {
+   "decisions": 69.3,
+   "core": 54.9,
+   "smartVsRandom": 3.31,
+   "randomVsSmart": 0.1,
+   "day3LeaderWins": 55,
+   "finalDayComeback": 25,
+   "margin": 2.4,
+   "winningGlory": 13.7,
+   "avgGlory": 10.1,
+   "celestialSpread": 0.24,
+   "celestialRange": [
+    0.67,
+    1.49
+   ],
+   "celestials": {
+    "the-echo": 0.91,
+    "the-oracle": 0.85,
+    "the-tempest": 0.87,
+    "the-patron": 0.67,
+    "the-dominion": 1.49,
+    "the-arbiter": 1.03,
+    "the-cantor": 0.84,
+    "the-whisper": 1.03,
+    "the-eclipse": 1.3
+   },
+   "dayGloryByPosition": [
+    1.73,
+    1.71,
+    1.69,
+    1.62
+   ],
+   "msPerGame": 2.4
+  }
+ }
+]

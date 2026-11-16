@@ -39,7 +39,7 @@ describe('replay is deterministic', () => {
 });
 
 describe('experimental rules run cleanly', () => {
-  const sets = [[], ['two-rounds'], ['catchup-order'], ['celestial-draft'], ['two-rounds', 'catchup-order', 'celestial-draft']];
+  const sets = [[], ['two-rounds'], ['catchup-order'], ['celestial-draft'], ['two-rounds', 'catchup-order', 'celestial-draft'], ['snake-rounds'], ['snake-rounds', 'celestial-draft']];
   for (const variants of sets) {
     it(variants.join('+'), () => {
       for (let seed = 1; seed <= 60; seed++) {
