@@ -3,6 +3,7 @@ import { Zoom } from './components/Zoom';
 import { usePath } from './lib/router';
 import { Cards } from './pages/Cards';
 import { Home } from './pages/Home';
+import { Learn } from './pages/Learn';
 import { Replay } from './pages/Replay';
 import { Room } from './pages/Room';
 import { Rules } from './pages/Rules';
@@ -20,6 +21,7 @@ function App() {
   if (room) page = <Room code={room[1].toUpperCase()} />;
   else if (path.startsWith('/cards')) page = <Cards />;
   else if (path.startsWith('/rules')) page = <Rules />;
+  else if (path.startsWith('/learn')) page = <Learn />;
   else if (path.startsWith('/stats')) page = <Stats />;
   else if (game) page = <Replay id={game[1]} />;
   return (

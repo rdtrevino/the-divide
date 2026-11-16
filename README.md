@@ -2,14 +2,14 @@
 
 A card game of divine ambition for 3 to 6 players by Robert Treviño. Players feed a shared, partly hidden Altar whose weight sets each Day's Tide, and score their public Choirs against it. At larger tables, secret factions fight over a tug-of-war Balance.
 
-**Current versions:** card data **V38**, rulebook **v8** (November 16, 2026).
+**Current versions:** card data **V39**, rulebook **v9** (November 16, 2026).
 
 ## What's here
 
 | Folder | Contents |
 |---|---|
-| `rules/` | `The_Divide_Rulebook_v8.md`: the complete rules. Open Game first, Hidden Roles as a mode, Celestials, Events, rulings, glossary. |
-| `cards/` | `The_Divide_Cards_V38.xlsx` (tabs: all cards, Open Game deck, changes since V32, reprint list), `cards.csv` (same data, one row per card), and `cards.json` (structured for the web build). To change card text, write a change set in `cards/changes/` and run `python3 cards/tools/apply_changes.py cards/changes/<VERSION>.json`; it updates all of these and the engine's copy together. |
+| `rules/` | `The_Divide_Rulebook_v9.md`: the complete rules, organized for new players: the game in one minute, a Day at a glance, the actions and scoring as tables, then Celestials, Events, rulings by topic, Hidden Roles, and the glossary. The site's Rules page shows it with a search. |
+| `cards/` | `The_Divide_Cards_V39.xlsx` (tabs: all cards, Open Game deck, changes since V32, reprint list), `cards.csv` (same data, one row per card), and `cards.json` (structured for the web build). To change card text, write a change set in `cards/changes/` and run `python3 cards/tools/apply_changes.py cards/changes/<VERSION>.json`; it updates all of these and the engine's copy together. |
 | `design/` | `design-decisions.md`: every standing decision, card ruling, and the playtest watch list. `file-audit-2026-11-13.md`: the audit that produced V33. |
 | `art/faces/` | Every card face as last printed (Host, Celestial, Event, Fate and Turn), about 370 DPI. |
 | `art/plates/` | The illustration alone for every card, for the web build. |
@@ -21,9 +21,9 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 
 ## Sources of truth
 
-- **Rules and card text:** the V38 card data and rulebook v8 in this folder. When the rulebook and the card data disagree, the card data wins.
-- **Printed card visuals:** the Claude Design session. Card text changes must be made there too before printing. The **Reprint List** tab in the V38 spreadsheet lists every card whose printed face is out of date, plus the three new cards that need art.
-- **Card faces in `art/faces/`** show the most recent printing. Many carry older wording than V38, and Ithuriel, Urim, and Asmadai have no art yet; check `print_status` in `cards.csv` before relying on a face's text.
+- **Rules and card text:** the V39 card data and rulebook v9 in this folder. When the rulebook and the card data disagree, the card data wins.
+- **Printed card visuals:** the Claude Design session. Card text changes must be made there too before printing. The **Reprint List** tab in the V39 spreadsheet lists every card whose printed face is out of date, plus the three new cards that need art.
+- **Card faces in `art/faces/`** show the most recent printing. Many carry older wording than V39, and Ithuriel, Urim, and Asmadai have no art yet; check `print_status` in `cards.csv` before relying on a face's text.
 
 ## Quick facts
 
@@ -41,6 +41,6 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 
 ## Next
 
-1. Update the Claude Design session with the V38 text, create art for Ithuriel, Urim, and Asmadai, and reprint the cards whose rules changed.
+1. Update the Claude Design session with the V39 text, create art for Ithuriel, Urim, and Asmadai, and reprint the cards whose rules changed.
 2. Add the two Cloudflare secrets to this repository so every change publishes the site automatically (`game/SITE.md`, Publishing changes).
 3. Playtest online against the watch list in `design/design-decisions.md`, and read the results on the Stats page.

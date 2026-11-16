@@ -27,13 +27,13 @@ export function Cards() {
       </div>
       {(filter === 'all' || filter === 'celestial') && (
         <section>
-          <h2 class="rule"><span>The Nine Celestials</span></h2>
+          <h2 class="rule"><span>Celestials ({CELESTIALS.length})</span></h2>
           <div class="gallery">{CELESTIALS.map((c) => <Card id={c.id} w={236} zoom={false} />)}</div>
         </section>
       )}
       {showHosts && (
         <section>
-          <h2 class="rule"><span>Host cards ({hosts.length})</span></h2>
+          <h2 class="rule"><span>Host Cards ({hosts.length})</span></h2>
           <div class="gallery">{hosts.map((h) => <Card id={h.id} w={236} zoom={false} />)}</div>
         </section>
       )}

@@ -1,5 +1,25 @@
 # Changelog
 
+## V39 cards, Rulebook v9, and the site's Learn page and names (November 16, 2026)
+
+**Rulings confirmed or decided** (recorded in `design/design-decisions.md`):
+
+- **The Flood and Let There Be Light:** every ability of that color is off for the Day, automatic ones included (Hymn, Snare, Cherubim's protection). The cards still count toward Alignment. New card text; reprint both.
+- **Casting Lots:** wording only, pays "At the Reaping" (was "In the Evening").
+- **Urim and Asmadai:** a peeked card is shown once, then goes back facedown; players must remember it.
+- **Hubris** (Hidden Roles): 1 Glory in total; the holder chooses among tied leaders.
+- **Confirmed as already played:** the Tempest on your own turn; the Echo copies only repeatable turn abilities; the Patron is Targeting only into a full Choir; the Favor player chooses how the card is taken; a once-per-game card that leaves the Choir is fresh if it returns; Seraphim and Legion never re-activate each other.
+
+**Rulebook v9:** the same rules as v8, reorganized for new players: the game in one minute, a Day at a glance, the three actions and Reaping scoring as tables, advice gathered into one section, and rulings grouped by topic. Also fixes three errors in v8: Hidden Roles uses all 72 Host cards (v8 said 69), the 4-player rows of the Hidden Roles setup tables are now marked as an optional variant, and Casting Lots matches its card. v8 moved to `sources/rulebook-drafts/`.
+
+**Site:**
+
+- **Learn to play** (`/learn`): a 12-step, clickable walk-through with real cards and things to try (build a Choir, fill an Altar and reveal the Tide, score a Reaping).
+- **Rules page:** sections, folded reference parts (Rulings, Hidden Roles, Glossary) and a search for any rule or card.
+- **Names are unique.** The first browser to use a name gets a private player code; the name can be used anywhere else only with that code, so nobody can play or be counted in the stats under someone else's name. The same player on two devices shares one seat. Bot names are reserved. New migration `0003_names.sql`.
+- **Lettering:** the title font's H no longer joins the letter beside it ("The"); `apps/web/scripts/plain-h.py` makes the font change.
+- Cards page: "Celestials (9)" heading.
+
 ## Online game site (November 16, 2026)
 
 The Divide is playable online at https://thedivide.pages.dev. No card or rule changes.

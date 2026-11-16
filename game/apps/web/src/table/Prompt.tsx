@@ -26,7 +26,8 @@ export function Prompt(p: {
   onConfirm: () => void;
 }) {
   const { decision: d, view, pick } = p;
-  if (view.phase === 'ended') return <div class="prompt idle"><span class="prompt-text">The game is over.</span></div>;
+  // Once the game is over the results take over; nothing is left to decide.
+  if (view.phase === 'ended') return null;
 
   if (!d) {
     const humans = p.waiting.filter((w) => !view.players[w.seat].isBot);

@@ -1,0 +1,20 @@
+{
+  "version": "V39",
+  "date": "2026-11-16",
+  "previous": "V38",
+  "events": {
+    "The Flood": {
+      "text": "The abilities of Light Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still count toward Alignment. Neutral cards are unaffected.",
+      "why": "Ruling confirmed November 16: every ability of that colour is off for the Day, automatic ones included (was: only abilities a player chooses to activate)"
+    },
+    "Let There Be Light": {
+      "text": "The abilities of Dark Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still count toward Alignment. Neutral cards are unaffected.",
+      "why": "Ruling confirmed November 16, mirroring The Flood"
+    },
+    "Casting Lots": {
+      "text": "Each player secretly predicts the Tide during the Unveiling: Light, Dark, or Neutral. At the Reaping, a correct call gains 1 Glory (2 for Neutral); a wrong call loses 1.",
+      "why": "Wording: pays At the Reaping, after the Tide is set (was \"In the Evening\")",
+      "wording": true
+    }
+  }
+}

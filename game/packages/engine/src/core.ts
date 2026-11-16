@@ -7,14 +7,16 @@ import type {
 
 // ---------------------------------------------------------------- decisions
 
-export type Ask = Omit<Decision, 'id'>;
+/** `confirm`: show the decision even when it has a single option (a "you see these cards" step). */
+export type Ask = Omit<Decision, 'id'> & { confirm?: boolean };
 
 /** Ask one player one question. Forced single choices resolve without prompting. */
 export function* ask(s: GameState, d: Ask): Gen<Answer> {
+  const { confirm, ...rest } = d;
   if (d.options.length === 0) return [];
-  if (d.min >= 1 && d.options.length === 1 && d.max === 1) return [d.options[0].id];
-  if (d.min === d.options.length && d.max === d.options.length) return d.options.map((o) => o.id);
-  const decision: Decision = { ...d, id: ++s.decisionSeq };
+  if (!confirm && d.min >= 1 && d.options.length === 1 && d.max === 1) return [d.options[0].id];
+  if (!confirm && d.min === d.options.length && d.max === d.options.length) return d.options.map((o) => o.id);
+  const decision: Decision = { ...rest, id: ++s.decisionSeq };
   const [answer] = yield [decision];
   return answer;
 }
@@ -75,8 +77,13 @@ export const isCelestial = (s: GameState, seat: Seat, id: string) => s.players[s
 export function activeCards(p: Player): ChoirCard[] {
   return p.choir.filter((c) => !c.facedown && c.id.startsWith('host-'));
 }
+/**
+ * Whether a card's ability is working for this player: face up in their Choir, and not switched off by
+ * The Flood or Let There Be Light (ruling confirmed November 16, 2026: those Events switch off every
+ * ability of their colour, automatic ones included; the cards still count toward Alignment).
+ */
 export function hasActive(s: GameState, seat: Seat, id: string): boolean {
-  return activeCards(s.players[seat]).some((c) => c.id === id);
+  return activeCards(s.players[seat]).some((c) => c.id === id) && !blockedByEvent(s, seat, id);
 }
 export function holderOf(s: GameState, id: string): Seat | null {
   for (const p of s.players) if (hasActive(s, p.seat, id)) return p.seat;
@@ -273,8 +280,9 @@ export function* activation(s: GameState, seat: Seat, source: string, run: () =>
 }
 
 /** Cards a player may voluntarily discard from their Choir to make room. */
-export function discardableForRoom(p: Player): ChoirCard[] {
-  return p.choir.filter((c) => c.id.startsWith('host-') && !(c.id === H.parasite && !c.facedown));
+export function discardableForRoom(s: GameState, p: Player): ChoirCard[] {
+  // Parasite cannot be discarded by choice while its ability works (not facedown, not switched off by Let There Be Light).
+  return p.choir.filter((c) => c.id.startsWith('host-') && !(c.id === H.parasite && !c.facedown && !blockedByEvent(s, p.seat, c.id)));
 }
 
 export const CHOIR_LIMIT = 3;
@@ -298,7 +306,7 @@ export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
 export function* makeRoom(s: GameState, seat: Seat, why: string): Gen<boolean> {
   const p = s.players[seat];
   if (p.choir.length < CHOIR_LIMIT) return true;
-  const opts = discardableForRoom(p);
+  const opts = discardableForRoom(s, p);
   if (!opts.length) return false;
   const pick = yield* chooseOne(s, seat, 'choir.discard', `Your Choir is full. Choose a card to discard (${why}).`, opts.map((c) => cardOpt(c.id)));
   if (!pick) return false;
@@ -429,8 +437,8 @@ export function altarAvailable(s: GameState, seat: Seat): AltarCard[] {
 
 export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
   const by = a.offeredBy !== null && a.offeredBy >= 0 ? ` (${a.kind === 'fruits' ? 'First Fruits' : 'Offered'} by ${s.players[a.offeredBy]?.name ?? '?'})` : a.kind === 'seed' ? ' (Seed)' : '';
-  if (a.facedown && a.offeredBy !== viewer && !a.seenBy?.includes(viewer)) return 'Facedown card' + by;
-  return cardName(a.id) + (a.facedown ? (a.offeredBy === viewer ? ' (your facedown card)' : ' (facedown, seen by you)') : '') + by;
+  if (a.facedown && a.offeredBy !== viewer) return 'Facedown card' + by;
+  return cardName(a.id) + (a.facedown ? ' (your facedown card)' : '') + by;
 }
 
 /** Mirage (V35): a player's facedown Offerings cannot be flipped, looked at, exchanged, or destroyed by others before the Evening. */

@@ -1,6 +1,6 @@
 # The Divide: Design Decisions
 
-The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 16, 2026, to match card data V38 and rulebook v8.
+The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 16, 2026, to match card data V39 and rulebook v9.
 
 ## Governing rules
 
@@ -107,6 +107,16 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 | Absolution | Once per Day, a discarded Choir card returns to hand; then discard 1 from hand. |
 | Divine Calling | Exalt costs 0 Glory this Day. |
 | Patron | Kept at full strength; watch in playtesting. |
+| The Tempest | Confirmed November 16: used on your own turn, after your action. |
+| The Echo | Confirmed November 16: copies only repeatable "On your turn" abilities, not once-per-game cards. |
+| Seraphim, Legion | Each re-activates only another card of its own color, so they never re-activate each other. |
+| The Patron (Targeting) | Confirmed November 16: a gift into a Choir with room is not Targeting; a gift into a full Choir (forcing a discard) is, so Cherubim blocks it and Tribute must be paid. |
+| Casting Lots | V39 wording: pays At the Reaping (was "In the Evening"; same rule). |
+| The Flood, Let There Be Light | V39, decided November 16: every ability of that color is off for the Day, automatic ones included (Hymn, Snare, Cherubim's protection); the cards still count toward Alignment. Parasite can be discarded on a Let There Be Light Day. Was: only abilities a player chooses to activate. |
+| Favor | Confirmed November 16: the player using Favor chooses "at random" or "they choose". |
+| Once-per-game cards | Confirmed November 16: a used card that leaves the Choir and later returns is fresh again. |
+| Urim, Asmadai | Decided November 16: a peeked card is shown once, then goes back facedown; players must remember it (online, it is shown in one confirmation step and not named again). |
+| Hubris | Decided November 16 (Claude's recommendation, for balance): one leader pays 1 Glory in total; when tied leaders both gain, the Hubris holder chooses which. Was: every tied leader who gains gives 1. |
 
 ## Design principles
 

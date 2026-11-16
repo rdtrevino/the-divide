@@ -63,7 +63,8 @@ export function viewFor(s: GameState, seat: Seat | null, pending: Decision[] = [
       choir: p.choir.map((c) => ({ id: !c.facedown || p.seat === seat || ended ? c.id : null, facedown: c.facedown, used: c.used })),
       alignment: alignment(s, p.seat),
     })),
-    altar: s.altar.map((a) => ({ id: !a.facedown || a.offeredBy === seat || (seat !== null && !!a.seenBy?.includes(seat)) || ended ? a.id : null, facedown: a.facedown, offeredBy: a.offeredBy, kind: a.kind, sanctuary: a.sanctuary })),
+    // A card someone peeked at (Urim, Asmadai) was shown to them once, in that decision; it is not shown again here.
+    altar: s.altar.map((a) => ({ id: !a.facedown || a.offeredBy === seat || ended ? a.id : null, facedown: a.facedown, offeredBy: a.offeredBy, kind: a.kind, sanctuary: a.sanctuary })),
     deckCount: s.hostDeck.length,
     discard: [...s.discard],
     eventDeckCount: s.eventDeck.length,

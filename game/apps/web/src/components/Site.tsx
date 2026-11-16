@@ -11,6 +11,7 @@ export function Site(p: { children: ComponentChildren; wide?: boolean }) {
         <Link href="/" class="wordmark">The Divide</Link>
         <nav>
           <Link href="/" class={on('/')}>Play</Link>
+          <Link href="/learn" class={on('/learn')}>Learn</Link>
           <Link href="/cards" class={on('/cards')}>Cards</Link>
           <Link href="/rules" class={on('/rules')}>Rules</Link>
           <Link href="/stats" class={on('/stats')}>Stats</Link>

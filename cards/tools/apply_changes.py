@@ -5,7 +5,7 @@ Usage (from the repo root):
     python3 cards/tools/apply_changes.py cards/changes/V37.json
 
 Reads cards/changes/<VERSION>.json: {"version", "date", "previous", "changes": {Host name: {text, why,
-cadence?, wording?}}, "celestials": {Celestial name: {text, why}}}
+cadence?, wording?}}, "celestials": {Celestial name: {text, why}}, "events": {Event name: {text, why, wording?}}}
 and updates, in step:
   - cards/cards.json and game/packages/engine/src/cards.data.json (card text, version, date)
   - cards/The_Divide_Cards_<previous>.xlsx -> cards/The_Divide_Cards_<VERSION>.xlsx
@@ -34,12 +34,13 @@ def main(change_path: str) -> None:
     # Changes keyed by (deck, name). "changes" holds Host cards; "celestials" holds Celestials.
     changes = {("Host", n): c for n, c in spec.get("changes", {}).items()}
     changes.update({("Celestial", n): c for n, c in spec.get("celestials", {}).items()})
+    changes.update({("Event", n): c for n, c in spec.get("events", {}).items()})
 
     # 1. JSON card data
     data_path = ROOT / "cards/cards.json"
     data = json.loads(data_path.read_text())
     old_text, number = {}, {}
-    for deck, key in (("Host", "hosts"), ("Celestial", "celestials")):
+    for deck, key in (("Host", "hosts"), ("Celestial", "celestials"), ("Event", "events")):
         for card in data[key]:
             k = (deck, card["name"])
             if k in changes:

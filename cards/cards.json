@@ -1,5 +1,5 @@
 {
-  "version": "V38",
+  "version": "V39",
   "date": "2026-11-16",
   "hosts": [
     {
@@ -1050,7 +1050,7 @@
     {
       "id": "event-let-there-be-light",
       "name": "Let There Be Light",
-      "text": "Dark Host cards in Choirs cannot activate this Day. Neutral cards still activate.",
+      "text": "The abilities of Dark Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still count toward Alignment. Neutral cards are unaffected.",
       "openGame": true,
       "face": "art/faces/event/let-there-be-light.jpg",
       "plate": "art/plates/event/let-there-be-light.jpg"
@@ -1098,7 +1098,7 @@
     {
       "id": "event-casting-lots",
       "name": "Casting Lots",
-      "text": "Each player secretly predicts the Tide during the Unveiling: Light, Dark, or Neutral. In the Evening, a correct call gains 1 Glory (2 for Neutral); a wrong call loses 1.",
+      "text": "Each player secretly predicts the Tide during the Unveiling: Light, Dark, or Neutral. At the Reaping, a correct call gains 1 Glory (2 for Neutral); a wrong call loses 1.",
       "openGame": true,
       "face": "art/faces/event/casting-lots.jpg",
       "plate": "art/plates/event/casting-lots.jpg"
@@ -1170,7 +1170,7 @@
     {
       "id": "event-the-flood",
       "name": "The Flood",
-      "text": "Light Host cards in Choirs cannot activate this Day. Neutral cards still activate.",
+      "text": "The abilities of Light Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still count toward Alignment. Neutral cards are unaffected.",
       "openGame": true,
       "face": "art/faces/event/the-flood.jpg",
       "plate": "art/plates/event/the-flood.jpg"

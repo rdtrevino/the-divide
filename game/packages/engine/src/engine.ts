@@ -282,7 +282,7 @@ export function exaltCost(s: GameState, seat: Seat): number {
 
 function canRoom(s: GameState, seat: Seat) {
   const p = s.players[seat];
-  return p.choir.length < CHOIR_LIMIT || discardableForRoom(p).length > 0;
+  return p.choir.length < CHOIR_LIMIT || discardableForRoom(s, p).length > 0;
 }
 
 export function legalActions(s: GameState, seat: Seat): ('offer' | 'gather' | 'exalt')[] {
@@ -808,7 +808,11 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
       if (!(delta[seat] > 0) && s.players.some((o) => o.seat !== seat && lost[o.seat] > 0)) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
     }
     if (hasActive(s, seat, H.hubris)) {
-      for (const l of leadersBefore) if (l !== seat && delta[l] > 0) {
+      // Ruling confirmed November 16, 2026: one leader pays 1 Glory in total. When several tied leaders
+      // gained, the Hubris holder chooses which one (the general rule for ties on most-Glory cards).
+      const payers = leadersBefore.filter((l) => l !== seat && delta[l] > 0 && s.players[l].glory > 0);
+      const l = payers.length > 1 ? seatFromOpt((yield* chooseOne(s, seat, 'hubris', 'Hubris: the tied leaders both gained Glory. Choose who gives you 1.', payers.map((x) => seatOpt(s, x))))!) : payers[0];
+      if (l !== undefined) {
         const t = transfer(s, l, seat, 1, H.hubris);
         if (t) log(s, 'hubris', `${pname(s, l)} gave 1 Glory to ${p.name} (Hubris).`);
       }

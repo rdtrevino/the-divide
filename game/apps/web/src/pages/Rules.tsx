@@ -1,41 +1,118 @@
 // The rulebook, straight from the repository's rules/ folder, so the site always shows the current rules.
+// Shown in sections, with the long reference parts folded, and a search that finds any rule or card.
 import { marked } from 'marked';
-import { useEffect, useMemo } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Site } from '../components/Site';
-import source from '../../../../../rules/The_Divide_Rulebook_v8.md?raw';
+import { Link } from '../lib/router';
+import source from '../../../../../rules/The_Divide_Rulebook_v9.md?raw';
 
 // The rulebook's version line is for the designer, not for players.
 const raw = source.replace(/^\*\*Version:\*\*.*\n/m, '');
 
-const slug = (text: string) => text.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const slug = (text: string) => text.toLowerCase().replace(/<[^>]+>/g, '').replace(/[*_]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const plain = (md: string) => md.replace(/\*\*|\*|_|`|^#+\s*|^>\s*/gm, '').trim();
+/** Reference sections start folded; open them from the contents or by searching. */
+const FOLDED = new Set(['rulings', 'hidden-roles', 'glossary']);
+
+interface Section { id: string; title: string; md: string; html: string }
+
+function parse(): { intro: string; sections: Section[] } {
+  const parts = raw.split(/\n(?=## )/);
+  const renderer = new marked.Renderer();
+  renderer.heading = function ({ tokens, depth }) {
+    const inner = this.parser.parseInline(tokens);
+    return `<h${depth} id="${slug(inner)}">${inner}</h${depth}>`;
+  };
+  const render = (md: string) => marked.parse(md, { renderer, async: false }) as string;
+  // The credits under the title are one per line.
+  const intro = marked.parse(parts[0].replace(/^---\s*$/gm, ''), { renderer, async: false, breaks: true }) as string;
+  const sections = parts.slice(1).map((p) => {
+    const [first, ...rest] = p.split('\n');
+    const title = plain(first.replace(/^##\s*/, ''));
+    const md = rest.join('\n').replace(/^---\s*$/gm, '');
+    return { id: slug(title), title, md, html: render(md) };
+  });
+  return { intro, sections };
+}
+
+interface Hit { section: Section; html: string }
+
+function search(sections: Section[], q: string): Hit[] {
+  const words = q.toLowerCase().split(/\s+/).filter((w) => w.length > 1);
+  if (!words.length) return [];
+  const hits: Hit[] = [];
+  for (const s of sections) {
+    // Paragraphs, list items and table rows are the units a rule lives in.
+    const blocks = s.md.split(/\n\s*\n|\n(?=\* )|\n(?=\| \*\*)|\n(?=\d\. )/).map((b) => b.trim()).filter((b) => b && !/^#/.test(b) && !/^\|\s*-/.test(b));
+    for (const b of blocks) {
+      const text = plain(b).toLowerCase();
+      if (words.every((w) => text.includes(w))) {
+        let html = marked.parseInline(b.replace(/^\* /, '').replace(/^\|\s*|\s*\|$/g, '').replace(/\s*\|\s*/g, ' · ')) as string;
+        for (const w of words) html = html.replace(new RegExp(`(?![^<]*>)(${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), '<mark>$1</mark>');
+        hits.push({ section: s, html });
+      }
+    }
+  }
+  return hits.slice(0, 40);
+}
 
 export function Rules() {
-  const { html, toc } = useMemo(() => {
-    const toc: { id: string; text: string }[] = [];
-    const renderer = new marked.Renderer();
-    renderer.heading = function ({ tokens, depth }) {
-      const inner = this.parser.parseInline(tokens);
-      const text = inner.replace(/<[^>]+>/g, '');
-      const id = slug(text);
-      if (depth === 2) toc.push({ id, text });
-      return `<h${depth} id="${id}">${inner}</h${depth}>`;
-    };
-    const html = marked.parse(raw, { renderer, async: false }) as string;
-    return { html, toc };
-  }, []);
+  const { intro, sections } = useMemo(parse, []);
+  const [q, setQ] = useState('');
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const hits = useMemo(() => search(sections, q), [sections, q]);
+  const show = (id: string) => {
+    setOpen((o) => new Set(o).add(id));
+    setQ('');
+    requestAnimationFrame(() => document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
   useEffect(() => {
-    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    const id = location.hash.slice(1);
+    if (id && sections.some((s) => s.id === id)) show(id);
   }, []);
   return (
     <Site>
       <div class="rules">
         <nav class="rules-toc panel">
           <div class="eyebrow">Contents</div>
-          {toc.map((t) => <a href={`#${t.id}`}>{t.text}</a>)}
+          {sections.map((s) => (
+            <a href={`#${s.id}`} onClick={(e) => { e.preventDefault(); history.replaceState(null, '', `#${s.id}`); show(s.id); }}>{s.title}</a>
+          ))}
         </nav>
         <article class="prose">
-          <p class="rules-note panel">This site plays the <b>Open Game</b> for 3 or 4 players. Hidden Roles (5 or 6 players) is described below but is not playable online yet.</p>
-          <div dangerouslySetInnerHTML={{ __html: html }} />
+          <div class="rules-intro" dangerouslySetInnerHTML={{ __html: intro }} />
+          <Link href="/learn" class="learn-cta">New to The Divide? <b>Learn to play in 5 minutes →</b></Link>
+          <p class="rules-note">This site plays the <b>Open Game</b> for 3 or 4 players. Hidden Roles (5 or 6 players) is described below but is not playable online yet.</p>
+          <div class="rules-search">
+            <input class="field" type="search" value={q} placeholder="Look up a rule or a card: Tide, Exalt, Mirage…" aria-label="Search the rules" onInput={(e) => setQ((e.target as HTMLInputElement).value)} />
+          </div>
+          {q.trim().length > 1 ? (
+            <div class="rules-hits">
+              <p class="muted">{hits.length ? `${hits.length}${hits.length === 40 ? '+' : ''} place${hits.length === 1 ? '' : 's'} in the rules mention “${q.trim()}”.` : `Nothing in the rules mentions “${q.trim()}”.`}</p>
+              {hits.map((h) => (
+                <div class="rules-hit">
+                  <button class="rules-hit-where" onClick={() => show(h.section.id)}>{h.section.title} →</button>
+                  <div dangerouslySetInnerHTML={{ __html: h.html }} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            sections.map((s) => {
+              const folded = FOLDED.has(s.id) && !open.has(s.id);
+              return (
+                <section id={`sec-${s.id}`} class={`rules-sec${folded ? ' folded' : ''}`}>
+                  <h2 id={s.id}>
+                    {FOLDED.has(s.id) ? (
+                      <button class="rules-fold" aria-expanded={!folded} onClick={() => setOpen((o) => { const n = new Set(o); if (n.has(s.id)) n.delete(s.id); else n.add(s.id); return n; })}>
+                        {s.title}<span>{folded ? 'Show' : 'Hide'}</span>
+                      </button>
+                    ) : s.title}
+                  </h2>
+                  {folded ? <p class="muted rules-folded-note">{s.id === 'rulings' ? 'How specific cards work, grouped by topic. Search above to find a card.' : s.id === 'glossary' ? 'Every game term, A to Z.' : 'The 5 and 6 player mode with secret factions.'}</p> : <div dangerouslySetInnerHTML={{ __html: s.html }} />}
+                </section>
+              );
+            })
+          )}
         </article>
       </div>
     </Site>

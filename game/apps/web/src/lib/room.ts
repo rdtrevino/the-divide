@@ -3,10 +3,10 @@
 import type { LogEntry } from '@divide/engine';
 import type { ChatLine, ClientMsg, ServerMsg, StateMsg } from '@divide/protocol';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { clientId } from './identity';
+import { clientId, codeFor } from './identity';
 
 export interface RoomSnap {
-  conn: 'connecting' | 'open' | 'reconnecting' | 'missing';
+  conn: 'connecting' | 'open' | 'reconnecting' | 'missing' | 'unverified';
   state: StateMsg | null;
   log: LogEntry[];
   /** Log lines that arrived with the latest update. Empty when the whole log was (re)loaded. */
@@ -48,10 +48,14 @@ export class RoomClient {
       if (info.status === 404) { this.set({ conn: 'missing' }); return; }
     } catch { /* offline: fall through and let the socket retry */ }
     if (this.closed) return;
+    const code = codeFor(this.name);
+    if (!code) { this.set({ conn: 'unverified' }); return; }
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${proto}://${location.host}/api/rooms/${this.code}/ws?client=${encodeURIComponent(clientId())}&name=${encodeURIComponent(this.name)}`);
+    const ws = new WebSocket(`${proto}://${location.host}/api/rooms/${this.code}/ws?client=${encodeURIComponent(clientId())}&name=${encodeURIComponent(this.name)}&code=${encodeURIComponent(code)}`);
+    let opened = false;
     this.ws = ws;
     ws.onopen = () => {
+      opened = true;
       this.retry = 0;
       clearInterval(this.ping);
       this.ping = window.setInterval(() => { if (ws.readyState === 1) ws.send('ping'); }, 20000);
@@ -62,9 +66,14 @@ export class RoomClient {
       try { msg = JSON.parse(e.data); } catch { return; }
       this.receive(msg);
     };
-    ws.onclose = () => {
+    ws.onclose = async () => {
       clearInterval(this.ping);
       if (this.closed || this.ws !== ws) return;
+      // A refused connection may mean the name's code is no longer valid here: check before retrying.
+      if (!opened) {
+        const r = await fetch('/api/names', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: this.name, code: codeFor(this.name) }) }).catch(() => null);
+        if (r && (r.status === 409 || r.status === 400)) { this.set({ conn: 'unverified' }); return; }
+      }
       this.set({ conn: 'reconnecting' });
       this.timer = window.setTimeout(() => void this.open(), Math.min(8000, 600 * 2 ** this.retry++));
     };

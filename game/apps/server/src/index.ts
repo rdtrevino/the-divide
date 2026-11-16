@@ -1,5 +1,6 @@
 // The Divide: the Worker. Serves the website, creates and routes to game rooms, and answers the stats API.
 import { CARD_VERSION, ENGINE_VERSION } from './build.gen';
+import { claimName, d1Names, verifyName } from './names';
 import { serveSite } from './site';
 import { parseFilters, readGame, readStats } from './stats';
 
@@ -44,10 +45,24 @@ export default {
         return json({ error: 'Could not create a room. Try again.' }, { status: 503 });
       }
 
+      // Claim a name, or prove it is yours with its player code.
+      if (path === '/api/names' && req.method === 'POST') {
+        const body = (await req.json().catch(() => ({}))) as { name?: string; code?: string };
+        const r = await claimName(d1Names(env.DB), body.name, body.code);
+        return r.ok ? json({ name: r.name, code: r.code }) : json({ error: r.message, reason: r.reason }, { status: r.status });
+      }
+
       const room = path.match(/^\/api\/rooms\/([A-Za-z]{5})\/(ws|info)$/);
       if (room) {
         const stub = env.ROOM.get(env.ROOM.idFromName(room[1].toUpperCase()));
-        return stub.fetch(new Request(`https://room/${room[2]}${url.search}`, req));
+        if (room[2] === 'info') return stub.fetch(new Request('https://room/info', req));
+        // Joining a table needs a name and its player code. The room only ever sees the checked name.
+        const name = await verifyName(d1Names(env.DB), url.searchParams.get('name'), url.searchParams.get('code'));
+        if (!name) return new Response('Name not verified', { status: 401 });
+        const inner = new URL('https://room/ws');
+        inner.searchParams.set('client', url.searchParams.get('client') ?? '');
+        inner.searchParams.set('name', name);
+        return stub.fetch(new Request(inner, req));
       }
 
       if (path === '/api/stats') return json(await readStats(env.DB, parseFilters(url.searchParams)));
