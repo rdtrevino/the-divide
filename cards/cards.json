@@ -694,7 +694,7 @@
     {
       "id": "host-leviathan",
       "name": "Leviathan",
-      "text": "At the Reaping: Gain 1 Glory for each other player who loses Glory this Reaping.",
+      "text": "At the Reaping: Gain 1 Glory if any other player loses Glory this Reaping.",
       "openGame": true,
       "face": "art/faces/host/54-leviathan.jpg",
       "plate": "art/plates/host/54-leviathan.jpg",

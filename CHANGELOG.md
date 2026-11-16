@@ -7,7 +7,8 @@
 - **The Arbiter:** the Glory it gives when you lose now goes to the player, other than you, with the least Glory.
 - **Mammon:** its Exalt payment now goes to the player, other than you, with the least Glory.
 - **New ruling:** when a card names the player with the most or least Glory and players tie, the user chooses among them, unless the card says otherwise.
-- **Shroud** at game end uses the second-to-last Day's Tide.
+- **Leviathan:** "At the Reaping: Gain 1 Glory if any other player loses Glory this Reaping." (was 1 Glory for each rival who loses). Win ratio 1.67 to 1.44 in the race.
+- **Shroud** at game end keeps the value it had on the final Day.
 
 Measured: average length 6.4 Days, skill edge 2.81 (was 2.46) at 3 players, 4-player seat spread 0.08 (was 0.20). See `game/reports/v36-race-to-10-2026-11-16.md`. Also tested and not adopted: two rounds of turns per Day, snake order, catch-up turn order, and a Day 8 cap.
 

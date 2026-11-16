@@ -306,7 +306,7 @@ These clarify how specific cards work. The card text is always the starting poin
 
 **Nephilim.** Counts as both Light +1 and Dark +1 for any card that checks for a Light card or a Dark card, so on its own it satisfies Twilight. For scoring, its two values always cancel to 0, even beside Uriel or Beelzebub, and it never earns the endgame bonus.
 
-**Shroud.** Its value on any Day is the opposite of the previous Day's Tide, both on the Altar and in your Choir. At the end of the game that means the opposite of the second-to-last Day's Tide, and Shroud earns the endgame bonus only if that value matches the final Tide.
+**Shroud.** Its value on any Day is the opposite of the previous Day's Tide, both on the Altar and in your Choir. At the end of the game it keeps the value it had on the final Day, and Shroud earns the endgame bonus only if that value matches the final Tide.
 
 **The Whisper.** A correct prediction means your Choir gains its net value instead of losing it, subject to the usual cap of 3. A Choir with net Alignment 0 gains nothing.
 

@@ -747,8 +747,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
       else { yield* lose(s, seat, 1, H.prophecy); log(s, 'prophecy', `${p.name}'s Prophecy failed: -1 Glory.`); }
     }
     if (hasActive(s, seat, H.leviathan)) {
-      const k = s.players.filter((o) => o.seat !== seat && lost[o.seat] > 0).length;
-      if (k) { yield* gain(s, seat, k, H.leviathan); log(s, 'leviathan', `${p.name} gained ${k} Glory (Leviathan).`); }
+      // V36: 1 Glory if any other player lost Glory this Reaping (was 1 per player).
+      if (s.players.some((o) => o.seat !== seat && lost[o.seat] > 0)) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
     }
     if (hasActive(s, seat, H.hubris)) {
       for (const l of leadersBefore) if (l !== seat && delta[l] > 0) {

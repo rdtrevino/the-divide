@@ -66,7 +66,7 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 | Card | Ruling |
 |---|---|
 | Nephilim | Counts as both Light +1 and Dark +1 for other cards (alone it satisfies Twilight). Always scores 0, even beside Uriel or Beelzebub, and never earns the endgame bonus. |
-| Shroud | Its value is the opposite of the previous Day's Tide, on the Altar and in the Choir. At game end it uses the second-to-last Day's Tide. |
+| Shroud | Its value is the opposite of the previous Day's Tide, on the Altar and in the Choir. At game end it keeps the value it had on the final Day (the opposite of the Tide of the Day before). |
 | The Whisper | Predicts direction. A correct call means the Choir gains its net value instead of losing it (cap 3). A net-zero Choir gains nothing. Payoff At the Reaping. |
 | The Eclipse | "At the Reaping, once per Day, treat one Host card in your Choir as Neutral." Fallback if too strong: declare before the Tide is set. |
 | The Arbiter | V36: "At the Reaping, if you gain Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to the player, other than you, with the least Glory." Applies only to Alignment scoring; if no rival has Glory, the gain comes from the Pot. |
@@ -144,7 +144,7 @@ Rejected the same day: two rounds of turns per Day (in the same order, or snake 
 
 ## Playtest watch list (Open Game, V36)
 
-- **Leviathan (1.67), Michael (1.41), Tree of Life (1.35), Envy (1.29), Tribute (1.29), Mammon (1.28)** are the strongest Host cards in the race. Leviathan needs a decision.
+- **Leviathan** changed in V36 to "Gain 1 Glory if any other player loses Glory this Reaping" (was 1 per rival): 1.67 to 1.44, and 2.68 to 1.95 Glory per game. It is now level with **Michael (1.42)**; next are **Tree of Life (1.36), Envy (1.30), Tribute (1.29), Mammon (1.28)**.
 - **Covenant** can be aimed at a player at 9 Glory: if the pact holds, both gain 1. Does it get used as kingmaking?
 - **Apple (0.68), Morning Star (0.69), Eternity (0.73)** are slow setup cards that the race punishes.
 - **Long games.** About 1 game in 14 runs past Day 10. Does the table ever stall?

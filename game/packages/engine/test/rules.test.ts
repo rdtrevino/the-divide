@@ -172,6 +172,18 @@ describe('The Reaping', () => {
     // P2: lots correct +1
     expect(glory(s)).toEqual([4, 3, 4]);
   });
+  it('Leviathan (V36) gains 1 however many rivals lose', () => {
+    const s = blank();
+    choir(s, 0, H.leviathan, H.wisdom, H.gabriel); // Light 1 net: gains on a Light Tide
+    choir(s, 1, H.moloch);
+    choir(s, 2, H.moloch);
+    s.players.forEach((p) => (p.glory = 3));
+    altar(s, H.wisdom);
+    reap(s);
+    expect(s.players[1].glory).toBe(2);
+    expect(s.players[2].glory).toBe(2);
+    expect(s.players[0].glory).toBe(3 + 1 + 1);
+  });
 });
 
 describe('Actions', () => {
