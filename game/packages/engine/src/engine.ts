@@ -57,11 +57,17 @@ export function* runGame(s: GameState): Gen<void> {
     p.choir = p.choir.filter((c) => c.id !== H.raguel);
     yield* enterChoir(s, p.seat, H.raguel);
   }
+  if (variant(s, 'seat-glory')) {
+    // Seat compensation: the seats that act earliest on the final Day start with 1 Glory.
+    const n0 = s.players.length;
+    const early = n0 === 4 ? [1, 2] : [2];
+    for (const k of early) { const p = s.players[(s.firstPlayer + k) % n0]; p.glory += 1; log(s, 'setup', `${p.name} starts with 1 Glory for their seat.`); }
+  }
   for (let d = 1; d <= DAYS; d++) {
     s.day = d;
     s.day_ = freshDay();
     s.turnUsed = [];
-    if (variant(s, 'catchup-order') && d > 1) {
+    if ((variant(s, 'catchup-order') && d > 1) || (variant(s, 'final-catchup') && d === DAYS)) {
       // The player with the least Glory acts last (ties: the one who would otherwise act earliest).
       const n0 = s.players.length;
       const rot = Array.from({ length: n0 }, (_, i) => (s.firstPlayer + i) % n0);
@@ -71,6 +77,7 @@ export function* runGame(s: GameState): Gen<void> {
     }
     yield* unveiling(s);
     yield* firstFruits(s);
+    if (variant(s, 'first-draw')) yield* drawTo(s, s.firstPlayer, 1);
     s.phase = 'turns';
     const n = s.players.length;
     const snake = variant(s, 'snake-rounds');
