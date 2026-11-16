@@ -54,7 +54,7 @@ That leaves **66 Host cards: 22 Light, 21 Dark, 21 Neutral, and 2 Variable**, wi
 Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Current" appeared in V32 but was drift from after the July 25 print run, which says Tide; Tide is canonical.
 
 **Timing windows.**
-- *In the Evening* resolves before the Altar is counted. It is for abilities that do not care about the Tide: Providence, Eternity, Twilight, Zealot, Moderation.
+- *In the Evening* resolves after the Altar is revealed (V35) and before it is counted. It is for abilities that do not care about the Tide: Providence, Eternity, Twilight, Zealot, Moderation.
 - *At the Reaping* resolves after the Tide is set. It is for every ability that reacts to the Tide: Stillness, Firmament, Fig Leaves, Heresy, Prophecy, Uriel, Beelzebub, Martyr, Apple, Leviathan, Hubris, the Whisper's payoff, and the Eclipse.
 - Remnant names its own moment: before the Altar is Refreshed.
 
@@ -140,11 +140,10 @@ Rejected the same day: the face-up row of 3 Host cards and "draw 2, keep 1" at U
 - **Bluffing.** The bots cannot bluff, so they undervalue the hidden Altar. Does the table read First Fruits and facedown Offers, or just guess?
 - **Ithuriel, Urim, Asmadai, Mirage.** Bots rate them 0.98, 0.78, 0.92, 0.73 (Neutral cards normally sit between 0.68 and 0.84). Is Urim's private look worth a card slot? Is Asmadai's swap too strong late in the Day?
 - **Blind Gathers.** Do players ever Gather a facedown card, or does the Gather action shrink?
-
 - **The Eclipse (1.26 in V35)** is the strongest Celestial. Fallback: declare before the Tide is set.
 - **Leviathan (1.54 in V35)** pays 1 Glory per rival who loses at the Reaping, which rarely misses in a three-way race.
-- **Fig Leaves (0.75)** lost ground to the new Heresy, which also protects against a bad Tide.
-- **Raguel (0.75)** improved but is still weak.
+- **Fig Leaves** recovered to 0.97 in V35 (0.75 in V34).
+- **Raguel (0.78 in V35)** improved but is still weak.
 - **The Patron (0.86), the Oracle (0.87), the Echo (0.86)** may be undervalued by the bots; confirm with people.
 - **Hubris removal.** Does the open deck play better without it?
 - **Final-Day gift ban.** Does it remove kingmaking without flattening Day 6 negotiation?
