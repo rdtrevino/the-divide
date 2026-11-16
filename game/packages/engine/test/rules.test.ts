@@ -319,6 +319,38 @@ describe('Protection and reactions', () => {
     expect(s.players[1].glory).toBe(2); // paid Tithe for Silence
     expect(s.players[1].choir[0].used).toBe(true);
   });
+  it('The Flood also switches off automatic Light abilities, but the cards still count toward Alignment', () => {
+    const run = (event: string | null) => {
+      const s = blank();
+      choir(s, 0, H.hymn);
+      hand(s, 0, H.michael, H.gabriel);
+      s.currentEvent = event;
+      const { asked } = drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.reward': ['glory'] });
+      return { pair: asked.some((d) => d.tag === 'offer.second'), align: alignment(s, 0) };
+    };
+    expect(run(null).pair).toBe(true);
+    expect(run(E.flood)).toEqual({ pair: false, align: 1 });
+  });
+  it('Let There Be Light lets Parasite be discarded to make room', () => {
+    const s = blank();
+    choir(s, 0, H.parasite, H.moloch, H.azazel);
+    s.currentEvent = E.letThereBeLight;
+    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'] });
+    const room = asked.find((d) => d.options.some((o) => o.card === H.moloch) && d.options.length >= 3);
+    expect(room?.options.some((o) => o.card === H.parasite)).toBe(true);
+  });
+  it('Hubris: when tied leaders both gain, the holder chooses one of them to pay 1', () => {
+    const s = blank();
+    choir(s, 0, H.hubris);
+    choir(s, 1, H.michael);
+    choir(s, 2, H.gabriel);
+    s.players[1].glory = 5;
+    s.players[2].glory = 5;
+    altar(s, H.wisdom);
+    const { asked } = reap(s, { hubris: (d) => [d.options.find((o) => o.seat === 2)!.id] });
+    expect(asked.some((d) => d.tag === 'hubris' && d.seat === 0)).toBe(true);
+    expect(glory(s)).toEqual([1, 6, 5]);
+  });
   it('The Flood stops Light cards from activating', () => {
     const s = blank();
     choir(s, 0, H.confession);
@@ -470,15 +502,26 @@ describe('V35: First Fruits and facedown Offers', () => {
     drive(s, takeTurn(s, 0), { action: ['offer'], 'offer.reward': ['glory'], activate: pick(H.ithuriel), ithuriel: (d) => [d.options.find((o) => s.altar[Number(o.id)].id === H.moloch)!.id] });
     expect(s.altar.find((a) => a.id === H.moloch)!.facedown).toBe(false);
   });
-  it('Urim sees up to two facedown cards; they become visible to that player only', () => {
+  it('Urim shows the chosen facedown cards once, to that player only, then they are hidden again', () => {
     const s = blank();
     choir(s, 0, H.urim);
     fd(s, H.moloch, 1);
     fd(s, H.wisdom, 2);
-    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.urim), urim: (d) => d.options.map((o) => o.id) });
-    const v0 = viewFor(s, 0, []), v1 = viewFor(s, 1, []);
-    expect(v0.altar.filter((a) => a.facedown).map((a) => a.id).sort()).toEqual([H.moloch, H.wisdom].sort());
-    expect(v1.altar.find((a) => a.offeredBy === 2)!.id).toBeNull();
+    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.urim), urim: (d) => d.options.map((o) => o.id) });
+    const shown = asked.find((d) => d.tag === 'urim.seen')!;
+    expect(shown.seat).toBe(0);
+    expect([...shown.reveal!].sort()).toEqual([H.moloch, H.wisdom].sort());
+    // Afterwards nobody's view names them, the Urim player's included, and no log line does either.
+    for (const seat of [0, 1]) expect(viewFor(s, seat, []).altar.filter((a) => a.facedown && a.offeredBy !== seat).every((a) => a.id === null)).toBe(true);
+    expect(s.log.some((e) => /Moloch|Wisdom/.test(e.text))).toBe(false);
+  });
+  it('Asmadai with an empty hand still shows the card once', () => {
+    const s = blank();
+    choir(s, 0, H.asmadai);
+    fd(s, H.wisdom, 1);
+    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.asmadai), asmadai: (d) => [d.options[0].id] });
+    expect(asked.find((d) => d.tag === 'asmadai.seen')!.reveal).toEqual([H.wisdom]);
+    expect(viewFor(s, 0, []).altar.find((a) => a.offeredBy === 1)!.id).toBeNull();
   });
   it('Asmadai exchanges a facedown card with one from hand, keeping it facedown', () => {
     const s = blank();

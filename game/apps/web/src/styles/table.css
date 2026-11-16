@@ -213,7 +213,8 @@
 .ev-line.loss { color: #f0a493; }
 .ev-score { display: flex; align-items: center; font-size: 15.5px; padding: 2px 0; }
 .ev-score b { margin-left: auto; font-size: 18px; color: var(--gold-bright); }
-.evening-foot { display: flex; justify-content: center; margin-top: 12px; }
+/* The button that closes the Evening stays in view at the bottom of the panel, however long it is. */
+.evening-foot { display: flex; justify-content: center; margin: 12px -24px -16px; padding: 12px 0 14px; position: sticky; bottom: -16px; background: linear-gradient(transparent, rgba(18, 14, 11, 0.98) 35%); }
 
 /* Results */
 .result-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 4vw, 40px); color: var(--gold-bright); letter-spacing: 0.08em; margin: 6px 0 16px; text-shadow: 0 0 40px rgba(232, 200, 74, 0.45); }
@@ -257,6 +258,7 @@
   .action-btn { flex-basis: 100%; }
   .evening { position: fixed; inset: 50px 0 auto 0; }
   .evening-in { max-height: calc(100dvh - 50px - 200px); padding: 12px 14px; }
+  .evening-foot { margin: 12px -14px -12px; bottom: -12px; }
   /* Keep the decision in reach on a phone: the prompt stays pinned to the bottom of the screen. */
   .prompt { position: sticky; bottom: 0; z-index: 85; box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.7); background: rgba(13, 11, 8, 0.97); }
   .prompt.yours { background: linear-gradient(180deg, rgba(60, 42, 14, 0.98), rgba(26, 20, 16, 0.99)); }

@@ -6,6 +6,8 @@ Robert and friends play the Open Game (3 or 4 players) in the browser, in real t
 
 ## Playing
 
+New players: **Learn to play** (https://thedivide.pages.dev/learn) walks through the game in 12 short steps.
+
 1. Open the site, type your name, and press **Start a new table**.
 2. Send the link (or the 5-letter code) to your friends. Anyone who opens it takes an empty seat.
 3. The host (whoever opened the table) can **Add a bot** to any empty seat, switch between 3 and 4 players, set the time per decision, and turn on the optional 2-Seeds rule.
@@ -21,7 +23,9 @@ At the table:
 
 **Turn timer.** Each decision has a clock (90 seconds unless the host changes it). When it runs out, a bot makes that one choice. After two missed decisions in a row a bot covers the seat until the player presses **I'm back**. A player whose browser disconnects gets 25 seconds per decision. When nobody is connected the clock stops, so a table can be left and picked up later.
 
-**Reconnecting.** Closing the tab or losing the connection does not lose your seat. Reopen the link and you are back. The same name on another device (a phone after a laptop) takes over the seat once the old browser is gone.
+**Reconnecting.** Closing the tab or losing the connection does not lose your seat. Reopen the link and you are back.
+
+**Names are yours.** The first time you use a name, your browser is given a private **player code** for it. Nobody else can use that name. To play under your name on another device, enter the name and your player code (shown under "Playing on another device?" on the front page and in the lobby). The same player on two devices has one seat. The computer players' names (Asher, Naomi, Ezra, Tirzah) cannot be taken.
 
 ## What it costs
 
@@ -57,7 +61,7 @@ Each finished game writes these tables in the `divide-stats` database:
 | `day_scores` | seat and Day: Glory at the start and end of the Day |
 | `tides` | Day: the Event, the Tide and its Light and Dark totals |
 | `game_events` | engine event: every First Fruits, Offer, Gather and Exalt, every activation and Silence, every Glory change with its source |
-| `players` | person, keyed by name (lower case) |
+| `players` | person, keyed by name (lower case), with a hash of their player code |
 
 The **Stats page** reads them directly and can be filtered by card version, player count, and whether bot seats are counted:
 
@@ -125,7 +129,7 @@ New card art: put the plate in `art/plates/` and point the card's `plate` at it 
 - **Absent players:** a turn timer (host's choice of 1, 1.5, 2 or 5 minutes) after which a bot makes that choice; a bot covers the seat after two misses until the player returns.
 - **Hosting:** Cloudflare's free plan, at a workers.dev address. GitHub Pages cannot run live tables or a database.
 - **Access:** anyone with a table's link can join it. The Stats page is open to anyone with the site address.
-- **Player identity in the stats:** by name, the same name on any device being the same player. No accounts or passwords.
+- **Player identity in the stats:** by name. A name belongs to whoever used it first (their player code proves it on another device), so the stats never mix two people under one name. No accounts or passwords.
 - **Rule variants:** none in real games, except the optional 2 Seeds rule the host can switch on.
 
 ## Known limits

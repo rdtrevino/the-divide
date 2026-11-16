@@ -2,17 +2,19 @@
 import { useState } from 'preact/hooks';
 import { Card } from '../components/Card';
 import { Site } from '../components/Site';
-import { clientId, getName, setName } from '../lib/identity';
+import { NameForm, PlayerCode } from '../components/NameField';
+import { clientId, getName } from '../lib/identity';
 import { Link, go } from '../lib/router';
 
 export function Home() {
-  const [name, set] = useState(getName());
+  const [name, setName] = useState(getName());
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const save = () => { if (name.trim()) setName(name); };
-  const create = async () => {
-    save();
+  const [joining, setJoining] = useState(false);
+  const clean = code.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
+  const create = async (who: string) => {
+    setName(who);
     setBusy(true);
     setError('');
     try {
@@ -25,7 +27,6 @@ export function Home() {
       setBusy(false);
     }
   };
-  const clean = code.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
   return (
     <Site>
       <div class="home">
@@ -40,20 +41,36 @@ export function Home() {
           </div>
         </div>
         <div class="home-play panel pad">
-          <label class="eyebrow" for="home-name">Your name</label>
-          <input id="home-name" class="field" value={name} maxLength={20} placeholder="What should the table call you?" onInput={(e) => set((e.target as HTMLInputElement).value)} onBlur={save} />
-          <button class="btn primary big" disabled={busy || !name.trim()} onClick={create}>{busy ? 'Setting the table…' : 'Start a new table'}</button>
-          <p class="muted small">You get a link to send to friends. Online tables are for 3 or 4 players, and computer players can fill any empty seat.</p>
-          <div class="rule"><span class="eyebrow">or join one</span></div>
-          <form class="join" onSubmit={(e) => { e.preventDefault(); save(); if (clean.length === 5) go(`/r/${clean}`); }}>
-            <input class="field code" value={clean} placeholder="CODE" aria-label="Table code" onInput={(e) => setCode((e.target as HTMLInputElement).value)} />
-            <button class="btn" disabled={clean.length !== 5 || !name.trim()}>Join</button>
-          </form>
+          <NameForm
+            id="home-name"
+            action={busy ? 'Setting the table…' : joining ? 'Join the table' : 'Start a new table'}
+            busy={busy || (joining && clean.length !== 5)}
+            initial={name || undefined}
+            onDone={(who) => (joining ? (setName(who), go(`/r/${clean}`)) : void create(who))}
+            before={joining && (
+              <>
+                <label class="eyebrow" for="table-code">Table code</label>
+                <input id="table-code" class="field code" value={clean} placeholder="CODE" autoComplete="off" onInput={(e) => setCode((e.target as HTMLInputElement).value)} />
+              </>
+            )}
+          >
+            <p class="muted small">{joining ? 'The 5 letters at the end of the link your friend sent.' : 'You get a link to send to friends. Online tables are for 3 or 4 players, and computer players can fill any empty seat.'}</p>
+          </NameForm>
+          {joining ? (
+            <button class="btn quiet" onClick={() => setJoining(false)}>Start a new table instead</button>
+          ) : (
+            <>
+              <div class="rule"><span class="eyebrow">or</span></div>
+              <button class="btn" onClick={() => setJoining(true)}>Join a friend's table</button>
+            </>
+          )}
           {error && <p class="error">{error}</p>}
+          {name && <PlayerCode name={name} />}
+          <Link href="/learn" class="learn-cta">New to The Divide? <b>Learn to play in 5 minutes →</b></Link>
         </div>
         <div class="home-links">
           <Link href="/cards" class="home-link panel"><b>Cards</b><span>Every card with its current text.</span></Link>
-          <Link href="/rules" class="home-link panel"><b>Rules</b><span>How a Day works, the Tide, the Reaping, and every Celestial.</span></Link>
+          <Link href="/rules" class="home-link panel"><b>Rules</b><span>The full rules, with a quick reference.</span></Link>
           <Link href="/stats" class="home-link panel"><b>Stats</b><span>Which cards and Celestials are winning in real games.</span></Link>
         </div>
       </div>

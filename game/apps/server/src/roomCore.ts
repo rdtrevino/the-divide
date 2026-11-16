@@ -81,7 +81,15 @@ export interface FinishedGame {
   tries?: number;
 }
 
+/**
+ * One open connection. `clientId` is the player's identity at this table: it is set from the name,
+ * which the Worker has already checked against the name's player code, so the same person on two
+ * devices is one player in one seat.
+ */
 export interface Conn { id: string; clientId: string; name: string }
+
+/** The identity a verified name gives a player at a table. */
+export const identityOf = (name: string) => 'p:' + playerKey(name);
 
 export interface Store {
   get<T>(key: string): Promise<T | undefined>;
@@ -130,6 +138,8 @@ export class RoomCore {
   async load() {
     this.meta = (await this.store.get<RoomMeta>('meta')) ?? null;
     if (!this.meta) return;
+    for (const seat of this.meta.seats) if (seat.kind === 'human' && !seat.clientId?.startsWith('p:')) seat.clientId = identityOf(seat.name);
+    if (this.meta.hostClient && !this.meta.hostClient.startsWith('p:')) this.meta.hostClient = null;
     this.chat = (await this.store.get<ChatLine[]>('chat')) ?? [];
     this.timers = (await this.store.get<Timers>('timers')) ?? { deadlines: {}, botDue: null, quiet: false };
     for (const [k, v] of await this.store.list<FinishedGame>('finished:')) this.unsaved.set(k.slice(9), v);
@@ -166,13 +176,14 @@ export class RoomCore {
 
   /** Rebuild the connection table after the room wakes from hibernation. Sends nothing. */
   restore(conns: Conn[]) {
-    for (const c of conns) this.conns.set(c.id, c);
+    for (const c of conns) this.conns.set(c.id, { ...c, clientId: identityOf(cleanName(c.name) || 'Guest') });
   }
 
   connect(conn: Conn) {
     const m = this.need();
     const wasEmpty = this.conns.size === 0;
     conn.name = cleanName(conn.name) || 'Guest';
+    conn.clientId = identityOf(conn.name);
     this.conns.set(conn.id, conn);
     m.lastActive = this.hooks.now();
     let seat = this.seatOf(conn.clientId);

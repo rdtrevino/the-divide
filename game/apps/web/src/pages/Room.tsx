@@ -2,24 +2,13 @@
 import { TIMER_CHOICES, type ClientMsg } from '@divide/protocol';
 import { useState } from 'preact/hooks';
 import { Site } from '../components/Site';
-import { getName, setName } from '../lib/identity';
+import { NameForm, PlayerCode } from '../components/NameField';
+import { getName } from '../lib/identity';
 import { useRoom, type RoomSnap } from '../lib/room';
 import { Link, go } from '../lib/router';
 import { seatColor } from '../table/bits';
 import { Chat } from '../table/Side';
 import { Table } from '../table/Table';
-
-export function NameForm(p: { onDone: (name: string) => void; action: string; initial?: string }) {
-  const [name, set] = useState(p.initial ?? getName());
-  return (
-    <form class="name-form" onSubmit={(e) => { e.preventDefault(); const n = name.trim(); if (n) { setName(n); p.onDone(n); } }}>
-      <label class="eyebrow" for="name">Your name</label>
-      <input id="name" class="field" value={name} maxLength={20} autoFocus placeholder="What should the table call you?" onInput={(e) => set((e.target as HTMLInputElement).value)} />
-      <button class="btn primary" disabled={!name.trim()}>{p.action}</button>
-      <p class="muted small">Your wins and games are recorded under this name, so use the same one each time.</p>
-    </form>
-  );
-}
 
 export function Room(p: { code: string }) {
   const [name, set] = useState(getName());
@@ -30,6 +19,7 @@ export function Room(p: { code: string }) {
           <div class="eyebrow">Table {p.code}</div>
           <h1 class="h-display">Join the table</h1>
           <NameForm action="Take a seat" onDone={set} />
+          <p class="muted small learn-line">New to The Divide? <a href="/learn" target="_blank" rel="noopener">Learn to play in 5 minutes</a>.</p>
         </div>
       </Site>
     );
@@ -39,6 +29,18 @@ export function Room(p: { code: string }) {
 
 function Connected(p: { code: string; name: string; onRename: (n: string) => void }) {
   const [snap, send] = useRoom(p.code, p.name);
+  if (snap.conn === 'unverified') {
+    return (
+      <Site>
+        <div class="narrow panel pad">
+          <div class="eyebrow">Table {p.code}</div>
+          <h1 class="h-display">Who's playing?</h1>
+          <p>This browser doesn't hold the player code for <b>{p.name}</b>. Enter it, or choose another name.</p>
+          <NameForm action="Take a seat" initial={p.name} onDone={p.onRename} />
+        </div>
+      </Site>
+    );
+  }
   if (snap.conn === 'missing') {
     return (
       <Site>
@@ -105,7 +107,8 @@ function Lobby(p: { snap: RoomSnap; send: (m: ClientMsg) => void; onRename: (n: 
               </div>
             ))}
           </div>
-          {renaming && <div class="rename"><NameForm action="Save name" initial={you.name} onDone={(n) => { setRenaming(false); p.onRename(n); }} /></div>}
+          {renaming && <div class="rename"><NameForm id="rename" action="Save name" initial={you.name} onDone={(n) => { setRenaming(false); p.onRename(n); }} /></div>}
+          {you.seat !== null && <PlayerCode name={you.name} />}
 
           {you.isHost ? (
             <div class="lobby-start">
@@ -148,7 +151,7 @@ function Lobby(p: { snap: RoomSnap; send: (m: ClientMsg) => void; onRename: (n: 
             <div class="eyebrow">Table talk</div>
             <Chat chat={p.snap.chat} onSend={(text) => p.send({ t: 'chat', text })} />
           </div>
-          <p class="muted small center">New to the game? <a href="/rules" target="_blank" rel="noopener">Read the rules</a> or <a href="/cards" target="_blank" rel="noopener">browse the cards</a>.</p>
+          <p class="muted small center">New to the game? <a href="/learn" target="_blank" rel="noopener">Learn to play in 5 minutes</a>, or <a href="/rules" target="_blank" rel="noopener">read the rules</a>.</p>
         </div>
         {p.snap.error && <div class="toast" key={p.snap.error.n}>{p.snap.error.message}</div>}
       </div>

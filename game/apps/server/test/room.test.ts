@@ -83,12 +83,16 @@ describe('lobby', () => {
     expect(x.last('b').view?.players.length).toBe(3);
   });
 
-  it('never gives two seats the same name', async () => {
+  it('the same player on two devices has one seat (names are verified before they reach the table)', async () => {
     const x = table();
     x.core.init('ABCDE', 'client-a-xxxx');
     join(x, 'a', 'Sam');
     join(x, 'b', 'sam');
-    expect(x.last('a').room.seats.slice(0, 2).map((s) => s.name)).toEqual(['Sam', 'sam 2']);
+    expect(x.last('a').room.seats.map((s) => s.kind)).toEqual(['human', 'open', 'open', 'open']);
+    expect(x.last('b').you.seat).toBe(0);
+    // Leaving on one device does not mark the player as gone while the other is still connected.
+    x.core.disconnect('a');
+    expect(x.last('b').room.seats[0].connected).toBe(true);
   });
 });
 

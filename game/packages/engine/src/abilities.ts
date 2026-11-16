@@ -371,9 +371,11 @@ export const TURN: Record<string, TurnAbility> = {
       {
         const picks = yield* ask(s, { seat, tag: 'urim', prompt: 'Urim: secretly look at up to 3 facedown cards on the Altar.', options: t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), min: 1, max: Math.min(3, t.length) });
         const seen = picks.map((i) => s.altar[Number(i)]);
+        // seenBy is kept for the computer players' memory; people see the cards once, here, and then must remember them.
         for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
-        log(s, 'urim', `${pname(s, seat)} looked at ${seen.length} facedown card(s) on the Altar (Urim).`);
-        log(s, 'peek', `Urim: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}.`, [seat], { reveal: seen.map((a) => a.id) });
+        log(s, 'urim', `${pname(s, seat)} looked at ${seen.length} facedown card${seen.length === 1 ? '' : 's'} on the Altar (Urim).`);
+        // Ruling confirmed November 16, 2026: shown once, then hidden again.
+        yield* ask(s, { seat, tag: 'urim.seen', prompt: `Urim: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}. Remember them: they go back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: seen.map((a) => a.id), confirm: true });
       }
     },
   },
@@ -386,9 +388,12 @@ export const TURN: Record<string, TurnAbility> = {
       const a = s.altar[Number(pick)];
       a.seenBy = [...(a.seenBy ?? []), seat];
       log(s, 'asmadai', `${pname(s, seat)} looked at a facedown card on the Altar (Asmadai).`);
-      log(s, 'peek', `Asmadai: the card is ${cardName(a.id)}.`, [seat], { reveal: [a.id] });
       const hand = s.players[seat].hand;
-      if (!hand.length) return;
+      // Ruling confirmed November 16, 2026: shown once (here or in the exchange choice below), then hidden again.
+      if (!hand.length) {
+        yield* ask(s, { seat, tag: 'asmadai.seen', prompt: `Asmadai: the card is ${cardName(a.id)}. You have no card to exchange it for. Remember it: it goes back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: [a.id], confirm: true });
+        return;
+      }
       const swap = yield* chooseOne(s, seat, 'asmadai.swap', `Asmadai: the card is ${cardName(a.id)}. Exchange it with a card from your hand? The new card stays facedown.`, hand.map((c) => cardOpt(c)), true, [a.id]);
       if (!swap) return;
       hand.splice(hand.indexOf(swap), 1, a.id);

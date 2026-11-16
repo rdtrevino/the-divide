@@ -31,19 +31,6 @@ V35 (November 15) made First Fruits, facedown Offers, and the Offer reward choic
 
 V37 (November 16) adopted nine card changes for the strongest and weakest cards (`reports/v37-balance-2026-11-16.md`). V38 (November 16) changed Michael and 15 more cards toward Robert's target of every card between 0.75 and 1.25 (`reports/v38-balance-2026-11-16.md`); the trial variants were removed once adopted. Measure every card on fixed seeds with `cd tools/sim && npx tsx ab3.ts 20000 0 out.json base` (run several offsets in parallel and merge the counts).
 
-## Engine rulings to confirm
+## Engine rulings
 
-These are calls the engine makes where the card text leaves room. Each is easy to change.
-
-- **The Tempest** is used on your own turn.
-- **The Echo** copies only repeatable "On your turn" abilities (not once-per-game cards).
-- **Seraphim and Legion** cannot re-activate each other.
-- **The Patron** counts as Targeting only when the receiving Choir is full (Cherubim and Tribute apply then).
-- **Casting Lots** resolves after the Tide is set (its text says "In the Evening", which is before the Tide).
-- **The Flood and Let There Be Light** block only abilities a player chooses to activate; automatic effects such as Uriel still work.
-- **Favor**: the Gathering player chooses "at random" or "they choose".
-- **Hubris** (Hidden Roles only): every tied leader who gains Glory gives 1.
-- **Arbiter** (V34): routes 1 Glory only for Alignment scoring at the Reaping, not for other Reaping-step abilities such as Firmament.
-- A once-per-game card that leaves a Choir is no longer "used" if it returns later.
-- **Facedown Altar cards** (V35): bots estimate an unseen Offering as leaning toward the Offerer's own Choir. Players who see a card through Urim or Asmadai see it in their own view until the Evening reveal.
-- **Exalt with Absolution** (fixed in V35): the card being Exalted is set aside first, so Absolution's hand discard cannot take it.
+The calls the engine makes where card text leaves room were confirmed or decided on November 16, 2026, and are recorded in `design/design-decisions.md` (Card rulings) and the rulebook's Rulings section. Three changed the engine: The Flood and Let There Be Light switch off every ability of their color (automatic ones included), a card seen with Urim or Asmadai is shown once and then hidden again, and Hubris takes 1 Glory in total (its holder chooses among tied leaders).
