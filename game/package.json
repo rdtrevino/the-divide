@@ -2,9 +2,17 @@
   "name": "the-divide-game",
   "private": true,
   "version": "0.1.0",
-  "workspaces": ["packages/*", "apps/*", "tools/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tools/*"
+  ],
   "scripts": {
-    "test": "npm run test -w @divide/engine",
+    "test": "npm run test -w @divide/engine && npm run test -w @divide/server",
+    "typecheck": "npm run typecheck -w @divide/engine && npm run typecheck -w @divide/server && npm run typecheck -w @divide/web",
+    "build": "npm run build -w @divide/web",
+    "dev": "npm run build && npm run dev -w @divide/server",
+    "deploy": "npm run build && npm run deploy:kv -w @divide/server",
     "sim": "npm run sim -w @divide/sim"
   }
 }

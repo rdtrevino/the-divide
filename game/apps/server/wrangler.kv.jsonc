@@ -1,0 +1,24 @@
+// The same Worker as wrangler.jsonc, but the website's files are read from Workers KV instead of
+// Cloudflare's static assets. Used by scripts/deploy-kv.mjs, for publishing from places where the
+// static-assets upload does not work. Keep the two files in step.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "the-divide",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "build": { "command": "node scripts/build-info.mjs" },
+  "kv_namespaces": [{ "binding": "SITE", "id": "c7ae0c47d1c74cd1a76d19c573a9642f" }],
+  "durable_objects": { "bindings": [{ "name": "ROOM", "class_name": "Room" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "divide-stats",
+      "database_id": "2cd15db7-cb25-4b41-8800-8215ff8e7943",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "observability": { "enabled": true }
+}

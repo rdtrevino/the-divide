@@ -7,14 +7,19 @@ The online version of The Divide. Everything here is TypeScript.
 | `packages/engine` | The rules engine. Deterministic: a game is its config (with a seed) plus the ordered list of player inputs, so any game can be replayed exactly. Every Host, Celestial, and Event ability is implemented here. |
 | `tools/sim` | The balance simulator. Plays thousands of all-bot games and reports win rates by Celestial and card. |
 | `reports/` | Saved simulator reports. |
-| `apps/server` | Cloudflare Worker: live game rooms (Durable Objects) and the stats database. The D1 database `divide-stats` (id `2cd15db7-cb25-4b41-8800-8215ff8e7943`) is created and its schema applied from `migrations/0001_init.sql`. Server code is next. |
-| `apps/web` | (next) The website, styled after the printed cards. The starting brief is `BUILD_NOTES.md`. |
+| `packages/protocol` | The messages between the browser and a game table, and the shapes of the stats API. |
+| `apps/server` | The Cloudflare Worker: live game tables (one Durable Object each), bots and the turn timer, and the stats database (D1 `divide-stats`, schema in `migrations/`). |
+| `apps/web` | The website, drawn after the printed cards: lobby, game table, cards, rules, stats and game records. |
+
+**The site is live at https://the-divide.divide-game.workers.dev.** How to play, how it works, what the stats record, and how to publish changes: `SITE.md`.
 
 ## Commands
 
 ```
 npm install
-npm test                                   # run 79 tests, including about 1,500 bot games
+npm test                                   # engine tests (79, including about 1,500 bot games) and server tests
+npm run dev                                # the whole site locally at http://127.0.0.1:8787
+npm run deploy                             # publish (see SITE.md)
 cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements
 npm run sim -- --games 20000 --players 3,4 # balance report
 cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a rule variant

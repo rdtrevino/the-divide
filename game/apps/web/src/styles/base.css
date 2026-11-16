@@ -1,0 +1,102 @@
+/* The Divide: colours, type and shared controls, taken from the card design system (Eden). */
+@font-face { font-family: 'Cinzel'; font-weight: 400 900; font-display: swap; src: url('/fonts/cinzel.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel Decorative'; font-weight: 400; font-display: swap; src: url('/fonts/cinzel-decorative-400.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel Decorative'; font-weight: 700; font-display: swap; src: url('/fonts/cinzel-decorative-700.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel Decorative'; font-weight: 900; font-display: swap; src: url('/fonts/cinzel-decorative-900.woff2') format('woff2'); }
+@font-face { font-family: 'IM Fell English'; font-style: normal; font-display: swap; src: url('/fonts/im-fell-english.woff2') format('woff2'); }
+@font-face { font-family: 'IM Fell English'; font-style: italic; font-display: swap; src: url('/fonts/im-fell-english-italic.woff2') format('woff2'); }
+
+:root {
+  --void: #0d0b08;
+  --night: #1a1410;
+  --ember: #2a1f14;
+  --ember-2: #36281a;
+  --cream: #f6ead2;
+  --cream-bright: #fff6de;
+  --parchment: #e8d9b0;
+  --gold: #c9922a;
+  --gold-bright: #e8c84a;
+  --gold-deep: #a87c1f;
+  --gold-soft: #c8a060;
+  --light: #e7c24a;
+  --dark: #7d6fd0;
+  --dark-deep: #4a3d8c;
+  --neutral: #9a9186;
+  --danger: #d2553f;
+  --muted: rgba(246, 234, 210, 0.58);
+  --faint: rgba(246, 234, 210, 0.32);
+  --hair: rgba(201, 146, 42, 0.3);
+  --hair-soft: rgba(201, 146, 42, 0.16);
+  --font-display: 'Cinzel Decorative', Georgia, serif;
+  --font-title: 'Cinzel', Georgia, serif;
+  --font-body: 'IM Fell English', Georgia, serif;
+  --seat-0: #e8c84a;
+  --seat-1: #6ab8b8;
+  --seat-2: #e87030;
+  --seat-3: #a9a2e6;
+  --ease: cubic-bezier(0.22, 0.8, 0.26, 1);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--void);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+#app { min-height: 100%; }
+a { color: var(--gold); text-decoration: none; }
+a:hover { color: var(--gold-bright); }
+h1, h2, h3 { font-family: var(--font-title); font-weight: 600; letter-spacing: 0.08em; margin: 0; }
+button { font: inherit; color: inherit; }
+::selection { background: rgba(201, 146, 42, 0.4); }
+
+.eyebrow { font-family: var(--font-title); font-size: 11px; letter-spacing: 0.34em; text-transform: uppercase; color: var(--gold-soft); }
+.wordmark { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.2em; color: var(--gold); text-shadow: 0 0 40px rgba(201, 146, 42, 0.45), 0 2px 0 rgba(0, 0, 0, 0.8); text-transform: uppercase; }
+.rule { display: flex; align-items: center; gap: 14px; color: var(--gold-soft); }
+.rule::before, .rule::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--hair) 30%, var(--hair) 70%, transparent); }
+.muted { color: var(--muted); }
+.num { font-family: var(--font-title); font-variant-numeric: tabular-nums lining-nums; }
+
+.btn {
+  font-family: var(--font-title); font-weight: 600; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 11px 20px; border-radius: 6px; border: 1px solid var(--gold-deep); background: linear-gradient(#2b2013, #1d150c);
+  color: var(--cream); cursor: pointer; transition: transform 0.12s var(--ease), border-color 0.15s, background 0.15s, box-shadow 0.15s; white-space: nowrap;
+}
+.btn:hover:not(:disabled) { border-color: var(--gold-bright); box-shadow: 0 0 0 1px rgba(232, 200, 74, 0.25), 0 6px 18px rgba(0, 0, 0, 0.5); transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(0); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn.primary { background: linear-gradient(#d9a233, #b17f1c); color: #1a1208; border-color: #e8c84a; }
+.btn.primary:hover:not(:disabled) { background: linear-gradient(#e8b440, #c18c22); }
+.btn.quiet { border-color: var(--hair); background: transparent; color: var(--muted); }
+.btn.quiet:hover:not(:disabled) { color: var(--cream); }
+.btn.small { padding: 6px 12px; font-size: 11px; letter-spacing: 0.14em; }
+.btn:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+
+.field {
+  font-family: var(--font-body); font-size: 18px; color: var(--cream); background: rgba(0, 0, 0, 0.35); border: 1px solid var(--hair);
+  border-radius: 6px; padding: 10px 14px; width: 100%;
+}
+.field::placeholder { color: var(--faint); }
+select.field { appearance: none; padding-right: 30px; background-image: linear-gradient(45deg, transparent 50%, var(--gold) 50%), linear-gradient(135deg, var(--gold) 50%, transparent 50%); background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+select.field option { background: var(--night); color: var(--cream); }
+
+.panel { background: linear-gradient(180deg, rgba(42, 31, 20, 0.72), rgba(26, 20, 16, 0.72)); border: 1px solid var(--hair-soft); border-radius: 10px; }
+
+/* Site frame for the non-game pages. */
+.site { min-height: 100vh; display: flex; flex-direction: column; background: radial-gradient(1200px 600px at 50% -10%, rgba(201, 146, 42, 0.13), transparent 60%), var(--void); }
+.site-nav { display: flex; align-items: center; gap: 26px; padding: 16px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--hair-soft); }
+.site-nav .wordmark { font-size: 18px; }
+.site-nav nav { display: flex; gap: 22px; margin-left: auto; font-family: var(--font-title); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; }
+.site-nav nav a { color: var(--muted); }
+.site-nav nav a.on, .site-nav nav a:hover { color: var(--gold-bright); }
+.site-main { flex: 1; width: 100%; max-width: 1240px; margin: 0 auto; padding: clamp(18px, 3vw, 36px) clamp(16px, 4vw, 40px) 60px; }
+.site-foot { padding: 18px; text-align: center; font-size: 13px; color: var(--faint); border-top: 1px solid var(--hair-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
