@@ -18,8 +18,8 @@ For Robert's review, November 17, 2026. Every Open Game Host card checked agains
 |---|---|---|
 | **Engine: alignment synergy** | pays more the more of your color you hold; finished by Exalting | Uriel, Beelzebub, Seraphim, Legion, Zealot |
 | **Engine: store** | Glory piles up on the card; cash it in when you choose | Providence, Mammon |
-| **Engine: growth** | weak early, strong late | Tree of Life, Leviathan, Eternity |
-| **Engine: steady income** | +1 under a condition, every Day | Twilight, Moderation, Stillness, Firmament, Outcast |
+| **Engine: growth** | pays more as your Choir grows | Tree of Life, Leviathan |
+| **Engine: steady income** | +1 under a condition, every Day | Twilight, Moderation, Stillness, Firmament, Outcast, Eternity |
 | **Engine support** | draws, recycles and swaps that make the engine run | Temptation, Council, Moloch, Absolution, Forger, Jubilee |
 | **Information** | see what others hide | Wisdom, Gabriel, Serpent, Ithuriel, Urim, Watchers, Prophecy, Confession |
 | **Altar** | push, protect, destroy or retake Altar cards | Hymn, Lamentation, Raphael, Azazel, Sanctuary, Remnant, Vessel, Abaddon, Snare, Asmadai, Mirage |
@@ -43,7 +43,7 @@ Light and Dark cards mirror each other job for job (Uriel and Beelzebub, Provide
 | Gabriel | L1 | Information | **Rework** | On your turn: Look at another player's hand. *(Was the Event deck, which the Base game does not have. Pairs with Serpent.)* |
 | Providence | L1 | Engine: store | **Rework** | At each Reaping, put 1 Glory from the Pot on this card. On your turn, you may take it all, then discard this card. |
 | Confession | L1 | Information (proof of loyalty) | Wording | On your turn: Reveal your hand until your next turn. If it holds no Dark card, gain 1 Glory. |
-| Tree of Life | L1 | Engine: growth | **Rework** | At the Reaping: Gain 1 Glory from Day 4 on, or 2 from Day 7 on. |
+| Tree of Life | L1 | Engine: growth | **Rework** | At the Reaping: Gain 1 Glory for each card in your Choir beyond 2. |
 | Free Will | L2 | Tempo | Wording | Once per game: Take two actions this turn. |
 | Seraphim | L1 | Engine: synergy | **Rework** | Exalting a Light card costs you nothing. |
 | Hymn | L1 | Altar | Wording | You may Offer 2 Light cards at once, face up, for one reward. |
@@ -55,7 +55,7 @@ Light and Dark cards mirror each other job for job (Uriel and Beelzebub, Provide
 | Tribute | L1 | Protection | Wording | Other players must pay 1 Glory to the Pot to target your Choir. |
 | Mercy | L2 | Team tool | **Rework** | Once per game, at the Reaping: If you lean with the Tide, score 3 as if you were alone. |
 | Cherubim | L1 | Protection | Wording | Other players cannot discard or replace your Choir cards. |
-| Morning Star | L1 | Team tool | Wording | At the Reaping: You may pay 1 Glory to treat one Choir card as the opposite color. |
+| Morning Star | L1 | Team tool | **Rework** | On your turn: Pay 1 Glory: one card in your Choir counts as the opposite color this Day. |
 | Absolution | L1 | Engine support | Wording | Once per Day: When a card is discarded from your Choir, you may put it in your hand instead. |
 | Deliverance | L2 | Interaction | Wording | Once per game: Swap a card between any two Choirs. |
 | Remnant | L1 | Altar | Wording | At the Reaping: Take an Altar card into your hand, then discard a hand card. |
@@ -74,7 +74,7 @@ Light and Dark cards mirror each other job for job (Uriel and Beelzebub, Provide
 | Azazel | D1 | Altar | Wording | When you Offer a Dark card, you may reveal it and skip its reward to destroy a face-up Light Altar card. |
 | Moloch | D1 | Engine support | Wording | On your turn: Discard another card from your Choir to gain 1 Glory. |
 | Beelzebub | D1 | Engine: synergy | **Rework** | At the Reaping: Gain 1 Glory for each other Dark card in your Choir. |
-| Leviathan | D1 | Engine: growth | **Rework** | At the Reaping: Gain 1 Glory from Day 4 on, or 2 from Day 7 on. |
+| Leviathan | D1 | Engine: growth | **Rework** | At the Reaping: Gain 1 Glory for each card in your Choir beyond 2. |
 | Mammon | D1 | Engine: store | **Rework** | At each Reaping, put 1 Glory from the Pot on this card. On your turn, you may take it all, then discard this card. |
 | Envy | D1 | Interaction | Wording | On your turn: If the leader has 3 or more Glory than you, they lose 1. |
 | Lilith | D1 | Protection | **Rework** | Other players' abilities cannot look at, take, or discard cards in your hand. |
@@ -92,7 +92,7 @@ Light and Dark cards mirror each other job for job (Uriel and Beelzebub, Provide
 | Card | Value | Job | Status | Text |
 |---|---|---|---|---|
 | Vessel | N | Altar | Keep | On your turn: Place a hand card facedown on the Altar and draw 1. Gain 1 Glory if it matches the Tide. |
-| Eternity | N | Engine: growth | **Rework** | At the Reaping: Gain 1 Glory from Day 4 on, or 2 from Day 7 on. *(Was near-identical to Remnant.)* |
+| Eternity | N | Engine: income | **Rework** | At the Reaping: If you did not Offer this Day, gain 1 Glory. *(Was near-identical to Remnant.)* |
 | Ordeal | N | Team tool | Wording | On your turn: Double your Reaping result this Day, gain or loss. |
 | Raguel | N | Team tool (an alliance) | **Rework** | When this enters your Choir, Bind a player. Each Reaping they gain Glory, you gain 1. |
 | Twilight | N | Engine: income | Wording | At the Reaping: If your Choir holds a Light and a Dark card, gain 1 Glory. |
@@ -100,9 +100,9 @@ Light and Dark cards mirror each other job for job (Uriel and Beelzebub, Provide
 | Stillness | N | Engine: income | Wording | At the Reaping: If the Tide is Neutral, gain 1 Glory. |
 | Firmament | N | Engine: income | Wording | At the Reaping: If the Tide won by exactly 1, gain 1 Glory. |
 | Moderation | N | Engine: income | Wording | At the Reaping: If your Choir is balanced, gain 1 Glory. |
-| Fig Leaves | N | Team tool | **Rework** | At the Reaping: Your Choir may sit out: it scores nothing and does not count toward the Tide's share. |
+| Fig Leaves | N | Team tool | **Rework** | On your turn: Your Choir sits out this Day: it scores nothing, loses nothing, and does not count. |
 | Outcast | N | Engine: income (catch-up) | Wording | At the Reaping: If you have the least Glory, or tie for it, gain 1 Glory. |
-| Heresy | N | Team tool | **Rework** | At the Reaping: You may count your Choir as leaning the opposite way. |
+| Heresy | N | Team tool | **Rework** | On your turn: Your Choir counts as leaning the opposite way this Day. |
 | Council | N | Engine support | Wording | On your turn: Swap a hand card into your Choir. Each other player may pay you 1 Glory to do the same. |
 | Mirage | N | Altar | Wording | Your facedown Offers are hidden from every ability. At the Reaping, gain 1 Glory if one matches the Tide. |
 | Veil | N | Protection | Wording | Other players cannot look at, reveal, copy, or flip your cards. |
@@ -117,8 +117,9 @@ Light and Dark cards mirror each other job for job (Uriel and Beelzebub, Provide
 
 ## Totals
 
-- **19 reworks**, the rest wording only.
-- **Engine cards: 21**: 5 synergy, 2 stores, 3 growth, 5 steady income, 6 support.
+- **20 reworks**, the rest wording only.
+- **Engine cards: 21**: 5 synergy, 2 stores, 2 growth, 6 steady income, 6 support.
+- Team tools that choose your side act **on your turn, before the Altar is revealed** (Heresy, Morning Star, Fig Leaves), so they are bets, not fixes made after the Tide is known.
 - **Information: 8. Altar: 11. Team tools: 11. Interaction: 9. Protection: 4. Tempo: 2.**
 
 ## How a game should feel
