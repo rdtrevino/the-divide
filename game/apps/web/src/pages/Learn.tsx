@@ -58,40 +58,36 @@ function ChoirBuilder() {
   );
 }
 
-const ALTAR_POOL = ['host-wisdom', 'host-free-will', 'host-serpent', 'host-silence', 'host-council', 'host-leviathan'];
+// This Evening's Altar, already revealed: Light 3 against Dark 4, so one Gather of Silence flips the Tide.
+const ALTAR = ['host-wisdom', 'host-free-will', 'host-council', 'host-serpent', 'host-silence', 'host-leviathan'];
 
 function AltarBuilder() {
-  const [on, setOn] = useState<string[]>(['host-wisdom', 'host-serpent', 'host-leviathan']);
-  const [revealed, setRevealed] = useState(false);
+  const [off, setOff] = useState<string[]>([]);
+  const on = ALTAR.filter((id) => !off.includes(id));
   const light = on.reduce((a, id) => a + Math.max(0, signed(id)), 0);
   const dark = on.reduce((a, id) => a + Math.max(0, -signed(id)), 0);
+  const toggle = (id: string) => setOff((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
   return (
     <div class="learn-try">
-      <div class="eyebrow">Try it: put cards on the Altar, then reveal it</div>
-      <div class="learn-split">
-        <div>
-          <div class="learn-label">Cards you could Offer</div>
-          <div class="learn-cards small">
-            {ALTAR_POOL.filter((id) => !on.includes(id)).map((id) => <Card id={id} w={84} compact selectable onClick={() => { setOn([...on, id]); setRevealed(false); }} />)}
-            {ALTAR_POOL.every((id) => on.includes(id)) && <span class="muted">All on the Altar.</span>}
-          </div>
-        </div>
-        <div>
-          <div class="learn-label">The Altar {on.length > 0 && <span class="muted">(click a card to take it back)</span>}</div>
-          <div class="learn-cards small altar">
-            {on.map((id) => <Card id={revealed ? id : null} w={84} compact={revealed} onClick={() => setOn(on.filter((x) => x !== id))} />)}
-            {!on.length && <span class="muted">Empty: the Tide would be Neutral.</span>}
-          </div>
-        </div>
+      <div class="eyebrow">Try it: tap a card to take it off the Altar</div>
+      <div class="learn-altar">
+        {ALTAR.map((id) => {
+          const v = signed(id);
+          return (
+            <div class={`la-slot${off.includes(id) ? ' off' : ''}`}>
+              <Card id={id} w="calc((100cqw - 40px) / 6)" compact onClick={() => toggle(id)} />
+              <span class={`tag ${leanClass(v)}`}>{v === 0 ? 'Neutral' : `+${Math.abs(v)} ${lean(v)}`}</span>
+            </div>
+          );
+        })}
       </div>
-      {!revealed ? (
-        <button class="btn primary" onClick={() => setRevealed(true)}>It's Evening: reveal the Altar</button>
-      ) : (
-        <>
-          <Meter light={light} dark={dark} />
-          <button class="btn quiet small" onClick={() => setRevealed(false)}>Turn them facedown again</button>
-        </>
-      )}
+      <Meter light={light} dark={dark} />
+      <p class="learn-small">
+        {off.length === 0
+          ? 'Dark wins by 1. Take Silence off and see what happens.'
+          : 'Taking a card off the Altar is what a Gather does: one card can turn the Tide.'}
+        {off.length > 0 && <> <button class="linkish" onClick={() => setOff([])}>Put them all back</button></>}
+      </p>
     </div>
   );
 }
@@ -314,7 +310,7 @@ const STEPS: Step[] = [
     title: 'Evening: the Tide',
     body: (
       <>
-        <p>When everyone has had a turn, the Altar is <b>revealed</b>. Add up its Light and its Dark. The heavier side is the <b>Tide</b>. A tie is a Neutral Tide.</p>
+        <p>When everyone has had a turn, every facedown card on the Altar is turned face up. Add up its Light and its Dark. The heavier side is the <b>Tide</b>. A tie is a Neutral Tide.</p>
       </>
     ),
     side: <AltarBuilder />,
