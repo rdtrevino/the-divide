@@ -100,7 +100,24 @@ export const TURN: Record<string, TurnAbility> = {
       yield* gain(s, seat, 1, H.confession);
     },
   },
-  [H.legion]: reactivator('dark'),
+  [H.legion]: (() => {
+    const r = reactivator('dark');
+    // Tests 'legion-free' / 'seraph-refund': Legion becomes an Exalt card instead.
+    return { ...r, can: (s: GameState, seat: Seat) => !variant(s, 'legion-free') && !variant(s, 'seraph-refund') && r.can(s, seat) };
+  })(),
+  [H.mammon]: {
+    // Test 'mammon-store': take the Glory stored on Mammon, then discard it.
+    can: (s, seat) => variant(s, 'mammon-store') && (s.players[seat].choir.find((c) => c.id === H.mammon)?.store ?? 0) > 0,
+    *run(s, seat) {
+      const c = s.players[seat].choir.find((x) => x.id === H.mammon);
+      const n = c?.store ?? 0;
+      if (!c || !n) return;
+      c.store = 0;
+      yield* gain(s, seat, n, H.mammon);
+      yield* discardFromChoir(s, seat, H.mammon, 'Mammon');
+      log(s, 'mammon', `${pname(s, seat)} took the ${n} Glory stored on Mammon and discarded it.`);
+    },
+  },
   [H.sanctuary]: {
     can: (s) => s.altar.some((a) => a.sanctuary === undefined),
     *run(s, seat) {

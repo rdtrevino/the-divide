@@ -276,8 +276,11 @@ export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
 
 export function exaltCost(s: GameState, seat: Seat, card?: string): number {
   if (eventOn(s, E.divineCalling, seat)) return 0;
-  // Seraphim (V42): Exalting a Light card costs nothing.
+  // Test 'exalt-free': Exalt costs no Glory.
+  if (variant(s, 'exalt-free')) return 0;
+  // Seraphim (V42): Exalting a Light card costs nothing. Test 'legion-free': Legion does the same for Dark.
   if (card && hasActive(s, seat, H.seraphim) && colorsOf(s, null, card).light) return 0;
+  if (card && variant(s, 'legion-free') && hasActive(s, seat, H.legion) && colorsOf(s, null, card).dark) return 0;
   if (hasActive(s, seat, H.outcast)) {
     const min = Math.min(...s.players.map((p) => p.glory));
     if (s.players[seat].glory === min) return 0;
@@ -370,7 +373,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
     // Mammon: when the Offer includes a Dark card, take this Glory from another player instead of the Pot.
     const mamFrom = s.players.filter((o) => o.seat !== seat && o.glory > 0 && !glorySafe(s, seat, o.seat));
     const mamOk = offered.some((c) => col(c).dark);
-    if (mamOk && hasActive(s, seat, H.mammon) && canActivate(s, seat, H.mammon) && mamFrom.length) {
+    if (mamOk && !variant(s, 'mammon-store') && hasActive(s, seat, H.mammon) && canActivate(s, seat, H.mammon) && mamFrom.length) {
       const pick = yield* chooseOne(s, seat, 'mammon.offer', 'Mammon: take this Glory from a player instead of the Pot?', mamFrom.map((o) => seatOpt(s, o.seat)), true);
       if (pick) {
         const from = seatFromOpt(pick);
@@ -390,7 +393,7 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
   if (s.hostDeck.length || s.discard.length) opts.push({ id: 'deck', label: hasActive(s, seat, H.temptation) ? 'From the top of the Host deck (Temptation: look at 2)' : 'From the top of the Host deck', card: undefined });
   // V37: Forger may take any Host card from the discard pile (was the top card only).
   if (hasActive(s, seat, H.forger) && s.discard.length && canActivate(s, seat, H.forger)) for (const c of [...new Set(s.discard.filter((x) => x.startsWith('host-')))]) opts.push({ id: 'discard:' + c, label: `From the discard pile (Forger): ${cardName(c)}`, card: c });
-  if (hasActive(s, seat, H.favor) && canActivate(s, seat, H.favor)) for (const o of s.players) if (o.seat !== seat && o.hand.length && !handProtected(s, seat, o.seat)) opts.push({ id: 'favor:' + o.seat, label: `From ${o.name}'s hand (Favor)`, card: undefined });
+  if (!variant(s, 'favor-ripen') && hasActive(s, seat, H.favor) && canActivate(s, seat, H.favor)) for (const o of s.players) if (o.seat !== seat && o.hand.length && !handProtected(s, seat, o.seat)) opts.push({ id: 'favor:' + o.seat, label: `From ${o.name}'s hand (Favor)`, card: undefined });
   const src = (yield* chooseOne(s, seat, 'gather.source', 'Gather: choose where to take a card from.', opts))!;
   if (!(yield* makeRoom(s, seat, 'Gather'))) return;
 
@@ -453,6 +456,11 @@ function* doExalt(s: GameState, seat: Seat): Gen<void> {
   yield* pay(s, seat, cost, 'exalt');
   yield* enterChoir(s, seat, card);
   stat(s, { type: 'action', seat, card, source: 'exalt' });
+  // Test 'seraph-refund': Seraphim (Legion) pays 1 Glory when you Exalt a Light (Dark) card.
+  if (variant(s, 'seraph-refund')) {
+    if (hasActive(s, seat, H.seraphim) && colorsOf(s, null, card).light && card !== H.seraphim) { yield* gain(s, seat, 1, H.seraphim); log(s, 'seraphim', `${p.name} gained 1 Glory (Seraphim).`); }
+    if (hasActive(s, seat, H.legion) && colorsOf(s, null, card).dark && card !== H.legion) { yield* gain(s, seat, 1, H.legion); log(s, 'legion', `${p.name} gained 1 Glory (Legion).`); }
+  }
   log(s, 'exalt', `${p.name} Exalted ${cardName(card)}${cost ? '' : ' at no cost'}.`);
 }
 
@@ -809,7 +817,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     for (const [id, k] of [[H.uriel, 'light'], [H.beelzebub, 'dark']] as const) {
       // Tests: 'set-others' (3 others besides the card itself), 'set-tide' (and your Choir leans with the Tide).
       const setN = activeCards(p).filter((c) => colorsOf(s, seat, c.id)[k] && (!variant(s, 'set-others') || c.id !== id)).length;
-      if (hasActive(s, seat, id) && setN >= 3 && (!variant(s, 'set-tide') || leansWithTide.has(seat))) { yield* gain(s, seat, 1, id); log(s, 'set', `${p.name} gained 1 Glory (${cardName(id)}).`); }
+      if (hasActive(s, seat, id) && setN >= 3 && (!variant(s, 'set-tide') || leansWithTide.has(seat))) { yield* gain(s, seat, variant(s, 'set-2') ? 2 : 1, id); log(s, 'set', `${p.name} gained 1 Glory (${cardName(id)}).`); }
     }
     // Test 'tree-swap' / 'tree-swap-tide' (Robert's idea): take an Altar card into your Choir, discarding one if it is full.
     if ((variant(s, 'tree-swap') || (variant(s, 'tree-swap-tide') && leansWithTide.has(seat)) || (variant(s, 'tree-swap-cost') && canSpend(s, seat, 1)) || (variant(s, 'tree-swap-lose') && !(gained[seat] > 0))) && hasActive(s, seat, H.treeOfLife) && canActivate(s, seat, H.treeOfLife)) {
@@ -833,6 +841,16 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     // Providence (V42): if your Choir leans with the Tide, put 1 Glory from the Pot on it.
     const prov = p.choir.find((c) => c.id === H.providence && !c.facedown);
     if (prov && hasActive(s, seat, H.providence)) { prov.store = (prov.store ?? 0) + 1; log(s, 'providence', `1 Glory is stored on ${p.name}'s Providence (${prov.store} in all).`); }
+    // Test 'mammon-store': Mammon is the Dark store, like Providence.
+    const mam = p.choir.find((c) => c.id === H.mammon && !c.facedown);
+    if (variant(s, 'mammon-store') && mam && hasActive(s, seat, H.mammon)) { mam.store = (mam.store ?? 0) + 1; log(s, 'mammon', `1 Glory is stored on ${p.name}'s Mammon (${mam.store} in all).`); }
+    // Test 'favor-ripen': each Day your Choir leans with the Tide, 1 Glory ripens on Favor; at 3, take all 3.
+    const fav = p.choir.find((c) => c.id === H.favor && !c.facedown);
+    if (variant(s, 'favor-ripen') && fav && hasActive(s, seat, H.favor) && leansWithTide.has(seat)) {
+      fav.store = (fav.store ?? 0) + 1;
+      if (fav.store >= 3) { fav.store = 0; yield* gain(s, seat, 3, H.favor); log(s, 'favor', `${p.name}'s Favor ripens: +3 Glory.`); }
+      else log(s, 'favor', `1 Glory ripens on ${p.name}'s Favor (${fav.store} of 3).`);
+    }
     // Leviathan (V42): 1 Glory if two or more other players lost Glory at this Reaping.
     if (hasActive(s, seat, H.leviathan) && s.players.filter((o) => o.seat !== seat && lost[o.seat] > 0).length >= 2) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
     // Test 'hubris-day' (Robert): at the end of the Day, if the player with the most Glory gained 3 or more this Day (from anything), they give 1 to you.
