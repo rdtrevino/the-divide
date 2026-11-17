@@ -1,12 +1,8 @@
 // The Game object: owns the state, the running game loop, and the input log.
-import { eventOn, log, stat } from './core';
-import { E } from './data';
-import { createState, DAYS, gloryTarget, runGame } from './engine';
+import { createState, runGame } from './engine';
 import type { Answer, Decision, GameConfig, GameState, Gen, Seat } from './types';
 
-export type Input =
-  | { t: 'answer'; id: number; seat: Seat; choice: Answer }
-  | { t: 'gift'; from: Seat; to: Seat; amount: number };
+export type Input = { t: 'answer'; id: number; seat: Seat; choice: Answer };
 
 export class RuleError extends Error {}
 
@@ -40,8 +36,9 @@ export class Game {
   }
 
   apply(i: Input) {
-    if (i.t === 'answer') this.answer(i.seat, i.id, i.choice);
-    else this.gift(i.from, i.to, i.amount);
+    // Games recorded before Glory gifts were removed may hold other inputs; they no longer replay.
+    if (i.t !== 'answer') throw new RuleError('This game was recorded under earlier rules.');
+    this.answer(i.seat, i.id, i.choice);
   }
 
   answer(seat: Seat, id: number, choice: Answer) {
@@ -57,30 +54,6 @@ export class Game {
     if (this.pending.every((x) => this.answers.has(x.id))) {
       this.advance(this.pending.map((x) => this.answers.get(x.id)!));
     }
-  }
-
-  /** Give Glory to another player (deals). Not allowed on Babel or on the final Day. */
-  canGift(from: Seat, to: Seat, amount: number): string | null {
-    const s = this.state;
-    if (s.phase === 'ended' || s.day === 0) return 'The game is not in progress.';
-    if (from === to) return 'Choose another player.';
-    if (!Number.isInteger(amount) || amount < 1) return 'Give at least 1 Glory.';
-    if (s.players[from].glory < amount) return 'Not enough Glory.';
-    if (eventOn(s, E.babel)) return 'Babel: no Glory transfers this Day.';
-    if (!gloryTarget(s) && s.day === DAYS) return 'No Glory may be given on the final Day.';
-    return null;
-  }
-
-  gift(from: Seat, to: Seat, amount: number) {
-    const err = this.canGift(from, to, amount);
-    if (err) throw new RuleError(err);
-    const s = this.state;
-    s.players[from].glory -= amount;
-    s.players[to].glory += amount;
-    stat(s, { type: 'glory', seat: from, amount: -amount, source: 'gift' });
-    stat(s, { type: 'glory', seat: to, amount, source: 'gift' });
-    log(s, 'gift', `${s.players[from].name} gave ${amount} Glory to ${s.players[to].name}.`);
-    this.inputs.push({ t: 'gift', from, to, amount });
   }
 
   private advance(ans: Answer[]) {

@@ -132,7 +132,7 @@ const ACTIONS: Record<ActionKey, { title: string; icon: string; badge: string; t
     summary: 'Hand → Altar, facedown',
     steps: [
       'Choose a card from your hand and put it on the Altar facedown.',
-      'Then gain 1 Glory (or draw 1 card instead, if you need cards more).',
+      'Then gain 1 Glory.',
       'Nobody sees what you Offered until the Evening, and anyone who acts after you can still Gather it away.',
     ],
     why: 'Your income, and your secret vote on the Tide.',
@@ -195,7 +195,7 @@ const STEPS: Step[] = [
     title: 'The Divide in 5 minutes',
     body: (
       <>
-        <p>Each Day, everyone secretly feeds a shared Altar. At night the Altar tips toward the Light or the Dark, and every player whose cards lean the same way gains Glory.</p>
+        <p>Each Day, everyone secretly feeds a shared Altar. In the Evening the Altar tips toward the Light or the Dark, and every player whose cards lean the same way gains Glory.</p>
         <p>This walk-through teaches the 3 and 4 player game, the one you play on this site. Use <b>Next</b>, or the arrow keys.</p>
       </>
     ),
@@ -229,8 +229,8 @@ const STEPS: Step[] = [
     body: (
       <ul class="learn-list">
         <li><b>A Celestial.</b> Your special power. Everyone can see it.</li>
-        <li><b>A Choir</b> of 3 cards, face up in front of you. Their abilities are yours to use, and together they lean Light or Dark.</li>
-        <li><b>A hand</b> of 3 cards only you can see. You refill it every night.</li>
+        <li><b>A Choir</b> of up to 3 cards, face up in front of you. Their abilities are yours to use, and together they lean Light or Dark. You start with 2: everyone is dealt 5 cards, picks 2 for their Choir, and reveals them together.</li>
+        <li><b>A hand</b> of 3 cards only you can see. You refill it every Evening.</li>
       </ul>
     ),
     side: (
@@ -271,11 +271,14 @@ const STEPS: Step[] = [
   {
     title: 'Morning: the Day begins',
     body: (
+      <>
+      <p>Every Day has three parts: <b>Morning</b> sets up the Altar, at <b>Noon</b> everyone takes a turn, and in the <b>Evening</b> the Tide is set and everyone scores.</p>
       <ol class="learn-list">
         <li><b>An Event</b> changes one rule for the whole Day.</li>
         <li><b>The Seed:</b> the top card of the deck goes face up on the Altar.</li>
         <li><b>First Fruits:</b> everyone secretly picks one card from their hand, then all are revealed together onto the Altar. Then everyone draws one.</li>
       </ol>
+      </>
     ),
     side: (
       <div class="learn-morning">
@@ -293,7 +296,7 @@ const STEPS: Step[] = [
     ),
   },
   {
-    title: 'Your turn: one action',
+    title: 'Noon: one action each',
     body: (
       <>
         <p>Going around the table, each player takes <b>one turn</b> and picks <b>one of three actions</b>:</p>

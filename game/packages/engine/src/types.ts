@@ -16,7 +16,7 @@ export interface GameConfig {
   seed: number;
   mode: Mode;
   players: PlayerConfig[];
-  /** Optional rule: reveal 2 Seeds each Unveiling (suggested for thin 3-player Altars). */
+  /** Optional rule: reveal 2 Seeds each Morning (suggested for thin 3-player Altars). */
   twoSeeds?: boolean;
   /** Experimental balance variants, used for A/B testing in the simulator. */
   variants?: string[];
@@ -155,7 +155,7 @@ export interface GameState {
   config: GameConfig;
   rng: number;
   day: number;
-  phase: 'setup' | 'unveiling' | 'turns' | 'evening' | 'ended';
+  phase: 'setup' | 'morning' | 'noon' | 'evening' | 'ended';
   players: Player[];
   hostDeck: string[];
   discard: string[];

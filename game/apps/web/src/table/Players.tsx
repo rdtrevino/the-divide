@@ -65,7 +65,7 @@ export function PlayerPanel(p: { view: GameView; seat: number; waiting?: Waiting
   const pick = useContext(PickCtx);
   const pl = p.view.players[p.seat];
   const opt = pick.seat.get(p.seat);
-  const active = p.view.active === p.seat && p.view.phase === 'turns';
+  const active = p.view.active === p.seat && p.view.phase === 'noon';
   const winner = p.view.result?.winners.includes(p.seat);
   return (
     <div
@@ -102,7 +102,7 @@ export function MyArea(p: { view: GameView; seat: number }) {
   const pick = useContext(PickCtx);
   const pl = p.view.players[p.seat];
   const celOpt = pick.card.get(pl.celestial);
-  const active = p.view.active === p.seat && p.view.phase === 'turns';
+  const active = p.view.active === p.seat && p.view.phase === 'noon';
   const hand = pl.hand ?? [];
   return (
     <div class={`mine${active ? ' active' : ''}`} style={{ '--seat': seatColor(p.seat) } as any}>

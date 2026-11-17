@@ -1,6 +1,6 @@
 {
-  "version": "V39",
-  "date": "2026-11-16",
+  "version": "V40",
+  "date": "2026-11-17",
   "hosts": [
     {
       "id": "host-michael",
@@ -291,7 +291,7 @@
     {
       "id": "host-vessel",
       "name": "Vessel",
-      "text": "On your turn: You may place a card from your hand on the Altar facedown, then gain 1 Glory or draw 1 card, as with an Offer. This is not an Offer.",
+      "text": "On your turn: You may place a card from your hand on the Altar facedown, then draw 1 card. This is not an Offer.",
       "openGame": true,
       "face": "art/faces/host/23-vessel.jpg",
       "plate": "art/plates/host/23-vessel.jpg",
@@ -525,14 +525,14 @@
     {
       "id": "host-prophecy",
       "name": "Prophecy",
-      "text": "During the Unveiling: Publicly declare a Target Alignment, Light or Dark. At the Reaping, if the Tide matches, gain 1 Glory; otherwise, including a Neutral Tide, lose 1 Glory.",
+      "text": "In the Morning: Publicly declare a Target Alignment, Light or Dark. At the Reaping, if the Tide matches, gain 1 Glory; otherwise, including a Neutral Tide, lose 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/41-prophecy.jpg",
       "plate": "art/plates/host/41-prophecy.jpg",
       "number": 41,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "During the Unveiling",
+      "cadence": "In the Morning",
       "oncePerGame": false
     },
     {
@@ -952,7 +952,7 @@
     {
       "id": "celestial-the-oracle",
       "name": "The Oracle",
-      "text": "Once per Day, during the Unveiling, look at the top Event card. Play it, or bury it at the bottom of the deck.",
+      "text": "In the Morning, look at the top Event card. Play it, or bury it at the bottom of the deck.",
       "openGame": true,
       "face": "art/faces/celestial/II-the-oracle.jpg",
       "plate": "art/plates/celestial/II-the-oracle.jpg",
@@ -1006,7 +1006,7 @@
     {
       "id": "celestial-the-whisper",
       "name": "The Whisper",
-      "text": "During the Unveiling, publicly predict the direction of the Tide. At the Reaping, if correct, your Choir scores as if aligned with the Tide.",
+      "text": "In the Morning, publicly predict the direction of the Tide. At the Reaping, if correct, your Choir scores as if aligned with the Tide.",
       "openGame": true,
       "face": "art/faces/celestial/VIII-the-whisper.jpg",
       "plate": "art/plates/celestial/VIII-the-whisper.jpg",
@@ -1026,7 +1026,7 @@
     {
       "id": "event-creation",
       "name": "Creation",
-      "text": "During the Unveiling, reveal 3 Host cards as Seed to the Altar instead of 1.",
+      "text": "In the Morning, reveal 3 Host cards as Seed to the Altar instead of 1.",
       "openGame": true,
       "face": "art/faces/event/creation.jpg",
       "plate": "art/plates/event/creation.jpg"
@@ -1082,7 +1082,7 @@
     {
       "id": "event-equilibrium",
       "name": "Equilibrium",
-      "text": "During the Unveiling, move the Balance marker 1 space toward the center. No effect if it is already on the center space.",
+      "text": "In the Morning, move the Balance marker 1 space toward the center. No effect if it is already on the center space.",
       "openGame": false,
       "face": "art/faces/event/equilibrium.jpg",
       "plate": "art/plates/event/equilibrium.jpg"
@@ -1098,7 +1098,7 @@
     {
       "id": "event-casting-lots",
       "name": "Casting Lots",
-      "text": "Each player secretly predicts the Tide during the Unveiling: Light, Dark, or Neutral. At the Reaping, a correct call gains 1 Glory (2 for Neutral); a wrong call loses 1.",
+      "text": "Each player secretly predicts the Tide in the Morning: Light, Dark, or Neutral. At the Reaping, a correct call gains 1 Glory (2 for Neutral); a wrong call loses 1.",
       "openGame": true,
       "face": "art/faces/event/casting-lots.jpg",
       "plate": "art/plates/event/casting-lots.jpg"
@@ -1130,7 +1130,7 @@
     {
       "id": "event-babel",
       "name": "Babel",
-      "text": "No table talk, deals, or Glory transfers this Day.",
+      "text": "No table talk or deals this Day.",
       "openGame": true,
       "face": "art/faces/event/babel.jpg",
       "plate": "art/plates/event/babel.jpg"

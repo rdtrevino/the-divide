@@ -16,7 +16,7 @@ import { Prompt } from './Prompt';
 import { Results } from './Results';
 import { Chat, LogList } from './Side';
 
-const PHASE: Record<string, string> = { setup: 'Setting up', unveiling: 'Morning', turns: 'Turns', evening: 'Evening', ended: 'Game over' };
+const PHASE: Record<string, string> = { setup: 'Setting up', morning: 'Morning', noon: 'Noon', evening: 'Evening', ended: 'Game over' };
 /** Log lines too routine to announce in the middle of the table. */
 const HERALD_SKIP = new Set(['turn', 'day', 'setup', 'evening', 'activate']);
 

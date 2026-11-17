@@ -38,6 +38,8 @@ export function buildRows(f: FinishedGame, cardVersion = CARD_VERSION): GameRows
   const snapshot = () => {
     while (seen < g.state.tides.length) {
       const day = g.state.tides[seen].day;
+      // A Reaping can still be waiting on a player's choice after the Tide is set; record the Day once it is over.
+      if (!g.over && g.state.day === day) break;
       seen++;
       if (seen < g.state.tides.length) continue; // only the newest Day matches the current table
       const bonus = (seat: number) => g.state.result?.standings.find((x) => x.seat === seat)?.bonus ?? 0;
