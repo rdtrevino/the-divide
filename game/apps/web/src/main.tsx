@@ -1,4 +1,5 @@
 import { render } from 'preact';
+import { Tip } from './components/Tip';
 import { Zoom } from './components/Zoom';
 import { usePath } from './lib/router';
 import { Cards } from './pages/Cards';
@@ -28,6 +29,7 @@ function App() {
     <>
       {page}
       <Zoom />
+      <Tip />
     </>
   );
 }
