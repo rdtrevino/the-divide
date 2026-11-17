@@ -291,7 +291,7 @@
     {
       "id": "host-vessel",
       "name": "Vessel",
-      "text": "On your turn: You may place a card from your hand on the Altar facedown, then draw 1 card. This is not an Offer.",
+      "text": "On your turn: You may place a card from your hand on the Altar facedown, then draw 1 card. At the Reaping, if that card is still on the Altar and matches the Tide, gain 1 Glory. This is not an Offer.",
       "openGame": true,
       "face": "art/faces/host/23-vessel.jpg",
       "plate": "art/plates/host/23-vessel.jpg",

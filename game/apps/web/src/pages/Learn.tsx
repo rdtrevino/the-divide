@@ -229,7 +229,7 @@ const STEPS: Step[] = [
     body: (
       <ul class="learn-list">
         <li><b>A Celestial.</b> Your special power. Everyone can see it.</li>
-        <li><b>A Choir</b> of up to 3 cards, face up in front of you. Their abilities are yours to use, and together they lean Light or Dark. You start with 2: everyone is dealt 5 cards, picks 2 for their Choir, and reveals them together.</li>
+        <li><b>A Choir</b> of 3 cards, dealt face up in front of you. Their abilities are yours to use, and together they lean Light or Dark.</li>
         <li><b>A hand</b> of 3 cards only you can see. You refill it every Evening.</li>
       </ul>
     ),

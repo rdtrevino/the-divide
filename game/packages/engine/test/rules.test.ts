@@ -543,6 +543,17 @@ describe('V35: First Fruits and facedown Offers', () => {
     const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.urim) });
     expect(asked.some((d) => d.tag === 'urim')).toBe(false);
   });
+  it('Vessel pays 1 Glory at the Reaping only if its card is still on the Altar and matches the Tide (V40)', () => {
+    for (const [placed, others, want] of [[H.wisdom, [H.confession], 1], [H.moloch, [H.confession, H.freeWill], 0]] as const) {
+      const s = blank();
+      choir(s, 0, H.vessel);
+      s.altar.push({ id: placed, facedown: false, offeredBy: 0, day: s.day, kind: 'vessel' });
+      altar(s, ...others);
+      expect(setTide(s).dir).toBe('light');
+      reap(s);
+      expect(s.players[0].glory).toBe(want);
+    }
+  });
   it('Vessel adds its card facedown, then draws 1 card (V40)', () => {
     const s = blank();
     choir(s, 0, H.vessel);
@@ -820,36 +831,20 @@ describe('V38 balance changes', () => {
   });
 });
 
-describe('V40: choose your starting Choir', () => {
-  it('deals 5 cards (the Dominion 6); everyone chooses 2 for their Choir and keeps the rest in hand', () => {
+describe('starting deal', () => {
+  it('deals a hand of 3 (the Dominion 4) and 3 random face-up Choir cards, with no choice', () => {
     const g = new Game({ seed: 21, mode: 'open', players: ['A', 'B', 'C', 'D'].map((name) => ({ name, isBot: false })) });
-    expect(g.state.day).toBe(0);
-    expect(g.pending.map((d) => d.tag)).toEqual(['choir.pick', 'choir.pick', 'choir.pick', 'choir.pick']);
+    expect(g.pending.some((d) => d.tag === 'choir.pick')).toBe(false);
     for (const p of g.state.players) {
-      expect(p.choir).toHaveLength(0);
-      expect(p.hand).toHaveLength(p.celestial === C.dominion ? 6 : 5);
+      expect(p.choir).toHaveLength(3);
+      expect(p.hand).toHaveLength(p.celestial === C.dominion ? 4 : 3);
     }
-    const chosen = g.pending.map((d) => [d.options[0].card!, d.options[3].card!]);
-    for (const d of [...g.pending]) {
-      expect([d.min, d.max]).toEqual([2, 2]);
-      g.answer(d.seat, d.id, [d.options[0].id, d.options[3].id]);
-    }
-    expect(g.state.day).toBe(1);
-    g.state.players.forEach((p, i) => {
-      expect(p.choir.map((c) => c.id).sort()).toEqual([...chosen[i]].sort());
-      // After First Fruits is decided the hand is back to its limit; before it, it holds the rest of the deal.
-      expect(p.hand.length).toBe(p.celestial === C.dominion ? 4 : 3);
-    });
   });
-  it("no one's choice is applied until every player has chosen", () => {
-    const g = new Game({ seed: 22, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: false })) });
-    const [d0] = g.pending;
-    g.answer(d0.seat, d0.id, [d0.options[0].id, d0.options[1].id]);
-    expect(g.state.players[d0.seat].choir).toHaveLength(0);
-  });
-  it("'choir-3' still deals the old random starting Choir, for comparisons", () => {
-    const g = new Game({ seed: 23, mode: 'open', variants: ['choir-3'], players: ['A', 'B', 'C'].map((name) => ({ name, isBot: false })) });
-    expect(g.pending.every((d) => d.tag !== 'choir.pick')).toBe(true);
-    for (const p of g.state.players) expect(p.choir).toHaveLength(3);
+  it("'choir-N' and 'pick-K' change the deal for testing", () => {
+    const cfg = (v: string) => new Game({ seed: 23, mode: 'open', variants: [v], players: ['A', 'B', 'C'].map((name) => ({ name, isBot: false })) });
+    for (const p of cfg('choir-2').state.players) expect(p.choir).toHaveLength(2);
+    const g = cfg('pick-2');
+    expect(g.pending.map((d) => d.tag)).toEqual(['choir.pick', 'choir.pick', 'choir.pick']);
+    for (const p of g.state.players) expect(p.choir).toHaveLength(0);
   });
 });

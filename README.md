@@ -30,7 +30,6 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 - **Full deck:** 72 Host cards (24 Light, 24 Dark, 24 Neutral or Variable), 9 Celestials, 20 Events, Fate tokens, Turn cards, the Balance.
 - **Open Game deck:** 66 Hosts (22 Light, 21 Dark, 21 Neutral, 2 Variable; Offering 25 Light, 25 Dark) and 17 Events.
 - **Modes:** Open Game at 3 or 4 players; Hidden Roles at 5 or 6.
-- **Setup:** everyone is dealt 5 Host cards, chooses 2 for their starting Choir, and reveals them together.
 - **The Day:** Morning (Event, Declarations, Seed, First Fruits: everyone reveals one card), Noon (one turn each, with facedown Offers worth 1 Glory), then Evening (reveal, Tide, Reaping). The Open Game ends after the first Reaping where anyone has 10 Glory.
 
 ## Online game

@@ -45,8 +45,8 @@ export function createState(cfg: GameConfig): GameState {
     seat, name: p.name, isBot: p.isBot, celestial: p.celestial ?? pool.pop()!, hand: [], choir: [], glory: 0,
   }));
   for (const p of s.players) {
-    // V40: each player is dealt their hand plus 2 cards, and chooses 2 of them for their starting Choir.
-    // For testing: 'pick-K' changes how many are chosen; 'choir-N' deals N random Choir cards instead.
+    // Each player is dealt a hidden hand and 3 random face-up Choir cards.
+    // For testing: 'choir-N' deals N Choir cards; 'pick-K' deals K extra hand cards to choose a Choir from.
     const n = baseHandLimit(s, p.seat) - (p.celestial === C.dominion && variant(s, 'celestial-draft') ? 1 : 0) + pickCount(s);
     for (let i = 0; i < n; i++) p.hand.push(drawHost(s)!);
     for (let i = 0; i < choirCount(s); i++) p.choir.push({ id: drawHost(s)!, facedown: false, used: false });
@@ -60,10 +60,10 @@ export function createState(cfg: GameConfig): GameState {
 // ---------------------------------------------------------------- main loop
 
 const numVariant = (s: GameState, pre: string) => { const v = (s.config.variants ?? []).find((x) => x.startsWith(pre)); return v === undefined ? null : Number(v.slice(pre.length)); };
-/** Starting Choir (V40): cards each player chooses from their opening hand. */
-export const STARTING_CHOIR = 2;
-const choirCount = (s: GameState) => numVariant(s, 'choir-') ?? 0;
-const pickCount = (s: GameState) => numVariant(s, 'pick-') ?? (choirCount(s) ? 0 : STARTING_CHOIR);
+/** Cards dealt face up into each starting Choir. */
+export const STARTING_CHOIR = 3;
+const pickCount = (s: GameState) => numVariant(s, 'pick-') ?? 0;
+const choirCount = (s: GameState) => numVariant(s, 'choir-') ?? (pickCount(s) ? 0 : STARTING_CHOIR);
 
 export function* runGame(s: GameState): Gen<void> {
   if (variant(s, 'celestial-draft')) yield* celestialDraft(s);
@@ -807,6 +807,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (hasActive(s, seat, H.firmament) && tide.dir !== 'neutral' && tide.margin === 1) { yield* gain(s, seat, 1, H.firmament); log(s, 'firmament', `${p.name} gained 1 Glory (Firmament).`); }
     const mc: string[] | undefined = (s.day_ as any).mirageCards?.[seat];
     if (mc && tide.dir !== 'neutral' && mc.some((id) => s.altar.some((a) => a.id === id) && colorsOf(s, null, id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.mirage); log(s, 'mirage', `${p.name} gained 1 Glory (Mirage).`); }
+    // Vessel (V40): 1 Glory if the card it placed today is still on the Altar and matches the Tide.
+    if (hasActive(s, seat, H.vessel) && tide.dir !== 'neutral' && s.altar.some((a) => a.kind === 'vessel' && a.offeredBy === seat && colorsOf(s, null, a.id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.vessel); log(s, 'vessel', `${p.name} gained 1 Glory (Vessel).`); }
     const call = s.day_.prophecy[seat];
     if (call) { // V38: a Neutral Tide is a miss
       if (call === tide.dir) { yield* gain(s, seat, 1, H.prophecy); log(s, 'prophecy', `${p.name}'s Prophecy came true: +1 Glory.`); }

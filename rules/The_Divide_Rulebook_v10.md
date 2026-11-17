@@ -45,7 +45,7 @@ The Divide has two modes built on the same cards and the same Day. This rulebook
 | Place | What it is |
 | ----- | ----- |
 | **The Altar** | A shared pool of cards in the center. The Seed and First Fruits sit face up; every Offer goes on facedown, so no one is sure what the Altar holds until the Evening reveals it. Each Evening its totals set the Tide. It is emptied every Evening, and any card on it, hidden or not, can be taken by another player before the Day ends. |
-| **Your Choir** | Your row of up to 3 face-up cards. You choose your first 2 at setup. Its cards give you abilities, and each Evening it is scored against the Tide. |
+| **Your Choir** | Your row of up to 3 face-up cards, dealt at setup. Its cards give you abilities, and each Evening it is scored against the Tide. |
 | **Your hand** | Your hidden Host cards, normally 3, refilled each Evening. Your First Fruits come from it each Morning, and your facedown Offers keep its secrets a little longer. |
 | **Glory** | Both score and currency. You earn it from Offers and from scoring your Choir, and you spend it to Exalt. Glory comes from and returns to a shared supply called the **Pot**, and never drops below 0. |
 
@@ -66,9 +66,8 @@ A +2 Offering appears only on once-per-game cards. A spent once-per-game card is
    * **Host cards:** Revelation, Knowledge, Bounty, Flaming Sword, Belial, and Hubris. This leaves 66 Host cards.
    * **Event cards:** The Sabbath, Equilibrium, and Armageddon. This leaves 17 Event cards.
 2. **Deal Celestials.** Each player receives a Celestial card, face up. These powers are public.
-3. **Deal Host cards.** Deal each player 5 Host cards (the Dominion 6) as their hidden hand.
-4. **Choose your starting Choir.** Each player secretly chooses 2 cards from their hand. When everyone is ready, all reveal at once and place them face up in a row in front of them: their starting Choir. The rest stay in hand (3 cards; the Dominion 4).
-5. **Finish.** Shuffle the Event deck, set all Glory to 0, and give a random player the starting player marker.
+3. **Deal Host cards.** Each player takes a hidden hand of 3 Host cards (the Dominion takes 4). Then deal each player 3 more Host cards face up in a row in front of them: their starting Choir.
+4. **Finish.** Shuffle the Event deck, set all Glory to 0, and give a random player the starting player marker.
 
 ---
 
@@ -193,7 +192,7 @@ Open negotiation is allowed at all times, and the game expects you to use it.
 
 **Advice for your first game:**
 
-* Your starting Choir is your first public promise. Choose a lean the rest of your hand can back, and remember that its open third place takes a card without a discard.
+* Your starting Choir is dealt at random, so every game starts from a different lean. Build on it or reshape it; either can win.
 * Watch what players discard from their Choirs: a card thrown out tells you which way that player has decided to lean.
 * Lean harder on Offers later, when each card on the Altar swings a Tide that matters more.
 * The last players to act each Day see the most of the Altar and have great power over where the Tide falls, though with facedown Offers they see less of it than they think.
@@ -284,7 +283,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Snare.** Pays only when someone Gathers a card you Offered. First Fruits, Seeds, and Vessel's card never trigger it.
 
-**Vessel.** Its card goes on the Altar facedown but is not an Offer: it earns no reward, no Offer abilities trigger (Mammon, Raphael, Azazel, Hymn, Lamentation, Snare, Mirage), and Asmadai treats it as nobody's Offering.
+**Vessel.** Its card goes on the Altar facedown but is not an Offer: it earns no reward, no Offer abilities trigger (Mammon, Raphael, Azazel, Hymn, Lamentation, Snare, Mirage), and Asmadai treats it as nobody's Offering. The Glory at the Reaping is not Alignment scoring, so the cap of 3 does not apply. If the card has been Gathered or destroyed, or the Tide is Neutral, it pays nothing.
 
 **Eternity.** Takes any face-up card on the Altar (all are revealed by then) that is not protected by Sanctuary, before the Tide is set, so it also changes the Tide.
 
@@ -445,7 +444,7 @@ A Fallen player might spend a Day Offering Light because their Choir leans Light
 
 **Celestial.** The unique, public power each player commands. A Celestial power does not use your turn action and works only in its listed timing window.
 
-**Choir.** Your row of up to 3 face-up Host cards. You choose your first 2 at setup. Its Alignment is scored each Reaping, and its cards may be activated.
+**Choir.** Your row of up to 3 face-up Host cards, dealt at setup. Its Alignment is scored each Reaping, and its cards may be activated.
 
 **Copy.** To use the ability of another player's card as if it were yours. A kind of Targeting.
 

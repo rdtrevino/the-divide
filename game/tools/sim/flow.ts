@@ -1,8 +1,8 @@
 // Card flow and starting Choir: compare dealing rules on identical seeds.
 // Usage: npx tsx flow.ts <games> <players> <out.json> <config> [config...]
 // A config is variants joined by '+', or 'B' for the current rules. Dealing variants:
-//   choir-3   the V39 deal: 3 random Choir cards, no choice
-//   pick-3    choose 3 Choir cards from a hand dealt 3 larger (the current rule is pick-2)
+//   choir-N   deal N random Choir cards (the rule is 3)
+//   pick-K    deal K extra hand cards and choose K of them as the Choir (not a rule; tested in V40)
 // The V40 report (reports/v40-dealing-2026-11-17.md) was measured with since-removed variants for the
 // Offer draw, the First Fruits draw and a hand of 4; check out commit history to rerun those.
 import { writeFileSync } from 'node:fs';

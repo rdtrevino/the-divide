@@ -1,20 +1,20 @@
 # Changelog
 
-## V40 cards and Rulebook v10: Morning, Noon and Evening; a chosen starting Choir (November 17, 2026)
+## V40 cards and Rulebook v10: Morning, Noon and Evening; the Offer pays 1 Glory (November 17, 2026)
 
 Measured over 6,000 bot games per option at 3 and 4 players; see `game/reports/v40-dealing-2026-11-17.md`.
 
 - **Three phases each Day.** Morning (Event, Declarations, Seed, First Fruits), **Noon** (one turn each), Evening (reveal, Tide, Reaping, Upkeep). "The Unveiling" is retired.
-- **Choose your starting Choir.** Everyone is dealt 5 Host cards (the Dominion 6), secretly chooses 2 for their Choir, and all reveal together. The third place starts open. Was: 3 random face-up cards.
+- **The starting Choir stays at 3 random cards.** Starting with 1, 2 or 3 random cards was measured; 3 keeps games shortest and the cards and Celestials best balanced.
 - **The Offer reward is 1 Glory.** The choice to draw a card instead is gone.
 - **First Fruits keeps its draw.**
 - **Glory moves between players only when a card says so.** The gift rule is gone from the rules and the engine.
 - **Rulebook v10:** the above, plus the open Hidden Roles questions moved out of the rulebook (they stay in `design/design-decisions.md`) and a clean version line. v9 moved to `sources/rulebook-drafts/`.
-- **Site:** the table asks for the starting Choir before Day 1 and shows Morning, Noon or Evening; the Learn page teaches the new setup and phases. Per-Day Glory in the stats is now recorded once the Reaping is over (it could be taken before a Reaping choice such as Uriel's was made).
+- **Site:** the table shows Morning, Noon or Evening, and the Learn page teaches the three phases. Per-Day Glory in the stats is now recorded once the Reaping is over (it could be taken before a Reaping choice such as Uriel's was made).
 
 **Card changes:**
 
-- **Vessel** (rules, reprint): "On your turn: You may place a card from your hand on the Altar facedown, then draw 1 card. This is not an Offer." With the Offer reward fixed at 1 Glory, the old text measured 1.49; this measures 0.76.
+- **Vessel** (rules, reprint): "On your turn: You may place a card from your hand on the Altar facedown, then draw 1 card. At the Reaping, if that card is still on the Altar and matches the Tide, gain 1 Glory. This is not an Offer." With the Offer reward fixed at 1 Glory, copying it measured 1.49; drawing alone 0.64; this measures 0.91.
 - **Wording only, reprint when convenient:** "During the Unveiling" becomes "In the Morning" on Prophecy, the Oracle (also drops "Once per Day"), the Whisper, Creation, Equilibrium and Casting Lots. Babel: "No table talk or deals this Day."
 
 ## The game table fits one screen (November 17, 2026)

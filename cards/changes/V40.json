@@ -4,8 +4,8 @@
   "previous": "V39",
   "changes": {
     "Vessel": {
-      "text": "On your turn: You may place a card from your hand on the Altar facedown, then draw 1 card. This is not an Offer.",
-      "why": "The Offer reward is now always 1 Glory, so Vessel no longer copies it. Gaining 1 Glory measured 1.49; drawing a card measured 0.76 (V40 dealing)"
+      "text": "On your turn: You may place a card from your hand on the Altar facedown, then draw 1 card. At the Reaping, if that card is still on the Altar and matches the Tide, gain 1 Glory. This is not an Offer.",
+      "why": "The Offer reward is now always 1 Glory, so Vessel no longer copies it. Measured with the random starting deal: gain 1 Glory 1.49; draw 1 card 0.64; draw 2 cards 0.74; draw 1 card plus 1 Glory if the card matches the Tide 0.91"
     },
     "Prophecy": {
       "text": "In the Morning: Publicly declare a Target Alignment, Light or Dark. At the Reaping, if the Tide matches, gain 1 Glory; otherwise, including a Neutral Tide, lose 1 Glory.",
