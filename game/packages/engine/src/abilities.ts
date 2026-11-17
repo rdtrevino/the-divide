@@ -292,15 +292,19 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.winnowing]: {
-    can: (s, seat) => others(s, seat).some((p) => p.hand.length && !protectedFrom(s, seat, p.seat, 'discard') && !handProtected(s, seat, p.seat)),
+    // Test 'winnowing-blind': discard a facedown Altar card without looking at it.
+    can: (s, seat) => variant(s, 'winnowing-blind') ? s.altar.some((a) => a.facedown && !altarShielded(s, a, seat) && (a.sanctuary === undefined || a.sanctuary === seat)) : winnowingHand(s, seat),
     *run(s, seat) {
-      const t = yield* chooseOne(s, seat, 'winnowing', 'Winnowing: choose another player to discard a random card from their hand.', others(s, seat).filter((p) => p.hand.length && !protectedFrom(s, seat, p.seat, 'discard') && !handProtected(s, seat, p.seat)).map((p) => seatOpt(s, p.seat)));
-      if (!t) return;
-      const o = s.players[seatFromOpt(t)];
-      const [c] = o.hand.splice(randInt(s, o.hand.length), 1);
-      s.discard.push(c);
-      yield* drawTo(s, o.seat, 1);
-      log(s, 'winnowing', `${o.name} discarded ${cardName(c)} at random (Winnowing) and drew a replacement.`);
+      if (variant(s, 'winnowing-blind')) {
+        const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.facedown && !altarShielded(s, a, seat) && (a.sanctuary === undefined || a.sanctuary === seat));
+        const pick = yield* chooseOne(s, seat, 'winnowing.altar', 'Winnowing: discard a facedown Altar card without looking at it.', opts.map(({ a, i }) => ({ id: String(i), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), true);
+        if (pick === null) return;
+        const [c] = s.altar.splice(Number(pick), 1);
+        s.discard.push(c.id);
+        log(s, 'winnowing', `${pname(s, seat)} winnowed a facedown card from the Altar: it was ${cardName(c.id)}.`);
+        return;
+      }
+      yield* winnowingRun(s, seat);
     },
   },
   [H.jubilee]: {
@@ -550,6 +554,18 @@ function echoTargets(s: GameState, seat: Seat) {
   return out;
 }
 
+function winnowingHand(s: GameState, seat: Seat) {
+  return others(s, seat).some((p) => p.hand.length && !protectedFrom(s, seat, p.seat, 'discard') && !handProtected(s, seat, p.seat));
+}
+function* winnowingRun(s: GameState, seat: Seat): Gen<void> {
+      const t = yield* chooseOne(s, seat, 'winnowing', 'Winnowing: choose another player to discard a random card from their hand.', others(s, seat).filter((p) => p.hand.length && !protectedFrom(s, seat, p.seat, 'discard') && !handProtected(s, seat, p.seat)).map((p) => seatOpt(s, p.seat)));
+      if (!t) return;
+      const o = s.players[seatFromOpt(t)];
+      const [c] = o.hand.splice(randInt(s, o.hand.length), 1);
+      s.discard.push(c);
+      yield* drawTo(s, o.seat, 1);
+      log(s, 'winnowing', `${o.name} discarded ${cardName(c)} at random (Winnowing) and drew a replacement.`);
+}
 function deliverancePairs(s: GameState, seat: Seat) {
   const pool: { owner: Seat; id: string }[] = [];
   for (const p of s.players) {

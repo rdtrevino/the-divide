@@ -511,6 +511,7 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
   // V38 Mirage: remember each holder's facedown Offerings; at the Reaping, 1 Glory if one is still there and matches the Tide.
   (s.day_ as any).mirageCards = Object.fromEntries(mirageDraw.map((seat) => [seat, s.altar.filter((a) => a.facedown && a.offeredBy === seat && a.kind === 'offer').map((a) => a.id)]));
   const hidden = s.altar.filter((a) => a.facedown);
+  (s.day_ as any).reveal = { down: hidden.length, up: s.altar.length - hidden.length };
   for (const a of s.altar) { a.facedown = false; a.seenBy = undefined; }
   if (hidden.length) log(s, 'reveal', `The Altar is revealed: ${hidden.map((a) => cardName(a.id)).join(', ')}.`);
 
@@ -544,7 +545,7 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
       if (has('light') && has('dark')) { yield* gain(s, seat, 1, H.twilight); log(s, 'twilight', `${p.name} gained 1 Glory (Twilight).`); }
     }
     // Zealot (V42): 1 Glory if your Choir has 3 or more cards, all of one color.
-    if (hasActive(s, seat, H.zealot)) {
+    if (hasActive(s, seat, H.zealot) && !variant(s, 'zealot-open')) {
       const cards = activeCards(p);
       const all = (k: 'light' | 'dark') => cards.every((c) => colorsOf(s, seat, c.id)[k]);
       if (cards.length >= 3 && (all('light') || all('dark'))) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
@@ -764,6 +765,10 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   // Other At the Reaping abilities.
   for (const seat of order) {
     const p = s.players[seat];
+    // Tests 'veil-secret' and 'zealot-open': facedown and face-up counts at the reveal.
+    const rv = (s.day_ as any).reveal ?? { down: 0, up: 0 };
+    if (variant(s, 'veil-secret') && hasActive(s, seat, H.veil) && rv.down >= 3) { yield* gain(s, seat, 1, H.veil); log(s, 'veil', `${p.name} gained 1 Glory (Veil).`); }
+    if (variant(s, 'zealot-open') && hasActive(s, seat, H.zealot) && rv.up > rv.down) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
     if (hasActive(s, seat, H.stillness) && tide.dir === 'neutral') { yield* gain(s, seat, 1, H.stillness); log(s, 'stillness', `${p.name} gained 1 Glory (Stillness).`); }
     if (hasActive(s, seat, H.firmament) && tide.dir !== 'neutral' && tide.margin === 1 && (!variant(s, 'firm-with') || leansWithTide.has(seat))) { yield* gain(s, seat, 1, H.firmament); log(s, 'firmament', `${p.name} gained 1 Glory (Firmament).`); }
     const mc: string[] | undefined = (s.day_ as any).mirageCards?.[seat];
