@@ -9,7 +9,7 @@
 
 ---
 
-## **The Game in One Minute**
+## **Overview**
 
 Before the first dawn, the unfinished world rests on the Divide, the narrow span between the Heights above and the Abyss below. You are a **Celestial**, a primordial power competing for **Glory**.
 
