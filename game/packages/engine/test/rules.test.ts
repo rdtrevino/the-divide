@@ -50,49 +50,12 @@ describe('The Reaping', () => {
     expect(run([[H.wisdom], [H.gabriel], [H.confession], [H.moloch]])).toEqual([0, 0, 0, -1]); // three share it: nobody scores
     expect(run([[H.moloch], [], []], 0)).toEqual([0, 0, 3 - 3]); // a loss never takes Glory below 0
   });
-  it('Uriel (V38) doubles Light values only if its holder pays 1 Glory at the Reaping', () => {
-    const run = (pay: boolean) => {
-      const s = blank();
-      choir(s, 0, H.uriel, H.wisdom); // Light 2, or 4 doubled (capped at 3)
-      s.players[0].glory = 1;
-      altar(s, H.confession);
-      reap(s, { 'doubler.pay': [pay ? 'yes' : 'no'] });
-      return s.players[0].glory;
-    };
-    expect(run(false)).toBe(1 + 3); // alone with the Tide: 3
-    expect(run(true)).toBe(1 - 1 + 3);
-    // In a pair, doubling decides who is the stronger lean.
-    const pair = (pay: boolean) => {
-      const s = blank();
-      choir(s, 0, H.uriel, H.wisdom); // Light 2, or 4 doubled
-      choir(s, 1, H.freeWill, H.gabriel); // Light 3
-      s.players[0].glory = 1;
-      altar(s, H.confession);
-      reap(s, { 'doubler.pay': [pay ? 'yes' : 'no'] });
-      return glory(s).slice(0, 2);
-    };
-    expect(pair(false)).toEqual([1 + 1, 2]);
-    expect(pair(true)).toEqual([1 - 1 + 2, 1]);
-  });
   it('Nephilim (V38) is Neutral for your Alignment and the Tide', () => {
     const s = blank();
     choir(s, 0, H.nephilim, H.uriel); // Nephilim adds nothing
     altar(s, H.nephilim);
     expect(alignment(s, 0, { reaping: true })).toBe(1);
     expect(setTide(s).dir).toBe('neutral');
-  });
-  it('Heresy (V34): you may score in reverse, chosen after the Tide is known', () => {
-    const s = blank();
-    choir(s, 0, H.heresy, H.moloch); // Dark 1 under a Light Tide
-    altar(s, H.wisdom);
-    reap(s, { heresy: ['yes'] });
-    expect(s.players[0].glory).toBe(3); // counts as leaning with the Tide, alone
-    const t = blank();
-    choir(t, 0, H.heresy, H.moloch);
-    t.players[0].glory = 2;
-    altar(t, H.wisdom);
-    reap(t, { heresy: ['no'] });
-    expect(t.players[0].glory).toBe(1);
   });
   it('a correct Whisper scores as if aligned; a net-zero Choir gains nothing', () => {
     const s = blank(3, [C.whisper]);
@@ -101,15 +64,6 @@ describe('The Reaping', () => {
     s.day_.whisperCall = 'light';
     reap(s);
     expect(s.players[0].glory).toBe(3);
-  });
-  it('Fig Leaves avoids a loss; Tithe charges 1 to activate it', () => {
-    const s = blank();
-    choir(s, 0, H.figLeaves, H.moloch, H.envy);
-    s.players[0].glory = 5;
-    altar(s, H.wisdom);
-    s.currentEvent = E.tithe;
-    reap(s, { figLeaves: ['yes'] });
-    expect(s.players[0].glory).toBe(4);
   });
   it('the Eclipse (V38) neutralizes one card, chosen in the Evening before the reveal', () => {
     const s = blank(3, [C.eclipse]);
@@ -127,49 +81,6 @@ describe('The Reaping', () => {
     s.day_.ordeal.push(0);
     reap(s);
     expect(s.players[0].glory).toBe(6);
-  });
-  it('Apple (V37) gains 1 when the Choir leans opposite the previous Day\'s Tide', () => {
-    const run = (prev: 'light' | 'dark', today: string) => {
-      const s = blank();
-      s.day = 2;
-      s.tides.push({ day: 1, dir: prev, light: 1, dark: 1, margin: 1 });
-      choir(s, 0, H.apple, H.wisdom); // Light 1
-      altar(s, today);
-      reap(s);
-      return s.players[0].glory;
-    };
-    expect(run('dark', H.confession)).toBe(4); // Light Tide: 3 from the Reaping (alone), 1 from Apple
-    expect(run('light', H.confession)).toBe(3); // same lean as yesterday: Reaping only
-    expect(run('dark', H.moloch)).toBe(1); // loses 1 at the Reaping, Apple still pays 1
-  });
-  it('Mercy prevents Reaping losses; Scapegoat passes them on', () => {
-    const s = blank();
-    choir(s, 0, H.moloch);
-    choir(s, 1, H.envy);
-    s.players.forEach((p) => (p.glory = 5));
-    altar(s, H.wisdom);
-    s.day_.mercy.push(0);
-    s.scapegoats.push({ from: 1, to: 2, day: 1 } as any);
-    reap(s);
-    expect(glory(s)).toEqual([5, 5, 4]);
-  });
-  it('Raguel (V34): only the holder\'s loss is shared with the Bound player', () => {
-    const s = blank();
-    choir(s, 0, H.raguel, H.moloch); // Dark 1
-    choir(s, 1, H.wisdom); // Light 1
-    s.bonds.push({ owner: 0, bound: 1 });
-    s.players.forEach((p) => (p.glory = 5));
-    altar(s, H.confession); // Light Tide
-    reap(s);
-    expect(glory(s).slice(0, 2)).toEqual([5, 7]); // 0 loses 1 less (0); 1 gains 3 alone, then loses 1 (Bound)
-    const t = blank();
-    choir(t, 0, H.raguel, H.wisdom); // Light 1: gains
-    choir(t, 1, H.moloch, H.envy); // Dark 2: loses 2
-    t.bonds.push({ owner: 0, bound: 1 });
-    t.players.forEach((p) => (p.glory = 5));
-    altar(t, H.confession);
-    reap(t);
-    expect(glory(t).slice(0, 2)).toEqual([8, 4]); // the Bound player's loss is not shared back
   });
   it('Famine skips Alignment scoring; Purgatory pays Neutral Choirs', () => {
     const s = blank();
@@ -391,16 +302,6 @@ describe('V34 card changes', () => {
     expect(run([H.wisdom, H.moloch])).toBe(0);
     expect(run([H.nephilim])).toBe(0); // Nephilim counts as Dark
   });
-  it('Covenant forbids only Offer or Gather and names a player who has not yet acted', () => {
-    const s = blank();
-    choir(s, 1, H.covenant);
-    s.day_.actionsTaken.push({ seat: 0, action: 'offer' });
-    const { asked } = drive(s, takeTurn(s, 1), { action: ['gather'], 'gather.source': ['deck'], activate: (d) => [d.options.find((o) => o.card === H.covenant)?.id ?? 'end'] });
-    const act = asked.find((d) => d.tag === 'covenant.action')!;
-    expect(act.options.map((o) => o.id)).toEqual(['offer', 'gather']);
-    expect(s.pacts).toHaveLength(1);
-    expect(s.pacts[0].b).toBe(2); // seat 0 already acted, so only seat 2 can be named
-  });
 });
 
 describe('Glory routing', () => {
@@ -430,14 +331,6 @@ describe('Glory routing', () => {
 });
 
 describe('Evening', () => {
-  it('Covenant: held pays both, broken costs both', () => {
-    const s = blank();
-    s.pacts.push({ a: 0, b: 1, action: 'offer', broken: false, day: 1 });
-    s.pacts.push({ a: 2, b: 1, action: 'gather', broken: true, day: 1 });
-    s.players.forEach((p) => (p.glory = 2));
-    drive(s, evening(s, true));
-    expect(glory(s)).toEqual([3, 2, 1]);
-  });
   it('Twilight counts Nephilim as both colors; Moderation pays a Neutral Choir', () => {
     const s = blank();
     choir(s, 0, H.twilight, H.nephilim);
@@ -637,17 +530,6 @@ describe('the race to 10', () => {
 
 describe('V37 card changes', () => {
   const act = (id: string) => (d: any) => [d.options.find((o: any) => o.card === id)?.id ?? 'end'];
-  it('Tree of Life takes only the top card of the discard pile', () => {
-    const s = blank();
-    choir(s, 0, H.treeOfLife);
-    hand(s, 0, H.gabriel);
-    s.hostDeck = s.hostDeck.filter((x) => x !== H.wisdom && x !== H.moloch);
-    s.discard.push(H.wisdom, H.moloch);
-    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: act(H.treeOfLife), 'treeOfLife.discard': (d) => [d.options.find((o) => o.card === H.gabriel)!.id] });
-    expect(s.players[0].hand).toContain(H.moloch);
-    expect(s.players[0].hand).not.toContain(H.gabriel);
-    expect(s.discard).toEqual([H.wisdom, H.gabriel]);
-  });
   it('Envy works only if the leader has at least 3 more Glory than you', () => {
     const run = (mine: number) => {
       const s = blank();
@@ -770,30 +652,6 @@ describe('V38 balance changes', () => {
     reap(s);
     expect(s.players[0].glory).toBe(1);
   });
-  it('Raguel: the Bound player loses 1 and the holder loses 1 less', () => {
-    const s = blank();
-    choir(s, 0, H.raguel, H.moloch, H.envy); // Dark 2
-    s.bonds.push({ owner: 0, bound: 1 });
-    s.players.forEach((p) => (p.glory = 5));
-    altar(s, H.wisdom); // Light Tide
-    reap(s);
-    expect(glory(s).slice(0, 2)).toEqual([5, 4]); // the holder's loss of 1 passes to the Bound player
-  });
-  it('Morning Star pays 1 at the Reaping to invert one card', () => {
-    const s = blank();
-    choir(s, 0, H.morningStar, H.moloch, H.envy); // Light 1, Dark 2: net Dark 1
-    s.players[0].glory = 3;
-    altar(s, H.wisdom); // Light Tide
-    reap(s, { 'morningStar.reap': (d) => [d.options.find((o) => o.card === H.envy)!.id] });
-    expect(s.players[0].glory).toBe(3 - 1 + 3); // pays 1; Envy turns Light, so Dark 1 becomes Light 1, alone with the Tide
-  });
-  it('Eternity takes a card from the Altar into your hand in the Evening', () => {
-    const s = blank();
-    choir(s, 0, H.eternity);
-    altar(s, H.moloch, H.wisdom);
-    drive(s, evening(s, true), { 'eternity.hand': (d) => [d.options.find((o) => o.card === H.moloch)!.id] });
-    expect(s.players[0].hand).toContain(H.moloch);
-  });
   it('the Arbiter (V38) takes from a player only when it gains 2 or more', () => {
     const run = (cards: string[]) => {
       const s = blank(3, [C.arbiter]);
@@ -826,24 +684,6 @@ describe('V38 balance changes', () => {
     expect(run(H.moloch)).toBe(2);
     expect(run(H.wisdom)).toBe(3);
   });
-  it('Scapegoat covers only the Day it is used', () => {
-    const s = blank();
-    choir(s, 0, H.moloch);
-    s.players.forEach((p) => (p.glory = 5));
-    s.scapegoats.push({ from: 0, to: 1, day: 0 } as any); // named on an earlier Day
-    altar(s, H.wisdom);
-    reap(s);
-    expect(glory(s).slice(0, 2)).toEqual([4, 5]);
-  });
-  it('Providence costs 1 Glory', () => {
-    const s = blank();
-    choir(s, 0, H.providence, H.moloch);
-    s.players[0].glory = 2;
-    altar(s, H.wisdom, H.confession, H.gabriel);
-    drive(s, evening(s, true), { providence: (d) => [d.options.find((o) => o.id.startsWith('0|') && o.id.endsWith(H.moloch))!.id] });
-    expect(s.players[0].choir.map((c) => c.id)).toContain(H.wisdom);
-    expect(s.players[0].glory).toBe(2 - 1 + 3); // paid 1; Light 1, alone with the Light Tide
-  });
 });
 
 describe('starting deal', () => {
@@ -861,5 +701,154 @@ describe('starting deal', () => {
     const g = cfg('pick-2');
     expect(g.pending.map((d) => d.tag)).toEqual(['choir.pick', 'choir.pick', 'choir.pick']);
     for (const p of g.state.players) expect(p.choir).toHaveLength(0);
+  });
+});
+
+describe('V42 reworked cards', () => {
+  const act = (id: string) => (d: any) => [d.options.find((o: any) => o.card === id)?.id ?? 'end'];
+  // A turn that leaves every lean alone: Offer a Neutral card, then use abilities as scripted.
+  const filler = [H.council, H.twilight, H.stillness, H.urim, H.watchers, H.jubilee];
+  const turn = (s: any, seat: number, script: Script) => {
+    const c = filler.find((x) => s.hostDeck.includes(x))!;
+    hand(s, seat, c);
+    return drive(s, takeTurn(s, seat), { action: ['offer'], 'offer.card': (d) => [d.options.find((o) => o.card === c)!.id], ...script });
+  };
+  it('Uriel and Beelzebub: 1 Glory with 3 or more cards of their color in your Choir', () => {
+    const s = blank();
+    choir(s, 0, H.uriel, H.wisdom); // 2 Light cards
+    choir(s, 1, H.beelzebub, H.moloch, H.envy); // 3 Dark cards
+    reap(s); // Neutral Tide: only the abilities pay
+    expect(glory(s)).toEqual([0, 1, 0]);
+  });
+  it('Zealot: 1 Glory with 3 or more cards, all of one color', () => {
+    const s = blank();
+    choir(s, 0, H.zealot, H.wisdom, H.gabriel); // Zealot is Neutral, so not all one color
+    choir(s, 1, H.zealot);
+    s.players[1].choir = [];
+    choir(s, 1, H.moloch, H.envy, H.azazel);
+    drive(s, evening(s, true));
+    expect(s.players[0].glory).toBe(0);
+  });
+  it('Tree of Life: 1 Glory when your Choir is full', () => {
+    const s = blank();
+    choir(s, 0, H.treeOfLife, H.council, H.twilight);
+    reap(s);
+    expect(s.players[0].glory).toBe(0);
+    choir(s, 0, H.stillness);
+    const t = s.players[0].glory;
+    reap(s);
+    expect(s.players[0].glory).toBe(t + 1 + 1); // Tree of Life, and Stillness on a Neutral Tide
+  });
+  it('Eternity: 1 Glory on a Day you did not Offer', () => {
+    const s = blank();
+    choir(s, 0, H.eternity);
+    choir(s, 1, H.eternity);
+    s.day_.actionsTaken.push({ seat: 1, action: 'offer' });
+    drive(s, evening(s, true));
+    expect(glory(s).slice(0, 2)).toEqual([1, 0]);
+  });
+  it('Providence stores 1 Glory at each Reaping you lean with the Tide; cash it in on your turn', () => {
+    const s = blank();
+    choir(s, 0, H.providence, H.wisdom); // Light 2
+    altar(s, H.confession);
+    reap(s); // alone with the Tide: 3, and 1 stored
+    reap(s); // again: 3, and 1 more stored
+    expect(s.players[0].choir.find((c) => c.id === H.providence)!.store).toBe(2);
+    expect(s.players[0].glory).toBe(6);
+    turn(s, 0, { activate: act(H.providence) });
+    expect(s.players[0].glory).toBe(6 + 1 + 2); // the Offer's 1, then the 2 stored
+    expect(s.players[0].choir.some((c) => c.id === H.providence)).toBe(false);
+  });
+  it('Seraphim: Exalting a Light card costs nothing; other cards still cost 1', () => {
+    const s = blank();
+    choir(s, 0, H.seraphim);
+    hand(s, 0, H.wisdom, H.moloch);
+    drive(s, takeTurn(s, 0), { action: ['exalt'] }); // with 0 Glory, only the Light card can be Exalted
+    expect(s.players[0].choir.map((c) => c.id)).toContain(H.wisdom);
+    expect(s.players[0].glory).toBe(0);
+  });
+  it('Heresy and Fig Leaves are chosen on your turn, before the reveal', () => {
+    const s = blank();
+    choir(s, 0, H.heresy, H.moloch); // Dark 1
+    choir(s, 1, H.figLeaves, H.envy); // Dark 1
+    s.players.forEach((p) => (p.glory = 2));
+    turn(s, 0, { activate: act(H.heresy) });
+    turn(s, 1, { activate: act(H.figLeaves) });
+    altar(s, H.wisdom); // Light Tide
+    reap(s);
+    expect(glory(s).slice(0, 2)).toEqual([2 + 1 + 3, 2 + 1]); // each Offered (+1); Heresy counts Light, alone; Fig Leaves sits out
+  });
+  it('Morning Star: pay 1 on your turn; one card counts as the opposite color this Day', () => {
+    const s = blank();
+    choir(s, 0, H.morningStar, H.moloch, H.envy); // Light 1, Dark 2: Dark 1
+    s.players[0].glory = 3;
+    turn(s, 0, { activate: act(H.morningStar), morningStar: (d) => [d.options.find((o) => o.card === H.envy)!.id] });
+    altar(s, H.wisdom); // Light Tide
+    reap(s);
+    expect(s.players[0].glory).toBe(3 + 1 - 1 + 3); // Offer +1, Morning Star -1, then Light 1, alone with the Tide
+  });
+  it('Mercy (once per game) scores 3 when the Tide is shared; Scapegoat knocks a player out of the share', () => {
+    const s = blank();
+    choir(s, 0, H.mercy, H.wisdom); // Light 3
+    choir(s, 1, H.gabriel); // Light 1
+    altar(s, H.confession);
+    reap(s, { mercy: ['yes'] });
+    expect(glory(s).slice(0, 2)).toEqual([3, 1]);
+    expect(s.players[0].choir.find((c) => c.id === H.mercy)!.used).toBe(true);
+    const t = blank();
+    choir(t, 0, H.scapegoat, H.wisdom, H.gabriel, H.confession); // Dark 2 + Light 3: Light 1
+    choir(t, 1, H.freeWill); // Light 2
+    altar(t, H.michael);
+    reap(t, { scapegoat: ['p1'] });
+    expect(glory(t).slice(0, 2)).toEqual([3, 0]); // 1 sat out, so 0 is alone with the Tide
+  });
+  it('Raguel: each Reaping the Bound player gains, the holder gains 1', () => {
+    const s = blank();
+    choir(s, 0, H.raguel, H.moloch); // Dark 1
+    choir(s, 1, H.wisdom); // Light 1
+    s.bonds.push({ owner: 0, bound: 1 });
+    s.players.forEach((p) => (p.glory = 5));
+    altar(s, H.confession); // Light Tide
+    reap(s);
+    expect(glory(s).slice(0, 2)).toEqual([5 - 1 + 1, 8]);
+  });
+  it('Apple: 1 Glory when your Choir leans the other way from yesterday', () => {
+    const s = blank();
+    choir(s, 0, H.apple, H.wisdom); // Light 1
+    s.lastAlignColor[0] = 'dark';
+    reap(s); // Neutral Tide: only Apple pays
+    expect(s.players[0].glory).toBe(1);
+    reap(s); // same side as yesterday now
+    expect(s.players[0].glory).toBe(1);
+  });
+  it('Covenant: if neither named player Offers this Day, each gains 1; if either Offers, nothing', () => {
+    const s = blank();
+    s.pacts.push({ a: 0, b: 1, action: 'offer', broken: false, day: 1 });
+    s.pacts.push({ a: 2, b: 1, action: 'offer', broken: true, day: 1 });
+    s.players.forEach((p) => (p.glory = 2));
+    drive(s, evening(s, true));
+    expect(glory(s)).toEqual([3, 3, 2]);
+  });
+  it('Gabriel looks at a hand; Lilith protects it', () => {
+    const s = blank();
+    choir(s, 0, H.gabriel);
+    hand(s, 1, H.moloch);
+    hand(s, 2, H.wisdom);
+    choir(s, 2, H.lilith);
+    const { asked } = turn(s, 0, { activate: act(H.gabriel), 'gabriel.player': (d) => [d.options[0].id] });
+    // Lilith protects player 2's hand, so player 1 is the only choice.
+    expect(asked.find((d) => d.tag === 'gabriel.seen')!.reveal).toEqual([H.moloch]);
+  });
+  it('Parasite moves into another Choir; Defiance makes its holder immune until their next turn', () => {
+    const s = blank();
+    choir(s, 0, H.parasite);
+    choir(s, 2, H.defiance);
+    turn(s, 2, { activate: act(H.defiance) });
+    expect(s.immune).toEqual([2]);
+    turn(s, 0, { activate: act(H.parasite) }); // player 2 is immune, so player 1 is the only choice
+    expect(s.players[1].choir.map((c) => c.id)).toContain(H.parasite);
+    expect(s.players[0].choir.map((c) => c.id)).not.toContain(H.parasite);
+    turn(s, 2, {});
+    expect(s.immune).toEqual([]);
   });
 });

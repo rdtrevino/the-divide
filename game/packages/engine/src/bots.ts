@@ -214,8 +214,16 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         if (o.card === H.envy && leaders.includes(seat)) return false;
         if (o.card === H.abaddon) return dirOf(altar) !== wantDir && altar !== 0;
         if (o.card === H.moloch) return s.players[seat].choir.some((c) => c.id !== H.moloch && (want >= 0 ? signed(s, c.id) < 0 : signed(s, c.id) > 0));
-        if (o.card === H.mercy) return dirOf(altar) !== wantDir && altar !== 0 && later <= 1;
-        if (o.card === H.scapegoat) return dirOf(altar) !== wantDir && altar !== 0 && later <= 1;
+        // V42 team tools, decided on your turn before the reveal.
+        const sharing = OTHERS.filter((x) => x !== 0 && Math.sign(x) === Math.sign(net)).length;
+        if (o.card === H.heresy) return net !== 0 && altar !== 0 && dirOf(altar) !== dirOf(net) && later <= 1;
+        if (o.card === H.figLeaves) return net !== 0 && (sharing >= 2 || (altar !== 0 && dirOf(altar) !== dirOf(net) && later <= 1));
+        if (o.card === H.morningStar) return false;
+        if (o.card === H.providence) {
+          const st = s.players[seat].choir.find((c) => c.id === H.providence)?.store ?? 0;
+          return st >= 3 || Math.max(...s.players.map((x) => x.glory)) >= 7;
+        }
+        if (o.card === H.parasite) return want > 0;
         if (o.card === H.defiance) return r < 0.3;
         if (o.card === H.deliverance) return r < 0.25;
         if (o.card === H.council) {
@@ -240,6 +248,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const t = s.tides[s.tides.length - 1];
       return one(t && t.dir !== dirOf(net) ? 'yes' : 'no');
     }
+    case 'mercy':
     case 'freeWill':
     case 'absolution':
     case 'oracle.use':

@@ -153,18 +153,14 @@ export function alignment(s: GameState, seat: Seat, opts: AlignOpts = {}): numbe
   const p = s.players[seat];
   let light = 0;
   let dark = 0;
-  // V38: Uriel and Beelzebub double only on a Reaping where their holder paid 1 Glory for them.
-  const paid: string[] = (s.day_ as any).doublerPaid?.[seat] ?? [];
-  const uriel = opts.reaping && hasActive(s, seat, H.uriel) && paid.includes(H.uriel);
-  const beel = opts.reaping && hasActive(s, seat, H.beelzebub) && paid.includes(H.beelzebub);
   for (const c of p.choir) {
     if (c.facedown || !c.id.startsWith('host-')) continue;
     if (c.id === H.nephilim) continue; // its two values are Neutral
     if (opts.reaping && s.day_.eclipsed[seat] === c.id) continue;
     let v = baseValue(s, c.id);
     if (s.morningStar.some((m) => m.seat === seat && m.card === c.id)) v = { light: v.dark, dark: v.light };
-    light += v.light * (uriel ? 2 : 1);
-    dark += v.dark * (beel ? 2 : 1);
+    light += v.light;
+    dark += v.dark;
   }
   return light - dark;
 }
@@ -293,7 +289,7 @@ export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
   s.players[seat].choir.push({ id, facedown: false, used: false });
   stat(s, { type: 'enter_choir', seat, card: id });
   if (id === H.raguel) {
-    const targets = others(s, seat).filter((p) => !hasActive(s, p.seat, H.lilith));
+    const targets = others(s, seat).filter((p) => !immune(s, seat, p.seat));
     const t = yield* chooseOne(s, seat, 'raguel.bind', 'Raguel entered your Choir: choose another player to be Bound to you.', targets.map((p) => seatOpt(s, p.seat)));
     if (t) {
       const bound = seatFromOpt(t);
@@ -405,10 +401,16 @@ export type TargetKind = 'look' | 'reveal' | 'copy' | 'flip' | 'replace' | 'disc
 /** Whether `actor` may Target `owner`'s cards with this kind of effect (ignoring Tribute cost). */
 export function protectedFrom(s: GameState, actor: Seat, owner: Seat, kind: TargetKind): boolean {
   if (actor === owner) return false;
+  if (immune(s, actor, owner)) return true;
   if ((kind === 'replace' || kind === 'discard') && hasActive(s, owner, H.cherubim)) return true;
   if ((kind === 'look' || kind === 'reveal' || kind === 'copy' || kind === 'flip') && hasActive(s, owner, H.veil)) return true;
   return false;
 }
+
+/** Defiance (V42): no other player's ability can affect this player until their next turn. */
+export const immune = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && s.immune.includes(owner);
+/** Lilith (V42): other players' abilities cannot look at, take, or discard cards in your hand. */
+export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && (immune(s, actor, owner) || hasActive(s, owner, H.lilith));
 
 /** Tribute: pay 1 Glory to the owner before Targeting a card in their Choir. Returns false if it cannot be paid. */
 export function canAffordTribute(s: GameState, actor: Seat, owner: Seat): boolean {

@@ -27,6 +27,8 @@ export interface ChoirCard {
   facedown: boolean;
   /** Once-per-game card whose ability has been spent (turned sideways). */
   used: boolean;
+  /** Providence (V42): Glory stored on the card. */
+  store?: number;
 }
 
 export interface AltarCard {
@@ -176,6 +178,8 @@ export interface GameState {
   anathema: { target: Seat; by: Seat }[];
   confession: { seat: Seat; endsAfterTurnOf: Seat; turnsLeft: number }[];
   morningStar: { seat: Seat; card: string }[];
+  /** Defiance (V42): players no other player's ability can affect until their next turn. */
+  immune: Seat[];
   day_: DayFlags;
   turnUsed: string[];
   log: LogEntry[];
