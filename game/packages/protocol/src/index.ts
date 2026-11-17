@@ -54,7 +54,6 @@ export type ClientMsg =
   | { t: 'options'; twoSeeds?: boolean; timer?: number }
   | { t: 'start' }
   | { t: 'answer'; id: number; choice: string[] }
-  | { t: 'gift'; to: number; amount: number }
   | { t: 'back' }
   | { t: 'again' }
   | { t: 'chat'; text: string }

@@ -7,9 +7,11 @@ No card or rule changes.
 - **The whole table on one screen.** On a computer or tablet the table no longer scrolls. The card sizes are worked out from the window: your cards are the largest, opponents' a little smaller, and the table fills the space between the top bar and the decision bar at any window size. On a phone the page still scrolls, so cards stay large enough to read.
 - **The decision bar never covers anything.** It is its own row under your cards. While you choose, the cards you can pick glow and the rest of the table dims; the choices are also listed in the bar as names (hover one to see the card).
 - **Opponents** have their facts (Glory, Alignment, hand size, notes) beside their cards, or above them when there are three opponents, so their cards stay large.
-- **Your area** keeps your Glory, Alignment, notes and a smaller **Give** button together at the left, then your Celestial, Choir and hand. On a tall, narrow window your hand gets a row of its own.
+- **Your area** keeps your Glory, Alignment and notes together at the left, then your Celestial, Choir and hand. On a tall, narrow window your hand gets a row of its own.
 - **Between turns** the bar shows the last two things that happened. The full log is still at the side.
 - **The Evening panel** covers the table only, not the decision bar.
+- **No more Give button.** Glory can no longer be given to another player on the site (the server refuses it too).
+- **Hover effects are never cut off:** buttons in the decision bar and cards in the discard pile have room for their lift and glow.
 - **Lettering:** the title's decorative H is back; it has extra room on its left so it never joins the T ("The"). `apps/web/scripts/spaced-h.py` makes the font change (replaces `plain-h.py`).
 
 ## V39 cards, Rulebook v9, and the site's Learn page and names (November 16, 2026)

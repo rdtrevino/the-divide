@@ -130,7 +130,7 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
                 ))}
               </div>
               <Center view={view} />
-              {me !== null && <MyArea view={view} seat={me} canGift={!ended} onGift={(to, amount) => send({ t: 'gift', to, amount })} />}
+              {me !== null && <MyArea view={view} seat={me} />}
             </div>
             {evening !== null && <Evening day={evening} log={snap.log} view={view} onClose={() => setEvening(null)} />}
           </div>
