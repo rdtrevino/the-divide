@@ -124,21 +124,61 @@ function ReapingCalc() {
   );
 }
 
+type ActionKey = 'offer' | 'gather' | 'exalt';
+
+const ACTIONS: Record<ActionKey, { title: string; icon: string; badge: string; tone: string; summary: string; steps: string[]; why: string }> = {
+  offer: {
+    title: 'Offer', icon: '✦', badge: '+1 Glory', tone: 'gain',
+    summary: 'Hand → Altar, facedown',
+    steps: [
+      'Choose a card from your hand and put it on the Altar facedown.',
+      'Then gain 1 Glory (or draw 1 card instead, if you need cards more).',
+      'Nobody sees what you Offered until the Evening, and anyone who acts after you can still Gather it away.',
+    ],
+    why: 'Your income, and your secret vote on the Tide.',
+  },
+  gather: {
+    title: 'Gather', icon: '❖', badge: 'Free', tone: '',
+    summary: 'Altar or deck → your Choir',
+    steps: [
+      'Take one card from the Altar, or the top card of the deck, into your Choir.',
+      'You can take a facedown Altar card without knowing what it is.',
+      'If your Choir already has 3 cards, discard one of them first.',
+    ],
+    why: 'Reshape your Choir for free, or pull a card off the Altar so it stops pushing the Tide.',
+  },
+  exalt: {
+    title: 'Exalt', icon: '▲', badge: 'Costs 1 Glory', tone: 'cost',
+    summary: 'Hand → your Choir',
+    steps: [
+      'Pay 1 Glory and play a card from your hand straight into your Choir.',
+      'If your Choir already has 3 cards, discard one of them first.',
+      'The card never touches the Altar, so nobody sees it coming.',
+    ],
+    why: 'The private way to change your Choir. You pay for the secrecy.',
+  },
+};
+
+/** The three actions side by side; choosing one opens its details below. */
 function Actions() {
-  const [a, setA] = useState<'offer' | 'gather' | 'exalt'>('offer');
-  const info = {
-    offer: { title: 'Offer', cost: 'Free', text: 'Put a card from your hand facedown on the Altar, then gain 1 Glory or draw 1 card.', why: 'Your income, and your secret vote on the Tide. Nobody knows what you Offered until the Evening.' },
-    gather: { title: 'Gather', cost: 'Free', text: 'Take a card from the Altar (even a facedown one) or from the top of the deck into your Choir. If your Choir is full, discard one of its cards first.', why: 'Reshape your Choir, or pull a card off the Altar so it stops pushing the Tide.' },
-    exalt: { title: 'Exalt', cost: '1 Glory', text: 'Play a card from your hand straight into your Choir. If your Choir is full, discard one of its cards first.', why: 'Change your Choir without showing the card to the Altar first.' },
-  }[a];
+  const [a, setA] = useState<ActionKey>('offer');
+  const info = ACTIONS[a];
   return (
     <div class="learn-try">
-      <div class="learn-tabs" role="tablist">
-        {(['offer', 'gather', 'exalt'] as const).map((k) => <button role="tab" aria-selected={a === k} class={`learn-tab${a === k ? ' on' : ''}`} onClick={() => setA(k)}>{k[0].toUpperCase() + k.slice(1)}</button>)}
+      <div class="eyebrow">Pick one each turn. Tap one to see how it works.</div>
+      <div class="learn-actions" role="tablist" aria-label="The three actions">
+        {(Object.keys(ACTIONS) as ActionKey[]).map((k) => (
+          <button role="tab" aria-selected={a === k} class={`learn-act${a === k ? ' on' : ''}`} onClick={() => setA(k)}>
+            <span class="la-icon">{ACTIONS[k].icon}</span>
+            <b>{ACTIONS[k].title}</b>
+            <span class="la-sum">{ACTIONS[k].summary}</span>
+            <span class={`la-badge ${ACTIONS[k].tone}`}>{ACTIONS[k].badge}</span>
+          </button>
+        ))}
       </div>
-      <div class="learn-action">
-        <div class="learn-action-head"><b>{info.title}</b><span>{info.cost}</span></div>
-        <p>{info.text}</p>
+      <div class="learn-action" role="tabpanel" key={a}>
+        <div class="learn-action-head"><b>{info.title}</b><span class={`la-badge ${info.tone}`}>{info.badge}</span></div>
+        <ol>{info.steps.map((t) => <li>{t}</li>)}</ol>
         <p class="muted">{info.why}</p>
       </div>
       <p class="learn-small">After your action, use any of your Choir's “On your turn” abilities, once each. Your Celestial's power is extra: it never uses up your action.</p>
@@ -256,8 +296,13 @@ const STEPS: Step[] = [
     title: 'Your turn: one action',
     body: (
       <>
-        <p>Going around the table, each player takes <b>one turn</b> and picks <b>one action</b>.</p>
-        <p>Offers go on the Altar <b>facedown</b>. The table only learns what they were in the Evening, so a hidden Offer can help you, hurt a rival, or bluff.</p>
+        <p>Going around the table, each player takes <b>one turn</b> and picks <b>one of three actions</b>:</p>
+        <ul class="learn-list">
+          <li><b>Offer</b> a card to the Altar, facedown, and <b>gain 1 Glory</b>.</li>
+          <li><b>Gather</b> a card into your Choir, <b>free</b>.</li>
+          <li><b>Exalt</b> a card from your hand into your Choir for <b>1 Glory</b>.</li>
+        </ul>
+        <p class="muted">A hidden Offer can help you, hurt a rival, or bluff: the table only sees it in the Evening.</p>
       </>
     ),
     side: <Actions />,

@@ -70,14 +70,44 @@ export function Rules() {
     const id = location.hash.slice(1);
     if (id && sections.some((s) => s.id === id)) show(id);
   }, []);
+
+  // The section being read: the last one whose heading has scrolled past the top of the window.
+  const [current, setCurrent] = useState(sections[0]?.id ?? '');
+  const searching = q.trim().length > 1;
+  useEffect(() => {
+    if (searching) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      let at = sections[0]?.id ?? '';
+      for (const s of sections) {
+        const el = document.getElementById(`sec-${s.id}`);
+        if (el && el.getBoundingClientRect().top <= 140) at = s.id;
+      }
+      // At the very bottom of the page, the last section counts as read even if it is short.
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) at = sections[sections.length - 1]?.id ?? at;
+      setCurrent(at);
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); cancelAnimationFrame(frame); };
+  }, [sections, searching, open]);
+  // Keep the highlighted entry visible in the contents list.
+  useEffect(() => {
+    document.querySelector('.rules-toc a.on')?.scrollIntoView({ block: 'nearest' });
+  }, [current]);
   return (
     <Site>
       <div class="rules">
         <nav class="rules-toc panel">
           <div class="eyebrow">Contents</div>
-          {sections.map((s) => (
-            <a href={`#${s.id}`} onClick={(e) => { e.preventDefault(); history.replaceState(null, '', `#${s.id}`); show(s.id); }}>{s.title}</a>
-          ))}
+          <div class="rules-toc-list">
+            {sections.map((s) => (
+              <a href={`#${s.id}`} class={!searching && current === s.id ? 'on' : ''} aria-current={!searching && current === s.id ? 'true' : undefined} onClick={(e) => { e.preventDefault(); history.replaceState(null, '', `#${s.id}`); show(s.id); }}>{s.title}</a>
+            ))}
+          </div>
         </nav>
         <article class="prose">
           <div class="rules-intro" dangerouslySetInnerHTML={{ __html: intro }} />
@@ -86,7 +116,7 @@ export function Rules() {
           <div class="rules-search">
             <input class="field" type="search" value={q} placeholder="Look up a rule or a card: Tide, Exalt, Mirage…" aria-label="Search the rules" onInput={(e) => setQ((e.target as HTMLInputElement).value)} />
           </div>
-          {q.trim().length > 1 ? (
+          {searching ? (
             <div class="rules-hits">
               <p class="muted">{hits.length ? `${hits.length}${hits.length === 40 ? '+' : ''} place${hits.length === 1 ? '' : 's'} in the rules mention “${q.trim()}”.` : `Nothing in the rules mentions “${q.trim()}”.`}</p>
               {hits.map((h) => (
