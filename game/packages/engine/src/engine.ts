@@ -667,6 +667,18 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     delta[a.seat] = (a.str > b.str ? 2 : 1) * a.dbl;
     delta[b.seat] = (b.str > a.str ? 2 : 1) * b.dbl;
   }
+  // Test 'scapegoat-deny' (Robert): pay 1 Glory so another player who would gain at this Reaping gains nothing.
+  if (variant(s, 'scapegoat-deny')) for (const seat of order) {
+    if (!hasActive(s, seat, H.scapegoat) || !canActivate(s, seat, H.scapegoat) || !canSpend(s, seat, 1)) continue;
+    const gaining = others(s, seat).filter((o) => delta[o.seat] > 0 && !glorySafe(s, seat, o.seat));
+    if (!gaining.length) continue;
+    const pick = yield* chooseOne(s, seat, 'scapegoat.deny', 'Scapegoat: pay 1 Glory so one of these players gains nothing at this Reaping?', gaining.map((o) => seatOpt(s, o.seat)), true);
+    if (!pick) continue;
+    yield* pay(s, seat, 1, H.scapegoat);
+    const t = seatFromOpt(pick);
+    delta[t] = 0;
+    log(s, 'scapegoat', `${pname(s, seat)} paid 1 Glory: ${pname(s, t)} gains nothing this Reaping (Scapegoat).`);
+  }
   log(s, 'share', withTide.length === 0 ? 'No Choir leans with the Tide.' : withTide.length >= 3 ? `${withTide.length} Choirs lean with the Tide, so none of them scores.` : withTide.length === 1 ? `${pname(s, withTide[0].seat)} leans with the Tide alone.` : `${withTide.map((w) => pname(s, w.seat)).join(' and ')} share the Tide.`);
   const prevLean = { ...s.lastAlignColor };
   for (const p of s.players) s.lastAlignColor[p.seat] = dirOf(nets[p.seat]);
@@ -684,7 +696,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   }
   // Scapegoat (V42): if you would lose Glory at the Reaping, a player of your choice loses it instead.
   for (const seat of order) {
-    if (!loss[seat] || !hasActive(s, seat, H.scapegoat) || !canActivate(s, seat, H.scapegoat) || variant(s, 'scapegoat-sac') || variant(s, 'scapegoat-sac-free') || variant(s, 'scapegoat-sac2') || variant(s, 'scapegoat-crowd')) continue;
+    if (!loss[seat] || !hasActive(s, seat, H.scapegoat) || !canActivate(s, seat, H.scapegoat) || variant(s, 'scapegoat-sac') || variant(s, 'scapegoat-sac-free') || variant(s, 'scapegoat-sac2') || variant(s, 'scapegoat-crowd') || variant(s, 'scapegoat-deny')) continue;
     if (variant(s, 'scapegoat-cost') && !canSpend(s, seat, 1)) continue;
     const targets = others(s, seat).filter((o) => !glorySafe(s, seat, o.seat));
     if (!targets.length) continue;

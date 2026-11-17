@@ -250,6 +250,11 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const t = s.tides[s.tides.length - 1];
       return one(t && t.dir !== dirOf(net) ? 'yes' : 'no');
     }
+    case 'scapegoat.deny': {
+      // Deny the leader, if they are gaining.
+      const o = d.options.find((x) => x.seat !== undefined && leaderSeats(s, seat).includes(x.seat));
+      return one(o ? o.id : 'none');
+    }
     case 'scapegoat.sac': {
       // Sacrifice the stronger partner (they would take the 2), or anyone in a crowd.
       const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => Math.abs(alignment(s, x.seat!)));
