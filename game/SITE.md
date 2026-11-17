@@ -6,7 +6,7 @@ Robert and friends play the Open Game (3 or 4 players) in the browser, in real t
 
 ## Playing
 
-New players: **Learn to play** (https://thedivide.pages.dev/learn) walks through the game in 13 short steps. Its cards are shown large, so the hover preview is off on that page only.
+New players: **Learn to play** (https://thedivide.pages.dev/learn) walks through the game in 13 short steps. In its two click-to-try demos the hover preview is off, so it never covers the card being clicked.
 
 1. Open the site, type your name, and press **Start a new table**.
 2. Send the link (or the 5-letter code) to your friends. Anyone who opens it takes an empty seat.

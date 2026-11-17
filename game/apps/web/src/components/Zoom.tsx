@@ -1,6 +1,7 @@
 // The full-size card preview. Any element with data-zoom="<card id>" shows it on hover (mouse)
 // or on a long press (touch), so small cards on the table can always be read. Inside an element
-// marked data-no-zoom (the Learn page) there is no preview: its cards are already large.
+// marked data-no-zoom (the Learn page's click-to-try demos) there is no preview, so it never covers
+// the card you are about to click.
 import { useEffect, useState } from 'preact/hooks';
 import { Card } from './Card';
 import { kindOf } from '../lib/cards';

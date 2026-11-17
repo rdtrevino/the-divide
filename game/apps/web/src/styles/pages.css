@@ -348,8 +348,6 @@ table.stats th.r { text-align: right; }
 .learn-timing { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
 .learn-timing .learn-cards { flex-wrap: nowrap; }
 .learn-timing p { margin: 0 0 8px; }
-.learn-quote { font-size: 15px; line-height: 1.4; padding: 6px 10px; border-left: 2px solid var(--gold); background: rgba(0, 0, 0, 0.22); border-radius: 0 6px 6px 0; }
-.learn-quote b { font-family: var(--font-title); font-weight: normal; font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-bright); margin-right: 4px; }
 .learn-body .learn-list + p { margin-top: 14px; }
 @media (max-width: 720px) {
   .learn-actions.four { grid-template-columns: repeat(2, 1fr); }

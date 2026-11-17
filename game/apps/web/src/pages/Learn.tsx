@@ -45,7 +45,7 @@ function ChoirBuilder() {
   const dark = picked.reduce((a, id) => a + Math.max(0, -signed(id)), 0);
   const net = light - dark;
   return (
-    <div class="learn-try">
+    <div class="learn-try" data-no-zoom>
       <div class="eyebrow">Try it: pick up to 4 cards for your Choir</div>
       <div class="learn-cards">
         {CHOIR_POOL.map((id) => <Card id={id} w={104} compact selectable={!picked.includes(id)} selected={picked.includes(id)} onClick={() => toggle(id)} />)}
@@ -68,7 +68,7 @@ function AltarBuilder() {
   const dark = on.reduce((a, id) => a + Math.max(0, -signed(id)), 0);
   const toggle = (id: string) => setOff((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
   return (
-    <div class="learn-try">
+    <div class="learn-try" data-no-zoom>
       <div class="eyebrow">Try it: tap a card to take it off the Altar</div>
       <div class="learn-altar">
         {ALTAR.map((id) => {
@@ -236,10 +236,9 @@ function Timings() {
         ))}
       </div>
       <div class="learn-action learn-timing" role="tabpanel" key={t}>
-        <div class="learn-cards">{info.cards.map((id) => <Card id={id} w={124} />)}</div>
+        <div class="learn-cards">{info.cards.map((id) => <Card id={id} w={150} />)}</div>
         <div>
           <p>{info.how}</p>
-          {info.cards.map((id) => <p class="learn-quote"><b>{HOST[id]?.name}</b> {HOST[id]?.text}</p>)}
           <p class="muted">{info.tip}</p>
         </div>
       </div>
@@ -308,7 +307,7 @@ const STEPS: Step[] = [
       <>
         <p>Every card has a value at the bottom: <span class="tag light">Light +1</span> <span class="tag dark">Dark +1</span>, sometimes +2, or <span class="tag neutral">Neutral</span>.</p>
         <p>On the <b>Altar</b>, a card's value pushes the Tide its way. In your <b>Choir</b>, it pulls your lean its way. Neutral cards push and pull nothing, but they still have abilities.</p>
-        <p class="muted">At the table, hover over any card (or press and hold on a phone) to read it full size.</p>
+        <p class="muted">Hover over any card (or press and hold on a phone) to read it full size.</p>
       </>
     ),
     side: (
@@ -487,7 +486,7 @@ export function Learn() {
   const s = STEPS[i];
   return (
     <Site wide>
-      <div class="learn" data-no-zoom>
+      <div class="learn">
         <div class="learn-progress" role="tablist" aria-label="Steps">
           {STEPS.map((st, k) => <button class={`lp-dot${k === i ? ' on' : k < i ? ' done' : ''}`} title={st.title} aria-label={`Step ${k + 1}: ${st.title}`} aria-selected={k === i} onClick={() => go(k)} />)}
         </div>
