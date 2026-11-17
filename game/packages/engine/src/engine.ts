@@ -369,6 +369,8 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
       });
     }
     if (forgone) continue;
+    // Test 'offer-noglory': an Offer earns no Glory; it only sways the Altar.
+    if (variant(s, 'offer-noglory')) continue;
     // The Offer's reward is 1 Glory (V40: no longer a choice of 1 Glory or 1 card).
     // Mammon: when the Offer includes a Dark card, take this Glory from another player instead of the Pot.
     const mamFrom = s.players.filter((o) => o.seat !== seat && o.glory > 0 && !glorySafe(s, seat, o.seat));

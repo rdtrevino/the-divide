@@ -155,7 +155,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const fut = (n1: number) => rem * 0.3 * (Math.min(3, Math.abs(n1)) - Math.min(3, Math.abs(net)));
       if (has('offer')) {
         const best = Math.max(...p.hand.map((c) => reapValue(net, altar + signed(s, c), w) + (dirOf(signed(s, c)) === wantDir ? 0.3 : 0)));
-        scores.offer = 1 + best;
+        scores.offer = (variant(s, 'offer-noglory') ? 0 : 1) + best;
       }
       if (has('gather')) {
         const worst = worstChoirCard(s, seat, want);
