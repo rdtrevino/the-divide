@@ -4,7 +4,7 @@ import {
   activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
   canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
   eventOn, gain, handLimit, hasActive, isCelestial, log, lose, makeRoom, markToday, opposite, pay, pname, seatFromOpt,
-  seatOpt, stat, transfer, usedToday, yesNo, CHOIR_LIMIT, variant, leastGloryOthers,
+  seatOpt, stat, transfer, usedToday, yesNo, choirLimit, variant, leastGloryOthers,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
@@ -223,7 +223,7 @@ export function* morning(s: GameState): Gen<void> {
 
   // 3. The Seed.
   const facedown = s.currentEvent === E.pandemonium;
-  let seeds = (s.currentEvent === E.creation ? 3 : 1) + (s.config.twoSeeds ? 1 : 0);
+  let seeds = (s.currentEvent === E.creation ? 3 : variant(s, 'no-seed') ? 0 : 1) + (s.config.twoSeeds ? 1 : 0);
   if (s.carriedSeed) {
     s.altar.push({ id: s.carriedSeed, facedown, offeredBy: null, day: s.day, kind: 'seed' });
     log(s, 'seed', `${cardName(s.carriedSeed)} returns as the Seed (Eternity).`);
@@ -256,7 +256,7 @@ function* eventOnReveal(s: GameState, ev: string): Gen<void> {
       if (!id) continue;
       yield* discardFromChoir(s, p.seat, id, 'the Plague');
       const c = drawHost(s);
-      if (c && p.choir.length < CHOIR_LIMIT) yield* enterChoir(s, p.seat, c);
+      if (c && p.choir.length < choirLimit(s)) yield* enterChoir(s, p.seat, c);
     }
   }
 }
@@ -290,7 +290,7 @@ export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
 }
 
 export function exaltCost(s: GameState, seat: Seat): number {
-  if (eventOn(s, E.divineCalling, seat)) return 0;
+  if (eventOn(s, E.divineCalling, seat) || variant(s, 'free-exalt')) return 0;
   if (hasActive(s, seat, H.outcast)) {
     const min = Math.min(...s.players.map((p) => p.glory));
     if (s.players[seat].glory === min) return 0;
@@ -300,7 +300,7 @@ export function exaltCost(s: GameState, seat: Seat): number {
 
 function canRoom(s: GameState, seat: Seat) {
   const p = s.players[seat];
-  return p.choir.length < CHOIR_LIMIT || discardableForRoom(s, p).length > 0;
+  return p.choir.length < choirLimit(s) || discardableForRoom(s, p).length > 0;
 }
 
 export function legalActions(s: GameState, seat: Seat): ('offer' | 'gather' | 'exalt')[] {
@@ -745,7 +745,17 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (p.celestial === C.whisper && s.day_.whisperCall && s.day_.whisperCall === tide.dir) match = true;
     let d = match ? Math.abs(net) : -Math.abs(net);
     if (s.day_.ordeal.includes(seat)) d *= 2;
-    delta[seat] = Math.max(-3, Math.min(3, d));
+    const cap = variant(s, 'nocap') ? 99 : 3;
+    delta[seat] = Math.max(-cap, Math.min(cap, d));
+  }
+  {
+    // Coalition tests: 'spoils' caps each winner at 3 / 2 / 1 by how many gain; 'crowd' takes 1 per other winner (min 1); 'lone' adds 1 to a sole winner.
+    const k = s.players.filter((p) => delta[p.seat] > 0).length;
+    for (const p of s.players) if (delta[p.seat] > 0) {
+      if (variant(s, 'spoils')) delta[p.seat] = Math.min(delta[p.seat], k <= 1 ? 99 : k === 2 ? 2 : 1);
+      if (variant(s, 'crowd')) delta[p.seat] = Math.max(1, delta[p.seat] - (k - 1));
+      if (variant(s, 'lone') && k === 1) delta[p.seat] += 1;
+    }
   }
   for (const p of s.players) s.lastAlignColor[p.seat] = dirOf(nets[p.seat]);
 

@@ -286,6 +286,8 @@ export function discardableForRoom(s: GameState, p: Player): ChoirCard[] {
 }
 
 export const CHOIR_LIMIT = 3;
+/** The Choir limit: 3, or 'limit-N' for testing. */
+export const choirLimit = (s: GameState) => Number((s.config.variants ?? []).find((v) => v.startsWith('limit-'))?.slice(6) ?? CHOIR_LIMIT);
 
 /** Put a card into a Choir. Caller must ensure there is room. Handles entry triggers. */
 export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
@@ -305,7 +307,7 @@ export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
 /** Make room in a full Choir by discarding (player's choice among voluntary options). Returns false if impossible. */
 export function* makeRoom(s: GameState, seat: Seat, why: string): Gen<boolean> {
   const p = s.players[seat];
-  if (p.choir.length < CHOIR_LIMIT) return true;
+  if (p.choir.length < choirLimit(s)) return true;
   const opts = discardableForRoom(s, p);
   if (!opts.length) return false;
   const pick = yield* chooseOne(s, seat, 'choir.discard', `Your Choir is full. Choose a card to discard (${why}).`, opts.map((c) => cardOpt(c.id)));
