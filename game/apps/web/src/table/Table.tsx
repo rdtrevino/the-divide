@@ -27,6 +27,20 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
   const n = view.players.length;
   const root = useRef<HTMLDivElement>(null);
   useFlip(root);
+  useEffect(() => {
+    const el = root.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      const top = el.querySelector('.t-top')?.getBoundingClientRect().height ?? 52;
+      const bar = el.querySelector('.prompt')?.getBoundingClientRect().height ?? 0;
+      el.style.setProperty('--top-h', `${Math.round(top)}px`);
+      el.style.setProperty('--prompt-h', `${Math.round(bar)}px`);
+    };
+    const ro = new ResizeObserver(measure);
+    for (const sel of ['.t-top', '.prompt']) { const t = el.querySelector(sel); if (t) ro.observe(t); }
+    measure();
+    return () => ro.disconnect();
+  });
 
   // ---------------------------------------------------------------- answering decisions
   const decision = view.decisions[0] ?? null;
@@ -88,7 +102,7 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
 
   return (
     <PickCtx.Provider value={pick}>
-      <div class={`table${side ? ' side-open' : ''}${n === 4 || me === null ? ' many' : ''}`} ref={root}>
+      <div class={`table${side ? ' side-open' : ''}`} ref={root} style={{ '--opp-n': order.length } as any}>
         <header class="t-top">
           <Link href="/" class="wordmark t-mark" title="Leave the table">The Divide</Link>
           <div class="t-day">
@@ -121,6 +135,7 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
             <Center view={view} />
             <div class={`herald${herald ? ' on' : ''}`} aria-live="polite">{herald && <span key={herald.seq} class={`k-${herald.kind}`}>{herald.text}</span>}</div>
           </div>
+          {me !== null && <MyArea view={view} seat={me} canGift={!ended} onGift={(to, amount) => send({ t: 'gift', to, amount })} />}
           <Prompt
             view={view}
             decision={decision}
@@ -132,7 +147,6 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
             spectator={me === null}
             onConfirm={() => submit(sel)}
           />
-          {me !== null && <MyArea view={view} seat={me} canGift={!ended} onGift={(to, amount) => send({ t: 'gift', to, amount })} />}
           {evening !== null && <Evening day={evening} log={snap.log} view={view} onClose={() => setEvening(null)} />}
         </main>
 

@@ -1,11 +1,11 @@
 /* The Divide: colours, type and shared controls, taken from the card design system (Eden). */
-@font-face { font-family: 'Cinzel'; font-weight: 400 900; font-display: swap; src: url('/fonts/cinzel.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel'; font-weight: 400 900; font-display: swap; src: url('../fonts/cinzel.woff2') format('woff2'); }
 /* The title font's H and h are replaced with a plain H (scripts/plain-h.py), so "The" never looks joined. */
-@font-face { font-family: 'Cinzel Decorative'; font-weight: 400; font-display: swap; src: url('/fonts/cinzel-decorative-400.woff2') format('woff2'); }
-@font-face { font-family: 'Cinzel Decorative'; font-weight: 700; font-display: swap; src: url('/fonts/cinzel-decorative-700.woff2') format('woff2'); }
-@font-face { font-family: 'Cinzel Decorative'; font-weight: 900; font-display: swap; src: url('/fonts/cinzel-decorative-900.woff2') format('woff2'); }
-@font-face { font-family: 'IM Fell English'; font-style: normal; font-display: swap; src: url('/fonts/im-fell-english.woff2') format('woff2'); }
-@font-face { font-family: 'IM Fell English'; font-style: italic; font-display: swap; src: url('/fonts/im-fell-english-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel Decorative'; font-weight: 400; font-display: swap; src: url('../fonts/cinzel-decorative-400.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel Decorative'; font-weight: 700; font-display: swap; src: url('../fonts/cinzel-decorative-700.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel Decorative'; font-weight: 900; font-display: swap; src: url('../fonts/cinzel-decorative-900.woff2') format('woff2'); }
+@font-face { font-family: 'IM Fell English'; font-style: normal; font-display: swap; src: url('../fonts/im-fell-english.woff2') format('woff2'); }
+@font-face { font-family: 'IM Fell English'; font-style: italic; font-display: swap; src: url('../fonts/im-fell-english-italic.woff2') format('woff2'); }
 
 :root {
   --void: #0d0b08;

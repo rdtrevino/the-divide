@@ -1,19 +1,27 @@
 /* The game table: opponents along the top, the Altar in the middle, you along the bottom, log at the side. */
 .table {
-  --cw-me: clamp(70px, min((100vw - 660px) / 6.8, 14.8vh), 140px);
-  --cw-altar: clamp(64px, min(6.8vw, 12.2vh), 116px);
-  --cw-opp: clamp(50px, min(5.2vw, 9vh), 86px);
-  --cw-event: clamp(120px, min(13vw, 23vh), 214px);
-  --cw-pile: clamp(46px, min(4.6vw, 8.4vh), 78px);
-  --cw-evening: clamp(52px, min(5.4vw, 9.5vh), 92px);
-  height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr) 300px; grid-template-rows: auto minmax(0, 1fr);
+  /* Space the board can use: the window minus the log column. */
+  --side: 300px;
+  --main-w: calc(100vw - var(--side));
+  --opp-n: 2;
+  /* Card widths follow the window's width and height, so a normal screen shows the whole table
+     without scrolling. On a small window they stop shrinking and the page scrolls instead:
+     regions never overlap. */
+  --cw-opp: clamp(40px, min(7.4vh, (var(--main-w) - 40px - var(--opp-n) * 84px) / (var(--opp-n) * 5.4)), 84px);
+  --cw-altar: clamp(54px, min(10.2vh, (var(--main-w) - 120px) / 11), 110px);
+  --cw-event: clamp(110px, min(18vh, var(--main-w) / 7), 196px);
+  --cw-pile: clamp(44px, min(7.2vh, var(--main-w) / 18), 70px);
+  --cw-me: clamp(60px, min(13.6vh, (var(--main-w) - 330px) / 7.4), 136px);
+  --cw-evening: clamp(50px, min(9vh, var(--main-w) / 12), 90px);
+  --top-h: 52px;
+  --prompt-h: 100px;
+  min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr) var(--side); grid-template-rows: auto 1fr;
   background: radial-gradient(1100px 620px at 42% 46%, rgba(120, 84, 30, 0.2), transparent 70%), radial-gradient(900px 500px at 42% 110%, rgba(74, 61, 140, 0.16), transparent 70%), var(--void);
-  overflow: hidden; position: relative;
+  position: relative;
 }
-.table.many { --cw-opp: clamp(46px, min(4.5vw, 8.6vh), 80px); }
 
 /* Top bar */
-.t-top { grid-column: 1 / -1; display: flex; align-items: center; gap: 18px; padding: 8px 16px; border-bottom: 1px solid var(--hair-soft); background: rgba(13, 11, 8, 0.7); min-height: 50px; }
+.t-top { grid-column: 1 / -1; position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 18px; padding: 8px 16px; border-bottom: 1px solid var(--hair-soft); background: rgba(13, 11, 8, 0.94); backdrop-filter: blur(6px); min-height: 52px; }
 .t-mark { font-size: 15px; }
 .t-day { display: flex; flex-direction: column; line-height: 1.1; }
 .t-day b { font-family: var(--font-title); font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -38,7 +46,7 @@
 .track-peg { position: absolute; top: 3px; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: var(--seat); color: #14100a; font: 700 11px/20px var(--font-title); text-align: center; border: 1px solid rgba(0, 0, 0, 0.6); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); transition: left 0.7s var(--ease), transform 0.4s var(--ease); transform: translateY(calc(var(--stack) * 7px)) translateX(calc(var(--stack) * 5px)); z-index: 2; }
 
 /* Main column */
-.t-main { position: relative; display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 8px 14px 10px; gap: 8px; }
+.t-main { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 10px 14px 0; gap: 10px; }
 .zone-label { font-family: var(--font-title); font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold-soft); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
 .slot { width: var(--w); height: calc(var(--w) * 1.4); border-radius: calc(var(--w) / 25); border: 1px dashed var(--hair); background: rgba(0, 0, 0, 0.18); flex: none; }
 .slot.event { height: calc(var(--w) * 0.714); }
@@ -81,7 +89,8 @@
 @keyframes pulse { 50% { opacity: 0.6; } }
 
 /* Middle */
-.mid { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; position: relative; }
+/* The middle takes any spare height (centring the Altar), but never less than its content. */
+.mid { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; position: relative; }
 .t-center { display: flex; align-items: flex-start; justify-content: center; gap: clamp(14px, 2.4vw, 36px); }
 .event-slot { width: var(--cw-event); flex: none; }
 .event-text { margin: 7px 0 0; font-size: 13.5px; line-height: 1.3; color: var(--cream); font-style: italic; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
@@ -103,9 +112,10 @@
 @keyframes herald { from { opacity: 0; transform: translateY(8px); } }
 
 /* Prompt bar */
-.prompt { flex: none; position: relative; z-index: 75; min-height: 92px; border-radius: 10px; padding: 9px 14px; border: 1px solid var(--hair-soft); background: rgba(13, 11, 8, 0.66); display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+/* The decision bar is pinned to the bottom of the window, always in reach; the board scrolls above it when needed. */
+.prompt { flex: none; position: sticky; bottom: 0; z-index: 50; margin: 0 -14px; border-radius: 12px 12px 0 0; box-shadow: 0 -14px 34px rgba(0, 0, 0, 0.75); min-height: 92px; border-radius: 10px; padding: 9px 14px; border: 1px solid var(--hair-soft); border-bottom: 0; background: rgba(15, 12, 9, 0.97); display: flex; flex-direction: column; justify-content: center; gap: 8px; }
 .prompt.idle { flex-direction: row; align-items: center; justify-content: center; gap: 14px; color: var(--muted); }
-.prompt.yours { border-color: var(--gold); background: linear-gradient(180deg, rgba(60, 42, 14, 0.85), rgba(26, 20, 16, 0.9)); box-shadow: 0 0 0 1px rgba(232, 200, 74, 0.25), 0 0 30px rgba(201, 146, 42, 0.18); }
+.prompt.yours { border-color: var(--gold); background: linear-gradient(180deg, rgba(56, 40, 14, 0.98), rgba(24, 18, 13, 0.99)); box-shadow: 0 0 0 1px rgba(232, 200, 74, 0.25), 0 0 30px rgba(201, 146, 42, 0.18); }
 .prompt.busy { opacity: 0.65; }
 .prompt-top { display: flex; align-items: baseline; gap: 12px; }
 .prompt-text { font-size: 17.5px; line-height: 1.25; }
@@ -113,7 +123,7 @@
 .prompt-top .countdown { margin-left: auto; flex: none; }
 .prompt-more { font-size: 13px; white-space: nowrap; }
 .prompt-reveal { display: flex; align-items: center; gap: 10px; }
-.prompt-opts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-height: 132px; overflow-y: auto; }
+.prompt-opts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-height: min(150px, 28dvh); overflow-y: auto; }
 .prompt-confirm { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
 .prompt-confirm .muted { font-size: 13.5px; margin-right: auto; }
 .btn.on { border-color: var(--gold-bright); box-shadow: 0 0 0 2px rgba(232, 200, 74, 0.5); }
@@ -153,7 +163,7 @@
 .empty-hand { align-self: center; font-style: italic; }
 
 /* Side panel */
-.t-side { grid-row: 2; grid-column: 2; display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--hair-soft); background: rgba(13, 11, 8, 0.72); }
+.t-side { grid-row: 2; grid-column: 2; position: sticky; top: var(--top-h); align-self: start; height: calc(100dvh - var(--top-h)); display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--hair-soft); background: rgba(13, 11, 8, 0.72); }
 .side-head { padding: 9px 14px 6px; border-bottom: 1px solid var(--hair-soft); }
 .log { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 14px; font-size: 14.5px; line-height: 1.32; scrollbar-width: thin; scrollbar-color: var(--gold-deep) transparent; }
 .log-line { padding: 2.5px 0; color: rgba(246, 234, 210, 0.86); }
@@ -185,8 +195,8 @@
 .modal-cards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
 
 /* Evening panel: covers the opponents and the Altar, leaves your prompt and cards free. */
-.evening { position: absolute; inset: 0 0 auto 0; z-index: 70; padding: 8px 14px; display: flex; justify-content: center; pointer-events: none; }
-.evening-in { pointer-events: auto; width: min(1060px, 100%); max-height: calc(100dvh - 66px - (var(--cw-me) * 1.4 + 200px)); min-height: 0; overflow-y: auto; padding: 16px 24px 16px; background: linear-gradient(180deg, rgba(34, 26, 46, 0.985), rgba(18, 14, 11, 0.985)); border-color: var(--dark); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(125, 111, 208, 0.3); animation: rise 0.4s var(--ease); }
+.evening { position: fixed; top: calc(var(--top-h) + 8px); left: 0; right: var(--side); bottom: calc(var(--prompt-h) + 10px); z-index: 45; padding: 0 14px; display: flex; justify-content: center; align-items: flex-start; pointer-events: none; }
+.evening-in { pointer-events: auto; width: min(1060px, 100%); max-height: 100%; min-height: 0; overflow-y: auto; padding: 16px 24px 16px; background: linear-gradient(180deg, rgba(34, 26, 46, 0.985), rgba(18, 14, 11, 0.985)); border-color: var(--dark); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(125, 111, 208, 0.3); animation: rise 0.4s var(--ease); }
 .evening-head { text-align: center; }
 .verdict { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.6vw, 32px); letter-spacing: 0.1em; margin-top: 2px; color: var(--neutral); }
 .verdict.light { color: var(--light); text-shadow: 0 0 30px rgba(231, 194, 74, 0.45); }
@@ -226,28 +236,39 @@
 .result-table tr.won td { background: rgba(201, 146, 42, 0.12); }
 .result-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
 .saved { font-size: 14px; margin: 12px 0 4px; }
-.result-reopen { position: fixed; right: 320px; bottom: 18px; z-index: 80; }
+.result-reopen { position: fixed; right: calc(var(--side) + 20px); top: calc(var(--top-h) + 12px); z-index: 80; }
 
-/* Narrow screens: one column, the log slides over. */
+/* Narrower screens: one column; the log slides over from the right. */
 @media (max-width: 1080px) {
-  .table { --cw-me: clamp(70px, min((100vw - 360px) / 6.8, 14.8vh), 140px); grid-template-columns: minmax(0, 1fr); height: auto; min-height: 100dvh; overflow: visible; }
-  .t-side { position: fixed; inset: 50px 0 0 auto; width: min(340px, 100%); z-index: 90; transform: translateX(105%); transition: transform 0.3s var(--ease); background: var(--void); }
+  .table { --side: 0px; grid-template-columns: minmax(0, 1fr); }
+  .t-side { position: fixed; inset: var(--top-h) 0 0 auto; height: auto; width: min(340px, 100%); z-index: 90; transform: translateX(105%); transition: transform 0.3s var(--ease); background: var(--void); box-shadow: -20px 0 40px rgba(0, 0, 0, 0.6); }
   .table.side-open .t-side { transform: none; }
   .side-toggle { display: inline-block; }
-  .result-reopen { right: 18px; }
-  .t-room, .t-mark { display: none; }
+  .t-room { display: none; }
 }
+/* Tall, narrow screens (a tablet held upright): your hand gets its own row, so your cards can be larger. */
+@media (min-width: 761px) and (max-width: 1080px) and (orientation: portrait) {
+  .table { --cw-me: clamp(60px, min(10.5vh, (var(--main-w) - 300px) / 3.9), 128px); --cw-altar: clamp(54px, min(8.4vh, (var(--main-w) - 120px) / 8.5), 104px); }
+  .mine { flex-wrap: wrap; row-gap: 10px; }
+  .mine-zone.hand { flex-basis: 100%; margin-left: 0; padding-left: 0; border-left: 0; border-top: 1px solid var(--hair-soft); padding-top: 10px; }
+  .mine-zone.hand .zone-row { width: auto; }
+}
+/* Phones: opponents stack, everything wraps, cards sized from the width. */
 @media (max-width: 760px) {
-  .table { --cw-me: clamp(62px, 19vw, 104px); --cw-altar: clamp(54px, 16vw, 90px); --cw-opp: clamp(40px, 11vw, 62px); --cw-event: clamp(110px, 34vw, 170px); --cw-pile: 46px; --cw-evening: 56px; }
-  .t-top { flex-wrap: wrap; gap: 8px 12px; padding: 6px 10px; }
-  .track { order: 9; flex-basis: 100%; max-width: none; }
+  .table { --cw-me: clamp(58px, 19vw, 100px); --cw-altar: clamp(50px, 15vw, 86px); --cw-opp: clamp(40px, 11vw, 60px); --cw-event: clamp(104px, 32vw, 160px); --cw-pile: 44px; --cw-evening: clamp(46px, 13vw, 64px); }
+  .t-top { flex-wrap: wrap; gap: 6px 12px; padding: 6px 10px; }
+  .t-mark { display: none; }
+  .track { order: 9; flex-basis: 100%; max-width: none; padding: 0 8px; }
   .t-top .btn[href='/rules'] { display: none; }
+  .t-main { padding: 8px 10px 0; gap: 8px; }
   .opponents { flex-direction: column; gap: 8px; }
   .pp { max-width: none; }
-  .t-center { flex-wrap: wrap; }
+  .t-center { flex-wrap: wrap; gap: 12px; }
   .event-slot { display: flex; gap: 10px; width: 100%; align-items: center; }
   .event-slot .zone-label { display: none; }
-  .altar { width: 100%; min-width: 0; }
+  .event-text { margin: 0; }
+  .altar { width: 100%; min-width: 0; padding: 8px 10px 12px; }
+  .piles { width: 100%; justify-content: center; }
   .mine { flex-wrap: wrap; }
   .mine-me { width: 100%; flex-direction: row; align-items: center; flex-wrap: wrap; }
   .mine-glory b { font-size: 30px; }
@@ -255,18 +276,14 @@
   .mine-zone.hand { margin-left: 0; border-left: 0; padding-left: 0; }
   .mine-zone.hand .zone-row { width: auto; flex-wrap: wrap; gap: 8px !important; } .mine-zone.hand .zone-row .card + .card { margin-left: 0 !important; }
   .mine-zone.cel { border-right: 0; padding-right: 0; }
+  .mine-zone.cel .zone-label { display: none; }
   .action-btn { flex-basis: 100%; }
-  .evening { position: fixed; inset: 50px 0 auto 0; }
-  .evening-in { max-height: calc(100dvh - 50px - 200px); padding: 12px 14px; }
-  .evening-foot { margin: 12px -14px -12px; bottom: -12px; }
-  /* Keep the decision in reach on a phone: the prompt stays pinned to the bottom of the screen. */
-  .prompt { position: sticky; bottom: 0; z-index: 85; box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.7); background: rgba(13, 11, 8, 0.97); }
-  .prompt.yours { background: linear-gradient(180deg, rgba(60, 42, 14, 0.98), rgba(26, 20, 16, 0.99)); }
-  .prompt-opts { max-height: 34dvh; }
+  .prompt { margin: 0 -10px; padding: 9px 12px; }
   .prompt-confirm .muted { display: none; }
   .prompt-confirm .confirm { flex: 1; }
-  .mine-zone.cel .zone-label { display: none; }
-  .mine-zone.cel { padding-right: 0; }
   .zone-label { letter-spacing: 0.2em; }
   .opt-card { width: 76px; }
+  .evening { padding: 0 8px; }
+  .evening-in { padding: 12px 14px; }
+  .evening-foot { margin: 12px -14px -12px; bottom: -12px; }
 }

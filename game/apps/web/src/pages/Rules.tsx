@@ -60,6 +60,8 @@ export function Rules() {
   const { intro, sections } = useMemo(parse, []);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<Set<string>>(new Set());
+  // On phones the contents list folds away; it opens with a tap.
+  const [tocOpen, setTocOpen] = useState(false);
   const hits = useMemo(() => search(sections, q), [sections, q]);
   const show = (id: string) => {
     setOpen((o) => new Set(o).add(id));
@@ -101,11 +103,14 @@ export function Rules() {
   return (
     <Site>
       <div class="rules">
-        <nav class="rules-toc panel">
-          <div class="eyebrow">Contents</div>
+        <nav class={`rules-toc panel${tocOpen ? ' open' : ''}`}>
+          <button class="rules-toc-head" aria-expanded={tocOpen} onClick={() => setTocOpen(!tocOpen)}>
+            <span class="eyebrow">Contents</span>
+            <span class="rules-toc-current">{sections.find((x) => x.id === current)?.title}</span>
+          </button>
           <div class="rules-toc-list">
             {sections.map((s) => (
-              <a href={`#${s.id}`} class={!searching && current === s.id ? 'on' : ''} aria-current={!searching && current === s.id ? 'true' : undefined} onClick={(e) => { e.preventDefault(); history.replaceState(null, '', `#${s.id}`); show(s.id); }}>{s.title}</a>
+              <a href={`#${s.id}`} class={!searching && current === s.id ? 'on' : ''} aria-current={!searching && current === s.id ? 'true' : undefined} onClick={(e) => { e.preventDefault(); history.replaceState(null, '', `#${s.id}`); setTocOpen(false); show(s.id); }}>{s.title}</a>
             ))}
           </div>
         </nav>

@@ -32,7 +32,7 @@ export async function serveSite(req: Request, env: Env): Promise<Response> {
     'content-type': file.t,
     etag,
     // Vite's /assets files carry a content hash in their name and never change; the rest is revalidated.
-    'cache-control': path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : path.endsWith('.html') ? 'no-cache' : 'public, max-age=86400',
+    'cache-control': path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : path.endsWith('.html') ? 'no-cache' : 'public, max-age=3600',
     'x-content-type-options': 'nosniff',
   });
   if (req.headers.get('if-none-match') === etag) return new Response(null, { status: 304, headers });
