@@ -51,10 +51,10 @@ export function Replay(p: { id: string }) {
             <div class={`replay-player panel${x.winShare > 0 ? ' won' : ''}`} style={{ '--seat': seatColor(x.seat) } as any}>
               <div class="replay-name"><span class="pp-dot" />{x.name}{x.isBot && <span class="pp-badge">bot</span>}{x.winShare > 0 && <span class="pp-first">winner</span>}<b class="num">{x.glory}</b></div>
               <div class="replay-cards">
-                <Card id={x.celestial} w={74} compact />
-                {replay.same && pl?.choir.map((c) => <Card id={c.id} w={74} compact spent={c.used} tag={c.facedown ? 'Facedown' : undefined} />)}
+                <Card id={x.celestial} w="var(--rw)" compact />
+                {replay.same && pl?.choir.map((c) => <Card id={c.id} w="var(--rw)" compact spent={c.used} tag={c.facedown ? 'Facedown' : undefined} />)}
               </div>
-              {replay.same && pl && pl.hand.length > 0 && <div class="replay-hand"><span class="eyebrow">Hand</span>{pl.hand.map((id) => <Card id={id} w={46} compact />)}</div>}
+              {replay.same && pl && pl.hand.length > 0 && <div class="replay-hand"><span class="eyebrow">Hand</span>{pl.hand.map((id) => <Card id={id} w="calc(var(--rw) * 0.66)" compact />)}</div>}
               {timeouts[x.seat] > 0 && <p class="muted small">The turn timer made {timeouts[x.seat]} choice{timeouts[x.seat] === 1 ? '' : 's'} for this seat.</p>}
             </div>
           );

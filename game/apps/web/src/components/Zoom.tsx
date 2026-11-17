@@ -16,9 +16,11 @@ export function Zoom() {
       if (!id) return null;
       const r = el.getBoundingClientRect();
       const event = kindOf(id) === 'event';
-      const w = Math.min(event ? 460 : 310, window.innerWidth - 24);
-      const h = event ? w * 0.714 : w * 1.4;
       const note = el.getAttribute('data-zoom-note') ?? undefined;
+      // As large as the window allows (up to a comfortable reading size), always fully on screen.
+      const room = window.innerHeight - 24 - (note ? 70 : 0);
+      const w = Math.max(160, Math.min(event ? 560 : 400, window.innerWidth - 24, room / (event ? 0.714 : 1.4)));
+      const h = event ? w * 0.714 : w * 1.4;
       const total = h + (note ? 70 : 0);
       // Beside the card if there is room, otherwise above or below it.
       let x = r.right + 14;

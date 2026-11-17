@@ -22,7 +22,7 @@ export function Center(p: { view: GameView }) {
         {view.event ? (
           <>
             <Card id={view.event} w="var(--cw-event)" compact flip={view.event} />
-            <p class="event-text">{textOf(view.event)}</p>
+            <p class="event-text" data-zoom={view.event} title={textOf(view.event)}>{textOf(view.event)}</p>
           </>
         ) : (
           <div class="slot event" style={{ '--w': 'var(--cw-event)' } as any} />

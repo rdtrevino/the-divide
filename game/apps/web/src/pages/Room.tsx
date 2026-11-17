@@ -108,7 +108,6 @@ function Lobby(p: { snap: RoomSnap; send: (m: ClientMsg) => void; onRename: (n: 
             ))}
           </div>
           {renaming && <div class="rename"><NameForm id="rename" action="Save name" initial={you.name} onDone={(n) => { setRenaming(false); p.onRename(n); }} /></div>}
-          {you.seat !== null && <PlayerCode name={you.name} />}
 
           {you.isHost ? (
             <div class="lobby-start">
@@ -122,6 +121,7 @@ function Lobby(p: { snap: RoomSnap; send: (m: ClientMsg) => void; onRename: (n: 
           ) : (
             <p class="muted lobby-wait">Waiting for {room.host !== null ? room.seats[room.host].name : 'the host'} to start the game.</p>
           )}
+          {you.seat !== null && <div class="lobby-code"><PlayerCode name={you.name} /></div>}
         </div>
 
         <div class="lobby-side">

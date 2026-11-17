@@ -7,7 +7,7 @@ drawn joined to the letter after it, so "The" always looks joined. This script t
 in the font changes, so other joined forms (the "oo" in "Rulebook") stay as they are.
 
 Run from apps/web:  python3 scripts/plain-h.py
-It reads the original files in scripts/fonts-original/ and writes public/fonts/cinzel-decorative-*.woff2.
+It reads the original files in scripts/fonts-original/ and writes src/fonts/cinzel-decorative-*.woff2.
 Requires fontTools and brotli (pip install fonttools brotli).
 """
 from pathlib import Path
@@ -19,7 +19,7 @@ from fontTools.varLib import instancer
 
 HERE = Path(__file__).resolve().parent
 ORIGINALS = HERE / "fonts-original"
-OUT = HERE.parent / "public" / "fonts"
+OUT = HERE.parent / "src" / "fonts"
 
 for weight in (400, 700, 900):
     deco = TTFont(ORIGINALS / f"cinzel-decorative-{weight}.woff2")
