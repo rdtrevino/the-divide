@@ -120,21 +120,20 @@ export async function saveGame(db: D1Database, f: FinishedGame): Promise<boolean
 
 type Row = Record<string, any>;
 
-export interface StatsFilters { version: string | null; players: number | null; seats: 'all' | 'human' | 'bot' }
+/** The stats only ever cover the current card version: results from earlier rules are not shown. */
+export interface StatsFilters { players: number | null; seats: 'all' | 'human' | 'bot' }
 
 export function parseFilters(q: URLSearchParams): StatsFilters {
   const players = Number(q.get('players'));
   const seats = q.get('seats');
   return {
-    version: q.get('version') || null,
     players: players === 3 || players === 4 ? players : null,
     seats: seats === 'human' || seats === 'bot' ? seats : 'all',
   };
 }
 
 export async function readStats(db: D1Database, f: StatsFilters): Promise<StatsResponse> {
-  const versions = (await db.prepare('SELECT card_version AS version, COUNT(*) AS games, MAX(ended_at) AS lastPlayed FROM games WHERE ended_at IS NOT NULL GROUP BY card_version ORDER BY MAX(ended_at) DESC').all<Row>()).results as { version: string; games: number; lastPlayed: string }[];
-  const version = f.version ?? versions[0]?.version ?? CARD_VERSION;
+  const version = CARD_VERSION;
   // ?1 card version, ?2 player count or null, ?3 seat filter.
   const G = `g.ended_at IS NOT NULL AND g.card_version = ?1 AND (?2 IS NULL OR g.player_count = ?2) AND ?3 IS NOT NULL`;
   const S = `(?3 = 'all' OR gp.is_bot = (?3 = 'bot'))`;
@@ -198,7 +197,6 @@ export async function readStats(db: D1Database, f: StatsFilters): Promise<StatsR
   const s1 = rows(1)[0] ?? {};
   return {
     filters: { version, players: f.players, seats: f.seats },
-    versions,
     summary: {
       games: Number(s0.games ?? 0), seats: Number(s1.seats ?? 0), humanSeats: Number(s1.humanSeats ?? 0), avgDays: num(s0.avgDays),
       avgWinningGlory: num(s1.avgWinningGlory), avgGlory: num(s1.avgGlory), sharedWins: Number(s1.sharedWins ?? 0), baselineGloryPerDay: num(rows(2)[0]?.v),

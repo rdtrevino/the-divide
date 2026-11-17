@@ -32,7 +32,7 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 - **Modes:** the Base game (Host cards only) and the Advanced game (adds Celestials and Events) at 3 or 4 players; Hidden Roles at 5 or 6.
 - **Setup:** a hand of 3 and a Choir of 2 random face-up cards, with room for 4.
 - **The Day:** Morning (Event in Advanced, predictions, First Fruits: everyone reveals one card), Noon (one turn each: Offer for 1 Glory, Gather, or Exalt for 1 Glory), Evening (reveal, Tide, Reaping).
-- **Scoring:** Choirs leaning with the Tide share it: alone 3; two, 2 and 1; three or more, nothing. Leaning against it costs 1. The game ends after the first Reaping where anyone has 15 Glory; the most Glory wins.
+- **Scoring:** Choirs leaning with the Tide share it: alone 3; two, 2 and 1; three or more, nothing. Leaning against it costs 1. The game ends after the first Reaping where anyone has 10 Glory; the most Glory wins.
 
 ## Online game
 

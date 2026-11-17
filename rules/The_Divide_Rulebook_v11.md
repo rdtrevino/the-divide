@@ -18,7 +18,7 @@ Before the first dawn, the unfinished world rests on the Divide, the narrow span
 * **Your Choir is your team.** Your Choir is a row of up to four face-up cards. The way it leans, Light or Dark, is the side you are on, and everyone can see it.
 * **The Tide pays the few, not the many.** A Choir that leans with the Tide alone gains 3 Glory. Two Choirs share it, 2 and 1. If three or more lean with it, none of them gains. A Choir that leans against the Tide loses 1. So you need allies to win the Tide, and you need them to be few.
 * **Build now or sway the Altar.** Each turn you either put a card on the Altar for Glory now, or build your Choir into a machine that pays more as the game goes on.
-* **First to 15 ends it.** The game ends after the first Reaping at which anyone has 15 Glory or more. The most Glory wins.
+* **First to 10 ends it.** The game ends after the first Reaping at which anyone has 10 Glory or more. The most Glory wins.
 
 ---
 
@@ -47,7 +47,7 @@ Before the first dawn, the unfinished world rests on the Divide, the narrow span
 | **The Altar** | A shared pool of cards in the center. First Fruits sit face up; every Offer goes on facedown, so no one is sure what the Altar holds until the Evening reveals it. Each Evening its totals set the Tide. It is emptied every Evening, and any card on it, hidden or not, can be taken by another player before the Day ends. |
 | **Your Choir** | Your row of up to 4 face-up cards; you start with 2. Its lean is your side, its cards give you abilities, and each Evening it is scored against the Tide. |
 | **Your hand** | Your hidden Host cards, normally 3, refilled each Evening. Your First Fruits come from it each Morning, and your facedown Offers keep its secrets a little longer. |
-| **Glory** | Both score and currency. You earn it from Offers, the Reaping and your Choir's abilities, and you spend it to Exalt. Glory comes from and returns to a shared supply called the **Pot**, and never drops below 0. |
+| **Glory** | Both score and currency. You earn it from Offers, the Reaping and your Choir's abilities, and you spend it to Exalt. Glory comes from and returns to a shared supply called the **Pot**, and never drops below 0. Glory and cards pass between players only when a card says so. |
 
 ### **Reading a Host Card**
 
@@ -70,7 +70,7 @@ The Host deck is the game's one deck of playable cards. Every Host card shows:
 
 ## **A Day at a Glance**
 
-The game is played in rounds called **Days**. Every Day has three phases: **Morning** prepares the Altar, at **Noon** each player takes a turn, and in the **Evening** the Altar is revealed and every Choir is scored. Days continue until someone reaches 15 Glory.
+The game is played in rounds called **Days**. Every Day has three phases: **Morning** prepares the Altar, at **Noon** each player takes a turn, and in the **Evening** the Altar is revealed and every Choir is scored. Days continue until someone reaches 10 Glory.
 
 | Phase | Step | What happens |
 | ----- | ----- | ----- |
@@ -152,18 +152,9 @@ Then a new Day begins.
 
 ## **Ending the Game**
 
-**The race to 15.** At the end of every Reaping, check Glory. If any player has **15 or more**, the game ends. There is no Day limit, and every player always takes the same number of turns.
+**The race to 10.** At the end of every Reaping, check Glory. If any player has **10 or more**, the game ends. There is no Day limit, and every player always takes the same number of turns.
 
 **The most Glory wins.** Players who tie share the win.
-
----
-
-## **Table Talk**
-
-Open negotiation is allowed at all times, and the game expects you to use it.
-
-* **Promises are not binding.** You may promise anything: future plays, safe passage, a card held back, a switch of sides. Betrayal is a legal, legitimate strategy. Trust accordingly.
-* **Deals are words only.** Glory and cards change hands only when a card says so.
 
 ---
 
@@ -432,7 +423,7 @@ A Fallen player might spend a Day Offering Light because their Choir leans Light
 
 **Darkness.** One of the two opposed Offering types, paired against Light. Dark Offerings push the Tide toward the Dark, and Dark Host cards give your Choir a Dark Alignment.
 
-**Day.** A full round of play, in three phases: Morning, Noon, and Evening. The Open Game continues until a player has 15 Glory or more after a Reaping; Hidden Roles lasts 6 Days.
+**Day.** A full round of play, in three phases: Morning, Noon, and Evening. The Open Game continues until a player has 10 Glory or more after a Reaping; Hidden Roles lasts 6 Days.
 
 **Predictions.** The second step of Morning, when abilities marked *In the Morning* (such as Prophecy, the Whisper, and Casting Lots) are used, before First Fruits.
 

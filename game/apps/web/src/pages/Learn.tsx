@@ -191,6 +191,63 @@ function Actions() {
   );
 }
 
+type TimingKey = 'morning' | 'turn' | 'reaping' | 'always';
+
+const TIMINGS: Record<TimingKey, { title: string; when: string; cards: string[]; how: string; tip: string }> = {
+  morning: {
+    title: 'In the Morning', when: 'Before First Fruits',
+    cards: ['host-prophecy'],
+    how: 'Works at the start of each Day, before anyone has shown a card. Prophecy calls the Tide: right, gain 1; wrong, lose 1.',
+    tip: 'A bet you make before you know anything. Watch the other Choirs before you call it.',
+  },
+  turn: {
+    title: 'On your turn', when: 'After your action',
+    cards: ['host-wisdom', 'host-watchers'],
+    how: 'After your action, use each “On your turn” card in your Choir once. They never use up your action.',
+    tip: 'Each one is a free extra move every Day, so they are worth more the earlier you have them.',
+  },
+  reaping: {
+    title: 'At the Reaping', when: 'When the Tide is scored',
+    cards: ['host-twilight', 'host-uriel'],
+    how: 'Works in the Evening, after the Tide is set. Some pay Glory on a condition; others change how your Choir is scored.',
+    tip: 'These pay every Evening, on top of the Tide. A few of them can carry you to 10.',
+  },
+  always: {
+    title: 'Always on', when: 'No label, or “When…”',
+    cards: ['host-cherubim', 'host-snare'],
+    how: 'A card with no label works all the time. One that starts with “When…” works whenever that happens, even on someone else’s turn.',
+    tip: 'Nothing to remember to use. Some protect you, some quietly pay you.',
+  },
+};
+
+/** The four timing labels, each with real cards. */
+function Timings() {
+  const [t, setT] = useState<TimingKey>('turn');
+  const info = TIMINGS[t];
+  return (
+    <div class="learn-try">
+      <div class="eyebrow">Every ability starts with when it works. Tap one.</div>
+      <div class="learn-actions four" role="tablist" aria-label="When abilities work">
+        {(Object.keys(TIMINGS) as TimingKey[]).map((k) => (
+          <button role="tab" aria-selected={t === k} class={`learn-act${t === k ? ' on' : ''}`} onClick={() => setT(k)}>
+            <b>{TIMINGS[k].title}</b>
+            <span class="la-sum">{TIMINGS[k].when}</span>
+          </button>
+        ))}
+      </div>
+      <div class="learn-action learn-timing" role="tabpanel" key={t}>
+        <div class="learn-cards">{info.cards.map((id) => <Card id={id} w={124} />)}</div>
+        <div>
+          <p>{info.how}</p>
+          {info.cards.map((id) => <p class="learn-quote"><b>{HOST[id]?.name}</b> {HOST[id]?.text}</p>)}
+          <p class="muted">{info.tip}</p>
+        </div>
+      </div>
+      <p class="learn-small">◆ <b>Once per game</b> cards, like Free Will and Mercy, are turned sideways when used. Save them for the Day they decide.</p>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- the steps
 
 interface Step { title: string; body: ComponentChildren; side?: ComponentChildren }
@@ -213,19 +270,19 @@ const STEPS: Step[] = [
     ),
   },
   {
-    title: 'The goal: 15 Glory',
+    title: 'The goal: 10 Glory',
     body: (
       <>
         <p><b>Glory</b> is your score. You gain it from cards you Offer, from the Tide each Evening, and from your Choir's abilities.</p>
-        <p>The first Evening anyone finishes with <b>15 or more Glory</b>, the game ends and <b>the most Glory wins</b>.</p>
+        <p>The first Evening anyone finishes with <b>10 or more Glory</b>, the game ends and <b>the most Glory wins</b>.</p>
       </>
     ),
     side: (
       <div class="learn-track">
-        {[['Ada', 15, 'var(--seat-0)'], ['Ben', 12, 'var(--seat-1)'], ['Cy', 8, 'var(--seat-2)']].map(([n, g, c]) => (
-          <div class="lt-row"><span>{n}</span><div class="lt-bar"><i style={{ width: `${(Number(g) / 17) * 100}%`, background: c as string }} /><em style={{ left: `${(15 / 17) * 100}%` }} /></div><b class="num">{g}</b></div>
+        {[['Ada', 10, 'var(--seat-0)'], ['Ben', 8, 'var(--seat-1)'], ['Cy', 5, 'var(--seat-2)']].map(([n, g, c]) => (
+          <div class="lt-row"><span>{n}</span><div class="lt-bar"><i style={{ width: `${(Number(g) / 12) * 100}%`, background: c as string }} /><em style={{ left: `${(10 / 12) * 100}%` }} /></div><b class="num">{g}</b></div>
         ))}
-        <p class="muted small">Ada reached 15, so the game is over. Ada wins.</p>
+        <p class="muted small">Ada reached 10, so the game is over. Ada wins.</p>
       </div>
     ),
   },
@@ -251,7 +308,7 @@ const STEPS: Step[] = [
       <>
         <p>Every card has a value at the bottom: <span class="tag light">Light +1</span> <span class="tag dark">Dark +1</span>, sometimes +2, or <span class="tag neutral">Neutral</span>.</p>
         <p>On the <b>Altar</b>, a card's value pushes the Tide its way. In your <b>Choir</b>, it pulls your lean its way. Neutral cards push and pull nothing, but they still have abilities.</p>
-        <p class="muted">Hover over any card (or press and hold on a phone) to read it full size.</p>
+        <p class="muted">At the table, hover over any card (or press and hold on a phone) to read it full size.</p>
       </>
     ),
     side: (
@@ -337,17 +394,32 @@ const STEPS: Step[] = [
     side: <ReapingCalc />,
   },
   {
+    title: 'Building your Choir',
+    body: (
+      <>
+        <p>Your Choir is your side, and it is also your engine. Its cards' abilities are yours to use.</p>
+        <ul class="learn-list">
+          <li><b>Grow it</b> with a Gather (free) or an Exalt (1 Glory). It holds 4 cards; when it is full, a new card replaces one of yours, which is discarded.</li>
+          <li><b>Every card does two jobs.</b> Its value moves your lean; its ability earns you Glory or gets in someone's way.</li>
+          <li><b>Neutral cards</b> add an ability without moving your lean, so you can build without changing sides.</li>
+        </ul>
+        <p class="muted">An Offer pays 1 Glory once. A good Choir card pays every Day, so build early.</p>
+      </>
+    ),
+    side: <Timings />,
+  },
+  {
     title: 'How it ends',
     body: (
       <>
-        <p>After any Reaping where someone has <b>15 or more</b>, the game ends. <b>Most Glory wins</b>; a tie is shared.</p>
+        <p>After any Reaping where someone has <b>10 or more</b>, the game ends. <b>Most Glory wins</b>; a tie is shared.</p>
       </>
     ),
     side: (
       <Callout>
         <div class="eyebrow">Example</div>
-        <p>After the Reaping, Ada has 15 Glory, Ben 16 and Cy 11.</p>
-        <p>Ada reached 15, so the game ends, but <b>Ben has the most. Ben wins.</b></p>
+        <p>After the Reaping, Ada has 10 Glory, Ben 11 and Cy 7.</p>
+        <p>Ada reached 10, so the game ends, but <b>Ben has the most. Ben wins.</b></p>
       </Callout>
     ),
   },
@@ -415,7 +487,7 @@ export function Learn() {
   const s = STEPS[i];
   return (
     <Site wide>
-      <div class="learn">
+      <div class="learn" data-no-zoom>
         <div class="learn-progress" role="tablist" aria-label="Steps">
           {STEPS.map((st, k) => <button class={`lp-dot${k === i ? ' on' : k < i ? ' done' : ''}`} title={st.title} aria-label={`Step ${k + 1}: ${st.title}`} aria-selected={k === i} onClick={() => go(k)} />)}
         </div>

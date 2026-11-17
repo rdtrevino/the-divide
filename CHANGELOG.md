@@ -1,5 +1,15 @@
 # Changelog
 
+## Race to 10, a Learn step on building your Choir, current-rules stats (November 17, 2026)
+
+Robert's decisions. Still card data V41 and rulebook v11 (no card text changes; no V41 games had been recorded yet).
+
+- **Race to 10.** The game ends after the first Reaping where anyone has 10 Glory (was 15): with everything V41 added, the game should be harder. All-bot games now run a median of 6 Days at 3 players and 7 at 4 (90th percentile 9 and 10), down from 10 and 12. Rulebook, Learn page, engine and bots updated.
+- **Rulebook:** the Table Talk section is removed. Its one rule, that Glory and cards pass between players only when a card says so, is now in the Glory entry of "The Places on the Table".
+- **Learn page:** no hover magnification on this page (its cards are already large; everywhere else keeps it). New step, **Building your Choir**: growing it with Gather and Exalt, what a card's value and ability each do, Neutral cards, and the four timing labels with real cards for each. 13 steps.
+- **Stats page:** shows only the current card version; the "earlier rules" choice is gone (old games stay in the database). The bot column is now measured on V41 at 10 Glory (10,000 games, half Base and half Advanced); it showed V38 numbers before. `cd game/tools/sim && npx tsx baseline.ts 10000` regenerates it.
+- **Bots:** the fourth computer player is now called **Delilah** (was Tirzah).
+
 ## V41 cards and Rulebook v11: coalition scoring, a growing Choir, Base and Advanced (November 17, 2026)
 
 Robert's decisions of November 17. The Host card rework is next.

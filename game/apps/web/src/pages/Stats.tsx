@@ -14,7 +14,6 @@ const botCards = bots.cards as Record<string, number>;
 const botCelestials = bots.celestials as Record<string, number>;
 
 const ratioOf = (r: Ratio | null | undefined) => (r && r.expected > 0 ? r.wins / r.expected : null);
-const shortDate = (s: string) => new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 const fmt = (n: number | null | undefined, d = 2) => (n === null || n === undefined || Number.isNaN(n) ? '–' : n.toFixed(d));
 
 /** A win ratio on a 0 to 2 scale: the shaded band is the 0.75 to 1.25 target, the dot is real games, the tick is the bots. */
@@ -43,7 +42,6 @@ type SortKey = 'name' | 'ratio' | 'bot' | 'n' | 'days' | 'perDay' | 'fruits' | '
 interface Row extends CardStats { name: string; ratio: number | null; n: number; bot: number | undefined; kept: number | null; perDayDiff: number | null }
 
 export function Stats() {
-  const [version, setVersion] = useState('');
   const [players, setPlayers] = useState('');
   const [seats, setSeats] = useState<'all' | 'human' | 'bot'>('all');
   const [data, setData] = useState<StatsResponse | null>(null);
@@ -53,7 +51,6 @@ export function Stats() {
   useEffect(() => {
     let live = true;
     const q = new URLSearchParams();
-    if (version) q.set('version', version);
     if (players) q.set('players', players);
     q.set('seats', seats);
     fetch(`/api/stats?${q}`)
@@ -61,7 +58,7 @@ export function Stats() {
       .then((d) => { if (live) { setData(d as StatsResponse); setError(''); } })
       .catch((e) => { if (live) setError(e.message); });
     return () => { live = false; };
-  }, [version, players, seats]);
+  }, [players, seats]);
 
   const rows = useMemo<Row[]>(() => {
     if (!data) return [];
@@ -95,17 +92,10 @@ export function Stats() {
     <Site wide>
       <div class="page-head">
         <div>
-          <div class="eyebrow">From every game played on this site</div>
+          <div class="eyebrow">From every game played on this site under the current rules{data ? ` (${data.filters.version})` : ''}</div>
           <h1>Stats</h1>
         </div>
         <div class="filters">
-          {(data?.versions.length ?? 0) > 1 && (
-            <label>Rules
-              <select class="field" value={data?.filters.version ?? version} onChange={(e) => setVersion((e.target as HTMLSelectElement).value)}>
-                {data!.versions.map((v, i) => <option value={v.version}>{i === 0 ? 'Current rules' : `Earlier rules, until ${shortDate(v.lastPlayed)}`} ({v.games} game{v.games === 1 ? '' : 's'})</option>)}
-              </select>
-            </label>
-          )}
           <label>Players
             <select class="field" value={players} onChange={(e) => setPlayers((e.target as HTMLSelectElement).value)}>
               <option value="">3 and 4</option><option value="3">3 players</option><option value="4">4 players</option>

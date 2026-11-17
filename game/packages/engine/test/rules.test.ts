@@ -602,17 +602,17 @@ describe('V35: First Fruits and facedown Offers', () => {
   });
 });
 
-describe('the race to 15', () => {
-  it('ends after the Reaping of the first Day on which someone has 15 Glory', () => {
+describe('the race to 10', () => {
+  it('ends after the Reaping of the first Day on which someone has 10 Glory', () => {
     for (let seed = 1; seed <= 40; seed++) {
       const g = new Game({ seed, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
       while (g.pending.length) for (const d of g.pending) g.answer(d.seat, d.id, botAnswer(g.state, d));
       const s = g.state;
       expect(s.tides).toHaveLength(s.day);
-      // Someone reached 15 at the last Reaping, and nobody had before it.
+      // Someone reached 10 at the last Reaping, and nobody had before it.
       const byDay = (day: number) => s.players.map((p) => s.stats.filter((e) => e.type === 'glory' && e.seat === p.seat && e.day <= day).reduce((a, e) => a + (e.amount ?? 0), 0));
-      expect(Math.max(...s.players.map((p) => p.glory))).toBeGreaterThanOrEqual(15);
-      if (s.day > 1) expect(Math.max(...byDay(s.day - 1))).toBeLessThan(15);
+      expect(Math.max(...s.players.map((p) => p.glory))).toBeGreaterThanOrEqual(10);
+      if (s.day > 1) expect(Math.max(...byDay(s.day - 1))).toBeLessThan(10);
     }
   });
   it('the Arbiter gives to the other player with the least Glory; ties are the holder\'s choice', () => {

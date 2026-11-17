@@ -1,7 +1,7 @@
 // Computer players. Heuristic, not perfect: they read their Choir's lean and the Altar,
 // play toward a Tide that pays them, and answer every kind of decision sensibly.
 import { alignment, baseValue, choirLimit, dirOf } from './core';
-import { exaltCost as exaltCostFor } from './engine';
+import { exaltCost as exaltCostFor, gloryTarget } from './engine';
 import { H, cardName as cardNameOf } from './data';
 import type { Answer, Decision, Dir, GameState, Option, Seat } from './types';
 
@@ -123,7 +123,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const p = s.players[seat];
       const scores: Record<string, number> = {};
       // A Choir card keeps paying at later Reapings, so building is worth more early in the game.
-      const target = Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? 15);
+      const target = gloryTarget(s);
       const rem = Math.max(1, Math.min(4, (target - Math.max(...s.players.map((x) => x.glory))) / 4));
       const fut = (n1: number) => rem * 0.3 * (Math.min(3, Math.abs(n1)) - Math.min(3, Math.abs(net)));
       if (has('offer')) {
