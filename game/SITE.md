@@ -15,10 +15,11 @@ New players: **Learn to play** (https://thedivide.pages.dev/learn) walks through
 
 At the table:
 
-- The bar under the Altar shows the decision in front of you. Click an option there, or click the card itself on the table (the cards you can choose glow). Card choices ask you to confirm; double-click chooses at once.
+- The whole table fits on one screen (on a phone the page scrolls). The card sizes follow the window; `apps/web/src/lib/fit.ts` works them out.
+- The bar under your cards shows the decision in front of you; it never covers the table. Click a glowing card on the table, or its name in the bar, then confirm; double-click chooses at once. Between turns the bar shows the last two things that happened.
 - Hover over any card (or press and hold on a phone) to see it full size with its current text.
 - After each Evening a panel shows the revealed Altar, the Tide, and what everyone gained or lost.
-- **Give Glory** (under your Glory) makes a public gift to another player. Gifts cannot be taken back.
+- **Give** (beside your Glory) makes a public gift of Glory to another player. Gifts cannot be taken back.
 - The log on the right shows everything you are allowed to see, including your own private information (marked "only you"). Table talk is beside it.
 
 **Turn timer.** Each decision has a clock (90 seconds unless the host changes it). When it runs out, a bot makes that one choice. After two missed decisions in a row a bot covers the seat until the player presses **I'm back**. A player whose browser disconnects gets 25 seconds per decision. When nobody is connected the clock stops, so a table can be left and picked up later.
