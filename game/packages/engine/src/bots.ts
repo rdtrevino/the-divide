@@ -284,7 +284,15 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     }
     case 'bounty.player': {
       // A player leaning against the way the Altar is going is likely to lose. Decline (when allowed) if no one looks likely.
-      const likely = (x: Option) => x.seat !== undefined && alignment(s, x.seat) !== 0 && altar !== 0 && dirOf(alignment(s, x.seat)) !== dirOf(altar);
+      // With an empty Altar (the Morning), bet on a player in the smaller side: the bigger side usually wins the Tide.
+      const leans = s.players.map((p) => Math.sign(alignment(s, p.seat)));
+      const bigger = Math.sign(leans.reduce((t, x) => t + x, 0));
+      const likely = (x: Option) => {
+        if (x.seat === undefined) return false;
+        const l = Math.sign(alignment(s, x.seat));
+        if (l === 0) return false;
+        return altar !== 0 ? l !== Math.sign(altar) : bigger !== 0 && l !== bigger;
+      };
       const o = d.options.find(likely) ?? (d.options.some((x) => x.id === 'none') ? undefined : pickBest(d.options, () => r));
       return one(o ? o.id : 'none');
     }
