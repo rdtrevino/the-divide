@@ -21,7 +21,7 @@ describe('bot games run to completion', () => {
         const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
         if (s.carriedSeed) zones.push(s.carriedSeed);
         expect(new Set(zones).size).toBe(zones.length);
-        expect(zones.length).toBe(66);
+        expect(zones.length).toBe(69);
         // The game ends at the first Reaping where someone has 10, and the winner has the most Glory.
         const best = Math.max(...s.players.map((p) => p.glory));
         if (s.day < 60) expect(best).toBeGreaterThanOrEqual(10); // 60 Days is the engine's safety stop
@@ -54,7 +54,7 @@ describe('test switches run cleanly', () => {
         const s = g.state;
         const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
         expect(new Set(zones).size).toBe(zones.length);
-        expect(zones.length).toBe(66);
+        expect(zones.length).toBe(69);
         expect(s.result).not.toBeNull();
         const r = Game.replay(g.config, g.inputs);
         expect(r.state.result).toEqual(s.result);

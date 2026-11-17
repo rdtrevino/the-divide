@@ -224,7 +224,9 @@ export function botAnswer(s: GameState, d: Decision): Answer {
           return st >= 3 || Math.max(...s.players.map((x) => x.glory)) >= 7;
         }
         if (o.card === H.parasite) return want > 0;
-        if (o.card === H.defiance) return r < 0.3;
+        if (o.card === H.freeWill) return s.players[seat].glory >= 3 && s.players[seat].hand.length >= 2;
+        if (o.card === H.silence) return leaders.some((l) => l !== seat) && r < 0.5;
+        if (o.card === H.deliverance) return r < 0.25;
         if (o.card === H.deliverance) return r < 0.25;
         if (o.card === H.council) {
           const p = s.players[seat];
@@ -248,6 +250,20 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const t = s.tides[s.tides.length - 1];
       return one(t && t.dir !== dirOf(net) ? 'yes' : 'no');
     }
+    case 'mercy.other':
+      return one(d.options.find((o) => o.id !== 'none' && o.seat !== undefined && !leaderSeats(s, seat).includes(o.seat))?.id ?? 'none');
+    case 'silence.player':
+    case 'flamingSword.player': {
+      const o = byId((x) => x.seat !== undefined && leaderSeats(s, seat).includes(x.seat)) ?? d.options.find((x) => x.id !== 'none');
+      return one(o ? o.id : 'none');
+    }
+    case 'bounty.player': {
+      // A player leaning against the way the Altar is going is likely to lose.
+      const o = pickBest(d.options, (x) => (x.seat === undefined ? -9 : dirOf(alignment(s, x.seat)) !== dirOf(altar) && alignment(s, x.seat) !== 0 ? 1 + r : r));
+      return one(o.id);
+    }
+    case 'covenant.player':
+      return one(r < 0.5 ? d.options[Math.floor(r * 2 * (d.options.length - 1))].id : 'none');
     case 'mercy':
     case 'freeWill':
     case 'absolution':
@@ -255,7 +271,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       return one('yes');
     case 'oracle':
       return one(r < 0.3 ? 'bury' : 'play');
-    case 'ithuriel': {
+    case 'revelation': {
       // Reveal the hidden card most likely to work against us (an opponent's Offering).
       const o = pickBest(d.options, (o) => {
         const a = s.altar[Number(o.id)];
@@ -263,16 +279,16 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       });
       return one(o.id);
     }
-    case 'urim':
+    case 'knowledge':
       return d.options.slice(0, d.max).map((o) => o.id);
-    case 'asmadai': {
+    case 'belial': {
       const o = pickBest(d.options, (o) => {
         const a = s.altar[Number(o.id)];
         return a.offeredBy === seat ? -1 : a.offeredBy !== null && a.offeredBy >= 0 ? Math.abs(alignment(s, a.offeredBy)) + r * 0.1 : 0.2;
       });
       return one(o.id);
     }
-    case 'asmadai.swap': {
+    case 'belial.swap': {
       const seen = d.reveal?.[0];
       if (!seen) return one('none');
       const keep = reapValue(net, altar, w);

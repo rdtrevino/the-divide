@@ -2,9 +2,9 @@
 // "On your turn" Host abilities, once-per-game Host abilities, and Celestial turn powers.
 import { C, H, HOST, cardName } from './data';
 import {
-  activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
+  alignment, activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
   drawHost, drawTo, enterChoir, gain, handLimit, hasActive, log, lose, markToday, others, payTribute, peekHost,
-  pname, protectedFrom, immune, handProtected, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, choirLimit,
+  pname, protectedFrom, immune, glorySafe, handProtected, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, choirLimit,
   colorsOf, activation, altarShielded, altarPeekable, canSpend, pay, variant, makeRoom,
 } from './core';
 import { randInt } from './rng';
@@ -40,8 +40,9 @@ export function repeatable(id: string): boolean {
 
 export const TURN: Record<string, TurnAbility> = {
   [H.michael]: {
-    can: (s, seat) => flipTargets(s, seat).length > 0,
+    can: (s, seat) => (!variant(s, 'michael-cost') || canSpend(s, seat, 1)) && flipTargets(s, seat).length > 0,
     *run(s, seat) {
+      if (variant(s, 'michael-cost')) yield* pay(s, seat, 1, H.michael);
       const t = flipTargets(s, seat);
       const pick = yield* chooseOne(s, seat, 'michael.target', 'Michael: Flip a Host card in any Choir Facedown.', t.map((x) => ({ id: `${x.owner}:${x.id}`, label: `${cardName(x.id)} (${pname(s, x.owner)})`, card: x.id, seat: x.owner })));
       if (!pick) return;
@@ -77,6 +78,12 @@ export const TURN: Record<string, TurnAbility> = {
       const o = seatFromOpt(t);
       const theirs = [...s.players[o].hand];
       log(s, 'peek', `${pname(s, seat)} looked at ${pname(s, o)}'s hand (Gabriel).`);
+      // Test 'gabriel-traitor': 1 Glory if their hand holds no card of the color their Choir leans.
+      if (variant(s, 'gabriel-traitor')) {
+        const lean = alignment(s, o);
+        const k = lean > 0 ? 'light' : lean < 0 ? 'dark' : null;
+        if (k && !theirs.some((c) => colorsOf(s, null, c)[k])) yield* gain(s, seat, 1, H.gabriel);
+      }
       yield* ask(s, { seat, tag: 'gabriel.seen', prompt: `Gabriel: ${pname(s, o)} holds ${theirs.map(cardName).join(', ') || 'no cards'}.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: theirs, confirm: true } as any);
     },
   },
@@ -99,17 +106,6 @@ export const TURN: Record<string, TurnAbility> = {
       if (pick === null) return;
       s.altar[Number(pick)].sanctuary = seat;
       log(s, 'sanctuary', `${pname(s, seat)} protected ${altarLabel(s, s.altar[Number(pick)], -1)} on the Altar with Sanctuary.`);
-    },
-  },
-  [H.covenant]: {
-    // V42: name a player who has not acted; if neither of you Offers this Day, each gains 1 Glory.
-    can: (s, seat) => !s.day_.actionsTaken.some((x) => x.seat === seat && x.action === 'offer') && covenantTargets(s, seat).length > 0,
-    *run(s, seat) {
-      const t = yield* chooseOne(s, seat, 'covenant.player', 'Covenant: name a player who has not yet acted. If neither of you Offers this Day, each of you gains 1 Glory.', covenantTargets(s, seat).map((p) => seatOpt(s, p.seat)));
-      if (!t) return;
-      const b = seatFromOpt(t);
-      s.pacts.push({ a: seat, b, action: 'offer', broken: false, day: s.day });
-      log(s, 'covenant', `${pname(s, seat)} made a Covenant with ${pname(s, b)}: if neither Offers this Day, both gain 1 Glory.`);
     },
   },
   [H.heresy]: {
@@ -251,7 +247,7 @@ export const TURN: Record<string, TurnAbility> = {
       const t = yield* chooseOne(s, seat, 'anathema', 'Anathema: choose a player who cannot Offer until the start of your next turn.', others(s, seat).filter((p) => !immune(s, seat, p.seat)).map((p) => seatOpt(s, p.seat)));
       if (!t) return;
       const target = seatFromOpt(t);
-      s.anathema.push({ target, by: seat });
+      s.anathema.push({ target, by: seat, action: 'offer' });
       log(s, 'anathema', `${pname(s, target)} cannot Offer until ${pname(s, seat)}'s next turn (Anathema).`);
     },
   },
@@ -289,7 +285,7 @@ export const TURN: Record<string, TurnAbility> = {
     can: (s, seat) => Math.max(...s.players.map((p) => p.glory)) - s.players[seat].glory >= 3,
     *run(s, seat) {
       for (const p of leaders(s)) {
-        if (immune(s, seat, p.seat)) continue;
+        if (glorySafe(s, seat, p.seat)) continue;
         const n = yield* lose(s, p.seat, 1, H.envy);
         if (n) log(s, 'envy', `${p.name} lost 1 Glory to Envy.`);
       }
@@ -321,95 +317,135 @@ export const TURN: Record<string, TurnAbility> = {
 
   // ----- once per game
   [H.deliverance]: {
-    once: 'game',
-    can: (s, seat) => deliverancePairs(s, seat).length > 0,
+    // V42: pay 1 Glory to swap a card in your Choir with a card in another player's Choir.
+    can: (s, seat) => canSpend(s, seat, 1) && deliverancePairs(s, seat).length > 0,
     *run(s, seat) {
       const pairs = deliverancePairs(s, seat);
-      const pick = yield* chooseOne(s, seat, 'deliverance', 'Deliverance: choose two cards in two different Choirs to exchange.', pairs.map((x) => ({ id: `${x.a}:${x.ca}|${x.b}:${x.cb}`, label: `${cardName(x.ca)} (${pname(s, x.a)}) for ${cardName(x.cb)} (${pname(s, x.b)})` })));
+      const pick = yield* chooseOne(s, seat, 'deliverance', 'Deliverance: pay 1 Glory to swap a card in your Choir with a card in another Choir?', pairs.map((x) => ({ id: `${x.ca}|${x.b}:${x.cb}`, label: `Your ${cardName(x.ca)} for ${pname(s, x.b)}'s ${cardName(x.cb)}`, card: x.cb })), true);
       if (!pick) return;
-      const [[a, ca], [b, cb]] = pick.split('|').map((x) => x.split(':'));
-      const A = Number(a), B = Number(b);
-      if (!(yield* payTribute(s, seat, A))) return;
+      const [ca, rest] = pick.split('|');
+      const [b, cb] = rest.split(':');
+      const B = Number(b);
+      yield* pay(s, seat, 1, H.deliverance);
       if (!(yield* payTribute(s, seat, B))) return;
-      const cardA = removeFromChoir(s, A, ca);
+      const cardA = removeFromChoir(s, seat, ca);
       const cardB = removeFromChoir(s, B, cb);
       if (cardA) yield* enterChoir(s, B, ca);
-      if (cardB) yield* enterChoir(s, A, cb);
-      log(s, 'deliverance', `${pname(s, seat)} exchanged ${cardName(ca)} (${pname(s, A)}) with ${cardName(cb)} (${pname(s, B)}).`);
-    },
-  },
-  [H.defiance]: {
-    // V42: no other player's ability can affect you until your next turn (was: ignore the Day's Event).
-    once: 'game',
-    can: (s, seat) => !s.immune.includes(seat),
-    *run(s, seat) {
-      s.immune.push(seat);
-      log(s, 'defiance', `${pname(s, seat)} is Defiant: no other player's ability can affect them until their next turn.`);
+      if (cardB) yield* enterChoir(s, seat, cb);
+      log(s, 'deliverance', `${pname(s, seat)} swapped their ${cardName(ca)} for ${pname(s, B)}'s ${cardName(cb)} (Deliverance).`);
     },
   },
   [H.abaddon]: {
-    once: 'game',
-    can: (s, seat) => altarAvailable(s, seat).length > 0,
+    // V42: pay 2 Glory to replace every Altar card with the top card of the Host deck (was once per game).
+    can: (s, seat) => canSpend(s, seat, variant(s, 'abaddon-1') ? 1 : variant(s, 'abaddon-discard') ? 0 : 2) && altarAvailable(s, seat).length > 0,
     *run(s, seat) {
+      yield* pay(s, seat, variant(s, 'abaddon-1') ? 1 : variant(s, 'abaddon-discard') ? 0 : 2, H.abaddon);
+      if (variant(s, 'abaddon-discard')) yield* discardFromChoir(s, seat, H.abaddon, 'Abaddon');
       const keep = s.altar.filter((a) => (a.sanctuary !== undefined && a.sanctuary !== seat) || altarShielded(s, a, seat));
       const gone = s.altar.filter((a) => !keep.includes(a));
       s.discard.push(...gone.map((a) => a.id));
       const fresh = gone.map(() => drawHost(s)).filter((c): c is string => !!c).map((id) => ({ id, facedown: false, offeredBy: null, day: s.day, kind: 'other' as const }));
       s.altar = [...keep, ...fresh];
-      log(s, 'abaddon', `${pname(s, seat)} unleashed Abaddon: ${gone.length} Altar card(s) were replaced from the Host deck.`);
+      log(s, 'abaddon', `${pname(s, seat)} paid 2 Glory to unleash Abaddon: ${gone.length} Altar card(s) were replaced from the Host deck.`);
+    },
+  },
+  [H.freeWill]: {
+    // V42: pay 1 Glory to take a second action this turn (was once per game, two actions).
+    can: (s, seat) => canSpend(s, seat, 1) && s.day_.extraAction !== seat,
+    *run(s, seat) {
+      yield* pay(s, seat, 1, H.freeWill);
+      s.day_.extraAction = seat;
+      log(s, 'freeWill', `${pname(s, seat)} paid 1 Glory to take a second action (Free Will).`);
+    },
+  },
+  [H.silence]: {
+    // V42: choose a player; their Choir's abilities do not work until your next turn (was a once-per-game cancel).
+    can: (s, seat) => (variant(s, 'silence-free') || canSpend(s, seat, 1)) && others(s, seat).length > 0,
+    *run(s, seat) {
+      const t = yield* chooseOne(s, seat, 'silence.player', "Silence: pay 1 Glory. Choose a player whose Choir's abilities do not work until your next turn.", others(s, seat).map((p) => seatOpt(s, p.seat)), true);
+      if (!t) return;
+      if (!variant(s, 'silence-free')) yield* pay(s, seat, 1, H.silence);
+      s.silenced.push({ target: seatFromOpt(t), by: seat });
+      log(s, 'silence', `${pname(s, seat)} Silenced ${pname(s, seatFromOpt(t))}: their Choir's abilities do not work until ${pname(s, seat)}'s next turn.`);
+    },
+  },
+  [H.bounty]: {
+    // V42: name a player; if they lose Glory at the Reaping, gain 1.
+    can: (s, seat) => !variant(s, 'bounty-morning') && s.day_.bounty[seat] === undefined,
+    *run(s, seat) {
+      const t = yield* chooseOne(s, seat, 'bounty.player', 'Bounty: name a player. If they lose Glory at this Reaping, you gain 1.', others(s, seat).map((p) => seatOpt(s, p.seat)));
+      if (!t) return;
+      s.day_.bounty[seat] = seatFromOpt(t);
+      log(s, 'bounty', `${pname(s, seat)} put a Bounty on ${pname(s, seatFromOpt(t))}.`);
+    },
+  },
+  [H.flamingSword]: {
+    // V42: choose a player; they cannot Gather until your next turn (Anathema's counterpart for Gather).
+    can: (s, seat) => others(s, seat).length > 0,
+    *run(s, seat) {
+      const t = yield* chooseOne(s, seat, 'flamingSword.player', 'Flaming Sword: choose a player who cannot Gather until the start of your next turn.', others(s, seat).map((p) => seatOpt(s, p.seat)));
+      if (!t) return;
+      s.anathema.push({ target: seatFromOpt(t), by: seat, action: 'gather' });
+      log(s, 'flamingSword', `${pname(s, seatFromOpt(t))} cannot Gather until ${pname(s, seat)}'s next turn (Flaming Sword).`);
     },
   },
 
   // ----- Celestial turn powers (once per Day)
-  [H.ithuriel]: {
+  [H.revelation]: {
     can: (s, seat) => altarPeekable(s, seat).length > 0,
     *run(s, seat) {
       const t = altarPeekable(s, seat);
-      const pick = yield* chooseOne(s, seat, 'ithuriel', 'Ithuriel: flip a facedown card on the Altar face up.', t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })));
+      const pick = yield* chooseOne(s, seat, 'revelation', 'Revelation: flip a facedown card on the Altar face up.', t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })));
       if (pick === null) return;
       const a = s.altar[Number(pick)];
       a.facedown = false;
       a.seenBy = undefined;
-      log(s, 'ithuriel', `${pname(s, seat)} revealed ${cardName(a.id)} on the Altar (Ithuriel).`);
+      log(s, 'revelation', `${pname(s, seat)} revealed ${cardName(a.id)} on the Altar (Revelation).`);
+      // Test 'rev-punish': a revealed Offer that works against its owner's own lean costs them 1 Glory.
+      if (variant(s, 'rev-punish') && a.kind === 'offer' && a.offeredBy !== null && a.offeredBy !== seat && !glorySafe(s, seat, a.offeredBy)) {
+        const lean = alignment(s, a.offeredBy);
+        const col = colorsOf(s, null, a.id);
+        if ((lean > 0 && col.dark && !col.light) || (lean < 0 && col.light && !col.dark)) { yield* lose(s, a.offeredBy, 1, H.revelation); log(s, 'revelation', `${pname(s, a.offeredBy)} was caught working against their own side and loses 1 Glory.`); }
+      }
     },
   },
-  [H.urim]: {
+  [H.knowledge]: {
     // V38: up to 3 facedown cards (was 2).
     can: (s, seat) => altarPeekable(s, seat).some((a) => a.offeredBy !== seat),
     *run(s, seat) {
       const t = altarPeekable(s, seat).filter((a) => a.offeredBy !== seat);
       {
-        const picks = yield* ask(s, { seat, tag: 'urim', prompt: 'Urim: secretly look at up to 3 facedown cards on the Altar.', options: t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), min: 1, max: Math.min(3, t.length) });
+        const picks = yield* ask(s, { seat, tag: 'knowledge', prompt: 'Knowledge: secretly look at up to 3 facedown cards on the Altar.', options: t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), min: 1, max: Math.min(3, t.length) });
         const seen = picks.map((i) => s.altar[Number(i)]);
         // seenBy is kept for the computer players' memory; people see the cards once, here, and then must remember them.
         for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
-        log(s, 'urim', `${pname(s, seat)} looked at ${seen.length} facedown card${seen.length === 1 ? '' : 's'} on the Altar (Urim).`);
+        log(s, 'knowledge', `${pname(s, seat)} looked at ${seen.length} facedown card${seen.length === 1 ? '' : 's'} on the Altar (Knowledge).`);
         // Ruling confirmed November 16, 2026: shown once, then hidden again.
-        yield* ask(s, { seat, tag: 'urim.seen', prompt: `Urim: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}. Remember them: they go back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: seen.map((a) => a.id), confirm: true });
+        yield* ask(s, { seat, tag: 'knowledge.seen', prompt: `Knowledge: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}. Remember them: they go back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: seen.map((a) => a.id), confirm: true });
       }
     },
   },
-  [H.asmadai]: {
+  [H.belial]: {
     can: (s, seat) => altarPeekable(s, seat).length > 0,
     *run(s, seat) {
       const t = altarPeekable(s, seat);
-      const pick = yield* chooseOne(s, seat, 'asmadai', 'Asmadai: look at a facedown card on the Altar.', t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })));
+      const pick = yield* chooseOne(s, seat, 'belial', 'Belial: look at a facedown card on the Altar.', t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })));
       if (pick === null) return;
       const a = s.altar[Number(pick)];
       a.seenBy = [...(a.seenBy ?? []), seat];
-      log(s, 'asmadai', `${pname(s, seat)} looked at a facedown card on the Altar (Asmadai).`);
+      log(s, 'belial', `${pname(s, seat)} looked at a facedown card on the Altar (Belial).`);
       const hand = s.players[seat].hand;
       // Ruling confirmed November 16, 2026: shown once (here or in the exchange choice below), then hidden again.
       if (!hand.length) {
-        yield* ask(s, { seat, tag: 'asmadai.seen', prompt: `Asmadai: the card is ${cardName(a.id)}. You have no card to exchange it for. Remember it: it goes back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: [a.id], confirm: true });
+        yield* ask(s, { seat, tag: 'belial.seen', prompt: `Belial: the card is ${cardName(a.id)}. You have no card to exchange it for. Remember it: it goes back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: [a.id], confirm: true });
         return;
       }
-      const swap = yield* chooseOne(s, seat, 'asmadai.swap', `Asmadai: the card is ${cardName(a.id)}. Exchange it with a card from your hand? The new card stays facedown.`, hand.map((c) => cardOpt(c)), true, [a.id]);
+      const swap = yield* chooseOne(s, seat, 'belial.swap', `Belial: the card is ${cardName(a.id)}. Exchange it with a card from your hand? The new card stays facedown.`, hand.map((c) => cardOpt(c)), true, [a.id]);
       if (!swap) return;
       hand.splice(hand.indexOf(swap), 1, a.id);
       a.id = swap;
       a.seenBy = [seat];
-      log(s, 'asmadai', `${pname(s, seat)} exchanged a facedown card on the Altar with one from their hand (Asmadai).`);
+      log(s, 'belial', `${pname(s, seat)} exchanged a facedown card on the Altar with one from their hand (Belial).`);
     },
   },
   [C.tempest]: {
@@ -507,13 +543,11 @@ function echoTargets(s: GameState, seat: Seat) {
 }
 
 function deliverancePairs(s: GameState, seat: Seat) {
-  const pool: { owner: Seat; id: string }[] = [];
-  for (const p of s.players) {
-    const cards = p.seat === seat ? hostCardsOf(s, seat) : targetableChoir(s, seat, p.seat, 'replace');
-    for (const c of cards) pool.push({ owner: p.seat, id: c.id });
+  const out: { ca: string; b: Seat; cb: string }[] = [];
+  for (const mine of hostCardsOf(s, seat)) for (const p of others(s, seat)) {
+    if (!canAffordTribute(s, seat, p.seat)) continue;
+    for (const c of targetableChoir(s, seat, p.seat, 'replace')) out.push({ ca: mine.id, b: p.seat, cb: c.id });
   }
-  const out: { a: Seat; ca: string; b: Seat; cb: string }[] = [];
-  for (const x of pool) for (const y of pool) if (x.owner < y.owner) out.push({ a: x.owner, ca: x.id, b: y.owner, cb: y.id });
   return out;
 }
 

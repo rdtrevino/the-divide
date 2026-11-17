@@ -89,7 +89,7 @@
       "plate": "art/plates/host/07-free-will.jpg",
       "number": 7,
       "alignment": "light",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -206,7 +206,7 @@
       "plate": "art/plates/host/16-mercy.jpg",
       "number": 16,
       "alignment": "light",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -219,7 +219,7 @@
       "plate": "art/plates/host/17-revelation.jpg",
       "number": 17,
       "alignment": "light",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -271,7 +271,7 @@
       "plate": "art/plates/host/21-knowledge.jpg",
       "number": 21,
       "alignment": "light",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -284,7 +284,7 @@
       "plate": "art/plates/host/22-deliverance.jpg",
       "number": 22,
       "alignment": "light",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -388,7 +388,7 @@
       "plate": "art/plates/host/30-shroud.jpg",
       "number": 30,
       "alignment": "variable",
-      "value": 2,
+      "value": 1,
       "cadence": "Passive",
       "oncePerGame": false
     },
@@ -804,7 +804,7 @@
       "plate": "art/plates/host/62-silence.jpg",
       "number": 62,
       "alignment": "dark",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -817,7 +817,7 @@
       "plate": "art/plates/host/63-scapegoat.jpg",
       "number": 63,
       "alignment": "dark",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -830,7 +830,7 @@
       "plate": "art/plates/host/64-defiance.jpg",
       "number": 64,
       "alignment": "dark",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -843,7 +843,7 @@
       "plate": "art/plates/host/65-bounty.jpg",
       "number": 65,
       "alignment": "dark",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },
@@ -856,7 +856,7 @@
       "plate": "art/plates/host/66-abaddon.jpg",
       "number": 66,
       "alignment": "dark",
-      "value": 2,
+      "value": 1,
       "cadence": "Once per game",
       "oncePerGame": true
     },

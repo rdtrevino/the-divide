@@ -127,8 +127,8 @@ export function baseValue(s: GameState, id: string): Value {
   if (!h) return { light: 0, dark: 0 };
   if (id === H.shroud) {
     const prev = previousTide(s);
-    if (prev === 'light') return { light: 0, dark: 2 };
-    if (prev === 'dark') return { light: 2, dark: 0 };
+    if (prev === 'light') return { light: 0, dark: 1 };
+    if (prev === 'dark') return { light: 1, dark: 0 };
     return { light: 0, dark: 0 };
   }
   if (id === H.nephilim) return { light: 1, dark: 1 };
@@ -231,6 +231,7 @@ export function* discardFromChoir(s: GameState, seat: Seat, id: string, why: str
 /** Host cards of a blocked color cannot activate on The Flood / Let There Be Light. */
 export function blockedByEvent(s: GameState, seat: Seat, id: string): boolean {
   if (!id.startsWith('host-')) return false;
+  if (s.silenced?.some((x) => x.target === seat)) return true; // Silence (V42)
   const col = colorsOf(s, seat, id);
   if (col.light && eventOn(s, E.flood, seat)) return true;
   if (col.dark && eventOn(s, E.letThereBeLight, seat)) return true;
@@ -256,20 +257,6 @@ export function* activation(s: GameState, seat: Seat, source: string, run: () =>
   }
   stat(s, { type: 'activate', seat, card: source });
   log(s, 'activate', `${pname(s, seat)} activated ${cardName(source)}.`);
-  // Silence: another player may negate this as it is activated.
-  const sil = s.players.find((p) => p.seat !== seat && p.choir.some((c) => c.id === H.silence && !c.facedown && !c.used));
-  if (sil && canActivate(s, sil.seat, H.silence)) {
-    const use = yield* yesNo(s, sil.seat, 'silence', `${pname(s, seat)} is activating ${cardName(source)}. Use Silence to negate it (once per game)?`);
-    if (use) {
-      const card = sil.choir.find((c) => c.id === H.silence)!;
-      card.used = true;
-      if (eventOn(s, E.tithe, sil.seat)) yield* pay(s, sil.seat, 1, E.tithe);
-      stat(s, { type: 'activate', seat: sil.seat, card: H.silence });
-      stat(s, { type: 'negated', seat, card: source, data: { by: sil.seat } });
-      log(s, 'silence', `${pname(s, sil.seat)} used Silence. ${cardName(source)} has no effect.`);
-      return false;
-    }
-  }
   yield* run();
   return true;
 }
@@ -407,8 +394,10 @@ export function protectedFrom(s: GameState, actor: Seat, owner: Seat, kind: Targ
   return false;
 }
 
-/** Defiance (V42): no other player's ability can affect this player until their next turn. */
-export const immune = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && s.immune.includes(owner);
+/** Kept for older call sites: no card grants blanket immunity any more. */
+export const immune = (_s: GameState, _actor: Seat, _owner: Seat) => false;
+/** Defiance (V42): other players' abilities cannot make you lose or give up Glory. */
+export const glorySafe = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && hasActive(s, owner, H.defiance);
 /** Lilith (V42): other players' abilities cannot look at, take, or discard cards in your hand. */
 export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && (immune(s, actor, owner) || hasActive(s, owner, H.lilith));
 

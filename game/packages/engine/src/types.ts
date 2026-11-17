@@ -151,6 +151,10 @@ export interface DayFlags {
   figLeaves: Seat[];
   heresy: Seat[];
   handLimitBonus: number;
+  /** Bounty (V42): the player each holder named this Day. */
+  bounty: Record<number, Seat>;
+  /** Free Will (V42): this player takes a second action this turn. */
+  extraAction?: Seat;
 }
 
 export interface GameState {
@@ -175,7 +179,10 @@ export interface GameState {
   pacts: Pact[];
   bonds: { owner: Seat; bound: Seat }[];
   scapegoats: { from: Seat; to: Seat }[];
-  anathema: { target: Seat; by: Seat }[];
+  /** Anathema blocks Offer; Flaming Sword (V42) blocks Gather. */
+  anathema: { target: Seat; by: Seat; action?: 'offer' | 'gather' }[];
+  /** Silence (V42): a player whose Choir abilities do not work until the silencer's next turn. */
+  silenced: { target: Seat; by: Seat }[];
   confession: { seat: Seat; endsAfterTurnOf: Seat; turnsLeft: number }[];
   morningStar: { seat: Seat; card: string }[];
   /** Defiance (V42): players no other player's ability can affect until their next turn. */
