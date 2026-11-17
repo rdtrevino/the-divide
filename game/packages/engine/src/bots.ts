@@ -250,6 +250,11 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const t = s.tides[s.tides.length - 1];
       return one(t && t.dir !== dirOf(net) ? 'yes' : 'no');
     }
+    case 'revelation.hide': {
+      // Hide a card that pushes our way, so it cannot be destroyed and rivals must remember it.
+      const o = d.options.find((x) => x.card && dirOf(signed(s, x.card)) === wantDir);
+      return one(o ? o.id : 'none');
+    }
     case 'tree.take': {
       // Take the Altar card that most improves the lean (in the direction we want), if any does.
       const worst = worstChoirCard(s, seat, want);

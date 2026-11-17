@@ -401,6 +401,14 @@ export const TURN: Record<string, TurnAbility> = {
       a.facedown = false;
       a.seenBy = undefined;
       log(s, 'revelation', `${pname(s, seat)} revealed ${cardName(a.id)} on the Altar (Revelation).`);
+      // Test 'rev-swap' (Robert): then flip a face-up Altar card facedown.
+      if (variant(s, 'rev-swap')) {
+        const up = s.altar.map((x, i) => ({ x, i })).filter(({ x }) => !x.facedown && x !== a);
+        if (up.length) {
+          const h = yield* chooseOne(s, seat, 'revelation.hide', 'Revelation: flip a face-up Altar card facedown?', up.map(({ x, i }) => ({ id: String(i), label: cardName(x.id), card: x.id })), true);
+          if (h !== null) { const c = s.altar[Number(h)]; c.facedown = true; c.seenBy = []; log(s, 'revelation', `${pname(s, seat)} flipped ${cardName(c.id)} on the Altar facedown (Revelation).`); }
+        }
+      }
       // Test 'rev-punish': a revealed Offer that works against its owner's own lean costs them 1 Glory.
       if (variant(s, 'rev-punish') && a.kind === 'offer' && a.offeredBy !== null && a.offeredBy !== seat && !glorySafe(s, seat, a.offeredBy)) {
         const lean = alignment(s, a.offeredBy);
