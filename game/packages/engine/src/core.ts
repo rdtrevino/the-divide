@@ -127,8 +127,9 @@ export function baseValue(s: GameState, id: string): Value {
   if (!h) return { light: 0, dark: 0 };
   if (id === H.shroud) {
     const prev = previousTide(s);
-    if (prev === 'light') return { light: 0, dark: 1 };
-    if (prev === 'dark') return { light: 1, dark: 0 };
+    const same = variant(s, 'shroud-same'); // test: follows yesterday's Tide instead of opposing it
+    if (prev === 'light') return same ? { light: 1, dark: 0 } : { light: 0, dark: 1 };
+    if (prev === 'dark') return same ? { light: 0, dark: 1 } : { light: 1, dark: 0 };
     return { light: 0, dark: 0 };
   }
   if (id === H.nephilim) return { light: 1, dark: 1 };

@@ -180,8 +180,8 @@ export const TURN: Record<string, TurnAbility> = {
       const pick = yield* chooseOne(s, seat, 'vessel.hand', 'Vessel: place a card from your hand on the Altar facedown, then draw 1 card? At the Reaping, if it is still there and matches the Tide, you gain 1 Glory.', h.map((c) => cardOpt(c)), true);
       if (!pick) return;
       h.splice(h.indexOf(pick), 1);
-      s.altar.push({ id: pick, facedown: true, offeredBy: seat, day: s.day, kind: 'vessel' });
-      yield* drawTo(s, seat, 1);
+      s.altar.push({ id: pick, facedown: !variant(s, 'vessel-open'), offeredBy: seat, day: s.day, kind: 'vessel' }); // test 'vessel-open': face up
+      if (!variant(s, 'vessel-nodraw')) yield* drawTo(s, seat, 1); // test 'vessel-nodraw'
       log(s, 'vessel', `${pname(s, seat)} placed a card on the Altar facedown (Vessel).`);
     },
   },

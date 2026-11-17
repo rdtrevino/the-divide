@@ -566,7 +566,7 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
   // 4. Refresh the Altar (Remnant first).
   for (const seat of order) {
     // Tests: 'remnant-own' (only a card you Offered), 'remnant-cost' (pay 1 Glory).
-    const rOpts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !variant(s, 'remnant-own') || a.offeredBy === seat);
+    const rOpts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !variant(s, 'remnant-own') || (a.offeredBy === seat && a.kind !== 'vessel'));
     if (!variant(s, 'remnant-off') && hasActive(s, seat, H.remnant) && rOpts.length && canActivate(s, seat, H.remnant) && (!variant(s, 'remnant-cost') || s.players[seat].glory >= 1)) {
       const pick = yield* chooseOne(s, seat, 'remnant', 'Remnant: take a card from the Altar into your hand (then discard 1 card from your hand)?', rOpts.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
       if (pick !== null && variant(s, 'remnant-cost')) yield* pay(s, seat, 1, H.remnant);
@@ -789,7 +789,10 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     const mc: string[] | undefined = (s.day_ as any).mirageCards?.[seat];
     if (mc && !variant(s, 'mirage-protect') && tide.dir !== 'neutral' && (!variant(s, 'mirage-hedge') || (nets[seat] !== 0 && !leansWithTide.has(seat))) && mc.some((id) => s.altar.some((a) => a.id === id) && colorsOf(s, null, id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.mirage); log(s, 'mirage', `${p.name} gained 1 Glory (Mirage).`); }
     // Vessel (V40): 1 Glory if the card it placed today is still on the Altar and matches the Tide.
-    if (hasActive(s, seat, H.vessel) && tide.dir !== 'neutral' && s.altar.some((a) => a.kind === 'vessel' && a.offeredBy === seat && colorsOf(s, null, a.id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.vessel); log(s, 'vessel', `${p.name} gained 1 Glory (Vessel).`); }
+    // Test 'vessel-noglory': no Glory; the card is pure influence.
+    if (!variant(s, 'vessel-noglory') && hasActive(s, seat, H.vessel) && tide.dir !== 'neutral' && s.altar.some((a) => a.kind === 'vessel' && a.offeredBy === seat && colorsOf(s, null, a.id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.vessel); log(s, 'vessel', `${p.name} gained 1 Glory (Vessel).`); }
+    // Test 'vessel-bet': lose 1 if your Vessel card is still on the Altar and opposes the Tide.
+    if (variant(s, 'vessel-bet') && hasActive(s, seat, H.vessel) && tide.dir !== 'neutral' && s.altar.some((a) => a.kind === 'vessel' && a.offeredBy === seat && colorsOf(s, null, a.id)[opposite(tide.dir as 'light' | 'dark') as 'light' | 'dark'])) { yield* lose(s, seat, 1, H.vessel); log(s, 'vessel', `${p.name} lost 1 Glory (Vessel).`); }
     const call = s.day_.prophecy[seat];
     if (call) { // V38: a Neutral Tide is a miss
       if (call === tide.dir) { yield* gain(s, seat, 1, H.prophecy); log(s, 'prophecy', `${p.name}'s Prophecy came true: +1 Glory.`); }
