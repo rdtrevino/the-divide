@@ -252,6 +252,13 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const t = s.tides[s.tides.length - 1];
       return one(t && t.dir !== dirOf(net) ? 'yes' : 'no');
     }
+    case 'heresy.morning': {
+      // Flip away from a crowded side, or toward the side that won yesterday.
+      const mine = dirOf(net);
+      const crowd = OTHERS.filter((n) => n !== 0 && dirOf(n) === mine).length;
+      const t = s.tides[s.tides.length - 1];
+      return one(net !== 0 && (crowd >= 2 || (t && t.dir !== 'neutral' && t.dir !== mine && r < 0.5)) ? 'yes' : 'no');
+    }
     case 'scapegoat.deny': {
       // Deny the leader, if they are gaining.
       const o = d.options.find((x) => x.seat !== undefined && leaderSeats(s, seat).includes(x.seat));

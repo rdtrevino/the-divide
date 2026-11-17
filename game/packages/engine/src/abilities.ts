@@ -112,8 +112,10 @@ export const TURN: Record<string, TurnAbility> = {
   },
   [H.heresy]: {
     // V42: decided on your turn, before the Altar is revealed.
-    can: (s, seat) => !s.day_.heresy.includes(seat),
+    // Tests: 'heresy-morning' (decided in the Morning instead), 'heresy-cost' (pay 1 Glory).
+    can: (s, seat) => !variant(s, 'heresy-morning') && !s.day_.heresy.includes(seat) && (!variant(s, 'heresy-cost') || canSpend(s, seat, 1)),
     *run(s, seat) {
+      if (variant(s, 'heresy-cost')) yield* pay(s, seat, 1, H.heresy);
       s.day_.heresy.push(seat);
       log(s, 'heresy', `${pname(s, seat)}'s Choir counts as leaning the opposite way this Day (Heresy).`);
     },

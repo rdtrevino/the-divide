@@ -179,6 +179,13 @@ export function* morning(s: GameState): Gen<void> {
       });
     }
   }
+  // Test 'heresy-morning': Heresy is decided in the Morning, before anyone Offers.
+  if (variant(s, 'heresy-morning')) for (const p of s.players) {
+    if (!hasActive(s, p.seat, H.heresy) || !canActivate(s, p.seat, H.heresy)) continue;
+    if (yield* yesNo(s, p.seat, 'heresy.morning', 'Heresy: your Choir counts as leaning the opposite way this Day?')) {
+      yield* activation(s, p.seat, H.heresy, function* () { s.day_.heresy.push(p.seat); log(s, 'heresy', `${p.name}'s Choir counts as leaning the opposite way this Day (Heresy).`); });
+    }
+  }
   if (variant(s, 'bounty-morning')) for (const p of s.players) {
     if (!hasActive(s, p.seat, H.bounty)) continue;
     const t = yield* chooseOne(s, p.seat, 'bounty.player', 'Bounty: name a player. If they lose Glory at this Reaping, you gain 1.', others(s, p.seat).map((o) => seatOpt(s, o.seat)), variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft'));
