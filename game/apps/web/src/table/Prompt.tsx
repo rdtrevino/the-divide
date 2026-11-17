@@ -11,6 +11,25 @@ import type { Waiting } from './Players';
 import { isButton, type Pick } from './pick';
 
 const ACTION_ICON: Record<string, string> = { offer: '✦', gather: '❖', exalt: '▲' };
+const ACTIONS = ['offer', 'gather', 'exalt'] as const;
+const ACTION_LABEL: Record<string, string> = { offer: 'Offer: play a card to the Altar and gain 1 Glory', gather: 'Gather: take a card into your Choir', exalt: 'Exalt: pay 1 Glory to play a card from your hand into your Choir' };
+
+/** Why an action is not offered to you right now, from what your seat can see. */
+function whyNot(view: GameView, seat: number, id: string): string {
+  const me = view.players[seat];
+  const hand = me.hand?.length ?? me.handCount;
+  if (id === 'offer') {
+    if (view.anathema.some((a) => a.target === seat)) return 'Anathema: you cannot Offer until it ends';
+    if (!hand) return 'You have no cards in hand';
+  }
+  if (id === 'exalt') {
+    if (view.event === 'event-the-fast') return 'The Fast: no Glory may be spent today';
+    if (!hand) return 'You have no cards in hand';
+    if (me.glory < 1) return `Costs 1 Glory. You have ${me.glory}`;
+  }
+  if (id === 'gather') return 'Nothing you can take into your Choir now';
+  return 'Not possible right now';
+}
 
 const optionLabel = (o: Option) => (o.id === 'none' ? 'Decline' : o.id === 'end' ? 'End turn' : o.label);
 
@@ -86,12 +105,14 @@ export function Prompt(p: {
           </div>
         )}
         {d.tag === 'action'
-          ? d.options.map((o) => {
-              const [title, ...rest] = o.label.split(': ');
+          ? ACTIONS.map((id) => {
+              const o = d.options.find((x) => x.id === id);
+              // An action you cannot take stays in its place, dimmed, with the reason, so the three are always there.
+              const [title, ...rest] = (o?.label ?? ACTION_LABEL[id]).split(': ');
               return (
-                <button class="action-btn" disabled={p.busy} onClick={() => pick.choose(o.id)}>
-                  <span class="action-icon">{ACTION_ICON[o.id] ?? '•'}</span>
-                  <span><b>{title}</b><small>{rest.join(': ')}</small></span>
+                <button class={`action-btn${o ? '' : ' unavailable'}`} disabled={p.busy || !o} onClick={o ? () => pick.choose(o.id) : undefined}>
+                  <span class="action-icon">{ACTION_ICON[id]}</span>
+                  <span><b>{title}</b><small>{o ? rest.join(': ') : whyNot(view, d.seat, id)}</small></span>
                 </button>
               );
             })

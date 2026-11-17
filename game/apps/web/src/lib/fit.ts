@@ -98,7 +98,8 @@ export function useFit(refs: FitRefs, opponents: number) {
       if (!mine) return 0;
       if (stage.dataset.mode !== 'stack') return need(mine);
       const hand = mine.querySelector('.mine-zone.hand .zone-row');
-      return Math.max(need(mine, (c) => c.classList.contains('hand')), need(hand) + sides(mine));
+      const handW = hand ? Math.max(need(hand), parseFloat(getComputedStyle(hand).minWidth) || 0) : 0; // a short hand keeps room for 3
+      return Math.max(need(mine, (c) => c.classList.contains('hand')), handW + sides(mine));
     };
     const wide = () => Math.max(mineNeed(), need(opp), need(center)); // (offset sizes: flying cards do not count)
 

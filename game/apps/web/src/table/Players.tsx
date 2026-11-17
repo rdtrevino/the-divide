@@ -14,8 +14,9 @@ function Notes(p: { view: GameView; seat: number }) {
   return <>{notes.map((n) => <span class={`note ${n.tone ?? ''}`}>{n.text}</span>)}</>;
 }
 
-/** A Choir: the cards, card backs for facedown cards you can't see, and empty outlines. */
-function ChoirCards(p: { view: GameView; seat: number; w: string }) {
+/** A Choir: the cards, card backs for facedown cards you can't see, and empty outlines.
+ *  Opponents' Choirs use the small face (name, value, art); your own shows the whole printed card. */
+function ChoirCards(p: { view: GameView; seat: number; w: string; full?: boolean }) {
   const pick = useContext(PickCtx);
   const pl = p.view.players[p.seat];
   return (
@@ -28,7 +29,7 @@ function ChoirCards(p: { view: GameView; seat: number; w: string }) {
             key={c.id ?? `fd-${i}`}
             id={c.id}
             w={p.w}
-            compact
+            compact={!p.full}
             spent={c.used && !c.facedown}
             hiddenOwn={c.facedown && !!c.id}
             tag={tag}
@@ -118,19 +119,19 @@ export function MyArea(p: { view: GameView; seat: number }) {
       <div class="mine-zone cel">
         <div class="zone-label">Celestial</div>
         <div class="zone-row">
-          <Card id={pl.celestial} w="calc(var(--cw-me) * 0.82)" compact selectable={!!celOpt} selected={!!celOpt && pick.selected.has(celOpt)} onClick={celOpt ? () => pick.choose(celOpt) : undefined} onDblClick={celOpt ? () => pick.choose(celOpt, true) : undefined} />
+          <Card id={pl.celestial} w="calc(var(--cw-me) * 0.82)" selectable={!!celOpt} selected={!!celOpt && pick.selected.has(celOpt)} onClick={celOpt ? () => pick.choose(celOpt) : undefined} onDblClick={celOpt ? () => pick.choose(celOpt, true) : undefined} />
         </div>
       </div>
       <div class="mine-zone choir">
         <div class="zone-label">Your Choir</div>
-        <div class="zone-row"><ChoirCards view={p.view} seat={p.seat} w="var(--cw-me)" /></div>
+        <div class="zone-row"><ChoirCards view={p.view} seat={p.seat} w="var(--cw-me)" full /></div>
       </div>
       <div class="mine-zone hand">
         <div class="zone-label">Your hand</div>
-        <div class={`zone-row n${Math.min(6, Math.max(3, hand.length))}`} id={`hand-${p.seat}`}>
+        <div class="zone-row" id={`hand-${p.seat}`}>
           {hand.map((id) => {
             const opt = pick.card.get(id);
-            return <Card key={id} id={id} w="var(--cw-me)" compact flip={id} flipFrom="#deck" selectable={!!opt} selected={!!opt && pick.selected.has(opt)} onClick={opt ? () => pick.choose(opt) : undefined} onDblClick={opt ? () => pick.choose(opt, true) : undefined} />;
+            return <Card key={id} id={id} w="var(--cw-me)" flip={id} flipFrom="#deck" selectable={!!opt} selected={!!opt && pick.selected.has(opt)} onClick={opt ? () => pick.choose(opt) : undefined} onDblClick={opt ? () => pick.choose(opt, true) : undefined} />;
           })}
           {!hand.length && <span class="muted empty-hand">No cards in hand</span>}
         </div>

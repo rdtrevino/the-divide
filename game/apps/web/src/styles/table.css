@@ -144,11 +144,9 @@
 .mine-zone .zone-row { display: flex; gap: 8px; align-items: flex-end; }
 .mine-zone.cel { padding-right: clamp(8px, 1.2vw, 18px); border-right: 1px solid var(--hair-soft); }
 .mine-zone.hand { margin-left: auto; padding-left: clamp(8px, 1.2vw, 18px); border-left: 1px solid var(--hair-soft); }
-.mine-zone.hand .zone-row { width: calc(var(--cw-me) * 3 + 16px); min-height: calc(var(--cw-me) * 1.4); }
-.mine-zone.hand .zone-row.n4 { gap: 0; } .mine-zone.hand .zone-row.n4 .card + .card { margin-left: calc((var(--cw-me) * -1 + 16px) / 3); }
-.mine-zone.hand .zone-row.n5 { gap: 0; } .mine-zone.hand .zone-row.n5 .card + .card { margin-left: calc((var(--cw-me) * -2 + 16px) / 4); }
-.mine-zone.hand .zone-row.n6 { gap: 0; } .mine-zone.hand .zone-row.n6 .card + .card { margin-left: calc((var(--cw-me) * -3 + 16px) / 5); }
-.mine-zone.hand .card:hover { z-index: 5; }
+/* Your hand never overlaps: your cards show their words, so every card is laid side by side and the
+   fitter (lib/fit.ts) sizes all the cards to the hand you hold. An empty or short hand keeps room for 3. */
+.mine-zone.hand .zone-row { min-width: calc(var(--cw-me) * 3 + 16px); min-height: calc(var(--cw-me) * 1.4); }
 .empty-hand { align-self: center; font-style: italic; }
 .stage[data-mode='stack'] .mine { flex-wrap: wrap; row-gap: 10px; }
 .stage[data-mode='stack'] .mine-zone.hand { flex-basis: 100%; margin-left: 0; padding-left: 0; border-left: 0; border-top: 1px solid var(--hair-soft); padding-top: 10px; }
@@ -186,6 +184,9 @@
 .btn.on { border-color: var(--gold-bright); box-shadow: 0 0 0 2px rgba(232, 200, 74, 0.5); }
 .btn.seat-btn::before { content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--seat); margin-right: 8px; }
 .action-btn { flex: 1 1 180px; display: flex; align-items: center; gap: 12px; text-align: left; padding: 7px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--gold-deep); background: linear-gradient(#2e2212, #1d150c); transition: transform 0.12s var(--ease), border-color 0.15s, box-shadow 0.15s; }
+.action-btn.unavailable { cursor: default; opacity: 0.5; background: transparent; border-style: dashed; }
+.action-btn.unavailable b { color: var(--muted); }
+.action-btn.unavailable .action-icon { color: var(--faint); }
 .action-btn:hover:not(:disabled) { border-color: var(--gold-bright); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); }
 .action-btn b { display: block; font-family: var(--font-title); font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-bright); }
 .action-btn small { display: block; font-size: 13px; line-height: 1.2; color: var(--muted); }

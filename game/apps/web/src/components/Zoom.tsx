@@ -22,6 +22,13 @@ export function Zoom() {
       const w = Math.max(160, Math.min(event ? 560 : 400, window.innerWidth - 24, room / (event ? 0.714 : 1.4)));
       const h = event ? w * 0.714 : w * 1.4;
       const total = h + (note ? 70 : 0);
+      // Cards in the lower half of the screen (your Celestial, Choir and hand) open above themselves, so the
+      // magnified card never covers the cards beside it; it may cover the table above for a moment.
+      const upW = Math.min(event ? 560 : 400, window.innerWidth - 24, (r.top - 20 - (note ? 70 : 0)) / (event ? 0.714 : 1.4));
+      if (r.top > window.innerHeight / 2 && upW >= 240) {
+        const uh = upW * (event ? 0.714 : 1.4) + (note ? 70 : 0);
+        return { id, x: Math.min(Math.max(8, r.left + r.width / 2 - upW / 2), window.innerWidth - upW - 8), y: Math.max(8, r.top - uh - 10), w: upW, note };
+      }
       // Beside the card if there is room, otherwise above or below it.
       let x = r.right + 14;
       if (x + w > window.innerWidth - 8) x = r.left - w - 14;
@@ -40,7 +47,7 @@ export function Zoom() {
       current = el;
       if (!el) { setShown(null); return; }
       // Slight delay so sweeping the mouse across the table does not flicker.
-      timer = window.setTimeout(() => { if (current === el && el.isConnected) setShown(place(el)); }, 260);
+      timer = window.setTimeout(() => { if (current === el && el.isConnected) setShown(place(el)); }, 140);
     };
     const down = (e: PointerEvent) => {
       if (e.pointerType === 'mouse') { hide(); return; }
