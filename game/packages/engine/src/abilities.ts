@@ -247,7 +247,7 @@ export const TURN: Record<string, TurnAbility> = {
     // V42: no player may Offer, you included, until the end of your next turn.
     can: (s, seat) => !s.anathema.some((a) => a.by === seat && a.action === 'offer'),
     *run(s, seat) {
-      for (const p of s.players) s.anathema.push({ target: p.seat, by: seat, action: 'offer', endAfter: true });
+      for (const p of s.players) s.anathema.push({ target: p.seat, by: seat, action: 'offer', endAfter: !variant(s, 'anathema-start') });
       log(s, 'anathema', `No player may Offer until the end of ${pname(s, seat)}'s next turn (Anathema).`);
     },
   },
