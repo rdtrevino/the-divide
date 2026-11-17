@@ -226,7 +226,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         if (o.card === H.parasite) return want > 0;
         if (o.card === H.freeWill) return s.players[seat].hand.length >= 2 && r < 0.4;
         if (o.card === H.anathema) return altar !== 0 && dirOf(altar) === wantDir && later >= 1;
-        if (o.card === H.michael) return leaders.some((l) => l !== seat) && r < 0.5;
+        if (o.card === H.michael) return r < 0.6;
         if (o.card === H.silence) return leaders.some((l) => l !== seat) && r < 0.5;
         if (o.card === H.deliverance) return r < 0.25;
         if (o.card === H.deliverance) return r < 0.25;
