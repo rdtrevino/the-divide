@@ -67,7 +67,7 @@
 .pp-info { width: 132px; flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
 .pp-name-row { display: flex; align-items: center; gap: 6px; max-width: 100%; }
 .pp-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--seat); flex: none; box-shadow: 0 0 8px color-mix(in srgb, var(--seat) 60%, transparent); }
-.mine-name .pp-dot, .gift-pop .pp-dot, .ev-score .pp-dot, .result-table .pp-dot, .replay-name .pp-dot { margin-right: 6px; }
+.mine-name .pp-dot, .ev-score .pp-dot, .result-table .pp-dot, .replay-name .pp-dot { margin-right: 6px; }
 .pp-name { font-family: var(--font-title); font-weight: 600; font-size: 14.5px; letter-spacing: 0.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pp-status { display: flex; align-items: center; gap: 4px; min-height: 16px; flex-wrap: wrap; }
 .pp-badge { font-family: var(--font-title); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--hair); border-radius: 4px; padding: 0 5px; }
@@ -135,17 +135,12 @@
 /* You: info, Celestial, Choir and hand in one row (the hand gets its own row on tall, narrow screens). */
 .mine { flex: none; display: flex; align-items: flex-end; gap: clamp(10px, 1.4vw, 20px); padding: 8px 12px 10px; border-radius: 10px; border: 1px solid var(--hair-soft); background: linear-gradient(180deg, rgba(42, 31, 20, 0.55), rgba(26, 20, 16, 0.6)); transition: border-color 0.3s, box-shadow 0.3s; }
 .mine.active { border-color: var(--seat); box-shadow: 0 0 0 1px var(--seat), 0 0 30px color-mix(in srgb, var(--seat) 30%, transparent); }
-.mine-me { width: 150px; flex: none; align-self: flex-start; display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.mine-me { width: 132px; flex: none; align-self: flex-start; display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
 .mine-name { font-family: var(--font-title); font-weight: 600; font-size: 15.5px; letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; }
 .mine-glory { display: flex; align-items: baseline; gap: 7px; }
-.mine-glory .gift { margin-left: auto; align-self: center; }
 .mine-glory b { font-size: 40px; line-height: 1; font-weight: 700; color: var(--gold-bright); display: inline-block; animation: pop 0.5s var(--ease); text-shadow: 0 0 24px rgba(232, 200, 74, 0.35); }
 .mine-notes { display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-start; }
 .mine-notes .note { white-space: normal; }
-.gift { position: relative; }
-.gift-pop { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 30; width: 210px; padding: 12px; display: flex; flex-direction: column; gap: 7px; background: var(--night); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7); }
-.gift-pop p { margin: 2px 0 0; font-size: 12.5px; }
-.gift-pop .btn { text-align: left; }
 .mine-zone .zone-row { display: flex; gap: 8px; align-items: flex-end; }
 .mine-zone.cel { padding-right: clamp(8px, 1.2vw, 18px); border-right: 1px solid var(--hair-soft); }
 .mine-zone.hand { margin-left: auto; padding-left: clamp(8px, 1.2vw, 18px); border-left: 1px solid var(--hair-soft); }
@@ -175,7 +170,8 @@
 .prompt-recent .latest { color: var(--cream); animation: herald 0.4s var(--ease); }
 .prompt-recent .k-tide.latest, .prompt-recent .k-end.latest { color: var(--gold-bright); }
 @keyframes herald { from { opacity: 0; transform: translateY(6px); } }
-.prompt-opts { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; max-height: 128px; overflow-y: auto; }
+/* Room inside the scroll box for the hover lift, glow and focus ring, so no border is cut off. */
+.prompt-opts { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; max-height: 140px; overflow-y: auto; padding: 5px 6px 7px; margin: -5px -6px -7px; }
 .prompt-opts .confirm { margin-left: auto; }
 .prompt-reveal { display: flex; gap: 5px; padding-right: 8px; margin-right: 2px; border-right: 1px solid var(--hair-soft); }
 .chip-opt { display: inline-flex; align-items: baseline; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--gold-deep); background: rgba(0, 0, 0, 0.3); color: var(--cream); cursor: pointer; font: inherit; font-size: 14.5px; line-height: 1.1; transition: border-color 0.15s, background 0.15s; max-width: 100%; }
@@ -225,7 +221,7 @@
 .modal { width: min(880px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; padding: 24px 28px; background: linear-gradient(180deg, #2a1f14, #17120d); border-color: var(--hair); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8); animation: rise 0.35s var(--ease); }
 @keyframes rise { from { opacity: 0; transform: translateY(18px) scale(0.98); } }
 .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.modal-cards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.modal-cards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; padding: 8px 4px 4px; }
 
 /* Evening panel: over the board only; the decision bar below stays free. */
 .evening { position: absolute; inset: 0; z-index: 45; padding: 0; display: flex; justify-content: center; align-items: flex-start; pointer-events: none; }
@@ -316,8 +312,7 @@
   .mine-me { width: 100%; flex-direction: row; align-items: center; flex-wrap: wrap; }
   .mine-notes { flex-direction: row; flex-wrap: wrap; }
   .mine-glory b { font-size: 30px; }
-  .gift { margin: 0 0 0 auto; }
-  .mine-zone.hand { flex-basis: 100%; margin-left: 0; border-left: 0; padding-left: 0; }
+    .mine-zone.hand { flex-basis: 100%; margin-left: 0; border-left: 0; padding-left: 0; }
   .mine-zone.hand .zone-row { width: auto; flex-wrap: wrap; gap: 8px !important; } .mine-zone.hand .zone-row .card + .card { margin-left: 0 !important; }
   .mine-zone.cel { border-right: 0; padding-right: 0; }
   .action-btn { flex: 1 1 0; min-width: 0; flex-direction: column; align-items: center; text-align: center; gap: 2px; padding: 7px 6px; }

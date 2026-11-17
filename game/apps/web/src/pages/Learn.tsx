@@ -353,7 +353,7 @@ const STEPS: Step[] = [
       <ul class="learn-list">
         <li><b>Rivals will push against you.</b> They can see your lean, so expect Offers against it and Gathers that take your cards off the Altar.</li>
         <li><b>Read the table.</b> First Fruits are the one honest card each player has to show you. A card someone throws out of their Choir tells you which way they've decided to lean.</li>
-        <li><b>Make deals.</b> You can give Glory to anyone at any time. Promises aren't binding, so trust carefully.</li>
+        <li><b>Make deals.</b> Talk at the table. Promises aren't binding, so trust carefully.</li>
         <li><b>Late in the game,</b> every Day might be the last. Hold cards that match the Tide you expect.</li>
       </ul>
     ),

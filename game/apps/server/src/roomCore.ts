@@ -328,14 +328,6 @@ export class RoomCore {
         this.afterInput(before, false);
         return;
       }
-      case 'gift': {
-        if (seat === null || !this.game || m.status !== 'playing') throw new RoomError('You are not playing in this game.');
-        const before = this.game.state.seq;
-        this.game.gift(seat, Number(msg.to), Number(msg.amount));
-        this.cameBack(seat);
-        this.afterInput(before, false);
-        return;
-      }
       case 'back':
         if (seat !== null) {
           this.cameBack(seat);

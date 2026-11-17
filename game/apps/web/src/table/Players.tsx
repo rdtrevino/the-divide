@@ -2,7 +2,7 @@
 // Each panel keeps its facts (name, Glory, lean, hand size, notes) beside its cards, not above
 // and below them, so the whole table fits on one screen.
 import type { GameView } from '@divide/engine';
-import { useContext, useState } from 'preact/hooks';
+import { useContext } from 'preact/hooks';
 import { Card } from '../components/Card';
 import { Countdown, alignText, alignTone, choirTag, seatColor, statusNotes } from './bits';
 import { PickCtx } from './pick';
@@ -97,10 +97,9 @@ export function PlayerPanel(p: { view: GameView; seat: number; waiting?: Waiting
   );
 }
 
-export function MyArea(p: { view: GameView; seat: number; onGift: (to: number, amount: number) => void; canGift: boolean }) {
+export function MyArea(p: { view: GameView; seat: number }) {
   const pick = useContext(PickCtx);
   const pl = p.view.players[p.seat];
-  const [gift, setGift] = useState(false);
   const celOpt = pick.card.get(pl.celestial);
   const active = p.view.active === p.seat && p.view.phase === 'turns';
   const hand = pl.hand ?? [];
@@ -110,20 +109,6 @@ export function MyArea(p: { view: GameView; seat: number; onGift: (to: number, a
         <div class="mine-name"><span class="pp-dot" />{pl.name}{p.view.firstPlayer === p.seat && p.view.phase !== 'ended' && <span class="pp-first" title="You are the first player this Day">1st</span>}</div>
         <div class="mine-glory">
           <b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small>
-          {p.canGift && (
-            <div class="gift">
-              <button class="btn quiet small" onClick={() => setGift(!gift)} disabled={pl.glory < 1} title="Give Glory to another player">Give</button>
-              {gift && pl.glory > 0 && (
-                <div class="gift-pop panel">
-                  <div class="eyebrow">Give 1 Glory to</div>
-                  {p.view.players.filter((o) => o.seat !== p.seat).map((o) => (
-                    <button class="btn small" onClick={() => { p.onGift(o.seat, 1); setGift(false); }}><span class="pp-dot" style={{ '--seat': seatColor(o.seat) } as any} />{o.name}</button>
-                  ))}
-                  <p class="muted">Gifts are public and cannot be taken back.</p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
         <div class="mine-notes">
           <span class={`align ${alignTone(pl.alignment)}`} title="Your Alignment: the net of your Choir's Light and Dark values">{alignText(pl.alignment)}</span>
