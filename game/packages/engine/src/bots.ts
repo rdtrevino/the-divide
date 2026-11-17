@@ -218,7 +218,8 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         const sharing = OTHERS.filter((x) => x !== 0 && Math.sign(x) === Math.sign(net)).length;
         if (o.card === H.heresy) return net !== 0 && altar !== 0 && dirOf(altar) !== dirOf(net) && later <= 1;
         if (o.card === H.figLeaves) return net !== 0 && (sharing >= 2 || (altar !== 0 && dirOf(altar) !== dirOf(net) && later <= 1));
-        if (o.card === H.morningStar) return false;
+        // Morning Star: late in the turn order, flip one card if that turns your lean toward the Altar.
+        if (o.card === H.morningStar) return altar !== 0 && net !== 0 && dirOf(altar) !== dirOf(net) && later <= 1 && s.players[seat].choir.some((c) => !c.facedown && dirOf(net - 2 * signed(s, c.id)) === dirOf(altar));
         if (o.card === H.providence) {
           const st = s.players[seat].choir.find((c) => c.id === H.providence)?.store ?? 0;
           return st >= 3 || Math.max(...s.players.map((x) => x.glory)) >= 7;
@@ -487,7 +488,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     }
     case 'morningStar': {
       const t = altar;
-      const o = pickBest(d.options, (x) => (dirOf(signed(s, x.card)) !== dirOf(t) ? 1 : 0) + r * 0.1);
+      const o = pickBest(d.options, (x) => (dirOf(net - 2 * signed(s, x.card)) === dirOf(t) ? 2 : 0) + (dirOf(signed(s, x.card)) !== dirOf(t) ? 1 : 0) + r * 0.1);
       return one(o.id);
     }
     default: {

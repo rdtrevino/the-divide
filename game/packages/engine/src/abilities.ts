@@ -128,13 +128,15 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.morningStar]: {
-    can: (s, seat) => canSpend(s, seat, 1) && !s.morningStar.some((m) => m.seat === seat) && morningStarCards(s, seat).length > 0,
+    // Test 'morningstar-free': no Glory cost.
+    can: (s, seat) => (variant(s, 'morningstar-free') || canSpend(s, seat, 1)) && !s.morningStar.some((m) => m.seat === seat) && morningStarCards(s, seat).length > 0,
     *run(s, seat) {
-      const pick = yield* chooseOne(s, seat, 'morningStar', 'Morning Star: pay 1 Glory. Choose a card in your Choir to count as the opposite color this Day.', morningStarCards(s, seat).map((c) => cardOpt(c.id)), true);
+      const free = variant(s, 'morningstar-free');
+      const pick = yield* chooseOne(s, seat, 'morningStar', `Morning Star: ${free ? '' : 'pay 1 Glory. '}Choose a card in your Choir to count as the opposite alignment this Day.`, morningStarCards(s, seat).map((c) => cardOpt(c.id)), true);
       if (!pick) return;
-      yield* pay(s, seat, 1, H.morningStar);
+      if (!free) yield* pay(s, seat, 1, H.morningStar);
       s.morningStar.push({ seat, card: pick });
-      log(s, 'morningStar', `${pname(s, seat)}'s ${cardName(pick)} counts as the opposite color this Day (Morning Star).`);
+      log(s, 'morningStar', `${pname(s, seat)}'s ${cardName(pick)} counts as the opposite alignment this Day (Morning Star).`);
     },
   },
   [H.providence]: {
