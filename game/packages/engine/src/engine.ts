@@ -811,10 +811,10 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     // Leviathan (V42): 1 Glory if two or more other players lost Glory at this Reaping.
     if (hasActive(s, seat, H.leviathan) && s.players.filter((o) => o.seat !== seat && lost[o.seat] > 0).length >= 2) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
     // Test 'hubris-day' (Robert): at the end of the Day, if the player with the most Glory gained 3 or more this Day (from anything), they give 1 to you.
-    if (variant(s, 'hubris-day') && hasActive(s, seat, H.hubris)) {
+    if ((variant(s, 'hubris-day') || variant(s, 'hubris-day4')) && hasActive(s, seat, H.hubris)) {
       const dayGain = (x: Seat) => s.stats.filter((e) => e.type === 'glory' && e.seat === x && e.day === s.day && (e.amount ?? 0) > 0).reduce((t, e) => t + (e.amount ?? 0), 0);
       const max = Math.max(...s.players.map((o) => o.glory));
-      const payers = s.players.filter((o) => o.seat !== seat && o.glory === max && dayGain(o.seat) >= 3 && !glorySafe(s, seat, o.seat)).map((o) => o.seat);
+      const payers = s.players.filter((o) => o.seat !== seat && o.glory === max && dayGain(o.seat) >= (variant(s, 'hubris-day4') ? 4 : 3) && !glorySafe(s, seat, o.seat)).map((o) => o.seat);
       const l = payers.length > 1 ? seatFromOpt((yield* chooseOne(s, seat, 'hubris', 'Hubris: choose which leader gives you 1.', payers.map((x) => seatOpt(s, x))))!) : payers[0];
       if (l !== undefined && transfer(s, l, seat, 1, H.hubris)) log(s, 'hubris', `${pname(s, l)} gave 1 Glory to ${p.name} (Hubris).`);
     } else
