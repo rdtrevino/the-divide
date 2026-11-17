@@ -84,6 +84,11 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
   }, [snap.fresh]);
   const recent = useMemo(() => snap.log.filter((e) => !HERALD_SKIP.has(e.kind)).slice(-2), [snap.log]);
 
+  const [copied, setCopied] = useState(false);
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(`${location.origin}/r/${state.room.code}`); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { /* the code is on screen */ }
+  };
+
   const [side, setSide] = useState(false);
   const [chatSeen, setChatSeen] = useState(snap.chat.length);
   useEffect(() => { if (side || window.innerWidth > 1080) setChatSeen(snap.chat.length); }, [snap.chat.length, side]);
@@ -107,7 +112,10 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
           </div>
           <TideRecord view={view} />
           <GloryTrack view={view} target={GLORY_TARGET} />
-          <span class="t-room" title="Room code">{state.room.code}</span>
+          <button class={`t-room${copied ? ' copied' : ''}`} data-tip="Click to copy the invite link for this table" onClick={copyLink}>
+            <small>{copied ? 'Invite link' : 'Table code'}</small>
+            <b>{copied ? 'Copied' : state.room.code}</b>
+          </button>
           <a class="btn quiet small" href="/rules" target="_blank" rel="noopener">Rules</a>
           <button class="btn quiet small side-toggle" onClick={() => setSide(!side)}>
             {side ? 'Table' : 'Log & chat'}{!side && snap.chat.length > chatSeen && <i class="unread" />}

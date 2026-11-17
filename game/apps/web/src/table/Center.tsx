@@ -33,9 +33,9 @@ export function Center(p: { view: GameView }) {
         <div class="zone-label">
           The Altar
           <span class="tally">
-            <span class="light">Light {tally.light}</span>
-            <span class="dark">Dark {tally.dark}</span>
-            {hidden > 0 && <span class="hid">{hidden} facedown</span>}
+            <span class="light" data-tip="Light from the face-up cards on the Altar">Light {tally.light}</span>
+            <span class="dark" data-tip="Dark from the face-up cards on the Altar">Dark {tally.dark}</span>
+            {hidden > 0 && <span class="hid" data-tip="Facedown cards count toward the Tide, but no one sees them until the Evening">{hidden} facedown</span>}
           </span>
         </div>
         <div class="altar-row">
@@ -79,14 +79,14 @@ export function Center(p: { view: GameView }) {
           <div class="zone-label">Host deck</div>
           <div id="deck" class="pile-stack">
             <Card id={null} w="var(--cw-pile)" selectable={!!pick.deck} selected={!!pick.deck && pick.selected.has(pick.deck)} onClick={pick.deck ? () => pick.choose(pick.deck!) : undefined} onDblClick={pick.deck ? () => pick.choose(pick.deck!, true) : undefined} />
-            <span class="pile-count num">{view.deckCount}</span>
+            <span class="pile-count num" data-tip={`${view.deckCount} cards left in the Host deck`}>{view.deckCount}</span>
           </div>
         </div>
         <div class="pile">
           <div class="zone-label">Discard</div>
           <div class="pile-stack">
             {view.discard.length ? <Card id={view.discard[view.discard.length - 1]} w="var(--cw-pile)" compact onClick={() => setShowDiscard(true)} class={discardOpts.length ? 'selectable' : ''} /> : <div class="slot" style={{ '--w': 'var(--cw-pile)' } as any} />}
-            <span class="pile-count num">{view.discard.length}</span>
+            <span class="pile-count num" data-tip={view.discard.length ? `${view.discard.length} cards in the discard pile. Click the top card to see them all` : 'The discard pile is empty'}>{view.discard.length}</span>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@
 import type { GameView } from '@divide/engine';
 import { useContext } from 'preact/hooks';
 import { Card } from '../components/Card';
-import { Countdown, alignText, alignTone, choirTag, seatColor, statusNotes } from './bits';
+import { Countdown, alignText, alignTip, alignTone, choirTag, seatColor, statusNotes } from './bits';
 import { PickCtx } from './pick';
 
 export interface Waiting { seat: number; deadline: number | null }
@@ -52,10 +52,10 @@ function ChoirCards(p: { view: GameView; seat: number; w: string; full?: boolean
 function Status(p: { isBot: boolean; connected: boolean; away: boolean; first: boolean; waiting?: Waiting; skew: number }) {
   return (
     <>
-      {p.isBot && <span class="pp-badge">bot</span>}
-      {!p.isBot && p.away && <span class="pp-badge warn" title="A bot is covering this seat">away</span>}
-      {!p.isBot && !p.connected && !p.away && <span class="pp-badge warn">offline</span>}
-      {p.first && <span class="pp-first" title="First player this Day">1st</span>}
+      {p.isBot && <span class="pp-badge" data-tip="A computer player">bot</span>}
+      {!p.isBot && p.away && <span class="pp-badge warn" data-tip="A bot is playing this seat until the player is back">away</span>}
+      {!p.isBot && !p.connected && !p.away && <span class="pp-badge warn" data-tip="Not connected right now">offline</span>}
+      {p.first && <span class="pp-first" data-tip="First player this Day">1st</span>}
       {p.waiting && (p.waiting.deadline ? <Countdown deadline={p.waiting.deadline} skew={p.skew} /> : <span class="thinking" aria-label="thinking"><i /><i /><i /></span>)}
     </>
   );
@@ -76,10 +76,10 @@ export function PlayerPanel(p: { view: GameView; seat: number; waiting?: Waiting
       <div class="pp-info">
         <div class="pp-name-row"><span class="pp-dot" /><span class="pp-name">{pl.name}</span></div>
         <div class="pp-status"><Status isBot={pl.isBot} connected={p.connected} away={p.away} first={p.view.firstPlayer === p.seat && p.view.phase !== 'ended'} waiting={p.waiting} skew={p.skew} /></div>
-        <div class="pp-glory" title="Glory"><b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small></div>
+        <div class="pp-glory" data-tip={`${pl.name} has ${pl.glory} Glory. The first to 10 ends the game`}><b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small></div>
         <div class="pp-tags">
-          <span class={`align ${alignTone(pl.alignment)}`} title="Alignment: the net of the Choir's Light and Dark values">{alignText(pl.alignment)}</span>
-          <span class="pp-handcount" id={`hand-${p.seat}`} title={`${pl.handCount} card${pl.handCount === 1 ? '' : 's'} in hand`}><i />{pl.handCount}</span>
+          <span class={`align ${alignTone(pl.alignment)}`} data-tip={alignTip(pl.alignment, `${pl.name}'s`)}>{alignText(pl.alignment)}</span>
+          <span class="pp-handcount" id={`hand-${p.seat}`} data-tip={`${pl.name} holds ${pl.handCount} card${pl.handCount === 1 ? '' : 's'} in hand`}><i />{pl.handCount}</span>
         </div>
         <div class="pp-notes"><Notes view={p.view} seat={p.seat} /></div>
         {opt && <span class="pp-choose">Choose {pl.name}</span>}
@@ -89,7 +89,7 @@ export function PlayerPanel(p: { view: GameView; seat: number; waiting?: Waiting
         <span class="pp-sep" />
         <ChoirCards view={p.view} seat={p.seat} w="var(--cw-opp)" />
         {pl.hand && (
-          <div class="pp-revealed" title="Hand revealed">
+          <div class="pp-revealed" data-tip="Their hand, revealed to the table">
             {pl.hand.map((id) => <Card key={id} id={id} w="calc(var(--cw-opp) * 0.62)" compact flip={id} />)}
           </div>
         )}
@@ -107,12 +107,12 @@ export function MyArea(p: { view: GameView; seat: number }) {
   return (
     <div class={`mine${active ? ' active' : ''}`} style={{ '--seat': seatColor(p.seat) } as any}>
       <div class="mine-me">
-        <div class="mine-name"><span class="pp-dot" />{pl.name}{p.view.firstPlayer === p.seat && p.view.phase !== 'ended' && <span class="pp-first" title="You are the first player this Day">1st</span>}</div>
-        <div class="mine-glory">
+        <div class="mine-name"><span class="pp-dot" />{pl.name}{p.view.firstPlayer === p.seat && p.view.phase !== 'ended' && <span class="pp-first" data-tip="You are the first player this Day">1st</span>}</div>
+        <div class="mine-glory" data-tip="Your Glory. The first to 10 ends the game">
           <b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small>
         </div>
         <div class="mine-notes">
-          <span class={`align ${alignTone(pl.alignment)}`} title="Your Alignment: the net of your Choir's Light and Dark values">{alignText(pl.alignment)}</span>
+          <span class={`align ${alignTone(pl.alignment)}`} data-tip={alignTip(pl.alignment, 'Your')}>{alignText(pl.alignment)}</span>
           <Notes view={p.view} seat={p.seat} />
         </div>
       </div>
