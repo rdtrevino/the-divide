@@ -472,6 +472,12 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       });
       return one(o.id);
     }
+    case 'winnowing.altar': {
+      // Strike the facedown card of whoever leans hardest against you; skip your own and your allies'.
+      const foe = (o: Option) => (o.seat === undefined || o.seat === seat ? 0 : -Math.sign(want) * alignment(s, o.seat));
+      const o = pickBest(d.options.filter((x) => x.id !== 'none'), (x) => foe(x) + r * 0.01);
+      return one(o && foe(o) > 0 ? o.id : has('none') ? 'none' : d.options[0].id);
+    }
     case 'morningStar': {
       const t = altar;
       const o = pickBest(d.options, (x) => (dirOf(signed(s, x.card)) !== dirOf(t) ? 1 : 0) + r * 0.1);

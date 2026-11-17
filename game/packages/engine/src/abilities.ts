@@ -302,6 +302,16 @@ export const TURN: Record<string, TurnAbility> = {
         const [c] = s.altar.splice(Number(pick), 1);
         s.discard.push(c.id);
         log(s, 'winnowing', `${pname(s, seat)} winnowed a facedown card from the Altar: it was ${cardName(c.id)}.`);
+        // Test 'winnowing-blind2': up to 2 facedown cards.
+        if (variant(s, 'winnowing-blind2')) {
+          const more = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.facedown && !altarShielded(s, a, seat) && (a.sanctuary === undefined || a.sanctuary === seat));
+          if (!more.length) return;
+          const p2 = yield* chooseOne(s, seat, 'winnowing.altar', 'Winnowing: discard a second facedown Altar card without looking at it?', more.map(({ a, i }) => ({ id: String(i), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), true);
+          if (p2 === null) return;
+          const [c2] = s.altar.splice(Number(p2), 1);
+          s.discard.push(c2.id);
+          log(s, 'winnowing', `${pname(s, seat)} winnowed a second facedown card from the Altar: it was ${cardName(c2.id)}.`);
+        }
         return;
       }
       yield* winnowingRun(s, seat);
