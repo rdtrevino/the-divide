@@ -748,7 +748,10 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   }
   // Raguel (V42): each Reaping your Bound player gains Glory, you gain 1.
   for (const b of s.bonds) {
+    // Tests: 'raguel-fate' (also lose 1 when they lose), 'raguel-nogain' (only if you gained nothing yourself).
+    if (variant(s, 'raguel-fate') && hasActive(s, b.owner, H.raguel) && lost[b.bound] > 0) { yield* lose(s, b.owner, 1, H.raguel); log(s, 'raguel', `${pname(s, b.bound)} lost Glory, so ${pname(s, b.owner)} loses 1 (Raguel).`); continue; }
     if (!hasActive(s, b.owner, H.raguel) || !(gained[b.bound] > 0)) continue;
+    if (variant(s, 'raguel-nogain') && gained[b.owner] > 0) continue;
     yield* gain(s, b.owner, 1, H.raguel);
     log(s, 'raguel', `${pname(s, b.bound)} gained at the Reaping, so ${pname(s, b.owner)} gains 1 Glory (Raguel).`);
   }
