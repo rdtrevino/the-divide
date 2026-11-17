@@ -730,6 +730,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   // Alignment scoring.
   const delta: Record<number, number> = {};
   const nets: Record<number, number> = {};
+  // 'rank' (test): Choirs leaning with the Tide score by how many share it (3 alone; 2 and 1 for a pair; 0 for three or more).
+  const rankWin: { seat: Seat; str: number; dbl: number }[] = [];
   for (const p of s.players) {
     const seat = p.seat;
     let net = alignment(s, seat, { reaping: true });
@@ -743,10 +745,32 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     let match = dirOf(net) === dir;
     if (s.day_.heresy.includes(seat)) match = !match;
     if (p.celestial === C.whisper && s.day_.whisperCall && s.day_.whisperCall === tide.dir) match = true;
+    if (variant(s, 'rank') || variant(s, 'rank-lean')) {
+      const dbl = s.day_.ordeal.includes(seat) ? 2 : 1;
+      if (match) { rankWin.push({ seat, str: Math.abs(net), dbl }); delta[seat] = 0; }
+      else delta[seat] = -(variant(s, 'lose1') ? 1 : Math.min(3, Math.abs(net))) * dbl;
+      continue;
+    }
     let d = match ? Math.abs(net) : -Math.abs(net);
     if (s.day_.ordeal.includes(seat)) d *= 2;
     const cap = variant(s, 'nocap') ? 99 : 3;
     delta[seat] = Math.max(-cap, Math.min(cap, d));
+  }
+  if (variant(s, 'rank-lean')) {
+    // Blend (test): alone, your lean + 1; a pair, the stronger its lean and the weaker 1; three or more, 1 each ('crowd0': 0).
+    const lean = (x: { str: number }) => Math.min(3, x.str);
+    if (rankWin.length === 1) delta[rankWin[0].seat] = (lean(rankWin[0]) + 1) * rankWin[0].dbl;
+    else if (rankWin.length === 2) { const [a, b] = rankWin; delta[a.seat] = (a.str > b.str ? lean(a) : 1) * a.dbl; delta[b.seat] = (b.str > a.str ? lean(b) : 1) * b.dbl; }
+    else for (const w of rankWin) delta[w.seat] = (variant(s, 'crowd0') ? 0 : 1) * w.dbl;
+    rankWin.length = 0;
+  }
+  // 'rankpay-A-B-C' (test): alone A, the stronger of a pair B, the weaker C.
+  const [PA, PB, PC] = ((s.config.variants ?? []).find((v) => v.startsWith('rankpay-'))?.slice(8).split('-').map(Number)) ?? [3, 2, 1];
+  if (rankWin.length === 1) delta[rankWin[0].seat] = PA * rankWin[0].dbl;
+  if (rankWin.length === 2) {
+    const [a, b] = rankWin;
+    delta[a.seat] = (a.str > b.str ? PB : PC) * a.dbl;
+    delta[b.seat] = (b.str > a.str ? PB : PC) * b.dbl;
   }
   {
     // Coalition tests: 'spoils' caps each winner at 3 / 2 / 1 by how many gain; 'crowd' takes 1 per other winner (min 1); 'lone' adds 1 to a sole winner.

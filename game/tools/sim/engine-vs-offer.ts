@@ -8,6 +8,7 @@ for (const code of process.argv.slice(4)) {
   const mix: Record<string, number> = {}; let acts = 0;
   const early = { offer: 0, reap: 0, n: 0 }, late = { offer: 0, reap: 0, n: 0 };
   let winOffer = 0, winTotal = 0;
+  const withTide = [0, 0, 0, 0];
   for (let g = 0; g < N; g++) {
     const s = playBotGame({ seed: 333000 + g, mode: 'open', variants: v, players: ['A', 'B', 'C', 'D'].slice(0, P).map((name) => ({ name, isBot: true })) }).state;
     days += s.day;
@@ -17,6 +18,7 @@ for (const code of process.argv.slice(4)) {
     for (const e of s.stats) {
       if (e.type === 'action' && ['offer', 'gather', 'exalt'].includes(e.source ?? '')) { mix[e.source!] = (mix[e.source!] ?? 0) + 1; acts++; }
       if (e.type === 'reaping') (by[e.day] ??= []).push(e.amount ?? 0);
+      if (e.type === 'tide') { const t = (e.data as any).dir; if (t !== 'neutral') { const k = s.stats.filter((x) => x.type === 'reaping' && x.day === e.day && (x.data as any)?.net && Math.sign((x.data as any).net) === (t === 'light' ? 1 : -1)).length; withTide[Math.min(3, k)]++; } }
       if (e.type === 'glory' && e.seat !== undefined) {
         const a = e.amount ?? 0;
         if (e.day <= 3) g3[e.seat] += a;
@@ -38,5 +40,5 @@ for (const code of process.argv.slice(4)) {
     perPlayerDay_early: `offer ${f(early.offer / early.n)} reap ${f(early.reap / early.n)}`,
     perPlayerDay_late: `offer ${f(late.offer / Math.max(1, late.n))} reap ${f(late.reap / Math.max(1, late.n))}`,
     winnerFromOffersPct: Math.round(winOffer / winTotal * 100), day3LeaderWins: Math.round(lead3 / lead3n * 100),
-    everyoneGainsPct: Math.round(allGain / reapN * 100), choirAtEnd: +(choirEnd / N).toFixed(1) }));
+    everyoneGainsPct: Math.round(allGain / reapN * 100), choirAtEnd: +(choirEnd / N).toFixed(1), withTide0123: withTide.map((x) => Math.round(x / withTide.reduce((a, b) => a + b, 0) * 100)) }));
 }

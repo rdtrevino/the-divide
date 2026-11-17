@@ -151,3 +151,23 @@ Draft wording. **Bold** marks a rules change, not just wording. Cards not listed
 3. Measure every card again (target 0.75 to 1.25) and adjust.
 4. Rulebook v11 (Base rules first, Advanced as its own section), the Learn page, the site's table option for Base or Advanced.
 5. V41 card data and a reprint list.
+
+## Follow-up: Robert's coalition scoring (same day)
+
+Robert's rule: alone with the Tide, gain 3; two with it, the stronger lean gains 2 and the weaker 1; three or more, nobody gains; against the Tide, lose 1 or your lean. Robert also prefers a Choir limit of 3 or 4 (not 5), starting below full. Tested with bots taught the rule (they count who else leans their way), free Exalt, no Seed. 2,000 games per line, 3 players.
+
+| Scoring | Offers (share of actions) | Reaping per player per Day, late | Winner's Glory from Offers | 3+ Choirs on the winning side |
+|---|---|---|---|---|
+| Current (lean, cap 3) | 58% | 0.56 | 24% | 32% |
+| Rank 3 / 2-1 / 0, lose your lean | 71% | -0.11 | 43% | 38% |
+| Rank 3 / 2-1 / 0, lose 1 | 78% | 0.02 | 43% | 35% |
+| …starting Choir 2, limit 4 | 76% | 0.09 | 38% | 28% |
+| Rank 4 / 3-1 / 0, lose 1 | 75% | 0.11 | 35% | 33% |
+| Rank 5 / 3-2 / 0, lose 1 | 74% | 0.16 | 32% | 34% |
+| Blend: alone lean+1, pair lean / 1, three+ 1, lose 1 | 72% | 0.44 | 31% | 36% |
+
+- With 3 or 4 players and two colors, at least two players always share a side, and the bigger side usually wins the Tide, so under rank scoring the Reaping pays little and Offers become the main income. The size of your lean matters only against one partner, so building a stronger Choir stops paying.
+- The bots keep crowding onto the winning side even when taught the rule, because avoiding it takes coordination (deals, splitting up, betrayal) that bots cannot do. These numbers show the payouts, not how people would play it.
+- Starting Choir 2 against 3, and a limit of 4 against 3, changed little under any scoring (about a third of a Day).
+
+**Recommendation:** playtest with people. Put the scoring choices on the site as table options (Current, Rank, Blend; starting Choir 2 or 3; limit 3 or 4) so games with friends land in the stats, which already split games by version.
