@@ -563,6 +563,8 @@ function* winnowingRun(s: GameState, seat: Seat): Gen<void> {
       const o = s.players[seatFromOpt(t)];
       const [c] = o.hand.splice(randInt(s, o.hand.length), 1);
       s.discard.push(c);
+      // Test 'winnowing-nodraw': no replacement; the hand refills at Upkeep.
+      if (variant(s, 'winnowing-nodraw')) { log(s, 'winnowing', `${o.name} discarded ${cardName(c)} at random (Winnowing).`); return; }
       yield* drawTo(s, o.seat, 1);
       log(s, 'winnowing', `${o.name} discarded ${cardName(c)} at random (Winnowing) and drew a replacement.`);
 }
