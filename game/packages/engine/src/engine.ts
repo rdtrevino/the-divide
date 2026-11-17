@@ -647,6 +647,20 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (match) { withTide.push({ seat, str: Math.abs(net), dbl }); leansWithTide.add(seat); }
     else delta[seat] = -1 * dbl;
   }
+  // Test 'scapegoat-sac' / 'scapegoat-sac-free': if you share the Tide, sacrifice one of the others sharing it.
+  if (variant(s, 'scapegoat-sac') || variant(s, 'scapegoat-sac-free') || variant(s, 'scapegoat-sac2') || variant(s, 'scapegoat-crowd')) for (const w of [...withTide]) {
+    if (withTide.length < (variant(s, 'scapegoat-crowd') ? 3 : 2) || !withTide.includes(w) || !hasActive(s, w.seat, H.scapegoat) || !canActivate(s, w.seat, H.scapegoat)) continue;
+    const free = variant(s, 'scapegoat-sac-free');
+    const cost = free ? 0 : variant(s, 'scapegoat-sac2') ? 2 : 1;
+    if (!canSpend(s, w.seat, cost)) continue;
+    const others2 = withTide.filter((x) => x.seat !== w.seat);
+    const pick = yield* chooseOne(s, w.seat, 'scapegoat.sac', `Scapegoat: ${withTide.length} Choirs share the Tide. ${free ? '' : 'Pay 1 Glory to '}Name one of them to score nothing and not count?`, others2.map((x) => seatOpt(s, x.seat)), true);
+    if (!pick) continue;
+    if (cost) yield* pay(s, w.seat, cost, H.scapegoat);
+    const t = seatFromOpt(pick);
+    withTide.splice(withTide.findIndex((x) => x.seat === t), 1);
+    log(s, 'scapegoat', `${pname(s, w.seat)} made ${pname(s, t)} the Scapegoat: they score nothing this Reaping.`);
+  }
   if (withTide.length === 1) delta[withTide[0].seat] = 3 * withTide[0].dbl;
   if (withTide.length === 2) {
     const [a, b] = withTide;
@@ -670,7 +684,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   }
   // Scapegoat (V42): if you would lose Glory at the Reaping, a player of your choice loses it instead.
   for (const seat of order) {
-    if (!loss[seat] || !hasActive(s, seat, H.scapegoat) || !canActivate(s, seat, H.scapegoat)) continue;
+    if (!loss[seat] || !hasActive(s, seat, H.scapegoat) || !canActivate(s, seat, H.scapegoat) || variant(s, 'scapegoat-sac') || variant(s, 'scapegoat-sac-free') || variant(s, 'scapegoat-sac2') || variant(s, 'scapegoat-crowd')) continue;
     if (variant(s, 'scapegoat-cost') && !canSpend(s, seat, 1)) continue;
     const targets = others(s, seat).filter((o) => !glorySafe(s, seat, o.seat));
     if (!targets.length) continue;

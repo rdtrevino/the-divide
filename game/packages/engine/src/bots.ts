@@ -250,6 +250,11 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const t = s.tides[s.tides.length - 1];
       return one(t && t.dir !== dirOf(net) ? 'yes' : 'no');
     }
+    case 'scapegoat.sac': {
+      // Sacrifice the stronger partner (they would take the 2), or anyone in a crowd.
+      const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => Math.abs(alignment(s, x.seat!)));
+      return one(o ? o.id : 'none');
+    }
     case 'revelation.hide': {
       // Hide a card that pushes our way, so it cannot be destroyed and rivals must remember it.
       const o = d.options.find((x) => x.card && dirOf(signed(s, x.card)) === wantDir);
