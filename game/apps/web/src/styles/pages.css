@@ -226,6 +226,12 @@ table.stats th.r { text-align: right; }
 .learn-small { font-size: 15px; color: var(--muted); margin: 12px 0 0; }
 .learn-try { width: 100%; max-width: 620px; padding: 18px 20px; border-radius: 12px; border: 1px solid var(--hair); background: linear-gradient(180deg, rgba(42, 31, 20, 0.7), rgba(26, 20, 16, 0.7)); display: flex; flex-direction: column; gap: 14px; }
 .learn-try > .eyebrow { margin-bottom: -2px; }
+.learn-altar { container-type: inline-size; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 12px; border: 1px solid var(--hair); border-radius: 10px; background: rgba(0, 0, 0, 0.28); }
+.la-slot { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 0; transition: opacity 0.25s var(--ease), transform 0.25s var(--ease); }
+.la-slot .card { cursor: pointer; }
+.la-slot .tag { text-align: center; font-size: 11px; padding: 1px 2px; }
+@media (max-width: 600px) { .learn-altar { grid-template-columns: repeat(3, minmax(0, 1fr)); } .learn-altar .card { --w: calc((100cqw - 16px) / 3) !important; } }
+.la-slot.off { opacity: 0.28; transform: translateY(6px); filter: grayscale(0.7); }
 .learn-split { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .learn-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .learn-row .learn-label { margin: 0 6px 0 0; min-width: 130px; }
