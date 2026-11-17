@@ -558,8 +558,11 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
 
   // 4. Refresh the Altar (Remnant first).
   for (const seat of order) {
-    if (hasActive(s, seat, H.remnant) && s.altar.length && canActivate(s, seat, H.remnant)) {
-      const pick = yield* chooseOne(s, seat, 'remnant', 'Remnant: take a card from the Altar into your hand (then discard 1 card from your hand)?', s.altar.map((a, i) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
+    // Tests: 'remnant-own' (only a card you Offered), 'remnant-cost' (pay 1 Glory).
+    const rOpts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !variant(s, 'remnant-own') || a.offeredBy === seat);
+    if (!variant(s, 'remnant-off') && hasActive(s, seat, H.remnant) && rOpts.length && canActivate(s, seat, H.remnant) && (!variant(s, 'remnant-cost') || s.players[seat].glory >= 1)) {
+      const pick = yield* chooseOne(s, seat, 'remnant', 'Remnant: take a card from the Altar into your hand (then discard 1 card from your hand)?', rOpts.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
+      if (pick !== null && variant(s, 'remnant-cost')) yield* pay(s, seat, 1, H.remnant);
       if (pick !== null) yield* activation(s, seat, H.remnant, function* () {
         const [a] = s.altar.splice(Number(pick), 1);
         const p = s.players[seat];
