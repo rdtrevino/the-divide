@@ -767,7 +767,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     const p = s.players[seat];
     // Tests 'veil-secret' and 'zealot-open': facedown and face-up counts at the reveal.
     const rv = (s.day_ as any).reveal ?? { down: 0, up: 0 };
-    if (variant(s, 'veil-secret') && hasActive(s, seat, H.veil) && rv.down >= 3) { yield* gain(s, seat, 1, H.veil); log(s, 'veil', `${p.name} gained 1 Glory (Veil).`); }
+    if ((variant(s, 'veil-secret') || variant(s, 'veil-more') || variant(s, 'veil-4')) && hasActive(s, seat, H.veil) && (variant(s, 'veil-more') ? rv.down > rv.up : rv.down >= (variant(s, 'veil-4') ? 4 : 3))) { yield* gain(s, seat, 1, H.veil); log(s, 'veil', `${p.name} gained 1 Glory (Veil).`); }
     if (variant(s, 'zealot-open') && hasActive(s, seat, H.zealot) && rv.up > rv.down) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
     if (hasActive(s, seat, H.stillness) && tide.dir === 'neutral') { yield* gain(s, seat, 1, H.stillness); log(s, 'stillness', `${p.name} gained 1 Glory (Stillness).`); }
     if (hasActive(s, seat, H.firmament) && tide.dir !== 'neutral' && tide.margin === 1 && (!variant(s, 'firm-with') || leansWithTide.has(seat))) { yield* gain(s, seat, 1, H.firmament); log(s, 'firmament', `${p.name} gained 1 Glory (Firmament).`); }

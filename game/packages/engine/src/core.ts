@@ -390,7 +390,7 @@ export function protectedFrom(s: GameState, actor: Seat, owner: Seat, kind: Targ
   if (actor === owner) return false;
   if (immune(s, actor, owner)) return true;
   if ((kind === 'replace' || kind === 'discard') && hasActive(s, owner, H.cherubim)) return true;
-  if ((kind === 'look' || kind === 'reveal' || kind === 'copy' || kind === 'flip') && hasActive(s, owner, H.veil) && !variant(s, 'veil-secret')) return true;
+  if ((kind === 'look' || kind === 'reveal' || kind === 'copy' || kind === 'flip') && hasActive(s, owner, H.veil) && !variant(s, 'veil-secret') && !variant(s, 'veil-more') && !variant(s, 'veil-4')) return true;
   return false;
 }
 
