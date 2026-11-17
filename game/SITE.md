@@ -71,7 +71,7 @@ The **Stats page** reads them directly and can be filtered by card version, play
 - **Activations**, how often Silence negated them, and the Glory each ability produced.
 - Player records, turn-order fairness, Tide counts, and the average Glory per player on each Event.
 
-**Reading it.** One game decides little. A card needs roughly a dozen final Choirs before its win ratio means much; until then, lean on Glory per Day and Kept, and on the bot column. Bots cannot bluff, make deals or give gifts, so the bluffing and political cards (Mirage, Veil, Council, Covenant) are exactly where real games are expected to differ from the bot numbers. The "Seats counted: People only" filter shows how people do when they hold a card.
+**Reading it.** One game decides little. A card needs roughly a dozen final Choirs before its win ratio means much; until then, lean on Glory per Day and Kept, and on the bot column. Bots cannot bluff or make deals, so the bluffing and political cards (Mirage, Veil, Council, Covenant) are exactly where real games are expected to differ from the bot numbers. The "Seats counted: People only" filter shows how people do when they hold a card.
 
 For questions the page does not answer, the database can be queried directly in the Cloudflare dashboard (Storage & Databases, D1, `divide-stats`, Console). For example, the Celestials people win with:
 
@@ -135,7 +135,7 @@ New card art: put the plate in `art/plates/` and point the card's `plate` at it 
 ## Known limits
 
 - Hidden Roles (5 and 6 players) is not playable online; the engine does not implement it yet.
-- Bots cannot bluff, deal or give gifts.
+- Bots cannot bluff or make deals.
 - Ithuriel, Urim and Asmadai have no art yet and are drawn with a placeholder.
 - Table chat keeps the last 100 lines. A table nobody opens for two weeks is deleted (its finished games stay in the stats).
 - Publishing from this project's cloud sessions uses the KV setup (`wrangler.kv.jsonc`), because Cloudflare's standard static-assets upload is refused through the session's network proxy. `wrangler.jsonc` (static assets) is the standard setup and is used by `npm run dev`; the Worker serves the site either way.

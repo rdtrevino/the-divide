@@ -1,6 +1,6 @@
 # The Divide: Design Decisions
 
-The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 16, 2026, to match card data V39 and rulebook v9.
+The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 17, 2026, to match card data V40 and rulebook v10.
 
 ## Governing rules
 
@@ -39,22 +39,23 @@ That leaves **66 Host cards: 22 Light, 21 Dark, 21 Neutral, and 2 Variable**, wi
 
 ## Shared rules (both modes)
 
-- **Day loop:** Unveiling (Event, Declarations, Seed, First Fruits), one turn each, then the Evening (Reveal the Altar, In the Evening abilities, Set the Tide, the Reaping, Refresh the Altar, Upkeep).
+- **Day loop (V40):** three phases. **Morning** (Event, Declarations, Seed, First Fruits), **Noon** (one turn each), **Evening** (Reveal the Altar, In the Evening abilities, Set the Tide, the Reaping, Refresh the Altar, Upkeep). "The Unveiling" is retired; Morning is its only name.
 - **First Fruits (V35):** each Morning after the Seed, every player secretly picks 1 card from hand, all reveal at once face up on the Altar, then each draws 1. A tithe: no Glory, not the Offer action, triggers no Offer abilities.
 - **Facedown Offers (V35, both modes):** every Offer goes on the Altar facedown. The whole Altar is revealed as the first step of the Evening, so In the Evening abilities see every card. Facedown cards may be Gathered blind.
-- **Actions:** Offer (facedown; reward is 1 Glory or 1 card), Gather (free; discard from a full Choir), Exalt (flat 1 Glory; discard from a full Choir). Turn exists only in Hidden Roles.
-- **Starting position:** a hidden hand of 3 and a face-up Choir of 3 random cards. Choir limit 3 for everyone. Hand limit 3 (the Dominion has 4 and starts with 4).
+- **Actions:** Offer (facedown; the reward is 1 Glory, V40), Gather (free; discard from a full Choir), Exalt (flat 1 Glory; discard from a full Choir). Turn exists only in Hidden Roles.
+- **Starting position:** a hidden hand of 3 and a face-up Choir of 3 random cards. Choir limit 3 for everyone. Hand limit 3 (the Dominion has 4 and starts with 4). V40 measured 1, 2 and 3 random cards and a chosen Choir; Robert wants the random deal to steer each game's strategy, and 3 balances best.
 - **Reaping cap:** 3 Glory gained or lost per Reaping, applied after doubling. Effects outside Alignment scoring (Leviathan and similar) are not capped.
 - **Deck reshuffle:** when the Host deck runs out, shuffle the discard pile.
-- **Glory:** never below 0; may be given freely at any time. V36 removed the final-Day gift ban, because no one knows which Day is last; a gift that pushes someone to 10 ends the game, and Robert likes the tension when everyone is near 10.
+- **Glory:** never below 0. Moves between players only when a card says so (V40, Robert's decision November 17; until then it could be given freely). Table talk and promises remain open and non-binding.
 - **Most or least Glory ties:** when a card names the player with the most or least Glory and players are tied, the user of the card chooses, unless the card says otherwise (Envy).
 - **Once-per-game cards** stay in the starting deal and carry +2. Light: Free Will, Mercy, Revelation, Knowledge, Deliverance. Dark: Bounty, Abaddon, Silence, Scapegoat, Defiance.
 
 ## Terminology
 
-Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Current" appeared in V32 but was drift from after the July 25 print run, which says Tide; Tide is canonical.
+Choir, Altar, Offering, Gather, Reaping, Exalt, **Morning, Noon, Evening**, **Tide**, Fate. "Unveiling" was retired in V40 (Morning is the same steps). "Current" appeared in V32 but was drift from after the July 25 print run, which says Tide; Tide is canonical.
 
 **Timing windows.**
+- *In the Morning* (V40, was "During the Unveiling") works at the Morning step the card names: the Oracle at the Event, Prophecy, the Whisper and Casting Lots at Declarations, Creation at the Seed.
 - *In the Evening* resolves after the Altar is revealed (V35) and before it is counted. It is for abilities that do not care about the Tide: Providence, Eternity, Twilight, Zealot, Moderation.
 - *At the Reaping* resolves after the Tide is set. It is for every ability that reacts to the Tide: Stillness, Firmament, Fig Leaves, Heresy, Prophecy, Uriel, Beelzebub, Morning Star, Martyr, Apple, Leviathan, Outcast, Hubris, the payoffs of the Whisper and Mirage, and the last chance to pay for a card Michael Flipped.
 - *The Eclipse* (V38) is chosen in the Evening just before the Altar is revealed.
@@ -84,7 +85,7 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 | Mirage | V35: your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening (blocks Ithuriel, Urim, Asmadai, Abaddon, the Tempest). They can still be Gathered. V38: at the Reaping, 1 Glory if a card you Offered facedown that Day is still on the Altar and matches the Tide (replaces the V37 draw); not an activation. |
 | Ithuriel, Asmadai | V35 mirror pair. Light reveals a facedown card to everyone; Dark looks privately and may swap it for a hand card. Asmadai's swap keeps the card facedown and still Offered by its original owner. |
 | Urim | V35 Neutral. Look privately at up to 2 facedown cards you did not Offer. What you say about them is up to you. V38: up to 3 cards. |
-| Vessel | V38: place a card from your hand on the Altar facedown, then take the Offer reward (1 Glory or 1 card). Not an Offer (no Offer abilities, no Snare, no Mirage). |
+| Vessel | V40: place a card from your hand on the Altar facedown, then draw 1 card; at the Reaping, 1 Glory if that card is still on the Altar and matches the Tide (uncapped, not Alignment scoring). Not an Offer (no reward, no Offer abilities, no Snare, no Mirage). Was V38: then the Offer reward (1 Glory or 1 card). |
 | Pandemonium | V35: the Seed and First Fruits go facedown, and no Altar card may be flipped or looked at before the Evening. |
 | Snare | Pays only on a Gather of a card you Offered; never First Fruits or the Seed. |
 | Covenant | Imposed on the named player; no consent. |
@@ -106,6 +107,7 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 | Providence | V38: costs 1 Glory. |
 | Absolution | Once per Day, a discarded Choir card returns to hand; then discard 1 from hand. |
 | Divine Calling | Exalt costs 0 Glory this Day. |
+| Babel | V40 wording: "No table talk or deals this Day." (dropped "Glory transfers" when gifts were removed). |
 | Patron | Kept at full strength; watch in playtesting. |
 | The Tempest | Confirmed November 16: used on your own turn, after your action. |
 | The Echo | Confirmed November 16: copies only repeatable "On your turn" abilities, not once-per-game cards. |
@@ -120,7 +122,7 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, Unveiling, **Tide**, Fate. "Curr
 
 ## Design principles
 
-- Few Host cards should give easy Glory every turn. (Vessel, V38, can pay 1 Glory every turn, at the cost of a card from hand.)
+- Few Host cards should give easy Glory every turn. (Vessel, V40, pays only when its hidden card matches the Tide.)
 - **Balance target (V38):** every Host card and Celestial measures between 0.75 and 1.25 win ratio in bot testing.
 - No player should be able to profit by playing only cards of one alignment.
 - Paired cards are designed as mirrors or opposites (the Light and Dark numbering, Cherubim and Veil, Raphael and Azazel, Ithuriel and Asmadai).
@@ -218,19 +220,33 @@ Robert set the target: every Host card and Celestial between 0.75 and 1.25 win r
 
 Claude's proposals that Robert declined, with their measured results: Urim calling the Tide for +1 or -1 (1.11); Nephilim counting +1 toward the Tide when the Choir does not lean with it (0.86); Raguel passing on the full loss with the holder losing 1 less (0.89); Veil losing at most 1 at a Reaping (0.83). Other options tested are in `game/reports/v38-balance-2026-11-16.md`.
 
-## Playtest watch list (Open Game, V38)
+## Playtest watch list (Open Game, V40)
 
-- **Outside 0.75 to 1.25:** Urim (0.74) and Nephilim (0.74), by Robert's choice. Next closest: Veil (0.76), the Arbiter (1.21).
+- **Outside 0.75 to 1.25 (V40, 30,000 bot games):** Urim (0.71), by Robert's choice. Next closest: Free Will (1.22).
 - **Urim** is a pure information tool and **Nephilim** a pure enabler. Do people value them more than the bots do?
-- **Vessel** pays 1 Glory or 1 card every turn at the cost of a hand card. Does it feel like a second Offer that everyone wants?
+- **Vessel** (V40) is a hidden extra vote that costs no cards and pays 1 Glory when the Tide agrees: 0.91 in bot testing.
 - **Pay-at-the-Reaping cards** (Uriel, Beelzebub, Morning Star, Michael's victims) add a decision after the Tide is known. Does the Reaping slow down?
 - **Mirage, Veil, Council** are bluffing or political cards the bots cannot play well. Check them with people.
 - **Covenant** can be aimed at a player at 9 Glory: if the pact holds, both gain 1. Does it get used as kingmaking?
 - **Long games.** Does the table ever stall?
-- **Gifts near 10.** Does the open gift rule create fun brinkmanship or kingmaking?
 - **Bluffing.** Does the table read First Fruits and facedown Offers, or just guess?
 - **Blind Gathers.** Do players ever Gather a facedown card?
 - **Hubris removal.** Does the open deck play better without it?
 - **Raphael and Azazel without Once per Day.** Watch for Altar wipes with Hymn or Lamentation.
 - **Snowballing.** The sole leader after Day 3 wins 65% of 3-player bot games (chance: 33%).
 - **Thin Altar** at 3 players; the 2-Seed option is in the rules.
+
+## Morning, Noon and Evening; the Offer reward; Glory only by card (November 17, 2026, V40)
+
+Robert's questions: turns should not be part of the Morning, so each Day has three phases; whether to keep the draw after First Fruits and the "draw 1 card" Offer reward; how many Choir cards to start with (1, 2 or 3, dealt at random, because the deal should steer each game's strategy); and Glory should move only when a card says so. Measured on 6,000 games per option at 3 and 4 players, on identical seeds. Details: `game/reports/v40-dealing-2026-11-17.md`.
+
+| Decision | Why |
+|---|---|
+| The middle phase is **Noon**; "the Unveiling" is retired and six cards say "In the Morning" (wording) | Keeps the time-of-day pattern, avoids "Day", and pairs with "In the Evening". |
+| The Offer reward is **1 Glory** | Skilled bots chose the card 3% of the time; the hand refills at Upkeep anyway. No measurable change to length, snowballing or Glory. |
+| **Keep the draw after First Fruits** | Without it, hands drop to 2, games run 8.6 Days and the Dominion reaches 1.40 to 1.60. A hand of 4 instead tested slightly worse and needs a Dominion reprint. |
+| **Start with 3 random Choir cards** (unchanged) | 2 cards: slightly less snowballing (Day 3 leader 61% against 65%) but longer games, a wider Celestial spread and six Host cards outside 0.75 to 1.25. 1 card: 7 Days and the Celestials drift apart (spread 0.16 to 0.20). A chosen Choir (2 of 5) balanced well, but Robert wants the random deal to shape strategy. |
+| **Vessel**: place a card facedown, draw 1; 1 Glory at the Reaping if it matches the Tide | Copying the 1-Glory reward measured 1.49; drawing alone 0.64; drawing 2 0.74; this 0.91. |
+| **No Glory gifts** | Robert's call. Babel loses "Glory transfers" (wording). |
+
+Rejected the same day: a hand of 4 with no First Fruits draw; no draw after First Fruits; starting with 1 or 2 Choir cards; choosing the starting Choir (2 of 5 or 3 of 6).

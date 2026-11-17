@@ -1,0 +1,51 @@
+{
+  "version": "V40",
+  "date": "2026-11-17",
+  "previous": "V39",
+  "changes": {
+    "Vessel": {
+      "text": "On your turn: You may place a card from your hand on the Altar facedown, then draw 1 card. At the Reaping, if that card is still on the Altar and matches the Tide, gain 1 Glory. This is not an Offer.",
+      "why": "The Offer reward is now always 1 Glory, so Vessel no longer copies it. Measured with the random starting deal: gain 1 Glory 1.49; draw 1 card 0.64; draw 2 cards 0.74; draw 1 card plus 1 Glory if the card matches the Tide 0.91"
+    },
+    "Prophecy": {
+      "text": "In the Morning: Publicly declare a Target Alignment, Light or Dark. At the Reaping, if the Tide matches, gain 1 Glory; otherwise, including a Neutral Tide, lose 1 Glory.",
+      "cadence": "In the Morning",
+      "why": "Wording: the Day's phases are now Morning, Noon and Evening (was \"During the Unveiling\")",
+      "wording": true
+    }
+  },
+  "celestials": {
+    "The Oracle": {
+      "text": "In the Morning, look at the top Event card. Play it, or bury it at the bottom of the deck.",
+      "why": "Wording: Morning replaces the Unveiling; Morning comes once per Day, so \"Once per Day\" is dropped",
+      "wording": true
+    },
+    "The Whisper": {
+      "text": "In the Morning, publicly predict the direction of the Tide. At the Reaping, if correct, your Choir scores as if aligned with the Tide.",
+      "why": "Wording: Morning replaces the Unveiling",
+      "wording": true
+    }
+  },
+  "events": {
+    "Creation": {
+      "text": "In the Morning, reveal 3 Host cards as Seed to the Altar instead of 1.",
+      "why": "Wording: Morning replaces the Unveiling",
+      "wording": true
+    },
+    "Equilibrium": {
+      "text": "In the Morning, move the Balance marker 1 space toward the center. No effect if it is already on the center space.",
+      "why": "Wording: Morning replaces the Unveiling",
+      "wording": true
+    },
+    "Casting Lots": {
+      "text": "Each player secretly predicts the Tide in the Morning: Light, Dark, or Neutral. At the Reaping, a correct call gains 1 Glory (2 for Neutral); a wrong call loses 1.",
+      "why": "Wording: Morning replaces the Unveiling",
+      "wording": true
+    },
+    "Babel": {
+      "text": "No table talk or deals this Day.",
+      "why": "Glory is no longer given between players except by card abilities, so \"Glory transfers\" is dropped",
+      "wording": true
+    }
+  }
+}

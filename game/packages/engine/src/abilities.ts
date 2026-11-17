@@ -129,17 +129,16 @@ export const TURN: Record<string, TurnAbility> = {
   },
   // V38: Morning Star now acts At the Reaping (see engine.ts reaping()).
   [H.vessel]: {
-    // V38: place a card from your hand on the Altar facedown and take the Offer reward. It is not an Offer.
+    // V40: place a card from your hand on the Altar facedown, then draw 1 card. It is not an Offer.
+    // Its Glory, if the card matches the Tide, is paid At the Reaping (engine.ts reaping()).
     can: (s, seat) => s.players[seat].hand.length > 0,
     *run(s, seat) {
       const h = s.players[seat].hand;
-      const pick = yield* chooseOne(s, seat, 'vessel.hand', 'Vessel: place a card from your hand on the Altar facedown, then gain 1 Glory or draw 1 card?', h.map((c) => cardOpt(c)), true);
+      const pick = yield* chooseOne(s, seat, 'vessel.hand', 'Vessel: place a card from your hand on the Altar facedown, then draw 1 card? At the Reaping, if it is still there and matches the Tide, you gain 1 Glory.', h.map((c) => cardOpt(c)), true);
       if (!pick) return;
       h.splice(h.indexOf(pick), 1);
       s.altar.push({ id: pick, facedown: true, offeredBy: seat, day: s.day, kind: 'vessel' });
-      const r = yield* chooseOne(s, seat, 'offer.reward', 'Vessel: gain 1 Glory, or draw 1 card?', [{ id: 'glory', label: 'Gain 1 Glory' }, { id: 'card', label: 'Draw 1 card' }]);
-      if (r === 'card') yield* drawTo(s, seat, 1);
-      else yield* gain(s, seat, 1, H.vessel);
+      yield* drawTo(s, seat, 1);
       log(s, 'vessel', `${pname(s, seat)} placed a card on the Altar facedown (Vessel).`);
     },
   },

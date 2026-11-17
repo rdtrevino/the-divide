@@ -97,6 +97,14 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const sorted = [...d.options].sort((a, b) => (want >= 0 ? signed(s, a.card) - signed(s, b.card) : signed(s, b.card) - signed(s, a.card)));
       return sorted.slice(0, d.min).map((o) => o.id);
     }
+    if (d.tag === 'choir.pick') {
+      // Lean hard one way: take the strongest cards of whichever color the hand favors.
+      const by = (sign: number) => [...d.options].sort((a, b) => sign * (signed(s, b.card) - signed(s, a.card))).slice(0, d.min);
+      const sum = (os: Option[], sign: number) => os.reduce((t, o) => t + sign * signed(s, o.card), 0);
+      const L = by(1), D = by(-1);
+      const pick = sum(L, 1) > sum(D, -1) || (sum(L, 1) === sum(D, -1) && r < 0.5) ? L : D;
+      return pick.map((o) => o.id);
+    }
     if (d.tag === 'jubilee') {
       return d.options.filter((o) => (want >= 0 ? signed(s, o.card) < 0 : signed(s, o.card) > 0)).map((o) => o.id).slice(0, d.max);
     }
@@ -138,8 +146,6 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const choice = pickBest(ids, (x) => scores[x] + r * 0.4);
       return one(choice);
     }
-    case 'offer.reward':
-      return one(s.players[seat].hand.length <= 1 && r < 0.6 ? 'card' : 'glory');
     case 'celestial.pick': {
       const pref = ['celestial-the-eclipse', 'celestial-the-arbiter', 'celestial-the-whisper', 'celestial-the-dominion', 'celestial-the-cantor', 'celestial-the-echo', 'celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-patron'];
       return one(pickBest(d.options, (o) => -pref.indexOf(o.id)).id);
