@@ -376,6 +376,7 @@ export const TURN: Record<string, TurnAbility> = {
       if (!t) return;
       s.day_.bounty[seat] = seatFromOpt(t);
       log(s, 'bounty', `${pname(s, seat)} put a Bounty on ${pname(s, seatFromOpt(t))}.`);
+      if (variant(s, 'bounty-spent2') || variant(s, 'bounty-spent3')) { (s.day_ as any).bountySpent = { ...((s.day_ as any).bountySpent ?? {}), [seat]: true }; yield* discardFromChoir(s, seat, H.bounty, 'Bounty'); }
     },
   },
   [H.flamingSword]: {

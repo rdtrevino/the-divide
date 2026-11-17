@@ -731,7 +731,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   // Bounty (V42): if the player you named lost Glory at this Reaping, gain 1.
   for (const [k, t] of Object.entries(s.day_.bounty)) {
     const seat = Number(k);
-    if (hasActive(s, seat, H.bounty) && lost[t] > 0 && (!variant(s, 'bounty-with') || leansWithTide.has(seat))) { yield* gain(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory, so ${pname(s, seat)} collects the Bounty (1 Glory).`); }
+    const spent = (s.day_ as any).bountySpent?.[seat];
+    if ((hasActive(s, seat, H.bounty) || spent) && lost[t] > 0 && (!variant(s, 'bounty-with') || leansWithTide.has(seat)) && (!variant(s, 'bounty-nogain') || !(gained[seat] > 0))) { yield* gain(s, seat, spent ? (variant(s, 'bounty-spent3') ? 3 : 2) : 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory, so ${pname(s, seat)} collects the Bounty (1 Glory).`); }
   }
   // Raguel (V42): each Reaping your Bound player gains Glory, you gain 1.
   for (const b of s.bonds) {
