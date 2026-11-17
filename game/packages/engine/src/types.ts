@@ -16,8 +16,8 @@ export interface GameConfig {
   seed: number;
   mode: Mode;
   players: PlayerConfig[];
-  /** Optional rule: reveal 2 Seeds each Morning (suggested for thin 3-player Altars). */
-  twoSeeds?: boolean;
+  /** Advanced game: Celestials and Events (V41). The Base game has neither. */
+  advanced?: boolean;
   /** Experimental balance variants, used for A/B testing in the simulator. */
   variants?: string[];
 }
@@ -129,7 +129,7 @@ export interface StatEvent {
 export interface GameResult {
   winners: Seat[];
   finalTide: Dir;
-  standings: { seat: Seat; glory: number; bonus: number; matching: number }[];
+  standings: { seat: Seat; glory: number }[];
 }
 
 export interface DayFlags {

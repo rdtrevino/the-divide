@@ -4,7 +4,7 @@ import { marked } from 'marked';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Site } from '../components/Site';
 import { Link } from '../lib/router';
-import source from '../../../../../rules/The_Divide_Rulebook_v10.md?raw';
+import source from '../../../../../rules/The_Divide_Rulebook_v11.md?raw';
 
 // The rulebook's version line is for the designer, not for players.
 const raw = source.replace(/^\*\*Version:\*\*.*\n/m, '');

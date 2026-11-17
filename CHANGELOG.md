@@ -1,5 +1,29 @@
 # Changelog
 
+## V41 cards and Rulebook v11: coalition scoring, a growing Choir, Base and Advanced (November 17, 2026)
+
+Robert's decisions of November 17. The Host card rework is next.
+
+- **Coalition scoring.** At the Reaping, the Choirs leaning with the Tide share it: alone, 3 Glory; two, 2 for the stronger lean and 1 for the weaker (1 each if equal); three or more, nothing. A Choir leaning against the Tide loses 1. Was: gain or lose your lean, capped at 3.
+- **No Reaping cap**: coalition scoring has fixed amounts.
+- **Choir: start with 2 random cards, room for 4.** Was 3 and 3.
+- **No Seed.** First Fruits starts the Altar each Morning. The three-player "two Seeds" option is gone.
+- **Race to 15.** Was 10.
+- **No endgame bonus**, and nothing else left over from the fixed-length game: most Glory wins, a tie is shared.
+- **Base game and Advanced.** The Base game is the Host cards only; the Advanced game adds Celestials and Events. Hidden Roles uses the Advanced rules.
+- **Four timing labels**: In the Morning, On your turn, At the Reaping, and none (always on or "When…"). Morning's steps are the Event (Advanced), Predictions, and First Fruits; the Evening's are Reveal, Set the Tide, the Reaping, Refresh, Upkeep.
+- **The actions are unchanged**: Offer (1 Glory), Gather (free), Exalt (1 Glory); a replaced Choir card is discarded.
+- **Rulebook v11**, the Learn page (goal, starting Choir, Morning, and a new Reaping walk-through), and the site (an Advanced game option in the lobby replacing Two Seeds; four Choir places; no Celestials or Event place in a Base game; results without the bonus column).
+- **Bots** play coalition scoring: they count who else leans their way, and value building their Choir for later Reapings.
+
+**Card changes (V41):**
+
+- **Timing labels (wording):** Twilight, Zealot, Moderation and Remnant now say "At the Reaping".
+- **Timing (rules):** Providence and Eternity move from "In the Evening" to "At the Reaping", so they now act after the Tide is set. Absolution and Mammon lose "Once per Day".
+- **No Seed:** Creation reveals 3 Host cards onto the Altar; Pandemonium places First Fruits facedown.
+
+**Watch:** with bots, Base games run a median of 10 Days at 3 players and 12 at 4 (some much longer), because coalition scoring pays less than the old lean scoring. The engine cards in the Host rework are meant to speed up the late game. The Stats page's bot column still shows V40 numbers.
+
 ## V40 cards and Rulebook v10: Morning, Noon and Evening; the Offer pays 1 Glory (November 17, 2026)
 
 Measured over 6,000 bot games per option at 3 and 4 players; see `game/reports/v40-dealing-2026-11-17.md`.

@@ -209,10 +209,9 @@ export function removeFromChoir(s: GameState, seat: Seat, id: string): ChoirCard
 /** Discard a card from a Choir to the discard pile, honoring Absolution. */
 export function* discardFromChoir(s: GameState, seat: Seat, id: string, why: string): Gen<void> {
   if (!removeFromChoir(s, seat, id)) return;
-  if (id.startsWith('host-') && hasActive(s, seat, H.absolution) && !usedToday(s, seat, 'absolution') && canActivate(s, seat, H.absolution)) {
+  if (id.startsWith('host-') && hasActive(s, seat, H.absolution) && canActivate(s, seat, H.absolution)) {
     const take = yield* yesNo(s, seat, 'absolution', `Absolution: return ${cardName(id)} to your hand instead of discarding it (then discard 1 card from your hand)?`);
     if (take) {
-      markToday(s, seat, 'absolution');
       let kept = false;
       const ok = yield* activation(s, seat, H.absolution, function* () {
         kept = true;
@@ -285,7 +284,9 @@ export function discardableForRoom(s: GameState, p: Player): ChoirCard[] {
   return p.choir.filter((c) => c.id.startsWith('host-') && !(c.id === H.parasite && !c.facedown && !blockedByEvent(s, p.seat, c.id)));
 }
 
-export const CHOIR_LIMIT = 3;
+export const CHOIR_LIMIT = 4;
+/** The Choir limit: 4 (V41), or 'limit-N' for testing. */
+export const choirLimit = (s: GameState) => Number((s.config.variants ?? []).find((v) => v.startsWith('limit-'))?.slice(6) ?? CHOIR_LIMIT);
 
 /** Put a card into a Choir. Caller must ensure there is room. Handles entry triggers. */
 export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
@@ -305,7 +306,7 @@ export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
 /** Make room in a full Choir by discarding (player's choice among voluntary options). Returns false if impossible. */
 export function* makeRoom(s: GameState, seat: Seat, why: string): Gen<boolean> {
   const p = s.players[seat];
-  if (p.choir.length < CHOIR_LIMIT) return true;
+  if (p.choir.length < choirLimit(s)) return true;
   const opts = discardableForRoom(s, p);
   if (!opts.length) return false;
   const pick = yield* chooseOne(s, seat, 'choir.discard', `Your Choir is full. Choose a card to discard (${why}).`, opts.map((c) => cardOpt(c.id)));

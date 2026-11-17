@@ -73,3 +73,22 @@ Assuming the 45-minute game:
 3. **A first-game setup.** No Events for the first game, and a 30-card starter Host deck of the plainest cards (no reactions, no timing windows), so new players learn the Altar and the Tide before the exceptions.
 4. **Better bots.** Contest the leader's color, hold cards back, and Offer against their own lean sometimes. Online play is where most playtesting happens now, so this is the cheapest way to make the game feel real.
 5. **Let the site test variants.** An option in the lobby for "The Long Day" (and later a herding rule) so friends can play both and the Stats page can compare them.
+
+## Follow-up: two turns, a race to 15, no Seed (same day)
+
+Robert rejected the margin cap and liked two turns at Noon with a race to 15, and proposed removing the Seed, since First Fruits already starts the Altar. 3,000 games per line; 3 players, with 4 players in brackets.
+
+| Rules | Actions | Days | Day 3 leader wins | Winner's Glory from Offers | Celestial spread |
+|---|---|---|---|---|---|
+| Current (V40) | 6.2 | 6.2 | 66% (59%) | about 4 of 13 | 0.129 (0.102) |
+| Two turns + race to 15 | 14.5 | 7.3 | 63% (53%) | about 10 of 18 | 0.108 (0.103) |
+| Two turns + race to 15 + no Seed | 14.4 | 7.2 | 63% (54%) | about 10 of 18 | 0.106 (0.099) |
+| Two turns + no Seed + Offers pay only if the card matches the Tide (race to 10) | 15.2 | 7.6 | 61% (53%) | about 4 of 13 | 0.124 (0.136) |
+| …the same, race to 12 | 19.2 | 9.6 | 57% (47%) | about 5 of 15 | 0.126 (0.167) |
+| Two turns + race to 15 + no Seed + shared spoils | 18.5 | 9.2 | 60% (50%) | | 0.103 (0.133) |
+| Two turns + race to 15 + no Seed + lone bonus | 13.9 | 6.9 | 64% (55%) | | 0.105 (0.114) |
+
+- **The Seed** can go: removing it changes nothing measurable.
+- **Two turns with flat 1-Glory Offers** makes Offers more than half of the winner's Glory, so the Tide matters less than it does now.
+- **Tide-matched Offers** keep the Tide central at the same length (15 actions, 7.6 Days). They also give hidden allegiance a payoff: you can lean Light in public and bet Dark in secret.
+- **Shared spoils** ("alone you gain up to 3, with one partner up to 2 each, with more 1 each") and the **lone bonus** (+1 if yours is the only Choir with the Tide) reward small winning coalitions. Bots don't react to them, so these numbers only show length and balance; whether they stop herding needs people.

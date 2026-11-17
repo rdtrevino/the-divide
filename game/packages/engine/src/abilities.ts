@@ -4,7 +4,7 @@ import { C, H, HOST, cardName } from './data';
 import {
   activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
   drawHost, drawTo, enterChoir, gain, handLimit, hasActive, log, lose, markToday, others, payTribute, peekHost,
-  pname, protectedFrom, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, CHOIR_LIMIT,
+  pname, protectedFrom, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, choirLimit,
   colorsOf, activation, altarShielded, altarPeekable, canSpend, pay, variant, makeRoom,
 } from './core';
 import { randInt } from './rng';
@@ -422,7 +422,7 @@ export const TURN: Record<string, TurnAbility> = {
       const o = seatFromOpt(t);
       const card = yield* chooseOne(s, seat, 'patron.card', `The Patron: choose a card to give to ${pname(s, o)}'s Choir.`, s.players[seat].hand.map((c) => cardOpt(c)));
       if (!card) return;
-      const full = s.players[o].choir.length >= CHOIR_LIMIT;
+      const full = s.players[o].choir.length >= choirLimit(s);
       if (full && !(yield* payTribute(s, seat, o))) return;
       s.players[seat].hand.splice(s.players[seat].hand.indexOf(card), 1);
       if (full) {
@@ -470,7 +470,7 @@ function covenantTargets(s: GameState, seat: Seat) {
 
 function patronTargets(s: GameState, seat: Seat): Seat[] {
   return others(s, seat)
-    .filter((p) => p.choir.length < CHOIR_LIMIT || (!protectedFrom(s, seat, p.seat, 'discard') && canAffordTribute(s, seat, p.seat)))
+    .filter((p) => p.choir.length < choirLimit(s) || (!protectedFrom(s, seat, p.seat, 'discard') && canAffordTribute(s, seat, p.seat)))
     .map((p) => p.seat);
 }
 

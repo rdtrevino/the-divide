@@ -5,6 +5,6 @@ export type { Input } from './game';
 export { viewFor } from './view';
 export type { GameView, PlayerView } from './view';
 export { botAnswer } from './bots';
-export { DAYS, GLORY_TARGET, gloryTarget, OPEN_SET_ASIDE_HOSTS, OPEN_SET_ASIDE_EVENTS, legalActions, exaltCost, setTide } from './engine';
-export { alignment, baseValue } from './core';
+export { GLORY_TARGET, STARTING_CHOIR, gloryTarget, OPEN_SET_ASIDE_HOSTS, OPEN_SET_ASIDE_EVENTS, legalActions, exaltCost, setTide } from './engine';
+export { alignment, baseValue, CHOIR_LIMIT } from './core';
 export { playBotGame } from './autoplay';
