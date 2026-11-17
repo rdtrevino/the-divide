@@ -567,6 +567,8 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
         const [a] = s.altar.splice(Number(pick), 1);
         const p = s.players[seat];
         p.hand.push(a.id);
+        // 'remnant-own': no discard here; Upkeep (next) discards down to, or draws up to, the hand limit.
+        if (variant(s, 'remnant-own')) { log(s, 'remnant', `${p.name} took back ${cardName(a.id)} from the Altar into their hand (Remnant).`); return; }
         const d = yield* chooseOne(s, seat, 'remnant.discard', 'Remnant: discard 1 card from your hand.', p.hand.map((c) => cardOpt(c)));
         if (d) { p.hand.splice(p.hand.indexOf(d), 1); s.discard.push(d); }
         log(s, 'remnant', `${p.name} took ${cardName(a.id)} from the Altar into their hand (Remnant).`);
@@ -792,7 +794,9 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     }
     // Uriel and Beelzebub (V42): 1 Glory if your Choir holds 3 or more cards of their color.
     for (const [id, k] of [[H.uriel, 'light'], [H.beelzebub, 'dark']] as const) {
-      if (hasActive(s, seat, id) && activeCards(p).filter((c) => colorsOf(s, seat, c.id)[k]).length >= 3) { yield* gain(s, seat, 1, id); log(s, 'set', `${p.name} gained 1 Glory (${cardName(id)}).`); }
+      // Tests: 'set-others' (3 others besides the card itself), 'set-tide' (and your Choir leans with the Tide).
+      const setN = activeCards(p).filter((c) => colorsOf(s, seat, c.id)[k] && (!variant(s, 'set-others') || c.id !== id)).length;
+      if (hasActive(s, seat, id) && setN >= 3 && (!variant(s, 'set-tide') || leansWithTide.has(seat))) { yield* gain(s, seat, 1, id); log(s, 'set', `${p.name} gained 1 Glory (${cardName(id)}).`); }
     }
     // Test 'tree-swap' / 'tree-swap-tide' (Robert's idea): take an Altar card into your Choir, discarding one if it is full.
     if ((variant(s, 'tree-swap') || (variant(s, 'tree-swap-tide') && leansWithTide.has(seat)) || (variant(s, 'tree-swap-cost') && canSpend(s, seat, 1)) || (variant(s, 'tree-swap-lose') && !(gained[seat] > 0))) && hasActive(s, seat, H.treeOfLife) && canActivate(s, seat, H.treeOfLife)) {
