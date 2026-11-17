@@ -40,18 +40,20 @@ export function repeatable(id: string): boolean {
 
 export const TURN: Record<string, TurnAbility> = {
   [H.michael]: {
-    can: (s, seat) => (!variant(s, 'michael-cost') || canSpend(s, seat, 1)) && flipTargets(s, seat).length > 0,
+    // V42, spent: discard a card from another player's Choir, then discard Michael.
+    can: (s, seat) => michaelTargets(s, seat).length > 0,
     *run(s, seat) {
-      if (variant(s, 'michael-cost')) yield* pay(s, seat, 1, H.michael);
-      const t = flipTargets(s, seat);
-      const pick = yield* chooseOne(s, seat, 'michael.target', 'Michael: Flip a Host card in any Choir Facedown.', t.map((x) => ({ id: `${x.owner}:${x.id}`, label: `${cardName(x.id)} (${pname(s, x.owner)})`, card: x.id, seat: x.owner })));
+      const t = michaelTargets(s, seat);
+      const pick = yield* chooseOne(s, seat, 'michael.target', "Michael: discard a card from another player's Choir, then discard Michael.", t.map((x) => ({ id: `${x.owner}:${x.id}`, label: `${cardName(x.id)} (${pname(s, x.owner)})`, card: x.id, seat: x.owner })), true);
       if (!pick) return;
       const [o, id] = pick.split(':');
       const owner = Number(o);
       if (!(yield* payTribute(s, seat, owner))) return;
-      const c = s.players[owner].choir.find((x) => x.id === id);
-      if (c) { c.facedown = true; (c as any).michael = true; }
-      log(s, 'michael', `${pname(s, seat)} turned ${cardName(id)} in ${pname(s, owner)}'s Choir Facedown until the Reaping ends.`);
+      if (variant(s, 'michael-hand')) { if (removeFromChoir(s, owner, id)) s.players[owner].hand.push(id); }
+      else if (variant(s, 'michael-flip')) { const c = s.players[owner].choir.find((x) => x.id === id); if (c) { c.facedown = true; (c as any).michael = true; } }
+      else yield* discardFromChoir(s, owner, id, 'Michael');
+      yield* discardFromChoir(s, seat, H.michael, 'Michael');
+      log(s, 'michael', `${pname(s, seat)} cast ${cardName(id)} out of ${pname(s, owner)}'s Choir, and Michael is spent.`);
     },
   },
   [H.wisdom]: {
@@ -242,13 +244,11 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.anathema]: {
-    can: () => true,
+    // V42: no player may Offer, you included, until the end of your next turn.
+    can: (s, seat) => !s.anathema.some((a) => a.by === seat && a.action === 'offer'),
     *run(s, seat) {
-      const t = yield* chooseOne(s, seat, 'anathema', 'Anathema: choose a player who cannot Offer until the start of your next turn.', others(s, seat).filter((p) => !immune(s, seat, p.seat)).map((p) => seatOpt(s, p.seat)));
-      if (!t) return;
-      const target = seatFromOpt(t);
-      s.anathema.push({ target, by: seat, action: 'offer' });
-      log(s, 'anathema', `${pname(s, target)} cannot Offer until ${pname(s, seat)}'s next turn (Anathema).`);
+      for (const p of s.players) s.anathema.push({ target: p.seat, by: seat, action: 'offer', endAfter: true });
+      log(s, 'anathema', `No player may Offer until the end of ${pname(s, seat)}'s next turn (Anathema).`);
     },
   },
   [H.serpent]: {
@@ -317,45 +317,44 @@ export const TURN: Record<string, TurnAbility> = {
 
   // ----- once per game
   [H.deliverance]: {
-    // V42: pay 1 Glory to swap a card in your Choir with a card in another player's Choir.
-    can: (s, seat) => canSpend(s, seat, 1) && deliverancePairs(s, seat).length > 0,
+    // V42, spent: swap a card between any two Choirs, then discard Deliverance.
+    can: (s, seat) => deliverancePairs(s, seat).length > 0,
     *run(s, seat) {
       const pairs = deliverancePairs(s, seat);
-      const pick = yield* chooseOne(s, seat, 'deliverance', 'Deliverance: pay 1 Glory to swap a card in your Choir with a card in another Choir?', pairs.map((x) => ({ id: `${x.ca}|${x.b}:${x.cb}`, label: `Your ${cardName(x.ca)} for ${pname(s, x.b)}'s ${cardName(x.cb)}`, card: x.cb })), true);
+      const pick = yield* chooseOne(s, seat, 'deliverance', 'Deliverance: swap a card between two Choirs, then discard Deliverance?', pairs.map((x) => ({ id: `${x.a}:${x.ca}|${x.b}:${x.cb}`, label: `${cardName(x.ca)} (${pname(s, x.a)}) for ${cardName(x.cb)} (${pname(s, x.b)})` })), true);
       if (!pick) return;
-      const [ca, rest] = pick.split('|');
-      const [b, cb] = rest.split(':');
-      const B = Number(b);
-      yield* pay(s, seat, 1, H.deliverance);
+      const [[a, ca], [b, cb]] = pick.split('|').map((x) => x.split(':'));
+      const A = Number(a), B = Number(b);
+      if (!(yield* payTribute(s, seat, A))) return;
       if (!(yield* payTribute(s, seat, B))) return;
-      const cardA = removeFromChoir(s, seat, ca);
+      const cardA = removeFromChoir(s, A, ca);
       const cardB = removeFromChoir(s, B, cb);
       if (cardA) yield* enterChoir(s, B, ca);
-      if (cardB) yield* enterChoir(s, seat, cb);
-      log(s, 'deliverance', `${pname(s, seat)} swapped their ${cardName(ca)} for ${pname(s, B)}'s ${cardName(cb)} (Deliverance).`);
+      if (cardB) yield* enterChoir(s, A, cb);
+      yield* discardFromChoir(s, seat, H.deliverance, 'Deliverance');
+      log(s, 'deliverance', `${pname(s, seat)} swapped ${cardName(ca)} (${pname(s, A)}) with ${cardName(cb)} (${pname(s, B)}), and Deliverance is spent.`);
     },
   },
   [H.abaddon]: {
-    // V42: pay 2 Glory to replace every Altar card with the top card of the Host deck (was once per game).
-    can: (s, seat) => canSpend(s, seat, variant(s, 'abaddon-1') ? 1 : variant(s, 'abaddon-discard') ? 0 : 2) && altarAvailable(s, seat).length > 0,
+    // V42, spent: replace every Altar card with the top card of the Host deck, then discard Abaddon.
+    can: (s, seat) => altarAvailable(s, seat).length > 0,
     *run(s, seat) {
-      yield* pay(s, seat, variant(s, 'abaddon-1') ? 1 : variant(s, 'abaddon-discard') ? 0 : 2, H.abaddon);
-      if (variant(s, 'abaddon-discard')) yield* discardFromChoir(s, seat, H.abaddon, 'Abaddon');
       const keep = s.altar.filter((a) => (a.sanctuary !== undefined && a.sanctuary !== seat) || altarShielded(s, a, seat));
       const gone = s.altar.filter((a) => !keep.includes(a));
       s.discard.push(...gone.map((a) => a.id));
       const fresh = gone.map(() => drawHost(s)).filter((c): c is string => !!c).map((id) => ({ id, facedown: false, offeredBy: null, day: s.day, kind: 'other' as const }));
       s.altar = [...keep, ...fresh];
-      log(s, 'abaddon', `${pname(s, seat)} paid 2 Glory to unleash Abaddon: ${gone.length} Altar card(s) were replaced from the Host deck.`);
+      yield* discardFromChoir(s, seat, H.abaddon, 'Abaddon');
+      log(s, 'abaddon', `${pname(s, seat)} unleashed Abaddon: ${gone.length} Altar card(s) were replaced, and Abaddon is spent.`);
     },
   },
   [H.freeWill]: {
-    // V42: pay 1 Glory to take a second action this turn (was once per game, two actions).
-    can: (s, seat) => canSpend(s, seat, 1) && s.day_.extraAction !== seat,
+    // V42, spent: take a second action this turn, then discard Free Will.
+    can: (s, seat) => s.day_.extraAction !== seat,
     *run(s, seat) {
-      yield* pay(s, seat, 1, H.freeWill);
       s.day_.extraAction = seat;
-      log(s, 'freeWill', `${pname(s, seat)} paid 1 Glory to take a second action (Free Will).`);
+      yield* discardFromChoir(s, seat, H.freeWill, 'Free Will');
+      log(s, 'freeWill', `${pname(s, seat)} takes a second action, and Free Will is spent.`);
     },
   },
   [H.silence]: {
@@ -551,10 +550,20 @@ function echoTargets(s: GameState, seat: Seat) {
 }
 
 function deliverancePairs(s: GameState, seat: Seat) {
-  const out: { ca: string; b: Seat; cb: string }[] = [];
-  for (const mine of hostCardsOf(s, seat)) for (const p of others(s, seat)) {
+  const pool: { owner: Seat; id: string }[] = [];
+  for (const p of s.players) {
+    const cards = p.seat === seat ? hostCardsOf(s, seat).filter((c) => c.id !== H.deliverance) : targetableChoir(s, seat, p.seat, 'replace');
+    for (const c of cards) if (canAffordTribute(s, seat, p.seat)) pool.push({ owner: p.seat, id: c.id });
+  }
+  const out: { a: Seat; ca: string; b: Seat; cb: string }[] = [];
+  for (const x of pool) for (const y of pool) if (x.owner < y.owner) out.push({ a: x.owner, ca: x.id, b: y.owner, cb: y.id });
+  return out;
+}
+function michaelTargets(s: GameState, seat: Seat) {
+  const out: { owner: Seat; id: string }[] = [];
+  for (const p of others(s, seat)) {
     if (!canAffordTribute(s, seat, p.seat)) continue;
-    for (const c of targetableChoir(s, seat, p.seat, 'replace')) out.push({ ca: mine.id, b: p.seat, cb: c.id });
+    for (const c of targetableChoir(s, seat, p.seat, 'discard')) if (!c.facedown) out.push({ owner: p.seat, id: c.id });
   }
   return out;
 }

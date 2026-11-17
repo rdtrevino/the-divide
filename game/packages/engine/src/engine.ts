@@ -243,11 +243,14 @@ export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
   // Two rounds per Day: each Choir card still activates at most once per Day.
   s.turnUsed = [];
   s.morningStar = s.morningStar.filter((m) => m.seat !== seat);
-  s.anathema = s.anathema.filter((a) => a.by !== seat);
+  // Anathema (V42) lasts until the end of its holder's next turn; Flaming Sword until the start of it.
+  s.anathema = s.anathema.filter((a) => a.by !== seat || a.endAfter);
+  for (const a of s.anathema) if (a.by === seat && a.endAfter) a.armed = true;
   s.silenced = s.silenced.filter((x) => x.by !== seat); // Silence lasts until the silencer's next turn
   const p = s.players[seat];
   log(s, 'turn', `${p.name}'s turn.`);
 
+  try {
   yield* takeAction(s, seat, 0);
   yield* activationPhase(s, seat);
   // Free Will (V42): a second action, paid for during this turn's activations.
@@ -255,6 +258,9 @@ export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
     s.day_.extraAction = undefined;
     yield* takeAction(s, seat, 1);
     yield* activationPhase(s, seat);
+  }
+  } finally {
+    s.anathema = s.anathema.filter((a) => !(a.by === seat && a.armed));
   }
 
   for (const c of s.confession) if (c.seat === seat) c.turnsLeft--;
@@ -679,21 +685,21 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     delta[t] = 0;
     log(s, 'scapegoat', `${pname(s, seat)} paid 1 Glory: ${pname(s, t)} gains nothing this Reaping (Scapegoat).`);
   }
+  // Mercy (V42, spent): if you share the Tide, score 3 as if you were alone, then discard Mercy.
+  const spentMercy: Seat[] = [];
+  if (withTide.length >= 2) for (const w of withTide) {
+    if (!hasActive(s, w.seat, H.mercy) || !canActivate(s, w.seat, H.mercy)) continue;
+    if (!(yield* yesNo(s, w.seat, 'mercy', `Mercy: ${withTide.length} Choirs share the Tide. Score 3 as if you were alone, then discard Mercy?`))) continue;
+    if (yield* activation(s, w.seat, H.mercy, function* () { log(s, 'mercy', `${pname(s, w.seat)} scores 3 as if alone, and Mercy is spent.`); })) { delta[w.seat] = 3 * w.dbl; spentMercy.push(w.seat); }
+  }
   log(s, 'share', withTide.length === 0 ? 'No Choir leans with the Tide.' : withTide.length >= 3 ? `${withTide.length} Choirs lean with the Tide, so none of them scores.` : withTide.length === 1 ? `${pname(s, withTide[0].seat)} leans with the Tide alone.` : `${withTide.map((w) => pname(s, w.seat)).join(' and ')} share the Tide.`);
   const prevLean = { ...s.lastAlignColor };
+  for (const seat of spentMercy) yield* discardFromChoir(s, seat, H.mercy, 'Mercy');
   for (const p of s.players) s.lastAlignColor[p.seat] = dirOf(nets[p.seat]);
 
   const loss: Record<number, number> = {};
   for (const p of s.players) loss[p.seat] = delta[p.seat] < 0 ? -delta[p.seat] : 0;
   // Mercy (V42): you never lose Glory at the Reaping.
-  if (!variant(s, 'mercy-other')) { for (const p of s.players) if (loss[p.seat] && hasActive(s, p.seat, H.mercy)) { log(s, 'mercy', `${p.name} loses nothing (Mercy).`); loss[p.seat] = 0; } }
-  else for (const seat of order) {
-    if (!hasActive(s, seat, H.mercy)) continue;
-    const losing = others(s, seat).filter((o) => loss[o.seat] > 0);
-    if (!losing.length) continue;
-    const pick = yield* chooseOne(s, seat, 'mercy.other', 'Mercy: choose a player who would lose Glory. They lose nothing.', losing.map((o) => seatOpt(s, o.seat)), true);
-    if (pick) loss[seatFromOpt(pick)] = 0;
-  }
   // Scapegoat (V42): if you would lose Glory at the Reaping, a player of your choice loses it instead.
   for (const seat of order) {
     if (!loss[seat] || !hasActive(s, seat, H.scapegoat) || !canActivate(s, seat, H.scapegoat) || variant(s, 'scapegoat-sac') || variant(s, 'scapegoat-sac-free') || variant(s, 'scapegoat-sac2') || variant(s, 'scapegoat-crowd') || variant(s, 'scapegoat-deny')) continue;

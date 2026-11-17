@@ -224,7 +224,9 @@ export function botAnswer(s: GameState, d: Decision): Answer {
           return st >= 3 || Math.max(...s.players.map((x) => x.glory)) >= 7;
         }
         if (o.card === H.parasite) return want > 0;
-        if (o.card === H.freeWill) return s.players[seat].glory >= 3 && s.players[seat].hand.length >= 2;
+        if (o.card === H.freeWill) return s.players[seat].hand.length >= 2 && r < 0.4;
+        if (o.card === H.anathema) return altar !== 0 && dirOf(altar) === wantDir && later >= 1;
+        if (o.card === H.michael) return leaders.some((l) => l !== seat) && r < 0.5;
         if (o.card === H.silence) return leaders.some((l) => l !== seat) && r < 0.5;
         if (o.card === H.deliverance) return r < 0.25;
         if (o.card === H.deliverance) return r < 0.25;
@@ -402,7 +404,9 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       return one(score(now + signed(s, c.id)) - score(now) >= 2 ? 'yes' : 'no');
     }
     case 'michael.target': {
-      const o = pickBest(d.options, (x) => {
+      const opts = d.options.filter((x) => x.seat !== undefined);
+      if (!opts.length) return one('none');
+      const o = pickBest(opts, (x) => {
         if (x.seat === seat) return -5;
         const v = signed(s, x.card);
         const theirNet = alignment(s, x.seat!);

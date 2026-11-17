@@ -200,7 +200,7 @@ describe('Protection and reactions', () => {
     });
     expect(s.players[0].glory).toBe(1); // paid 1 to the Pot (V37)
     expect(s.players[1].glory).toBe(0);
-    expect(s.players[1].choir.some((c) => c.facedown)).toBe(true);
+    expect(s.players[1].choir).toHaveLength(1); // Michael (V42) cast a card out
   });
   it('The Flood also switches off automatic Light abilities, but the cards still count toward Alignment', () => {
     const run = (event: string | null) => {
@@ -559,31 +559,6 @@ describe('V37 card changes', () => {
   });
 });
 
-describe('V38 Michael', () => {
-  it('the Flipped card turns face up after the Reaping; its owner may pay 1 at the Reaping to flip it first', () => {
-    const run = (pay: boolean) => {
-      const s = blank();
-      choir(s, 0, H.michael);
-      hand(s, 0, H.council); // Neutral: Offering it leaves the Tide and every lean unchanged
-      choir(s, 1, H.wisdom, H.gabriel); // Light 2
-      s.players[1].glory = 3;
-      drive(s, takeTurn(s, 0), {
-        action: ['offer'],
-        activate: (d) => [d.options.find((o) => o.card === H.michael)?.id ?? 'end'],
-        'michael.target': (d) => [d.options.find((o) => o.seat === 1 && o.card === H.wisdom)!.id],
-      });
-      expect(s.players[1].choir.find((c) => c.id === H.wisdom)!.facedown).toBe(true);
-      altar(s, H.confession); // Light Tide
-      const { asked } = reap(s, { 'michael.restore': [pay ? 'yes' : 'no'] });
-      expect(asked.some((d) => d.tag === 'michael.restore' && d.seat === 1)).toBe(true);
-      expect(s.players[1].choir.every((c) => !c.facedown)).toBe(true); // face up again after the Reaping
-      return s.players[1].glory;
-    };
-    // Michael's holder also leans Light (1), so they share the Tide as a pair.
-    expect(run(false)).toBe(3 + 1); // Light 1 with Wisdom facedown: a tie, 1 each
-    expect(run(true)).toBe(3 - 1 + 2); // paid 1: Light 2, the stronger lean
-  });
-});
 
 describe('V38 balance changes', () => {
   const act = (id: string) => (d: any) => [d.options.find((o: any) => o.card === id)?.id ?? 'end'];
@@ -812,15 +787,6 @@ describe('V42 one deck: no once-per-game cards', () => {
     expect(run(1)).toBe(3 - 1); // Leviathan leans Dark: loses 1; only 1 other loser
     expect(run(2)).toBe(3 - 1 + 1);
   });
-  it('Mercy: you never lose Glory at the Reaping. Scapegoat: someone else takes your loss', () => {
-    const s = blank();
-    choir(s, 0, H.mercy, H.moloch, H.envy); // Dark 1
-    choir(s, 1, H.scapegoat); // Dark 1
-    s.players.forEach((p) => (p.glory = 3));
-    altar(s, H.wisdom); // Light Tide
-    reap(s, { scapegoat: ['p2'] });
-    expect(glory(s)).toEqual([3, 3, 2]);
-  });
   it('Defiance: other players cannot make you lose Glory (Scapegoat, Envy)', () => {
     const s = blank();
     choir(s, 1, H.scapegoat); // Dark 1, loses under a Light Tide
@@ -830,15 +796,6 @@ describe('V42 one deck: no once-per-game cards', () => {
     altar(s, H.gabriel, H.confession);
     const { asked } = reap(s);
     expect(asked.find((d) => d.tag === 'scapegoat')?.options.some((o) => o.seat === 0) ?? false).toBe(false);
-  });
-  it('Free Will: pay 1 Glory for a second action', () => {
-    const s = blank();
-    choir(s, 0, H.freeWill);
-    hand(s, 0, H.council, H.twilight);
-    s.players[0].glory = 2;
-    drive(s, takeTurn(s, 0), { action: ['offer'], activate: act(H.freeWill) });
-    expect(s.altar.filter((a) => a.offeredBy === 0)).toHaveLength(2);
-    expect(s.players[0].glory).toBe(2 + 1 - 1 + 1);
   });
   it('Silence: pay 1; the chosen player\'s Choir abilities are off until your next turn', () => {
     const s = blank();
@@ -850,16 +807,6 @@ describe('V42 one deck: no once-per-game cards', () => {
     reap(s); // Neutral Tide, but Stillness is silenced
     expect(s.players[1].glory).toBe(0);
     expect(s.players[0].glory).toBe(2 + 1 - 1);
-  });
-  it('Abaddon: pay 2 Glory to replace every Altar card', () => {
-    const s = blank();
-    choir(s, 0, H.abaddon);
-    hand(s, 0, H.council);
-    altar(s, H.wisdom, H.gabriel);
-    s.players[0].glory = 2;
-    drive(s, takeTurn(s, 0), { action: ['offer'], activate: act(H.abaddon) });
-    expect(s.players[0].glory).toBe(2 + 1 - 2);
-    expect(s.altar.some((a) => a.id === H.wisdom || a.id === H.gabriel)).toBe(false);
   });
   it('Bounty pays 1 when the named player loses; Flaming Sword stops a player Gathering', () => {
     const s = blank();
@@ -884,6 +831,40 @@ describe('V42 one deck: no once-per-game cards', () => {
     expect(s.players[0].choir.find((c) => c.id === H.treeOfLife)!.store).toBe(2);
     reap(s);
     expect(s.players[0].glory).toBe(3 * 2 + 3);
+  });
+  it('spent cards: Free Will (second action), Abaddon (replace the Altar), Michael (cast a card out), then each is discarded', () => {
+    const s = blank();
+    choir(s, 0, H.freeWill, H.abaddon, H.michael);
+    choir(s, 1, H.wisdom);
+    hand(s, 0, H.council, H.twilight);
+    altar(s, H.gabriel);
+    const all = (d: any) => [d.options.find((o: any) => [H.freeWill, H.abaddon, H.michael].includes(o.card))?.id ?? 'end'];
+    drive(s, takeTurn(s, 0), { action: ['offer'], activate: all, 'michael.target': (d) => [d.options.find((o) => o.seat === 1)!.id] });
+    expect(s.players[0].choir).toHaveLength(0);
+    expect(s.players[1].choir).toHaveLength(0);
+    expect(s.altar.some((a) => a.id === H.gabriel)).toBe(false);
+    expect(s.discard).toEqual(expect.arrayContaining([H.freeWill, H.abaddon, H.michael, H.wisdom]));
+  });
+  it('Mercy (spent): when you share the Tide, score 3 as if alone, then discard it', () => {
+    const s = blank();
+    choir(s, 0, H.mercy, H.wisdom); // Light 2
+    choir(s, 1, H.gabriel); // Light 1
+    altar(s, H.confession);
+    reap(s, { mercy: ['yes'] });
+    expect(glory(s).slice(0, 2)).toEqual([3, 1]);
+    expect(s.players[0].choir.map((c) => c.id)).not.toContain(H.mercy);
+  });
+  it('Anathema: no player may Offer, you included, until the end of your next turn', () => {
+    const s = blank();
+    choir(s, 0, H.anathema);
+    hand(s, 0, H.council, H.twilight);
+    hand(s, 1, H.wisdom);
+    drive(s, takeTurn(s, 0), { action: ['offer'], activate: act(H.anathema) });
+    expect(legalActions(s, 1)).not.toContain('offer');
+    drive(s, takeTurn(s, 1), {});
+    expect(legalActions(s, 0)).not.toContain('offer'); // you are bound on your next turn too
+    drive(s, takeTurn(s, 0), { activate: () => ['end'] });
+    expect(legalActions(s, 1)).toContain('offer'); // over after your next turn
   });
 });
 
