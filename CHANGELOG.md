@@ -1,5 +1,17 @@
 # Changelog
 
+## The game table fits one screen (November 17, 2026)
+
+No card or rule changes.
+
+- **The whole table on one screen.** On a computer or tablet the table no longer scrolls. The card sizes are worked out from the window: your cards are the largest, opponents' a little smaller, and the table fills the space between the top bar and the decision bar at any window size. On a phone the page still scrolls, so cards stay large enough to read.
+- **The decision bar never covers anything.** It is its own row under your cards. While you choose, the cards you can pick glow and the rest of the table dims; the choices are also listed in the bar as names (hover one to see the card).
+- **Opponents** have their facts (Glory, Alignment, hand size, notes) beside their cards, or above them when there are three opponents, so their cards stay large.
+- **Your area** keeps your Glory, Alignment, notes and a smaller **Give** button together at the left, then your Celestial, Choir and hand. On a tall, narrow window your hand gets a row of its own.
+- **Between turns** the bar shows the last two things that happened. The full log is still at the side.
+- **The Evening panel** covers the table only, not the decision bar.
+- **Lettering:** the title's decorative H is back; it has extra room on its left so it never joins the T ("The"). `apps/web/scripts/spaced-h.py` makes the font change (replaces `plain-h.py`).
+
 ## V39 cards, Rulebook v9, and the site's Learn page and names (November 16, 2026)
 
 **Rulings confirmed or decided** (recorded in `design/design-decisions.md`):
@@ -17,7 +29,7 @@
 - **Learn to play** (`/learn`): a 12-step, clickable walk-through with real cards and things to try (build a Choir, fill an Altar and reveal the Tide, score a Reaping).
 - **Rules page:** sections, folded reference parts (Rulings, Hidden Roles, Glossary) and a search for any rule or card.
 - **Names are unique.** The first browser to use a name gets a private player code; the name can be used anywhere else only with that code, so nobody can play or be counted in the stats under someone else's name. The same player on two devices shares one seat. Bot names are reserved. New migration `0003_names.sql`.
-- **Lettering:** the title font's H no longer joins the letter beside it ("The"); `apps/web/scripts/plain-h.py` makes the font change.
+- **Lettering:** the title font's H no longer joins the letter beside it ("The").
 - Cards page: "Celestials (9)" heading.
 
 ## Online game site (November 16, 2026)

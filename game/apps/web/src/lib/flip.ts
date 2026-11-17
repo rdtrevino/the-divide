@@ -44,8 +44,10 @@ export function useFlip(root: RefObject<HTMLElement>) {
         anims.current.set(key, n.animate([{ opacity: 0, transform: 'scale(0.9)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: EASE }));
         continue;
       }
-      const dx = from.left + from.width / 2 - (r.left + r.width / 2);
-      const dy = from.top + from.height / 2 - (r.top + r.height / 2);
+      // Inside a scaled board, distances on screen are k times the distances the element moves.
+      const k = Number(n.closest('[data-scale]')?.getAttribute('data-scale') || 1) || 1;
+      const dx = (from.left + from.width / 2 - (r.left + r.width / 2)) / k;
+      const dy = (from.top + from.height / 2 - (r.top + r.height / 2)) / k;
       const scale = entering ? Math.min(1, Math.max(0.35, from.height / r.height)) : from.width / r.width;
       if (Math.abs(dx) < 2 && Math.abs(dy) < 2 && Math.abs(scale - 1) < 0.02) continue;
       const dist = Math.hypot(dx, dy);

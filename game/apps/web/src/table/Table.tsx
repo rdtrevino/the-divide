@@ -3,6 +3,7 @@
 import { GLORY_TARGET, type LogEntry } from '@divide/engine';
 import type { ClientMsg } from '@divide/protocol';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useFit } from '../lib/fit';
 import { useFlip } from '../lib/flip';
 import { Link } from '../lib/router';
 import type { RoomSnap } from '../lib/room';
@@ -26,6 +27,12 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
   const me = state.you.seat;
   const n = view.players.length;
   const root = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const opponentsCount = me === null ? n : n - 1;
+  // Fit first, then animate moves, so animations measure the final sizes.
+  useFit({ stage: stageRef, wrap: wrapRef, board: boardRef }, opponentsCount);
   useFlip(root);
   useEffect(() => {
     const el = root.current;
@@ -68,28 +75,14 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
   };
 
   // ---------------------------------------------------------------- what just happened
-  const [herald, setHerald] = useState<LogEntry | null>(null);
+  // The Evening summary opens when a Tide is set; the bar shows the latest happenings while you wait.
   const [evening, setEvening] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(true);
-  const queue = useRef<LogEntry[]>([]);
-  const timer = useRef(0);
   useEffect(() => {
-    if (!snap.fresh.length) return;
     const tide = snap.fresh.find((e) => e.kind === 'tide');
     if (tide) { setEvening(tide.day); setShowResult(true); }
-    queue.current.push(...snap.fresh.filter((e) => !HERALD_SKIP.has(e.kind)));
-    // A burst (a whole Evening) is summarised by its last few lines.
-    if (queue.current.length > 4) queue.current = queue.current.slice(-4);
-    const next = () => {
-      const e = queue.current.shift();
-      if (!e) { timer.current = window.setTimeout(() => { setHerald(null); timer.current = 0; }, 2600); return; }
-      setHerald(e);
-      timer.current = window.setTimeout(next, queue.current.length ? 1150 : 1700);
-    };
-    if (timer.current) clearTimeout(timer.current);
-    next();
   }, [snap.fresh]);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  const recent = useMemo(() => snap.log.filter((e) => !HERALD_SKIP.has(e.kind)).slice(-2), [snap.log]);
 
   const [side, setSide] = useState(false);
   const [chatSeen, setChatSeen] = useState(snap.chat.length);
@@ -100,9 +93,12 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
   const away = me !== null && state.room.seats[me]?.away;
   const ended = view.phase === 'ended';
 
+  // While you are choosing, cards you can choose glow and the rest of the board dims.
+  const choosing = !!decision && (maps.card.size > 0 || maps.altar.size > 0 || !!maps.deck || maps.seat.size > 0);
+
   return (
     <PickCtx.Provider value={pick}>
-      <div class={`table${side ? ' side-open' : ''}`} ref={root} style={{ '--opp-n': order.length } as any}>
+      <div class={`table${side ? ' side-open' : ''}`} ref={root}>
         <header class="t-top">
           <Link href="/" class="wordmark t-mark" title="Leave the table">The Divide</Link>
           <div class="t-day">
@@ -118,7 +114,7 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
           </button>
         </header>
 
-        <main class="t-main">
+        <main class="stage" ref={stageRef}>
           {snap.conn !== 'open' && <div class="banner warn">Connection lost. Reconnecting…</div>}
           {away && (
             <div class="banner">
@@ -126,16 +122,18 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
               <button class="btn primary small" onClick={() => send({ t: 'back' })}>I'm back</button>
             </div>
           )}
-          <div class="opponents">
-            {order.map((seat) => (
-              <PlayerPanel key={seat} view={view} seat={seat} waiting={waitingOf(seat)} skew={snap.skew} connected={state.room.seats[seat]?.connected ?? true} away={state.room.seats[seat]?.away ?? false} />
-            ))}
+          <div class="board-wrap" ref={wrapRef}>
+            <div class={`board${choosing ? ' choosing' : ''}`} ref={boardRef} data-scale="1">
+              <div class="opponents">
+                {order.map((seat) => (
+                  <PlayerPanel key={seat} view={view} seat={seat} waiting={waitingOf(seat)} skew={snap.skew} connected={state.room.seats[seat]?.connected ?? true} away={state.room.seats[seat]?.away ?? false} />
+                ))}
+              </div>
+              <Center view={view} />
+              {me !== null && <MyArea view={view} seat={me} canGift={!ended} onGift={(to, amount) => send({ t: 'gift', to, amount })} />}
+            </div>
+            {evening !== null && <Evening day={evening} log={snap.log} view={view} onClose={() => setEvening(null)} />}
           </div>
-          <div class="mid">
-            <Center view={view} />
-            <div class={`herald${herald ? ' on' : ''}`} aria-live="polite">{herald && <span key={herald.seq} class={`k-${herald.kind}`}>{herald.text}</span>}</div>
-          </div>
-          {me !== null && <MyArea view={view} seat={me} canGift={!ended} onGift={(to, amount) => send({ t: 'gift', to, amount })} />}
           <Prompt
             view={view}
             decision={decision}
@@ -145,9 +143,9 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
             skew={snap.skew}
             busy={busy}
             spectator={me === null}
+            recent={recent}
             onConfirm={() => submit(sel)}
           />
-          {evening !== null && <Evening day={evening} log={snap.log} view={view} onClose={() => setEvening(null)} />}
         </main>
 
         <aside class="t-side">
