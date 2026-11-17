@@ -283,9 +283,10 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       return one(o ? o.id : 'none');
     }
     case 'bounty.player': {
-      // A player leaning against the way the Altar is going is likely to lose.
-      const o = pickBest(d.options, (x) => (x.seat === undefined ? -9 : dirOf(alignment(s, x.seat)) !== dirOf(altar) && alignment(s, x.seat) !== 0 ? 1 + r : r));
-      return one(o.id);
+      // A player leaning against the way the Altar is going is likely to lose. Decline (when allowed) if no one looks likely.
+      const likely = (x: Option) => x.seat !== undefined && alignment(s, x.seat) !== 0 && altar !== 0 && dirOf(alignment(s, x.seat)) !== dirOf(altar);
+      const o = d.options.find(likely) ?? (d.options.some((x) => x.id === 'none') ? undefined : pickBest(d.options, () => r));
+      return one(o ? o.id : 'none');
     }
     case 'covenant.player':
       return one(r < 0.5 ? d.options[Math.floor(r * 2 * (d.options.length - 1))].id : 'none');

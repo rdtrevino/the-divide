@@ -181,7 +181,7 @@ export function* morning(s: GameState): Gen<void> {
   }
   if (variant(s, 'bounty-morning')) for (const p of s.players) {
     if (!hasActive(s, p.seat, H.bounty)) continue;
-    const t = yield* chooseOne(s, p.seat, 'bounty.player', 'Bounty: name a player. If they lose Glory at this Reaping, you gain 1.', others(s, p.seat).map((o) => seatOpt(s, o.seat)));
+    const t = yield* chooseOne(s, p.seat, 'bounty.player', 'Bounty: name a player. If they lose Glory at this Reaping, you gain 1.', others(s, p.seat).map((o) => seatOpt(s, o.seat)), variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft'));
     if (t) s.day_.bounty[p.seat] = seatFromOpt(t);
   }
   // Covenant (V42, In the Morning): name a player; if neither of you Offers this Day, each gains 1 Glory.
@@ -731,6 +731,12 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   // Bounty (V42): if the player you named lost Glory at this Reaping, gain 1.
   for (const [k, t] of Object.entries(s.day_.bounty)) {
     const seat = Number(k);
+    // Test 'bounty-bet' / 'bounty-bet-soft' (Robert): +1 if they lose; -1 if they do not lose (strict) or only if they gain (soft).
+    if ((variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft')) && hasActive(s, seat, H.bounty)) {
+      if (lost[t] > 0) { yield* gain(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory: ${pname(s, seat)} collects the Bounty.`); }
+      else if (variant(s, 'bounty-bet') || gained[t] > 0) { yield* lose(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} did not lose: ${pname(s, seat)}'s Bounty costs them 1 Glory.`); }
+      continue;
+    }
     const spent = (s.day_ as any).bountySpent?.[seat];
     if ((hasActive(s, seat, H.bounty) || spent) && lost[t] > 0 && (!variant(s, 'bounty-with') || leansWithTide.has(seat)) && (!variant(s, 'bounty-nogain') || !(gained[seat] > 0))) { yield* gain(s, seat, spent ? (variant(s, 'bounty-spent3') ? 3 : 2) : 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory, so ${pname(s, seat)} collects the Bounty (1 Glory).`); }
   }

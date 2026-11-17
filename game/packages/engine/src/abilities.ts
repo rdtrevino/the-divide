@@ -372,7 +372,7 @@ export const TURN: Record<string, TurnAbility> = {
     // V42: name a player; if they lose Glory at the Reaping, gain 1.
     can: (s, seat) => !variant(s, 'bounty-morning') && s.day_.bounty[seat] === undefined,
     *run(s, seat) {
-      const t = yield* chooseOne(s, seat, 'bounty.player', 'Bounty: name a player. If they lose Glory at this Reaping, you gain 1.', others(s, seat).map((p) => seatOpt(s, p.seat)));
+      const t = yield* chooseOne(s, seat, 'bounty.player', 'Bounty: name a player. If they lose Glory at this Reaping, you gain 1.', others(s, seat).map((p) => seatOpt(s, p.seat)), variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft'));
       if (!t) return;
       s.day_.bounty[seat] = seatFromOpt(t);
       log(s, 'bounty', `${pname(s, seat)} put a Bounty on ${pname(s, seatFromOpt(t))}.`);
