@@ -1,5 +1,5 @@
 {
-  "version": "V40",
+  "version": "V41",
   "date": "2026-11-17",
   "hosts": [
     {
@@ -44,14 +44,14 @@
     {
       "id": "host-providence",
       "name": "Providence",
-      "text": "In the Evening: Before Setting the Tide, you may pay 1 Glory to exchange 1 face-up card on the Altar with 1 card from your Choir.",
+      "text": "At the Reaping: You may pay 1 Glory to exchange 1 face-up card on the Altar with 1 card from your Choir.",
       "openGame": true,
       "face": "art/faces/host/04-providence.jpg",
       "plate": "art/plates/host/04-providence.jpg",
       "number": 4,
       "alignment": "light",
       "value": 1,
-      "cadence": "In the Evening",
+      "cadence": "At the Reaping",
       "oncePerGame": false
     },
     {
@@ -252,14 +252,14 @@
     {
       "id": "host-absolution",
       "name": "Absolution",
-      "text": "Once per Day: When a Host card is discarded from your Choir, you may return it to your hand instead, then discard 1 card from your hand.",
+      "text": "When a Host card is discarded from your Choir, you may return it to your hand instead, then discard 1 card from your hand.",
       "openGame": true,
       "face": "art/faces/host/20-absolution.jpg",
       "plate": "art/plates/host/20-absolution.jpg",
       "number": 20,
       "alignment": "light",
       "value": 1,
-      "cadence": "Once per Day",
+      "cadence": "When a card leaves your Choir",
       "oncePerGame": false
     },
     {
@@ -304,14 +304,14 @@
     {
       "id": "host-eternity",
       "name": "Eternity",
-      "text": "In the Evening: You may take 1 card from the Altar into your hand.",
+      "text": "At the Reaping: You may take 1 card from the Altar into your hand.",
       "openGame": true,
       "face": "art/faces/host/24-eternity.jpg",
       "plate": "art/plates/host/24-eternity.jpg",
       "number": 24,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "In the Evening",
+      "cadence": "At the Reaping",
       "oncePerGame": false
     },
     {
@@ -343,27 +343,27 @@
     {
       "id": "host-twilight",
       "name": "Twilight",
-      "text": "In the Evening: If your Choir holds at least one Light and at least one Dark Host card, gain 1 Glory.",
+      "text": "At the Reaping: If your Choir holds at least one Light and at least one Dark Host card, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/27-twilight.jpg",
       "plate": "art/plates/host/27-twilight.jpg",
       "number": 27,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "In the Evening",
+      "cadence": "At the Reaping",
       "oncePerGame": false
     },
     {
       "id": "host-zealot",
       "name": "Zealot",
-      "text": "In the Evening: If your Choir has the single most extreme net Alignment at the table (no ties), gain 1 Glory.",
+      "text": "At the Reaping: If your Choir has the single most extreme net Alignment at the table (no ties), gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/28-zealot.jpg",
       "plate": "art/plates/host/28-zealot.jpg",
       "number": 28,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "In the Evening",
+      "cadence": "At the Reaping",
       "oncePerGame": false
     },
     {
@@ -421,14 +421,14 @@
     {
       "id": "host-moderation",
       "name": "Moderation",
-      "text": "In the Evening: If your Choir's Alignment is Neutral, gain 1 Glory.",
+      "text": "At the Reaping: If your Choir's Alignment is Neutral, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/33-moderation.jpg",
       "plate": "art/plates/host/33-moderation.jpg",
       "number": 33,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "In the Evening",
+      "cadence": "At the Reaping",
       "oncePerGame": false
     },
     {
@@ -733,14 +733,14 @@
     {
       "id": "host-mammon",
       "name": "Mammon",
-      "text": "Once per Day: When you Offer a Dark card, take 1 Glory from a player of your choice instead of the Pot; or when you Exalt, pay the Glory cost to the player, other than you, with the least Glory.",
+      "text": "When you Offer a Dark card, you may take its 1 Glory from a player of your choice instead of the Pot. When you Exalt, pay the Glory cost to the player, other than you, with the least Glory.",
       "openGame": true,
       "face": "art/faces/host/57-mammon.jpg",
       "plate": "art/plates/host/57-mammon.jpg",
       "number": 57,
       "alignment": "dark",
       "value": 1,
-      "cadence": "Once per Day",
+      "cadence": "When you Offer",
       "oncePerGame": false
     },
     {
@@ -863,14 +863,14 @@
     {
       "id": "host-remnant",
       "name": "Remnant",
-      "text": "Before the Altar is Refreshed: You may take 1 card from the Altar into your hand, then discard 1 card from your hand.",
+      "text": "At the Reaping: You may take 1 card from the Altar into your hand, then discard 1 card from your hand.",
       "openGame": true,
       "face": "art/faces/host/67-remnant.jpg",
       "plate": "art/plates/host/67-remnant.jpg",
       "number": 67,
       "alignment": "light",
       "value": 1,
-      "cadence": "Before the Altar is Refreshed",
+      "cadence": "At the Reaping",
       "oncePerGame": false
     },
     {
@@ -1026,7 +1026,7 @@
     {
       "id": "event-creation",
       "name": "Creation",
-      "text": "In the Morning, reveal 3 Host cards as Seed to the Altar instead of 1.",
+      "text": "In the Morning, reveal 3 Host cards from the deck onto the Altar.",
       "openGame": true,
       "face": "art/faces/event/creation.jpg",
       "plate": "art/plates/event/creation.jpg"
@@ -1106,7 +1106,7 @@
     {
       "id": "event-pandemonium",
       "name": "Pandemonium",
-      "text": "The Seed and First Fruits are placed facedown, and no card on the Altar may be flipped or looked at before the Evening.",
+      "text": "First Fruits are placed facedown, and no card on the Altar may be flipped or looked at before the Evening.",
       "openGame": true,
       "face": "art/faces/event/pandemonium.jpg",
       "plate": "art/plates/event/pandemonium.jpg"

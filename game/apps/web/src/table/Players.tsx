@@ -1,7 +1,7 @@
 // The players around the table: opponents along the top, you along the bottom.
 // Each panel keeps its facts (name, Glory, lean, hand size, notes) beside its cards, not above
 // and below them, so the whole table fits on one screen.
-import type { GameView } from '@divide/engine';
+import { CHOIR_LIMIT, type GameView } from '@divide/engine';
 import { useContext } from 'preact/hooks';
 import { Card } from '../components/Card';
 import { Countdown, alignText, alignTip, alignTone, choirTag, seatColor, statusNotes } from './bits';
@@ -44,7 +44,7 @@ function ChoirCards(p: { view: GameView; seat: number; w: string; full?: boolean
           />
         );
       })}
-      {Array.from({ length: Math.max(0, 3 - pl.choir.length) }, () => <div class="slot" style={{ '--w': p.w } as any} />)}
+      {Array.from({ length: Math.max(0, CHOIR_LIMIT - pl.choir.length) }, () => <div class="slot" style={{ '--w': p.w } as any} />)}
     </>
   );
 }
@@ -85,8 +85,7 @@ export function PlayerPanel(p: { view: GameView; seat: number; waiting?: Waiting
         {opt && <span class="pp-choose">Choose {pl.name}</span>}
       </div>
       <div class="pp-cards">
-        <Card id={pl.celestial} w="var(--cw-opp)" compact />
-        <span class="pp-sep" />
+        {pl.celestial && <><Card id={pl.celestial} w="var(--cw-opp)" compact /><span class="pp-sep" /></>}
         <ChoirCards view={p.view} seat={p.seat} w="var(--cw-opp)" />
         {pl.hand && (
           <div class="pp-revealed" data-tip="Their hand, revealed to the table">
@@ -116,12 +115,12 @@ export function MyArea(p: { view: GameView; seat: number }) {
           <Notes view={p.view} seat={p.seat} />
         </div>
       </div>
-      <div class="mine-zone cel">
+      {pl.celestial && <div class="mine-zone cel">
         <div class="zone-label">Celestial</div>
         <div class="zone-row">
           <Card id={pl.celestial} w="calc(var(--cw-me) * 0.82)" selectable={!!celOpt} selected={!!celOpt && pick.selected.has(celOpt)} onClick={celOpt ? () => pick.choose(celOpt) : undefined} onDblClick={celOpt ? () => pick.choose(celOpt, true) : undefined} />
         </div>
-      </div>
+      </div>}
       <div class="mine-zone choir">
         <div class="zone-label">Your Choir</div>
         <div class="zone-row"><ChoirCards view={p.view} seat={p.seat} w="var(--cw-me)" full /></div>

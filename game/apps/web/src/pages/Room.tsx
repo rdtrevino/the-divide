@@ -141,10 +141,10 @@ function Lobby(p: { snap: RoomSnap; send: (m: ClientMsg) => void; onRename: (n: 
             </div>
             <p class="muted small">When a player's time runs out, a bot makes that one choice so the game keeps moving.</p>
             <label class="check setting">
-              <input type="checkbox" disabled={!you.isHost} checked={room.options.twoSeeds} onChange={(e) => p.send({ t: 'options', twoSeeds: (e.target as HTMLInputElement).checked })} />
-              Two Seeds each Day
+              <input type="checkbox" disabled={!you.isHost} checked={!!room.options.advanced} onChange={(e) => p.send({ t: 'options', advanced: (e.target as HTMLInputElement).checked })} />
+              Advanced game
             </label>
-            <p class="muted small">Optional rule for 3 players, if the Altar feels thin.</p>
+            <p class="muted small">Adds Celestials (a power for each player) and Events (a new rule each Day). Leave it off for a first game.</p>
             {!you.isHost && <p class="muted small">Only the host can change these.</p>}
           </div>
           <div class="panel pad lobby-chat">

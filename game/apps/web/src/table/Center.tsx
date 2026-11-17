@@ -17,7 +17,8 @@ export function Center(p: { view: GameView }) {
   const discardOpts = view.discard.filter((id) => pick.card.has(id));
   return (
     <div class="t-center">
-      <div class="event-slot">
+      {/* The Base game has no Events (and no Celestials); show the Event place only in the Advanced game. */}
+      {(view.event || view.players.some((pl) => pl.celestial)) && <div class="event-slot">
         <div class="zone-label">{view.event ? 'Today’s Event' : 'Event'}</div>
         {view.event ? (
           <>
@@ -27,7 +28,7 @@ export function Center(p: { view: GameView }) {
         ) : (
           <div class="slot event" style={{ '--w': 'var(--cw-event)' } as any} />
         )}
-      </div>
+      </div>}
 
       <div class="altar">
         <div class="zone-label">

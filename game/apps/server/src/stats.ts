@@ -42,13 +42,12 @@ export function buildRows(f: FinishedGame, cardVersion = CARD_VERSION): GameRows
       if (!g.over && g.state.day === day) break;
       seen++;
       if (seen < g.state.tides.length) continue; // only the newest Day matches the current table
-      const bonus = (seat: number) => g.state.result?.standings.find((x) => x.seat === seat)?.bonus ?? 0;
       for (const p of g.state.players) {
-        const end = p.glory - bonus(p.seat);
+        const end = p.glory;
         dayScores.push({ day, seat: p.seat, glory_start: prev[p.seat], glory_end: end });
         for (const c of p.choir) if (!c.facedown && c.id.startsWith('host-')) choirDays.push({ day, seat: p.seat, card: c.id });
       }
-      prev = g.state.players.map((p) => p.glory - bonus(p.seat));
+      prev = g.state.players.map((p) => p.glory);
     }
   };
 
@@ -72,14 +71,14 @@ export function buildRows(f: FinishedGame, cardVersion = CARD_VERSION): GameRows
       variants: (f.config.variants ?? []).join(','), engine_version: f.engineVersion, card_version: cardVersion,
       final_tide: res.finalTide, started_at: iso(f.startedAt), ended_at: iso(f.endedAt),
       inputs_json: JSON.stringify(f.inputs), config_json: JSON.stringify(f.config), days: s.tides.length,
-      two_seeds: f.config.twoSeeds ? 1 : 0, timer_seconds: f.timer, auto_inputs: JSON.stringify(f.auto),
+      two_seeds: 0, // legacy column (the two-Seeds option ended in V41) timer_seconds: f.timer, auto_inputs: JSON.stringify(f.auto),
     },
     players: s.players.flatMap((p) => (f.playerKeys[p.seat] ? [{ id: f.playerKeys[p.seat]!, name: p.name }] : [])),
     seats: s.players.map((p) => {
       const st = res.standings.find((x) => x.seat === p.seat)!;
       return {
         seat: p.seat, player_id: f.playerKeys[p.seat] ?? null, name: p.name, is_bot: p.isBot ? 1 : 0, celestial: p.celestial,
-        final_glory: st.glory, bonus: st.bonus, matching: st.matching, win_share: res.winners.includes(p.seat) ? share : 0,
+        final_glory: st.glory, bonus: 0, matching: 0, win_share: res.winners.includes(p.seat) ? share : 0,
         timeouts: timeouts[p.seat], turn_order: (p.seat - firstPlayer + n) % n,
       };
     }),

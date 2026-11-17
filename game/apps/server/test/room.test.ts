@@ -75,9 +75,9 @@ describe('lobby', () => {
     x.core.handle('a', { t: 'seat', seat: 2, kind: 'bot' });
     x.core.handle('a', { t: 'size', seats: 3 });
     expect(x.last('a').room.seats.map((s) => s.kind)).toEqual(['human', 'human', 'bot']);
-    x.core.handle('a', { t: 'options', timer: 120, twoSeeds: true });
+    x.core.handle('a', { t: 'options', timer: 120, advanced: true });
     x.core.handle('a', { t: 'options', timer: 7 });
-    expect(x.last('a').room.options).toEqual({ timer: 120, twoSeeds: true });
+    expect(x.last('a').room.options).toEqual({ timer: 120, advanced: true });
     x.core.handle('a', { t: 'start' });
     expect(x.last('b').room.status).toBe('playing');
     expect(x.last('b').view?.players.length).toBe(3);
@@ -167,7 +167,7 @@ describe('a full game', () => {
       expect(days[0].glory_start).toBe(0);
       days.slice(1).forEach((d, i) => expect(d.glory_start).toBe(days[i].glory_end));
       const st = rows.seats[seat];
-      expect(days.at(-1)!.glory_end).toBe(st.final_glory - st.bonus);
+      expect(days.at(-1)!.glory_end).toBe(st.final_glory);
     }
     expect(rows.choirDays.length).toBeGreaterThan(rows.tides.length * 4);
     expect(rows.events.some((e) => e.type === 'game_end')).toBe(true);

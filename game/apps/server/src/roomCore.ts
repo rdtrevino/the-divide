@@ -167,7 +167,7 @@ export class RoomCore {
     this.meta = {
       code, createdAt: now, lastActive: now, hostClient, status: 'lobby',
       seats: Array.from({ length: 4 }, () => ({ kind: 'open' as const, name: '' })),
-      options: { twoSeeds: false, timer: DEFAULT_TIMER }, gameNumber: 0, game: null,
+      options: { advanced: false, timer: DEFAULT_TIMER }, gameNumber: 0, game: null,
     };
     this.saveMeta();
   }
@@ -312,7 +312,7 @@ export class RoomCore {
       }
       case 'options':
         lobby(); hostOnly();
-        if (typeof msg.twoSeeds === 'boolean') m.options.twoSeeds = msg.twoSeeds;
+        if (typeof msg.advanced === 'boolean') m.options.advanced = msg.advanced;
         if (msg.timer !== undefined && (TIMER_CHOICES as readonly number[]).includes(msg.timer)) m.options.timer = msg.timer;
         break;
       case 'start':
@@ -362,7 +362,7 @@ export class RoomCore {
     const config: GameConfig = {
       seed: this.hooks.randomSeed(), mode: 'open',
       players: m.seats.map((s) => ({ name: s.name, isBot: s.kind === 'bot' })),
-      ...(m.options.twoSeeds ? { twoSeeds: true } : {}),
+      ...(m.options.advanced ? { advanced: true } : {}),
     };
     const old = this.stored.map((_, i) => 'in:' + pad(i));
     if (old.length) this.store.delete(old);

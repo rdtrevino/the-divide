@@ -34,20 +34,13 @@ function altarNet(s: GameState, viewer?: Seat) {
 
 /** Expected Reaping value of a Choir net under an estimated Tide. */
 function reapValue(net: number, tide: number, weight = 0.7) {
+  // V41 coalition scoring: alone with the Tide 3; two, 2 for the stronger and 1 for the weaker; three or more 0; against it, -1.
   const t = dirOf(tide);
   if (t === 'neutral' || net === 0) return 0;
-  if (RANK) {
-    // Rank scoring: count the other Choirs leaning the same way.
-    if (dirOf(net) !== t) return -(LOSE1 ? 1 : Math.min(3, Math.abs(net))) * weight;
-    const same = OTHERS.filter((o) => o !== 0 && Math.sign(o) === Math.sign(net));
-    const L = Math.min(3, Math.abs(net));
-    const v = BLEND
-      ? (same.length === 0 ? L + 1 : same.length === 1 ? (Math.abs(net) > Math.abs(same[0]) ? L : 1) : CROWD0 ? 0 : 1)
-      : same.length === 0 ? PAY[0] : same.length === 1 ? (Math.abs(net) > Math.abs(same[0]) ? PAY[1] : PAY[2]) : 0;
-    return v * weight;
-  }
-  const m = Math.min(CAP, Math.abs(net));
-  return (dirOf(net) === t ? m : -m) * weight;
+  if (dirOf(net) !== t) return -weight;
+  const same = OTHERS.filter((o) => o !== 0 && Math.sign(o) === Math.sign(net));
+  const v = same.length === 0 ? 3 : same.length === 1 ? (Math.abs(net) > Math.abs(same[0]) ? 2 : 1) : 0;
+  return v * weight;
 }
 
 /** Players acting after `seat` this Day can still swing the Tide; discount accordingly. */
@@ -88,18 +81,10 @@ function leaderSeats(s: GameState, except?: Seat) {
   return ps.filter((p) => p.glory === max).map((p) => p.seat);
 }
 
-let CAP = 3;
-let RANK = false, LOSE1 = false, BLEND = false, CROWD0 = false;
-let PAY = [3, 2, 1];
+/** Other players' leans, read once per decision (for coalition scoring). */
 let OTHERS: number[] = [];
 export function botAnswer(s: GameState, d: Decision): Answer {
-  CAP = s.config.variants?.includes('nocap') ? 99 : 3;
-  BLEND = !!s.config.variants?.includes('rank-lean');
-  CROWD0 = !!s.config.variants?.includes('crowd0');
-  PAY = s.config.variants?.find((v) => v.startsWith('rankpay-'))?.slice(8).split('-').map(Number) ?? [3, 2, 1];
-  RANK = !!s.config.variants?.includes('rank') || BLEND;
-  LOSE1 = !!s.config.variants?.includes('lose1');
-  OTHERS = RANK ? s.players.filter((p) => p.seat !== d.seat).map((p) => alignment(s, p.seat)) : [];
+  OTHERS = s.players.filter((p) => p.seat !== d.seat).map((p) => alignment(s, p.seat));
   const r = rand(d.id * 7919 + d.seat * 104729 + (s.config.seed | 0));
   const seat = d.seat;
   const net = alignment(s, seat);
@@ -137,10 +122,10 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     case 'action': {
       const p = s.players[seat];
       const scores: Record<string, number> = {};
-      // 'bot-future' (test): a bigger lean pays at every Reaping still to come, not just today's.
-      const target = Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? 10);
-      const rem = s.config.variants?.includes('bot-future') ? Math.max(1, Math.min(4, (target - Math.max(...s.players.map((x) => x.glory))) / 3)) : 0;
-      const fut = (n1: number) => rem * 0.3 * (Math.min(CAP, Math.abs(n1)) - Math.min(CAP, Math.abs(net)));
+      // A Choir card keeps paying at later Reapings, so building is worth more early in the game.
+      const target = Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? 15);
+      const rem = Math.max(1, Math.min(4, (target - Math.max(...s.players.map((x) => x.glory))) / 4));
+      const fut = (n1: number) => rem * 0.3 * (Math.min(3, Math.abs(n1)) - Math.min(3, Math.abs(net)));
       if (has('offer')) {
         const best = Math.max(...p.hand.map((c) => reapValue(net, altar + signed(s, c), w) + (dirOf(signed(s, c)) === wantDir ? 0.3 : 0)));
         scores.offer = 1 + best;

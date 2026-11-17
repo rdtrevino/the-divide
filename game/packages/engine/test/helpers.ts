@@ -6,7 +6,7 @@ export const names = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
 
 /** A blank state: empty hands, Choirs, and Altar, with chosen Celestials. */
 export function blank(n = 3, celestials: string[] = []): GameState {
-  const s = createState({ seed: 7, mode: 'open', players: names.slice(0, n).map((name, i) => ({ name, isBot: true, celestial: celestials[i] ?? ['celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-cantor', 'celestial-the-patron', 'celestial-the-echo', 'celestial-the-dominion'][i] })) });
+  const s = createState({ seed: 7, mode: 'open', advanced: true, players: names.slice(0, n).map((name, i) => ({ name, isBot: true, celestial: celestials[i] ?? ['celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-cantor', 'celestial-the-patron', 'celestial-the-echo', 'celestial-the-dominion'][i] })) });
   for (const p of s.players) { s.hostDeck.push(...p.hand, ...p.choir.map((c) => c.id)); p.hand = []; p.choir = []; }
   s.day = 1;
   s.firstPlayer = 0;

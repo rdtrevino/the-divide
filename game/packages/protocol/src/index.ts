@@ -15,7 +15,8 @@ export interface SeatPublic {
 
 export interface RoomOptions {
   /** Optional rule: 2 Seeds each Day (suggested for 3 players). */
-  twoSeeds: boolean;
+  /** Advanced game: Celestials and Events. */
+  advanced: boolean;
   /** Seconds a player has for each decision before a bot makes it. */
   timer: number;
 }
@@ -51,7 +52,7 @@ export type ClientMsg =
   | { t: 'stand' }
   | { t: 'seat'; seat: number; kind: 'bot' | 'open' }
   | { t: 'size'; seats: 3 | 4 }
-  | { t: 'options'; twoSeeds?: boolean; timer?: number }
+  | { t: 'options'; advanced?: boolean; timer?: number }
   | { t: 'start' }
   | { t: 'answer'; id: number; choice: string[] }
   | { t: 'back' }

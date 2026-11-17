@@ -3,19 +3,20 @@ import type { GameView } from '@divide/engine';
 import type { RoomPublic } from '@divide/protocol';
 import { Card } from '../components/Card';
 import { Link } from '../lib/router';
-import { DIR_LABEL, listNames, seatColor } from './bits';
+import { listNames, seatColor } from './bits';
 
 export function Results(p: { view: GameView; room: RoomPublic; isHost: boolean; onAgain: () => void; onClose: () => void }) {
   const res = p.view.result!;
-  const rows = [...res.standings].sort((a, b) => b.glory - a.glory || b.matching - a.matching);
+  const rows = [...res.standings].sort((a, b) => b.glory - a.glory);
+  const advanced = p.view.players.some((x) => x.celestial);
   const winners = res.winners.map((s) => p.view.players[s].name);
   return (
     <div class="overlay results">
       <div class="modal panel">
-        <div class="eyebrow">The final Tide was {DIR_LABEL[res.finalTide]} · {p.view.tides.length} Days</div>
-        <h2 class="result-title">{winners.length === 1 ? `${winners[0]} wins` : `${listNames(winners)} share the dawn`}</h2>
+        <div class="eyebrow">{p.view.tides.length} Days</div>
+        <h2 class="result-title">{winners.length === 1 ? `${winners[0]} wins` : `${listNames(winners)} share the win`}</h2>
         <table class="result-table">
-          <thead><tr><th /><th>Player</th><th>Celestial</th><th class="r">Glory</th><th class="r">Endgame bonus</th></tr></thead>
+          <thead><tr><th /><th>Player</th>{advanced && <th>Celestial</th>}<th class="r">Glory</th></tr></thead>
           <tbody>
             {rows.map((r, i) => {
               const pl = p.view.players[r.seat];
@@ -24,9 +25,8 @@ export function Results(p: { view: GameView; room: RoomPublic; isHost: boolean; 
                 <tr class={won ? 'won' : ''}>
                   <td class="num">{won ? '★' : i + 1}</td>
                   <td><span class="pp-dot" style={{ '--seat': seatColor(r.seat) } as any} />{pl.name}{pl.isBot && <span class="pp-badge">bot</span>}</td>
-                  <td><Card id={pl.celestial} w={34} compact /></td>
+                  {advanced && <td><Card id={pl.celestial} w={34} compact /></td>}
                   <td class="r num big">{r.glory}</td>
-                  <td class="r">{r.bonus ? `+${r.bonus} for ${r.matching} matching card${r.matching === 1 ? '' : 's'}` : res.finalTide === 'neutral' ? 'none (Neutral Tide)' : 'none'}</td>
                 </tr>
               );
             })}

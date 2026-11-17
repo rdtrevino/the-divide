@@ -1,6 +1,6 @@
 # The Divide: Design Decisions
 
-The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 17, 2026, to match card data V40 and rulebook v10.
+The record of every standing design decision, why it was made, and what to watch in playtesting. Updated November 17, 2026, to match card data V41 and rulebook v11.
 
 ## Governing rules
 
@@ -250,3 +250,24 @@ Robert's questions: turns should not be part of the Morning, so each Day has thr
 | **No Glory gifts** | Robert's call. Babel loses "Glory transfers" (wording). |
 
 Rejected the same day: a hand of 4 with no First Fruits draw; no draw after First Fruits; starting with 1 or 2 Choir cards; choosing the starting Choir (2 of 5 or 3 of 6).
+
+## Coalition scoring, the growing Choir, Base and Advanced (November 17, 2026, V41)
+
+Robert's decisions, after the studies in `design/actions-and-engine.md`, `design/v41-proposal.md` and `design/card-assessment-v41.md`:
+
+| Decision | Detail |
+|---|---|
+| Coalition scoring (Robert's rule) | Alone with the Tide 3; two, 2 and 1 (equal: 1 each); three or more 0; against the Tide -1. Your lean is your team; its size only decides the 2 in a pair. |
+| No Reaping cap | Coalition scoring has fixed amounts. |
+| Start with 2 random Choir cards, room for 4 | The random deal still points each player somewhere; the open places are the first things to build. Robert preferred 3 or 4 over 5; 4 fits a set of three plus a tool. |
+| No Seed | First Fruits starts the Altar. |
+| Race to 15 | Engines pay late, so the game needs room for them. |
+| No endgame bonus | It belonged to the fixed-length game. Most Glory wins; a tie is shared. Anything else left from the final Day was removed (the six-Day variants in the engine, the final-Day advice). |
+| Base and Advanced | Base: Host cards only. Advanced: adds Celestials and Events. Several Celestials still assume the old lean scoring (the Whisper, the Arbiter, the Eclipse) and need a pass. |
+| Four timing labels | In the Morning, On your turn, At the Reaping, none. |
+| Actions unchanged | Gather does not put a card back on the Altar (Offer should be the main way to move it). Exalt discards the replaced card, so cards keep rotating. |
+
+Rejected the same day: shared spoils as a cap (stalls herding tables), the margin cap, two turns per Day, Gather trading a card onto the Altar, Exalt returning a card to hand, families of named cards (Robert prefers synergy by alignment).
+
+**Next:** the Host card rework (`design/card-assessment-v41.md`), then the Celestials. Bots cannot judge coalition play, so the real test is people on the site.
+
