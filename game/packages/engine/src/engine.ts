@@ -10,11 +10,11 @@ import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
 import type { Dir, GameConfig, GameState, Gen, Seat, TideRecord } from './types';
 
-/** The game ends after the first Reaping at which any player has this much Glory (V41: 15). */
-export const GLORY_TARGET = 15;
+/** The game ends after the first Reaping at which any player has this much Glory (V41: 10). */
+export const GLORY_TARGET = 10;
 /** Engine safety cap only; the rules have no Day limit. */
 export const MAX_DAYS = 60;
-/** The Glory target: 15, or 'target-N' to test others. */
+/** The Glory target: 10, or 'target-N' to test others. */
 export const gloryTarget = (s: GameState) => Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? GLORY_TARGET);
 export const OPEN_SET_ASIDE_HOSTS = [H.revelation, H.knowledge, H.bounty, H.flamingSword, H.belial, H.hubris];
 export const OPEN_SET_ASIDE_EVENTS = [E.sabbath, E.equilibrium, E.armageddon];

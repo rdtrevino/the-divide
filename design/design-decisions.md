@@ -46,7 +46,7 @@ That leaves **66 Host cards: 22 Light, 21 Dark, 21 Neutral, and 2 Variable**, wi
 - **Starting position:** a hidden hand of 3 and a face-up Choir of 3 random cards. Choir limit 3 for everyone. Hand limit 3 (the Dominion has 4 and starts with 4). V40 measured 1, 2 and 3 random cards and a chosen Choir; Robert wants the random deal to steer each game's strategy, and 3 balances best.
 - **Reaping cap:** 3 Glory gained or lost per Reaping, applied after doubling. Effects outside Alignment scoring (Leviathan and similar) are not capped.
 - **Deck reshuffle:** when the Host deck runs out, shuffle the discard pile.
-- **Glory:** never below 0. Moves between players only when a card says so (V40, Robert's decision November 17; until then it could be given freely). Table talk and promises remain open and non-binding.
+- **Glory:** never below 0. Moves between players only when a card says so (V40, Robert's decision November 17; until then it could be given freely). Talk and promises remain open and non-binding; the rulebook's Table Talk section was removed on November 17 (V41) as no longer relevant, and its one rule (Glory and cards pass between players only when a card says so) moved to the Glory entry.
 - **Most or least Glory ties:** when a card names the player with the most or least Glory and players are tied, the user of the card chooses, unless the card says otherwise (Envy).
 - **Once-per-game cards** stay in the starting deal and carry +2. Light: Free Will, Mercy, Revelation, Knowledge, Deliverance. Dark: Bounty, Abaddon, Silence, Scapegoat, Defiance.
 
@@ -261,13 +261,15 @@ Robert's decisions, after the studies in `design/actions-and-engine.md`, `design
 | No Reaping cap | Coalition scoring has fixed amounts. |
 | Start with 2 random Choir cards, room for 4 | The random deal still points each player somewhere; the open places are the first things to build. Robert preferred 3 or 4 over 5; 4 fits a set of three plus a tool. |
 | No Seed | First Fruits starts the Altar. |
-| Race to 15 | Engines pay late, so the game needs room for them. |
+| Race to 15 (since changed to 10, below) | Engines pay late, so the game needs room for them. |
 | No endgame bonus | It belonged to the fixed-length game. Most Glory wins; a tie is shared. Anything else left from the final Day was removed (the six-Day variants in the engine, the final-Day advice). |
 | Base and Advanced | Base: Host cards only. Advanced: adds Celestials and Events. Several Celestials still assume the old lean scoring (the Whisper, the Arbiter, the Eclipse) and need a pass. |
 | Four timing labels | In the Morning, On your turn, At the Reaping, none. |
 | Actions unchanged | Gather does not put a card back on the Altar (Offer should be the main way to move it). Exalt discards the replaced card, so cards keep rotating. |
 
 Rejected the same day: shared spoils as a cap (stalls herding tables), the margin cap, two turns per Day, Gather trading a card onto the Altar, Exalt returning a card to hand, families of named cards (Robert prefers synergy by alignment).
+
+**Later the same day (still V41):** back to the **race to 10**. Robert's call: with everything V41 added, the game should be harder. All-bot games now run a median of 6 Days at 3 players and 7 at 4 (90th percentile 9 and 10), down from 10 and 12 at 15.
 
 **Next:** the Host card rework (`design/card-assessment-v41.md`), then the Celestials. Bots cannot judge coalition play, so the real test is people on the site.
 

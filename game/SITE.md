@@ -6,7 +6,7 @@ Robert and friends play the Open Game (3 or 4 players) in the browser, in real t
 
 ## Playing
 
-New players: **Learn to play** (https://thedivide.pages.dev/learn) walks through the game in 12 short steps.
+New players: **Learn to play** (https://thedivide.pages.dev/learn) walks through the game in 13 short steps. In its two click-to-try demos the hover preview is off, so it never covers the card being clicked.
 
 1. Open the site, type your name, and press **Start a new table**.
 2. Send the link (or the 5-letter code) to your friends. Anyone who opens it takes an empty seat.
@@ -25,7 +25,7 @@ At the table:
 
 **Reconnecting.** Closing the tab or losing the connection does not lose your seat. Reopen the link and you are back.
 
-**Names are yours.** The first time you use a name, your browser is given a private **player code** for it. Nobody else can use that name. To play under your name on another device, enter the name and your player code (shown under "Playing on another device?" on the front page and in the lobby). The same player on two devices has one seat. The computer players' names (Asher, Naomi, Ezra, Tirzah) cannot be taken.
+**Names are yours.** The first time you use a name, your browser is given a private **player code** for it. Nobody else can use that name. To play under your name on another device, enter the name and your player code (shown under "Playing on another device?" on the front page and in the lobby). The same player on two devices has one seat. The computer players' names (Asher, Naomi, Ezra, Delilah) cannot be taken.
 
 ## What it costs
 
@@ -46,7 +46,7 @@ Nothing. Everything runs on Cloudflare's free plan: the address (a Cloudflare Pa
 
 **Accuracy.** Every move is checked by the engine before it is accepted, and every table stores its seed and the list of moves. A table that is unloaded (Cloudflare does this to idle tables) rebuilds itself exactly by replaying them. When a game ends, the stats are written by replaying the stored moves from scratch, which proves the record reproduces the game. Every stored game can be replayed in the browser from the Stats page.
 
-**Rules changes.** Card text comes from `packages/engine/src/cards.data.json`, so a text change shows on the site as soon as it is published. A game in progress when new rules are published cannot continue (its moves may mean something different); that table returns to the lobby with a note. Every stored game records its card version and an engine fingerprint, and the Stats page shows one card version at a time, so results from different rules are never mixed.
+**Rules changes.** Card text comes from `packages/engine/src/cards.data.json`, so a text change shows on the site as soon as it is published. A game in progress when new rules are published cannot continue (its moves may mean something different); that table returns to the lobby with a note. Every stored game records its card version and an engine fingerprint, and the Stats page shows only the current card version, so results from different rules are never mixed. Earlier games stay in the database.
 
 ## The stats
 
@@ -63,9 +63,9 @@ Each finished game writes these tables in the `divide-stats` database:
 | `game_events` | engine event: every First Fruits, Offer, Gather and Exalt, every activation and Silence, every Glory change with its source |
 | `players` | person, keyed by name (lower case), with a hash of their player code |
 
-The **Stats page** reads them directly and can be filtered by card version, player count, and whether bot seats are counted:
+The **Stats page** reads them directly, for the current card version only, and can be filtered by player count and whether bot seats are counted:
 
-- **Win ratio** (wins divided by the wins expected by chance; 1.00 is fair) for every Celestial and for every Host card in a final Choir. The same measure from 10,000 all-bot games is shown beside it, and the 0.75 to 1.25 target is shaded.
+- **Win ratio** (wins divided by the wins expected by chance; 1.00 is fair) for every Celestial and for every Host card in a final Choir. The same measure from 10,000 all-bot games under the current rules is shown beside it (after a rules change, `cd tools/sim && npx tsx baseline.ts 10000` rewrites it), and the 0.75 to 1.25 target is shaded.
 - **Glory per Day vs average**: on Days a card sat in someone's Choir, how much more or less Glory its holder made than the average player. This counts every Day the card was held, not just the end of the game, so it settles faster than the win ratio.
 - **How each card is played**: First Fruits, Offered, Gathered, Exalted, and **Kept** (the share of plays that put it into a Choir rather than onto the Altar; a card people always keep is one they value).
 - **Activations**, how often Silence negated them, and the Glory each ability produced.

@@ -115,8 +115,6 @@ export interface CelestialStats {
 
 export interface StatsResponse {
   filters: { version: string; players: number | null; seats: 'all' | 'human' | 'bot' };
-  /** Rules versions with finished games, newest first. Shown to players as "current" and "earlier" rules. */
-  versions: { version: string; games: number; lastPlayed: string }[];
   summary: {
     games: number;
     seats: number;

@@ -1,5 +1,7 @@
 // The full-size card preview. Any element with data-zoom="<card id>" shows it on hover (mouse)
-// or on a long press (touch), so small cards on the table can always be read.
+// or on a long press (touch), so small cards on the table can always be read. Inside an element
+// marked data-no-zoom (the Learn page's click-to-try demos) there is no preview, so it never covers
+// the card you are about to click.
 import { useEffect, useState } from 'preact/hooks';
 import { Card } from './Card';
 import { kindOf } from '../lib/cards';
@@ -11,6 +13,10 @@ export function Zoom() {
   useEffect(() => {
     let timer = 0;
     let current: Element | null = null;
+    const zoomable = (t: EventTarget | null) => {
+      const el = (t as Element | null)?.closest?.('[data-zoom]') ?? null;
+      return el && !el.closest('[data-no-zoom]') ? el : null;
+    };
     const place = (el: Element): Shown | null => {
       const id = el.getAttribute('data-zoom');
       if (!id) return null;
@@ -41,7 +47,7 @@ export function Zoom() {
     const hide = () => { clearTimeout(timer); current = null; setShown(null); };
     const over = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return;
-      const el = (e.target as Element | null)?.closest?.('[data-zoom]') ?? null;
+      const el = zoomable(e.target);
       if (el === current) return;
       clearTimeout(timer);
       current = el;
@@ -51,7 +57,7 @@ export function Zoom() {
     };
     const down = (e: PointerEvent) => {
       if (e.pointerType === 'mouse') { hide(); return; }
-      const el = (e.target as Element | null)?.closest?.('[data-zoom]') ?? null;
+      const el = zoomable(e.target);
       clearTimeout(timer);
       if (!el) { setShown(null); return; }
       timer = window.setTimeout(() => setShown(place(el)), 420);

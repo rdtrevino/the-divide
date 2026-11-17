@@ -23,7 +23,7 @@ export const SAVE_MAX_TRIES = 40;
 /** A room nobody has opened for this long is deleted. */
 export const ROOM_TTL = 14 * 24 * 3600 * 1000;
 
-export const BOT_NAMES = ['Asher', 'Naomi', 'Ezra', 'Tirzah'];
+export const BOT_NAMES = ['Asher', 'Naomi', 'Ezra', 'Delilah'];
 
 // ---------------------------------------------------------------- stored shapes
 
