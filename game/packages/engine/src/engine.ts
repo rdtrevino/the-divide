@@ -747,9 +747,21 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     for (const [id, k] of [[H.uriel, 'light'], [H.beelzebub, 'dark']] as const) {
       if (hasActive(s, seat, id) && activeCards(p).filter((c) => colorsOf(s, seat, c.id)[k]).length >= 3) { yield* gain(s, seat, 1, id); log(s, 'set', `${p.name} gained 1 Glory (${cardName(id)}).`); }
     }
+    // Test 'tree-swap' / 'tree-swap-tide' (Robert's idea): take an Altar card into your Choir, discarding one if it is full.
+    if ((variant(s, 'tree-swap') || (variant(s, 'tree-swap-tide') && leansWithTide.has(seat)) || (variant(s, 'tree-swap-cost') && canSpend(s, seat, 1)) || (variant(s, 'tree-swap-lose') && !(gained[seat] > 0))) && hasActive(s, seat, H.treeOfLife) && canActivate(s, seat, H.treeOfLife)) {
+      const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.sanctuary === undefined || a.sanctuary === seat);
+      if (opts.length) {
+        const pick = yield* chooseOne(s, seat, 'tree.take', 'Tree of Life: take a card from the Altar into your Choir (discarding one if it is full)?', opts.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
+        if (pick !== null && (yield* makeRoom(s, seat, 'Tree of Life'))) {
+          if (variant(s, 'tree-swap-cost')) yield* pay(s, seat, 1, H.treeOfLife);
+          const [taken] = s.altar.splice(Number(pick), 1);
+          yield* activation(s, seat, H.treeOfLife, function* () { yield* enterChoir(s, seat, taken.id); log(s, 'treeOfLife', `${p.name} took ${cardName(taken.id)} from the Altar into their Choir (Tree of Life).`); });
+        }
+      }
+    }
     // Tree of Life (V42): fruit ripens. Each Reaping your Choir leans with the Tide, put 1 Glory on it; at 3, take all 3.
     const tree = p.choir.find((c) => c.id === H.treeOfLife && !c.facedown);
-    if (tree && hasActive(s, seat, H.treeOfLife) && leansWithTide.has(seat) && (!variant(s, 'tree-gain') || delta[seat] > 0)) {
+    if (tree && !(s.config.variants ?? []).some((v) => v.startsWith('tree-swap')) && hasActive(s, seat, H.treeOfLife) && leansWithTide.has(seat) && (!variant(s, 'tree-gain') || delta[seat] > 0)) {
       tree.store = (tree.store ?? 0) + 1;
       if (tree.store >= (variant(s, 'tree-4') ? 4 : 3)) { tree.store = 0; yield* gain(s, seat, variant(s, 'tree-2') ? 2 : 3, H.treeOfLife); log(s, 'treeOfLife', `${p.name}'s Tree of Life bears fruit.`); if (variant(s, 'tree-fall')) yield* discardFromChoir(s, seat, H.treeOfLife, 'Tree of Life'); }
       else log(s, 'treeOfLife', `1 Glory ripens on ${p.name}'s Tree of Life (${tree.store} of 3).`);

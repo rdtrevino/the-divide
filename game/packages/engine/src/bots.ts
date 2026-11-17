@@ -250,6 +250,14 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const t = s.tides[s.tides.length - 1];
       return one(t && t.dir !== dirOf(net) ? 'yes' : 'no');
     }
+    case 'tree.take': {
+      // Take the Altar card that most improves the lean (in the direction we want), if any does.
+      const worst = worstChoirCard(s, seat, want);
+      const room = s.players[seat].choir.length < choirLimit(s);
+      const gain = (o: Option) => { const v = signed(s, o.card); return (want >= 0 ? v : -v) - (room ? 0 : (want >= 0 ? worst?.v ?? 0 : -(worst?.v ?? 0))); };
+      const best = pickBest(d.options.filter((o) => o.id !== 'none'), gain);
+      return one(best && gain(best) > 0 ? best.id : 'none');
+    }
     case 'mercy.other':
       return one(d.options.find((o) => o.id !== 'none' && o.seat !== undefined && !leaderSeats(s, seat).includes(o.seat))?.id ?? 'none');
     case 'silence.player':
