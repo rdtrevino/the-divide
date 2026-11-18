@@ -276,6 +276,15 @@ From round 3 on, Favor kept its V42 ripening store and Tree of Life its V42 free
 
 The other Favor versions tested in rounds 3–6 (First Fruits 1.24–1.55, landslide 1.28, partnership 1.33, the narrow win 1.37) carried the same extra store, worth roughly 0.3; their true values were lower. Leviathan's Landslide (1.00) and every other card were unaffected.
 
+## Keeping the old Leviathan ability (November 18)
+
+The old Leviathan (*if 2 or more other players lost Glory this Day, gain 1 Glory*) measured 1.16 in V42 and 1.08 in the V43 deck: at the top of the range, not too strong. Option B keeps it by moving it to Favor and drops Defiance's protection instead (corrected measurement, 20,000 games, race to 12):
+
+| Option | Leviathan | Defiance | Favor | Spread | Outside 0.8–1.2 |
+|---|---|---|---|---|---|
+| A: Defiance the upset, Favor the protection (old Leviathan ability dropped) | 0.99 Landslide | 0.88 upset | 0.88 protection | 0.113 | Apple 0.80 (edge) |
+| **B: Defiance the upset, Favor the old Leviathan ability (protection dropped)** | **0.99 Landslide** | **0.87 upset** | **1.12 spared while others fall** | **0.114** | **none** |
+
 ## Next
 
 Build all 18 as test switches, teach the bots to use them, measure each card's balance and the game's shape (Days, Glory per Day, the action mix), then go card by card as before.
