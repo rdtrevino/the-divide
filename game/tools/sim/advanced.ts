@@ -1,9 +1,9 @@
 // Advanced game balance: Celestial win ratios and what each Event does to a Day.
-// Usage: npx tsx advanced.ts <games> [offset] [out.json] [variants...]
+// Usage: npx tsx advanced.ts <games> [offset] [out.json]
 import { writeFileSync } from 'node:fs';
 import { CELESTIALS, EVENTS, cardName, playBotGame } from '@divide/engine';
 
-const [gamesArg, offArg, outArg, ...VARIANTS] = process.argv.slice(2);
+const [gamesArg, offArg, outArg] = process.argv.slice(2);
 const GAMES = Number(gamesArg ?? 4000);
 const OFF = Number(offArg ?? 0);
 const NAMES = ['Ada', 'Ben', 'Cy', 'Dee'];
@@ -18,7 +18,7 @@ let days = 0;
 const len = { 3: [] as number[], 4: [] as number[] };
 for (let g = 0; g < GAMES; g++) {
   const n = g % 2 ? 4 : 3;
-  const s = playBotGame({ seed: 700000 + OFF + g, mode: 'open', advanced: true, variants: VARIANTS, players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) }).state;
+  const s = playBotGame({ seed: 700000 + OFF + g, mode: 'open', advanced: true, players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) }).state;
   const res = s.result!;
   (len as any)[n].push(s.day);
   const share = 1 / res.winners.length;
@@ -69,7 +69,7 @@ for (let g = 0; g < GAMES; g++) {
 }
 const med = (a: number[]) => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)] ?? 0; };
 const ratio = (a: Agg) => a.wins / a.expected;
-console.log(`${GAMES} Advanced games (half 3 players, half 4). Median Days: ${med(len[3])} at 3, ${med(len[4])} at 4. Variants: ${VARIANTS.join(', ') || 'none'}`);
+console.log(`${GAMES} Advanced games (half 3 players, half 4). Median Days: ${med(len[3])} at 3, ${med(len[4])} at 4.`);
 console.log('\nCelestial            seats   win ratio  avg Glory   3 players  4 players');
 for (const [id, a] of Object.entries(cel).sort((x, y) => ratio(y[1]) - ratio(x[1]))) console.log(`${cardName(id).padEnd(20)} ${String(a.seats).padStart(6)}   ${ratio(a).toFixed(2).padStart(8)}  ${(a.glory / a.seats).toFixed(1).padStart(8)}   ${ratio(celN[id + '|3']).toFixed(2).padStart(8)}   ${ratio(celN[id + '|4']).toFixed(2).padStart(8)}`);
 console.log('\nEvent                 days  Glory+/day  Glory-/day  Reap+/day  Reap-/day  Neutral%  leader Δ  trailer Δ');
@@ -79,5 +79,5 @@ for (const [id, x] of Object.entries(ev).sort((a, b) => b[1].gained / b[1].days 
   console.log(`${cardName(id).padEnd(20)} ${String(x.days).padStart(5)} ${f(x.gained)}  ${f(x.lost)}  ${f(x.reapG)}  ${f(x.reapL)}  ${((100 * x.neutral) / x.days).toFixed(0).padStart(7)}%  ${f(x.leaderGain)} ${f(x.trailGain)}`);
 }
 console.log(`All Days: ${(all.g / all.d).toFixed(2)} gained, ${(all.l / all.d).toFixed(2)} lost per Day`);
-if (outArg && outArg !== '-') writeFileSync(outArg, JSON.stringify({ games: GAMES, off: OFF, variants: VARIANTS, cel, celN, ev, len }, null, 1));
+if (outArg && outArg !== '-') writeFileSync(outArg, JSON.stringify({ games: GAMES, off: OFF, cel, celN, ev, len }, null, 1));
 void CELESTIALS; void EVENTS;

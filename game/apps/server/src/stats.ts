@@ -68,7 +68,7 @@ export function buildRows(f: FinishedGame, cardVersion = CARD_VERSION): GameRows
     game: {
       id: f.id, room_code: f.roomCode, mode: f.config.mode, player_count: n,
       human_count: f.config.players.filter((p) => !p.isBot).length, seed: f.config.seed,
-      variants: (f.config.variants ?? []).join(','), engine_version: f.engineVersion, card_version: cardVersion,
+      engine_version: f.engineVersion, card_version: cardVersion,
       final_tide: res.finalTide, started_at: iso(f.startedAt), ended_at: iso(f.endedAt),
       inputs_json: JSON.stringify(f.inputs), config_json: JSON.stringify(f.config), days: s.tides.length,
       two_seeds: 0, // legacy column: the 2 Seeds option ended in V41

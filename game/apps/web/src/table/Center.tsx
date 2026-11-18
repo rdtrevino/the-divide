@@ -13,8 +13,7 @@ export function Center(p: { view: GameView }) {
   const shown = view.altar.filter((a) => !a.facedown && a.id);
   const hidden = view.altar.filter((a) => a.facedown).length;
   // The engine's own count, applied to the cards everyone can see.
-  // It needs the game's rules settings too (the card values read them): online games use the standard rules.
-  const tally = setTide({ altar: shown.map((a) => ({ id: a.id })), currentEvent: view.event, tides: view.tides, day: view.day, config: { variants: [] } } as any);
+  const tally = setTide({ altar: shown.map((a) => ({ id: a.id! })), currentEvent: view.event, tides: view.tides, day: view.day });
   const unknown = new Map<string, number>();
   const discardOpts = view.discard.filter((id) => pick.card.has(id));
   return (

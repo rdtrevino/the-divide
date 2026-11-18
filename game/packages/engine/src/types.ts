@@ -18,8 +18,6 @@ export interface GameConfig {
   players: PlayerConfig[];
   /** Advanced game: Celestials and Events (V41). The Base game has neither. */
   advanced?: boolean;
-  /** Experimental balance variants, used for A/B testing in the simulator. */
-  variants?: string[];
 }
 
 export interface ChoirCard {
@@ -29,9 +27,7 @@ export interface ChoirCard {
   used: boolean;
   /** Providence (V42): Glory stored on the card. */
   store?: number;
-  /** Test 'michael-flip': Michael turned this card facedown; it turns face up again after the Reaping. */
-  michael?: boolean;
-  /** Test 'parasite-feed': the player who planted this Parasite. */
+  /** Parasite (V43): the player who planted it. */
   by?: Seat;
 }
 
@@ -142,8 +138,6 @@ export interface DayFlags {
   /** `${seat}:${key}` -> true for once-per-Day usage this Day. */
   usedToday: Record<string, true>;
   ordeal: Seat[];
-  mercy: Seat[];
-  defiance: Seat[];
   whisperCall?: Dir;
   prophecy: Record<number, Dir>;
   lots: Record<number, Dir>;
@@ -157,22 +151,16 @@ export interface DayFlags {
   bounty: Record<number, Seat>;
   /** Free Will (V42): this player takes a second action this turn. */
   extraAction?: Seat;
-  /** Each player's First Fruits card this Day (test 'favor-fruits'). */
-  fruits?: Record<number, string>;
-  /** Cards each player Offered this Day (test 'gabriel-seer'). */
+  /** Cards each player Offered this Day (for Gabriel). */
   offered?: Record<number, string[]>;
-  /** Gabriel's prediction (test 'gabriel-seer'): the player named and the alignment called. */
+  /** Gabriel's prediction: the player named and the alignment called. */
   seer?: Record<number, { t: Seat; dir: Dir }>;
-  /** Council's partner (test 'council-same'). */
+  /** Council's partner. */
   council?: Record<number, Seat>;
-  /** Mirage (V38): each holder's facedown Offerings when the Altar was revealed. */
-  mirageCards?: Record<number, string[]>;
-  /** Facedown and face-up Altar counts when it was revealed (tests 'veil-secret', 'zealot-open'). */
+  /** Facedown and face-up Altar counts when it was revealed (Veil). */
   reveal?: { down: number; up: number };
-  /** Players whose Choir leaned against the Tide at this Reaping (the Arbiter, V44 'arbiter-judge'). */
+  /** Players whose Choir leaned against the Tide at this Reaping (the Arbiter). */
   against?: Seat[];
-  /** Bounty holders who spent the card this Day (tests 'bounty-spent2', 'bounty-spent3'). */
-  bountySpent?: Record<number, true>;
 }
 
 export interface GameState {
@@ -194,8 +182,8 @@ export interface GameState {
   lastAlignColor: Record<number, Dir>;
   pacts: Pact[];
   bonds: { owner: Seat; bound: Seat }[];
-  /** Anathema blocks Offer; Flaming Sword (V42) blocks Gather. */
-  anathema: { target: Seat; by: Seat; action?: 'offer' | 'gather' | 'exalt'; endAfter?: boolean; armed?: boolean }[];
+  /** Anathema blocks Offer; Flaming Sword blocks Exalt and Gather. Each lasts until the start of its holder's next turn. */
+  anathema: { target: Seat; by: Seat; action?: 'offer' | 'gather' | 'exalt' }[];
   /** Silence (V42): a player whose Choir abilities do not work until the silencer's next turn. */
   silenced: { target: Seat; by: Seat }[];
   confession: { seat: Seat; turnsLeft: number }[];
@@ -207,8 +195,8 @@ export interface GameState {
   seq: number;
   decisionSeq: number;
   result: GameResult | null;
-  /** Players whose Choir leaned with the Tide at the last Reaping (tests 'tree-momentum', 'favor-momentum'). */
+  /** Players whose Choir leaned with the Tide at the last Reaping (Tree of Life). */
   lastWithTide?: Seat[];
-  /** Cards Eternity keeps on the Altar into the next Day (test 'eternity-relic'). */
+  /** Cards Eternity keeps on the Altar into the next Day. */
   relics?: { id: string; by: Seat | null }[];
 }
