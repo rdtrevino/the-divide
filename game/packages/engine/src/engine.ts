@@ -308,7 +308,7 @@ function* takeAction(s: GameState, seat: Seat, index: number): Gen<void> {
     log(s, 'pass', `${pname(s, seat)} has no legal action and passes.`);
     return;
   }
-  const labels: Record<string, string> = { offer: 'Offer: play a card to the Altar and gain 1 Glory', gather: 'Gather: take a card into your Choir', exalt: `Exalt: pay ${exaltCost(s, seat)} Glory to play a card from your hand into your Choir` };
+  const labels: Record<string, string> = { offer: 'Offer: play a card to the Altar and gain 1 Glory', gather: variant(s, 'gather-altar') ? 'Gather: take a card from the Altar into your Choir' : 'Gather: take a card into your Choir', exalt: exaltCost(s, seat) ? `Exalt: pay ${exaltCost(s, seat)} Glory to play a card from your hand into your Choir` : 'Exalt: play a card from your hand into your Choir' };
   const a = (yield* chooseOne(s, seat, 'action', index ? 'Free Will: choose your second action.' : 'Choose your action.', legal.map((id) => ({ id, label: labels[id] }))))!;
   s.day_.actionsTaken.push({ seat, action: a as any });
   for (const pact of s.pacts) if ((pact.a === seat || pact.b === seat) && pact.action === a && pact.day === s.day) pact.broken = true;
@@ -451,7 +451,7 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
 function* doExalt(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
   const affordable = p.hand.filter((c) => p.glory >= exaltCost(s, seat, c));
-  const card = (yield* chooseOne(s, seat, 'exalt.card', `Exalt: choose a card from your hand to play into your Choir (cost ${exaltCost(s, seat)}${hasActive(s, seat, H.seraphim) ? '; Light cards are free with Seraphim' : ''}).`, affordable.map((c) => cardOpt(c))))!;
+  const card = (yield* chooseOne(s, seat, 'exalt.card', exaltCost(s, seat) ? `Exalt: choose a card from your hand to play into your Choir (cost ${exaltCost(s, seat)}).` : 'Exalt: choose a card from your hand to play into your Choir.', affordable.map((c) => cardOpt(c))))!;
   const cost = exaltCost(s, seat, card);
   // Set the chosen card aside first, so Absolution's hand discard cannot take it.
   p.hand.splice(p.hand.indexOf(card), 1);
@@ -876,7 +876,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     }
     // Tree of Life (V42): fruit ripens. Each Reaping your Choir leans with the Tide, put 1 Glory on it; at 3, take all 3.
     const tree = p.choir.find((c) => c.id === H.treeOfLife && !c.facedown);
-    if (tree && !(s.config.variants ?? []).some((v) => v.startsWith('tree-swap')) && hasActive(s, seat, H.treeOfLife) && leansWithTide.has(seat) && (!variant(s, 'tree-gain') || delta[seat] > 0)) {
+    if (tree && !['tree-swap', 'tree-swap-tide', 'tree-swap-cost', 'tree-swap-lose'].some((v) => variant(s, v)) && hasActive(s, seat, H.treeOfLife) && leansWithTide.has(seat) && (!variant(s, 'tree-gain') || delta[seat] > 0)) {
       tree.store = (tree.store ?? 0) + 1;
       if (tree.store >= (variant(s, 'tree-4') ? 4 : 3)) { tree.store = 0; yield* gain(s, seat, variant(s, 'tree-2') ? 2 : 3, H.treeOfLife); log(s, 'treeOfLife', `${p.name}'s Tree of Life bears fruit.`); if (variant(s, 'tree-fall')) yield* discardFromChoir(s, seat, H.treeOfLife, 'Tree of Life'); }
       else log(s, 'treeOfLife', `1 Glory ripens on ${p.name}'s Tree of Life (${tree.store} of 3).`);

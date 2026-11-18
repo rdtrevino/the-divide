@@ -70,7 +70,31 @@ export const pname = (s: GameState, seat: Seat) => s.players[seat].name;
 // ---------------------------------------------------------------- queries
 
 export const others = (s: GameState, seat: Seat) => s.players.filter((p) => p.seat !== seat);
-export const variant = (s: GameState, v: string) => !!s.config.variants?.includes(v);
+/**
+ * V42 rules (approved November 18, 2026). Each was measured as a test switch first; these are now the game.
+ * Where a card's code still branches on one of these names, the branch it takes here is the rule.
+ * The other switches in the code are the rejected or parked alternatives (see design/parked-abilities.md).
+ */
+export const V42_RULES: readonly string[] = [
+  // Actions and the Reaping
+  'exalt-free', 'gather-altar', 'reap-mirror',
+  // Cards
+  'scapegoat-deny', 'silence-free', 'firm-with', 'tree-swap', 'rev-swap', 'bounty-bet-soft', 'bounty-morning',
+  'anathema-start', 'hubris-day4', 'mirage-protect', 'veil-more', 'winnowing-blind', 'winnowing-blind2', 'remnant-own',
+  'set-others', 'set-2', 'raguel-fate', 'heresy-cost', 'morningstar-free', 'vessel-bet', 'vessel-nodraw', 'shroud-same',
+  'seraph-refund', 'mammon-store', 'favor-ripen', 'favor-2', 'store-tide', 'zealot-others', 'sword-exalt',
+  'temptation-give', 'mercy-spare',
+  // Bots value a card's ability, not only its alignment, when they build.
+  'bot-engine',
+];
+const V42_SET = new Set(V42_RULES);
+/** A V42 rule, or a test switch named in the game's config. */
+export const variant = (s: GameState, v: string) => {
+  const cv = s.config.variants;
+  if (cv?.includes(v)) return true;
+  // '-name' turns one V42 rule off (tests and comparisons); 'v41-rules' turns them all off.
+  return V42_SET.has(v) && !cv?.includes('v41-rules') && !cv?.includes('-' + v);
+};
 export const isCelestial = (s: GameState, seat: Seat, id: string) => s.players[seat].celestial === id;
 
 /** A Host card is active when it is face up in a Choir. */
