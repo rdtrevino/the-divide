@@ -360,7 +360,7 @@ describe('V35: First Fruits and facedown Offers', () => {
     drive(s, takeTurn(s, 0), { action: ['offer'], activate: pick(H.revelation), revelation: (d) => [d.options.find((o) => s.altar[Number(o.id)].id === H.moloch)!.id] });
     expect(s.altar.find((a) => a.id === H.moloch)!.facedown).toBe(false);
   });
-  it('Urim shows the chosen facedown cards once, to that player only, then they are hidden again', () => {
+  it('Knowledge shows the chosen facedown cards once, to that player only, then they are hidden again', () => {
     const s = blank();
     choir(s, 0, H.knowledge);
     fd(s, H.moloch, 1);
@@ -369,11 +369,11 @@ describe('V35: First Fruits and facedown Offers', () => {
     const shown = asked.find((d) => d.tag === 'knowledge.seen')!;
     expect(shown.seat).toBe(0);
     expect([...shown.reveal!].sort()).toEqual([H.moloch, H.wisdom].sort());
-    // Afterwards nobody's view names them, the Urim player's included, and no log line does either.
+    // Afterwards nobody's view names them, the Knowledge player's included, and no log line does either.
     for (const seat of [0, 1]) expect(viewFor(s, seat, []).altar.filter((a) => a.facedown && a.offeredBy !== seat).every((a) => a.id === null)).toBe(true);
     expect(s.log.some((e) => /Moloch|Wisdom/.test(e.text))).toBe(false);
   });
-  it('Asmadai with an empty hand still shows the card once', () => {
+  it('Belial with an empty hand still shows the card once', () => {
     const s = blank();
     choir(s, 0, H.belial);
     fd(s, H.wisdom, 1);
@@ -381,7 +381,7 @@ describe('V35: First Fruits and facedown Offers', () => {
     expect(asked.find((d) => d.tag === 'belial.seen')!.reveal).toEqual([H.wisdom]);
     expect(viewFor(s, 0, []).altar.find((a) => a.offeredBy === 1)!.id).toBeNull();
   });
-  it('Asmadai exchanges a facedown card with one from hand, keeping it facedown', () => {
+  it('Belial exchanges a facedown card with one from hand, keeping it facedown', () => {
     const s = blank();
     choir(s, 0, H.belial);
     hand(s, 0, H.moloch, H.gabriel);
@@ -391,7 +391,7 @@ describe('V35: First Fruits and facedown Offers', () => {
     expect(swapped).toMatchObject({ id: H.moloch, facedown: true });
     expect(s.players[0].hand).toContain(H.wisdom);
   });
-  it('Mirage shields facedown Offerings from Ithuriel, Urim and Asmadai', () => {
+  it('Mirage shields facedown Offerings from Revelation', () => {
     const s = blank();
     choir(s, 0, H.revelation);
     choir(s, 1, H.mirage);
@@ -549,7 +549,7 @@ describe('V37 card changes', () => {
 
 describe('V38 balance changes', () => {
   const act = (id: string) => (d: any) => [d.options.find((o: any) => o.card === id)?.id ?? 'end'];
-  it('Urim looks at up to 3 facedown cards', () => {
+  it('Knowledge looks at up to 3 facedown cards', () => {
     const s = blank();
     choir(s, 0, H.knowledge);
     for (const c of [H.gabriel, H.moloch, H.envy, H.wisdom]) {

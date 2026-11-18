@@ -1,5 +1,16 @@
 # Changelog
 
+## Code cleanup, and the game record keeps the turn timer again (November 18, 2026)
+
+No card text, rules or balance changes, and nothing on the site looks different. Every change was checked against a recording of about 16,000 bot games (every test switch included): each decision, view, log line and result is identical before and after. Every page of the site was compared screenshot by screenshot.
+
+- **Fixed: stored games lost the turn timer record.** Since V41 a code comment had swallowed two fields, so the stats database stopped saving each game's timer setting and which moves the timer made for a player (the game record page never showed "The turn timer made N choices"). Games played from now on record both again; games already stored cannot be repaired.
+- **The engine** lost code nothing used: functions with no callers, computer-player answers to questions the game never asks, and game state that was written but never read. The extra state the V43 and V44 test switches keep is now declared, instead of being added on the fly.
+- **The simulator:** `flow.ts` works again in the Base game (it crashed looking for Celestials), and `variants.ts` stops with a message for the old letter codes, whose rules were removed from the engine long ago (they had been silently measuring the plain rules).
+- **Docs:** `game/README.md` describes the rule switches as they work today; `game/BUILD_NOTES.md`, the first site brief that `SITE.md` replaced, is removed (it is in the history); tests and comments name Knowledge, Belial and Revelation instead of the retired Urim, Asmadai and Ithuriel.
+
+Publishing this changes the engine fingerprint, so a table that is mid-game when it goes live returns to the lobby, as with any engine update.
+
 ## Site review: fixes across the table, the Learn page, the rulebook and the docs (November 18, 2026)
 
 No card text or balance changes. Found by playing full Base and Advanced games in the browser (desktop and phone) and reading every page, prompt and log line against the V44 rules.
