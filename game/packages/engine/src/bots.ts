@@ -40,7 +40,7 @@ function reapValue(net: number, tide: number, weight = 0.7) {
   const same = OTHERS.filter((o) => o !== 0 && Math.sign(o) === Math.sign(net));
   // Test 'reap-mirror': two with the Tide gain 1 each; a lone Choir against it loses 3, otherwise 1.
   if (dirOf(net) !== t) return -weight * (MIRROR && same.length === 0 ? 3 : 1);
-  const v = same.length === 0 ? 3 : same.length === 1 ? (MIRROR && !PAIR21 ? 1 : Math.abs(net) > Math.abs(same[0]) ? 2 : 1) : 0;
+  const v = same.length === 0 ? 3 : same.length === 1 ? (MIRROR && !PAIR21 ? 1 : Math.abs(net) > Math.abs(same[0]) ? 2 : 1) : CROWD1 ? 1 : 0;
   return v * weight;
 }
 
@@ -86,6 +86,7 @@ function leaderSeats(s: GameState, except?: Seat) {
 let OTHERS: number[] = [];
 let MIRROR = false;
 let PAIR21 = false;
+let CROWD1 = false;
 /**
  * Bot option 'bot-engine': value a Choir card's ability by the Glory it earns per Day held
  * (measured with tools/sim/income.ts), times the Days likely left. Without it, bots build only for lean.
@@ -110,6 +111,8 @@ function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
   if (id === H.treeOfLife && variant(s, 'tree-mature')) return 0.5;
   if (id === H.favor && variant(s, 'favor-late')) return s.day >= 6 ? 1.2 : s.day >= 3 ? 0.8 : 0.4;
   if (id === H.favor && variant(s, 'favor-momentum')) return 0.25;
+  if (id === H.leviathan && variant(s, 'lev-landslide')) return 0.3;
+  if (id === H.favor && variant(s, 'favor-spared')) return 0.2;
   if (id === H.favor && (variant(s, 'favor-landslide') || variant(s, 'favor-pair') || variant(s, 'favor-upset') || variant(s, 'favor-narrow'))) return 0.3;
   if (id === H.favor && (variant(s, 'favor-fruits') || variant(s, 'favor-fruits-alone') || variant(s, 'favor-fruits-bet'))) return 0.3;
   if (id === H.treeOfLife && variant(s, 'tree-momentum')) return 0.25;
@@ -151,6 +154,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
   OTHERS = s.players.filter((p) => p.seat !== d.seat).map((p) => alignment(s, p.seat));
   MIRROR = variant(s, 'reap-mirror');
   PAIR21 = variant(s, 'pair-21');
+  CROWD1 = variant(s, 'crowd-1');
   const r = rand(d.id * 7919 + d.seat * 104729 + (s.config.seed | 0));
   const seat = d.seat;
   const net = alignment(s, seat);

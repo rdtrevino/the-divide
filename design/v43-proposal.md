@@ -252,6 +252,19 @@ Robert likes Landslide but not on Favor. Firmament's old ability (the Tide won b
 - **Firmament:** At the end of the Day: If the Tide won by 3 or more and your Choir leans with it, gain 1 Glory.
 - **Favor:** At the end of the Day: If your Choir leans with the Tide and more Choirs leaned against it than with it, gain 1 Glory.
 
+## Round 6 (November 18): Landslide on Leviathan; the crowd rule
+
+| Version | Leviathan | Favor | Firmament | Spread | Outside 0.8–1.2 |
+|---|---|---|---|---|---|
+| Leviathan Landslide; Favor takes Leviathan's old ability ("2 or more others lost") | 0.96 | 1.38 | 1.02 | 0.114 | Favor |
+| **Leviathan Landslide; Favor the upset; Firmament unchanged** | **0.97** | **1.17** | **1.03** | **0.105** | none (Forger 0.80 at the edge) |
+
+- **Leviathan:** At the end of the Day: If the Tide won by 3 or more and your Choir leans with it, gain 1 Glory.
+- **Favor:** At the end of the Day: If your Choir leans with the Tide and more Choirs leaned against it than with it, gain 1 Glory.
+- **Firmament:** unchanged (the Tide won by exactly 1 and you lean with it).
+
+**Crowd rule (three or more Choirs with the Tide gain 1 each, mirroring the losing side):** measured and not recommended. Games shorten to 7.3–7.4 Days, the winner reaches 1.9 Glory a Day, everyone piles onto one side (a lone loser drops to 3% of results at 4 players), and the deck spread rises to 0.133 (Fig Leaves 0.69, Scapegoat 0.72; seven cards outside the band). It removes the dilemma the Tide is built on: too many allies and nobody is paid.
+
 ## Next
 
 Build all 18 as test switches, teach the bots to use them, measure each card's balance and the game's shape (Days, Glory per Day, the action mix), then go card by card as before.

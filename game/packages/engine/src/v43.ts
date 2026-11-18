@@ -122,7 +122,7 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
       const ok = variant(s, 'favor-narrow') ? tide.margin === 1 : variant(s, 'favor-landslide') ? tide.margin >= 3 : variant(s, 'favor-pair') ? withTide.size === 2 : against > withTide.size;
       if (ok) { yield* gain(s, seat, 1, H.favor); log(s, 'favor', `${p.name} gained 1 Glory (Favor).`); }
     }
-    if (hasActive(s, seat, H.favor) && !['favor-fruits', 'favor-fruits-alone', 'favor-fruits-bet', 'favor-landslide', 'favor-pair', 'favor-upset', 'favor-narrow'].some((v) => variant(s, v))) {
+    if (hasActive(s, seat, H.favor) && !['favor-fruits', 'favor-fruits-alone', 'favor-fruits-bet', 'favor-landslide', 'favor-pair', 'favor-upset', 'favor-narrow', 'favor-spared'].some((v) => variant(s, v))) {
       const n = variant(s, 'favor-late') ? (s.day >= 7 ? 2 : s.day >= 4 ? 1 : 0) : variant(s, 'favor-momentum') && withTide.has(seat) && ((s as any).lastWithTide ?? []).includes(seat) ? 1 : 0;
       if (n) { yield* gain(s, seat, n, H.favor); log(s, 'favor', `${p.name} gained ${n} Glory (Favor).`); }
     }

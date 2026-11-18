@@ -760,6 +760,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     log(s, 'scapegoat', `${pname(s, w.seat)} made ${pname(s, t)} the Scapegoat: they score nothing this Reaping.`);
   }
   if (withTide.length === 1) delta[withTide[0].seat] = 3 * withTide[0].dbl;
+  // V43 test 'crowd-1' (Robert): three or more Choirs with the Tide gain 1 each, mirroring the losing side.
+  if (variant(s, 'crowd-1') && withTide.length >= 3) for (const w of withTide) delta[w.seat] = 1 * w.dbl;
   if (withTide.length === 2) {
     const [a, b] = withTide;
     // Test 'reap-mirror': two with the Tide gain 1 each.
@@ -934,7 +936,11 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
       else log(s, 'favor', `1 Glory ripens on ${p.name}'s Favor (${fav.store} of 3).`);
     }
     // Leviathan (V42): 1 Glory if two or more other players lost Glory at this Reaping.
-    if (hasActive(s, seat, H.leviathan) && s.players.filter((o) => o.seat !== seat && lost[o.seat] > 0).length >= 2) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
+    // V43 tests: 'lev-landslide' (Leviathan: the Tide won by 3+ and you lean with it); 'favor-spared' (Favor takes Leviathan's old ability).
+    const twoLost = s.players.filter((o) => o.seat !== seat && lost[o.seat] > 0).length >= 2;
+    if (variant(s, 'lev-landslide') && hasActive(s, seat, H.leviathan) && tide.dir !== 'neutral' && tide.margin >= (variant(s, 'lev-landslide4') ? 4 : 3) && leansWithTide.has(seat)) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} rode the landslide: +1 Glory (Leviathan).`); }
+    if (variant(s, 'favor-spared') && hasActive(s, seat, H.favor) && twoLost) { yield* gain(s, seat, 1, H.favor); log(s, 'favor', `${p.name} was spared while others fell: +1 Glory (Favor).`); }
+    if (!variant(s, 'lev-landslide') && hasActive(s, seat, H.leviathan) && twoLost) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
     // Test 'hubris-day' (Robert): at the end of the Day, if the player with the most Glory gained 3 or more this Day (from anything), they give 1 to you.
     if ((variant(s, 'hubris-day') || variant(s, 'hubris-day4')) && hasActive(s, seat, H.hubris)) {
       const dayGain = (x: Seat) => s.stats.filter((e) => e.type === 'glory' && e.seat === x && e.day === s.day && (e.amount ?? 0) > 0).reduce((t, e) => t + (e.amount ?? 0), 0);
