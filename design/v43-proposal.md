@@ -239,6 +239,19 @@ Flaming Sword dipped to 0.74–0.77 with the new deck: **No other player may Exa
 | **1 each (V42)** | 8.3 / 8.7 | 1.71 / 1.61 | 27% / 19% | **none** | **0.101** |
 | 2 for the stronger lean, 1 for the weaker | 7.8 / 8.3 | 1.85 / 1.70 | 30% / 21% | Fig Leaves 0.76, Apple 0.78, Tree of Life 1.27 | 0.100 |
 
+## Round 5 (November 18): Landslide finds a home
+
+Robert likes Landslide but not on Favor. Firmament's old ability (the Tide won by exactly 1) and Landslide are mirrors about the margin, so Firmament takes Landslide.
+
+| Version | Favor | Firmament | Spread |
+|---|---|---|---|
+| Landslide on Favor; Firmament unchanged | 1.28 | 1.01 | 0.107 |
+| Straight swap: Firmament Landslide, Favor the narrow win | 1.37 (a Dark +1 card gives its holder a side, so it pays far more often than on a Neutral card) | 0.91 | 0.112 |
+| **Firmament Landslide; Favor the upset** | **1.17** | **0.92** | **0.101**, every card within 0.8–1.2 |
+
+- **Firmament:** At the end of the Day: If the Tide won by 3 or more and your Choir leans with it, gain 1 Glory.
+- **Favor:** At the end of the Day: If your Choir leans with the Tide and more Choirs leaned against it than with it, gain 1 Glory.
+
 ## Next
 
 Build all 18 as test switches, teach the bots to use them, measure each card's balance and the game's shape (Days, Glory per Day, the action mix), then go card by card as before.
