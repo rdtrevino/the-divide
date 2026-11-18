@@ -5,7 +5,7 @@ import {
   activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
   canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
   eventOn, gain, handLimit, hasActive, isCelestial, log, lose, makeRoom, markToday, opposite, pay, pname, seatFromOpt,
-  seatOpt, stat, transfer, usedToday, yesNo, choirLimit, variant, leastGloryOthers, immune, glorySafe, handProtected, others, protectedFrom, canAffordTribute, payTribute, snareHit,
+  seatOpt, stat, transfer, usedToday, yesNo, choirLimit, variant, leastGloryOthers, immune, glorySafe, handProtected, others, protectedFrom, canAffordTribute, payTribute, snareHit, altarShielded,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
@@ -117,6 +117,7 @@ function* firstFruits(s: GameState): Gen<void> {
   ps.forEach((p, k) => {
     const [c] = p.hand.splice(Number(picks[k][0]), 1);
     s.altar.push({ id: c, facedown: dark, offeredBy: p.seat, day: s.day, kind: 'fruits' });
+    ((s.day_ as any).fruits ??= {})[p.seat] = c; // V43 test 'favor-fruits'
     stat(s, { type: 'action', seat: p.seat, card: c, source: 'fruits' });
   });
   // Then each player draws 1 card, so First Fruits never shrinks a hand.
@@ -331,7 +332,9 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const cards = [first];
   p.hand.splice(p.hand.indexOf(first), 1);
   const col = (id: string) => colorsOf(s, null, id);
-  const second = p.hand.filter((c) => cantor || (hymn && col(first).light && col(c).light) || (lam && col(first).dark && col(c).dark));
+  // V43 test 'mirage-double': with Mirage you may Offer a second card, also facedown (one reward).
+  const mirPair = variant(s, 'mirage-double') && hasActive(s, seat, H.mirage) && canActivate(s, seat, H.mirage);
+  const second = p.hand.filter((c) => cantor || mirPair || (hymn && col(first).light && col(c).light) || (lam && col(first).dark && col(c).dark));
   if (second.length) {
     const why = cantor ? 'the Cantor' : hymn && col(first).light ? 'Hymn: both go face up' : 'Lamentation: both go face up';
     const pick = yield* chooseOne(s, seat, 'offer.second', `Offer a second card (${why})?`, second.map((c) => cardOpt(c)), true);
@@ -341,7 +344,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
     }
   }
   // V35: Offers go facedown. Hymn and Lamentation pairs go face up (their color is shown).
-  const facedown = !(cards.length === 2 && !cantor);
+  const facedown = !(cards.length === 2 && !cantor && !mirPair);
   for (const c of cards) s.altar.push({ id: c, facedown: facedown && !(loud && (c === H.hymn || c === H.lamentation)), offeredBy: seat, day: s.day, kind: 'offer' });
   noteOffer(s, seat, cards);
   stat(s, { type: 'action', seat, source: 'offer', data: { cards } });
@@ -357,7 +360,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
     let forgone = false;
     for (const [hid, mine, theirs] of [[H.raphael, 'light', 'dark'], [H.azazel, 'dark', 'light']] as const) {
       if (forgone || !hasActive(s, seat, hid) || !offered.some((c) => col(c)[mine]) || !canActivate(s, seat, hid)) continue;
-      const targets = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !a.facedown && col(a.id)[theirs] && (a.sanctuary === undefined || a.sanctuary === seat));
+      const targets = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !a.facedown && col(a.id)[theirs] && (a.sanctuary === undefined || a.sanctuary === seat) && !altarShielded(s, a, seat));
       if (!targets.length) continue;
       const pick = yield* chooseOne(s, seat, hid === H.raphael ? 'raphael' : 'azazel', `${cardName(hid)}: turn your Offering face up and forgo its reward to destroy a face-up ${theirs === 'dark' ? 'Dark' : 'Light'} card on the Altar?`, targets.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
       if (pick === null) continue;
@@ -554,6 +557,13 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
   const order = Array.from({ length: n }, (_, i) => (s.firstPlayer + i) % n);
   log(s, 'evening', 'Evening falls.');
 
+  // V43 test 'fig-evening': Fig Leaves is decided in the Evening, before the Altar is revealed.
+  if (variant(s, 'fig-evening')) for (const seat of order) {
+    if (!hasActive(s, seat, H.figLeaves) || !canActivate(s, seat, H.figLeaves) || s.day_.figLeaves.includes(seat)) continue;
+    if (yield* yesNo(s, seat, 'figLeaves.evening', 'Fig Leaves: before the Altar is revealed, have your Choir sit out this Day?')) {
+      yield* activation(s, seat, H.figLeaves, function* () { s.day_.figLeaves.push(seat); log(s, 'figLeaves', `${pname(s, seat)}'s Choir sits out this Day (Fig Leaves).`); });
+    }
+  }
   // V38 the Eclipse: chosen In the Evening, before the Altar is revealed.
   for (const seat of order) {
     const p = s.players[seat];

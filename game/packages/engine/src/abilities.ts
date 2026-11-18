@@ -138,8 +138,16 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.figLeaves]: {
-    can: (s, seat) => !s.day_.figLeaves.includes(seat),
+    can: (s, seat) => variant(s, 'fig-evening') ? false : variant(s, 'fig-other') ? s.players.some((p) => !s.day_.figLeaves.includes(p.seat)) : !s.day_.figLeaves.includes(seat),
     *run(s, seat) {
+      // V43 test 'fig-other': choose any Choir, yours or another player's, to sit out this Day.
+      if (variant(s, 'fig-other')) {
+        const t = yield* chooseOne(s, seat, 'figLeaves.target', 'Fig Leaves: choose a Choir to sit out this Day (yours or another player\'s).', s.players.filter((p) => !s.day_.figLeaves.includes(p.seat)).map((p) => seatOpt(s, p.seat)), true);
+        if (!t) return;
+        s.day_.figLeaves.push(seatFromOpt(t));
+        log(s, 'figLeaves', `${pname(s, seatFromOpt(t))}'s Choir sits out this Day (Fig Leaves).`);
+        return;
+      }
       s.day_.figLeaves.push(seat);
       if (variant(s, 'fig-plus1')) yield* gain(s, seat, 1, H.figLeaves); // V43 test: and gain 1 Glory
       log(s, 'figLeaves', `${pname(s, seat)}'s Choir sits out this Day (Fig Leaves).`);
@@ -503,7 +511,7 @@ export const TURN: Record<string, TurnAbility> = {
         const seen = picks.map((i) => s.altar[Number(i)]);
         // seenBy is kept for the computer players' memory; people see the cards once, here, and then must remember them.
         for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
-        for (const a of seen) yield* snareHit(s, seat, a);
+        if (!variant(s, 'snare-nolook')) for (const a of seen) yield* snareHit(s, seat, a);
         log(s, 'knowledge', `${pname(s, seat)} looked at ${seen.length} facedown card${seen.length === 1 ? '' : 's'} on the Altar (Knowledge).`);
         // Ruling confirmed November 16, 2026: shown once, then hidden again.
         yield* ask(s, { seat, tag: 'knowledge.seen', prompt: `Knowledge: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}. Remember them: they go back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: seen.map((a) => a.id), confirm: true });
@@ -518,7 +526,7 @@ export const TURN: Record<string, TurnAbility> = {
       if (pick === null) return;
       const a = s.altar[Number(pick)];
       a.seenBy = [...(a.seenBy ?? []), seat];
-      yield* snareHit(s, seat, a);
+      if (!variant(s, 'snare-nolook')) yield* snareHit(s, seat, a);
       log(s, 'belial', `${pname(s, seat)} looked at a facedown card on the Altar (Belial).`);
       const hand = s.players[seat].hand;
       // Ruling confirmed November 16, 2026: shown once (here or in the exchange choice below), then hidden again.

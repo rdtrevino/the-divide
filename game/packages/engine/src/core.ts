@@ -470,7 +470,7 @@ export function targetableChoir(s: GameState, actor: Seat, owner: Seat, kind: Ta
 
 /** Altar cards that `seat` may Gather or destroy (Sanctuary protects for other players). */
 export function altarAvailable(s: GameState, seat: Seat): AltarCard[] {
-  return s.altar.filter((a) => a.sanctuary === undefined || a.sanctuary === seat);
+  return s.altar.filter((a) => (a.sanctuary === undefined || a.sanctuary === seat) && !(variant(s, 'mirage-all') && altarShielded(s, a, seat)));
 }
 
 export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
@@ -481,6 +481,8 @@ export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
 
 /** Mirage (V35): a player's facedown Offerings cannot be flipped, looked at, exchanged, or destroyed by others before the Evening. */
 export function altarShielded(s: GameState, a: AltarCard, actor: Seat): boolean {
+  // V43 test 'mirage-all': every card you placed on the Altar is protected, face up or down, from other players' Gathers and abilities.
+  if (variant(s, 'mirage-all')) return a.offeredBy !== null && a.offeredBy >= 0 && a.offeredBy !== actor && hasActive(s, a.offeredBy, H.mirage);
   return a.facedown && a.kind === 'offer' && a.offeredBy !== null && a.offeredBy !== actor && hasActive(s, a.offeredBy, H.mirage);
 }
 

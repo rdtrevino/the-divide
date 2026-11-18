@@ -109,6 +109,8 @@ function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
   if (id === H.treeOfLife && variant(s, 'tree-mature')) return 0.5;
   if (id === H.favor && variant(s, 'favor-late')) return s.day >= 6 ? 1.2 : s.day >= 3 ? 0.8 : 0.4;
   if (id === H.favor && variant(s, 'favor-momentum')) return 0.25;
+  if (id === H.favor && (variant(s, 'favor-fruits') || variant(s, 'favor-fruits-alone') || variant(s, 'favor-fruits-bet'))) return 0.3;
+  if (id === H.treeOfLife && variant(s, 'tree-momentum')) return 0.25;
   if (id === H.remnant && variant(s, 'remnant-asc2e')) return choirLimit(s) - s.players[seat].choir.length > 2 ? 0.8 : 0;
   if (id === H.remnant && (variant(s, 'remnant-asc1') || variant(s, 'remnant-asc2'))) { const empty = choirLimit(s) - s.players[seat].choir.length; return variant(s, 'remnant-asc2') ? Math.min(2, Math.max(0, empty - 1)) * 0.8 : empty > 1 ? 0.8 : 0; }
   if (id === H.twilight && (variant(s, 'twilight-22') || variant(s, 'twilight-even'))) return 0.3;
@@ -243,6 +245,18 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const o = d.options.find((x) => x.card && dirOf(signed(s, x.card)) === wantDir);
       return one(o ? o.id : 'none');
     }
+    case 'figLeaves.target': {
+      // Sit out yourself when your side is losing or crowded; otherwise sit out a rival who leans with the Altar alone.
+      const mine = d.options.find((x) => x.seat === seat);
+      const sharing = OTHERS.filter((x) => x !== 0 && Math.sign(x) === Math.sign(net)).length;
+      if (mine && net !== 0 && (sharing >= 2 || (altar !== 0 && dirOf(altar) !== dirOf(net)))) return one(mine.id);
+      const rival = d.options.find((x) => x.seat !== undefined && x.seat !== seat && altar !== 0 && dirOf(alignment(s, x.seat)) === dirOf(altar) && dirOf(alignment(s, x.seat)) !== dirOf(net));
+      return one(rival ? rival.id : mine ? mine.id : 'none');
+    }
+    case 'figLeaves.evening': {
+      const sharing = OTHERS.filter((x) => x !== 0 && Math.sign(x) === Math.sign(net)).length;
+      return one(net !== 0 && (sharing >= 2 || (altar !== 0 && dirOf(altar) !== dirOf(net))) ? 'yes' : 'no');
+    }
     case 'lilith.take':
       return one('yes');
     case 'parasite.target': {
@@ -321,6 +335,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         // V42 team tools, decided on your turn before the reveal.
         const sharing = OTHERS.filter((x) => x !== 0 && Math.sign(x) === Math.sign(net)).length;
         if (o.card === H.heresy) return net !== 0 && altar !== 0 && dirOf(altar) !== dirOf(net) && later <= 1;
+        if (o.card === H.figLeaves && variant(s, 'fig-other')) return later <= 1;
         if (o.card === H.figLeaves) return net !== 0 && (sharing >= 2 || (altar !== 0 && dirOf(altar) !== dirOf(net) && later <= 1));
         // Morning Star: late in the turn order, flip one card if that turns your lean toward the Altar.
         if (o.card === H.morningStar) return altar !== 0 && net !== 0 && dirOf(altar) !== dirOf(net) && later <= 1 && s.players[seat].choir.some((c) => !c.facedown && dirOf(net - 2 * signed(s, c.id)) === dirOf(altar));

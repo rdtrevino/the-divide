@@ -2,7 +2,7 @@
 import { H, cardName } from './data';
 import {
   activation, alignment, canActivate, canAffordTribute, cardOpt, choirLimit, chooseOne, colorsOf, discardableForRoom,
-  drawHost, gain, hasActive, log, makeRoom, others, payTribute, pname, protectedFrom, removeFromChoir, seatFromOpt,
+  drawHost, gain, hasActive, log, lose, makeRoom, others, payTribute, pname, protectedFrom, removeFromChoir, seatFromOpt,
   seatOpt, stat, variant,
 } from './core';
 import type { GameState, Gen, Seat } from './types';
@@ -98,8 +98,21 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
       if ((tree.store ?? 0) >= (variant(s, 'tree-mature5') ? 5 : variant(s, 'tree-mature4') ? 4 : 3)) { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name}'s Tree of Life bears fruit: +1 Glory.`); }
       else if (!variant(s, 'tree-tide') || withTide.has(seat)) tree.store = (tree.store ?? 0) + 1; // 'tree-tide': grows only on Days you lean with the Tide
     }
+    // 'tree-momentum': Tree of Life takes Favor's momentum ability (with the Tide today and yesterday: 1 Glory).
+    if (variant(s, 'tree-momentum') && hasActive(s, seat, H.treeOfLife) && withTide.has(seat) && ((s as any).lastWithTide ?? []).includes(seat)) { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name} gained 1 Glory (Tree of Life).`); }
+    // 'favor-fruits': 1 Glory if the card you gave as First Fruits matches the Tide.
+    const tdir = s.tides[s.tides.length - 1]?.dir;
+    const fruit = day(s).fruits?.[seat];
+    if ((variant(s, 'favor-fruits') || variant(s, 'favor-fruits-alone') || variant(s, 'favor-fruits-bet')) && hasActive(s, seat, H.favor) && fruit && tdir && tdir !== 'neutral') {
+      const k = tdir as 'light' | 'dark';
+      const match = colorsOf(s, null, fruit)[k];
+      // 'favor-fruits-alone': only if no other player's First Fruits matched the Tide. 'favor-fruits-bet': -1 if it opposed the Tide.
+      const others2 = Object.entries(day(s).fruits ?? {}).filter(([o]) => Number(o) !== seat).some(([, c]) => colorsOf(s, null, c as string)[k]);
+      if (match && (!variant(s, 'favor-fruits-alone') || !others2)) { yield* gain(s, seat, 1, H.favor); log(s, 'favor', `${p.name}'s First Fruits matched the Tide: +1 Glory (Favor).`); }
+      else if (variant(s, 'favor-fruits-bet') && colorsOf(s, null, fruit)[k === 'light' ? 'dark' : 'light']) { yield* lose(s, seat, 1, H.favor); log(s, 'favor', `${p.name}'s First Fruits opposed the Tide: -1 Glory (Favor).`); }
+    }
     // Favor: 'favor-late' (Day 4+: 1, Day 7+: 2) or 'favor-momentum' (with the Tide today and yesterday: 1).
-    if (hasActive(s, seat, H.favor)) {
+    if (hasActive(s, seat, H.favor) && !variant(s, 'favor-fruits') && !variant(s, 'favor-fruits-alone') && !variant(s, 'favor-fruits-bet')) {
       const n = variant(s, 'favor-late') ? (s.day >= 7 ? 2 : s.day >= 4 ? 1 : 0) : variant(s, 'favor-momentum') && withTide.has(seat) && ((s as any).lastWithTide ?? []).includes(seat) ? 1 : 0;
       if (n) { yield* gain(s, seat, n, H.favor); log(s, 'favor', `${p.name} gained ${n} Glory (Favor).`); }
     }
@@ -131,13 +144,14 @@ export function* keepRelics(s: GameState, order: Seat[]): Gen<Set<object>> {
   if (variant(s, 'eternity-forever')) for (const a of s.altar) if (a.kind === 'relic' && a.offeredBy !== null && hasActive(s, a.offeredBy, H.eternity)) { kept.add(a); ((s as any).relics ??= []).push({ id: a.id, by: a.offeredBy }); }
   for (const seat of order) {
     if (!hasActive(s, seat, H.eternity) || !canActivate(s, seat, H.eternity)) continue;
-    const opts = s.altar.filter((a) => a.offeredBy === seat && a.kind === 'offer' && a.day === s.day && !kept.has(a));
+    // 'eternity-any': keep any card on the Altar (Robert).
+    const opts = s.altar.filter((a) => !kept.has(a) && (variant(s, 'eternity-any') ? a.kind !== 'relic' : a.offeredBy === seat && a.kind === 'offer' && a.day === s.day));
     if (!opts.length) continue;
     const pick = yield* chooseOne(s, seat, 'eternity.keep', 'Eternity: keep one card you Offered today on the Altar, face up, through the next Day?', opts.map((a) => ({ id: String(s.altar.indexOf(a)), label: cardName(a.id), card: a.id })), true);
     if (pick === null) continue;
     const a = s.altar[Number(pick)];
     kept.add(a);
-    ((s as any).relics ??= []).push({ id: a.id, by: seat });
+    ((s as any).relics ??= []).push({ id: a.id, by: variant(s, 'eternity-any') ? a.offeredBy : seat });
     log(s, 'eternity', `${pname(s, seat)} keeps ${cardName(a.id)} on the Altar for another Day (Eternity).`);
   }
   return kept;

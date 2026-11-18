@@ -206,6 +206,22 @@ Robert's changes after the first read, then measured with bots that value card a
 
 Engines need Days to pay off, so the longer race suits them: every card except Raguel (0.79) is within 0.8–1.2, and the spread is the lowest yet.
 
+## Round 3 (November 18): Robert's notes
+
+| Card | Change tested | Win ratio (race to 12) |
+|---|---|---|
+| Eternity | At the end of the Day: You may keep **one card** on the Altar, face up, through the next Day (any card, not only yours) | 0.94–0.96 |
+| Snare | Drop "looks at": Gathers, flips, or discards a card you placed on the Altar | 0.96–0.99 |
+| Mirage | No Glory clause. **Every card you placed on the Altar is protected, face up or down: other players cannot Gather, flip, look at, exchange, or destroy it before the Evening** | 0.87 (protection of facedown Offers only: 0.75; a second facedown Offer: 0.78) |
+| Revelation | Unchanged (the draw is dropped) | 0.87 |
+| Fig Leaves | No Glory. **Decided in the Evening, before the Altar is revealed** | 0.84 (on your turn: 0.80; choosing any Choir: 0.64) |
+| Raphael / Azazel | Keep the Offer's 1 Glory when destroying | 0.88–0.90 |
+| Cherubim | Hand protection dropped (it made no difference) | 0.89 |
+| Tree of Life | Favor's old ability: If your Choir leaned with the Tide today and yesterday, gain 1 Glory | 1.08–1.11 |
+| Favor | **First Fruits:** If your First Fruits was the only one that matched the Tide, gain 1 Glory | 1.24 (any match: 1.55; +1/−1: 1.43) |
+
+Spread 0.107 with the bold versions, the fairest yet; only Favor (1.24) sits outside 0.8–1.2.
+
 ## Next
 
 Build all 18 as test switches, teach the bots to use them, measure each card's balance and the game's shape (Days, Glory per Day, the action mix), then go card by card as before.
