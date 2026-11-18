@@ -127,10 +127,11 @@ function paxLater(s: State, p: number, mine: number) {
   return paxExp(s, p, mine, m, 2.4);
 }
 /** Fates: what a Day is worth to p if the Tide is Light with probability pl, with Choir cards `cards` (values). */
-function fateDay(s: State, p: number, cards: number[], pl: number) {
+function fateDay(s: State, p: number, cards: number[], pl: number, pn = 0.35) {
   const F = s.R.fate!;
-  let nL = 0, nD = 0;
-  for (const v of cards) { if (v > 0) nL++; else if (v < 0) nD++; }
+  let nL = 0, nD = 0, nN = 0;
+  for (const v of cards) { if (v > 0) nL++; else if (v < 0) nD++; else nN++; }
+  if (F.mult && s.fate[p] === 0) return F.perDay * pn * (1 + nN);
   if (F.mult) return F.perDay * (s.fate[p] === 1 ? pl * (1 + nL) : (1 - pl) * (1 + nD));
   return pl * (F.choirPay * nL + (s.fate[p] === 1 ? F.perDay : 0)) + (1 - pl) * (F.choirPay * nD + (s.fate[p] === -1 ? F.perDay : 0));
 }
@@ -145,7 +146,7 @@ const choirVals = (s: State, p: number) => s.choir[p].map((x) => (x.flip ? -val(
 /** Today's expected Reaping and the value of the position later, for any scoring system. */
 function expNow(s: State, p: number, mine: number, m: number, sd: number) {
   if (s.R.choirCardPay && !s.R.fate) { const cv = HYP ?? choirVals(s, p); const pl = PHI(m / sd); return s.R.choirCardPay * (pl * cv.filter((v) => v > 0).length + (1 - pl) * cv.filter((v) => v < 0).length); }
-  if (s.R.fate) return fateDay(s, p, HYP ?? choirVals(s, p), PHI(m / sd));
+  if (s.R.fate) return fateDay(s, p, HYP ?? choirVals(s, p), PHI(m / sd), PHI((1.5 - m) / sd) - PHI((-1.5 - m) / sd));
   return s.R.pax ? paxExp(s, p, mine, m, sd) : reapExp(s, p, sgn(mine), PHI(m / sd));
 }
 function expLater(s: State, p: number, mine: number) {

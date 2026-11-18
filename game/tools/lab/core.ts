@@ -565,13 +565,18 @@ export function paxScore(s: State, net: number): number[] {
 }
 
 /** Fates: each Choir card matching the Tide earns choirPay; the Day is recorded for the matching Fates (scored at the end). */
-export function fateScore(s: State, tide: Dir): number[] {
+export function fateScore(s: State, tide: Dir, net = 0): number[] {
   const F = s.R.fate!;
   const out = Array(s.R.n).fill(0);
   for (let p = 0; p < s.R.n; p++) {
     s.fateStats[1]++;
     if (lean(s, p) === s.fate[p]) s.fateStats[0]++;
     if (tide === 0) continue;
+    if (F.mult && s.fate[p] === 0) {
+      // The Forsaken: a narrow Day (the Altar within 1, or tied) scores 1 plus 1 per Neutral card in your Choir (paid at the end).
+      if (Math.abs(net) <= 1 && s.altar.length) { let k = 1; for (const x of s.choir[p]) if (val(s, x.c) === 0) k++; s.fateDays[p] += k; }
+      continue;
+    }
     if (F.mult) {
       // Multiplied: a Day the Tide matches your Fate scores 1 plus 1 per Choir card of your Fate's alignment (paid at the end).
       if (s.fate[p] === tide) { let k = 1; for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) k++; } s.fateDays[p] += k; }
@@ -627,7 +632,7 @@ export function evening(s: State) {
   const top0 = Math.max(...s.glory);
   const lead0 = s.glory.filter((g) => g === top0).length === 1 && top0 > 0 ? s.glory.indexOf(top0) : -1;
   const f = typeof s.R.score === 'function' ? s.R.score : scoreTable(s.R.score);
-  const reap = s.R.choirCardPay ? cardPay(s, tide) : s.R.fate ? fateScore(s, tide) : s.R.pax ? paxScore(s, net) : f(s, tide, Math.abs(net));
+  const reap = s.R.choirCardPay ? cardPay(s, tide) : s.R.fate ? fateScore(s, tide, net) : s.R.pax ? paxScore(s, net) : f(s, tide, Math.abs(net));
   for (let p = 0; p < n; p++) if (s.ordeal[p] && reap[p] > 0) reap[p] *= 2;
   for (let p = 0; p < n; p++) if (choirHas(s, p, 'scapegoat') && s.glory[p] >= 1) {
     const q = soleLeader(s, p);

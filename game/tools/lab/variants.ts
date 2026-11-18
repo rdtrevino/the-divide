@@ -289,3 +289,23 @@ Object.assign(VARIANTS, {
   fm_1_known: FATE(1, 0, { fate: { pool: [1, 1, -1, -1], perDay: 1, choirPay: 0, mult: true } }),
   fm_1_c5: FATE(1, 0, { fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 1, choirPay: 0, mult: true }, choirMax: 5 }),
 } as Record<string, V>);
+
+// ---- Round 22b: Dominance as fixed 7-Day games (same length as Fates), for a fair comparison
+const D7: V = { target: 999, target3: 999, target4: 999, maxDays: 7 };
+Object.assign(VARIANTS, {
+  d7_m2_31_2: { ...DOM(2, [3, 1], [2]), ...D7 },
+  d7_m2_42_2: { ...DOM(2, [4, 2], [2]), ...D7 },
+  d7_m3_42_2: { ...DOM(3, [4, 2], [2]), ...D7 },
+  d7_m1_31_2: { ...DOM(1, [3, 1], [2]), ...D7 },
+  d7_m2_42_2_bet: { ...DOM(2, [4, 2], [2], { offerReward: 'match' }), ...D7 },
+} as Record<string, V>);
+
+// ---- Round 26: multiplied Fates with the Forsaken (wins narrow Days, multiplied by Neutral Choir cards)
+const N8 = { L1: 16, D1: 16, L2: 2, D2: 2, N: 8 };
+const MF = (pool: number[], extra: V = {}): V => FATE(1, 0, { fate: { pool, perDay: 1, choirPay: 0, mult: true }, ...extra });
+Object.assign(VARIANTS, {
+  fm_n8: MF([1, 1, 1, -1, -1, -1], { deck: N8 }),
+  fmF_n8: MF([1, 1, 1, -1, -1, -1, 0], { deck: N8 }),
+  fmF2_n8: MF([1, 1, -1, -1, 0, 0], { deck: N8 }),
+  fmF_n4: MF([1, 1, 1, -1, -1, -1, 0]),
+} as Record<string, V>);
