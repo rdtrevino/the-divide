@@ -441,7 +441,8 @@ export function protectedFrom(s: GameState, actor: Seat, owner: Seat, kind: Targ
 /** Kept for older call sites: no card grants blanket immunity any more. */
 export const immune = (_s: GameState, _actor: Seat, _owner: Seat) => false;
 /** Defiance (V42): other players' abilities cannot make you lose or give up Glory. */
-export const glorySafe = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && hasActive(s, owner, H.defiance);
+// V43 test 'swap-defiance': Favor takes Defiance's protection, and Defiance takes Favor's upset ability.
+export const glorySafe = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && hasActive(s, owner, variant(s, 'swap-defiance') ? H.favor : H.defiance);
 /** Lilith (V42): other players' abilities cannot look at, take, or discard cards in your hand. */
 export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && (immune(s, actor, owner) || (!variant(s, 'lilith-scavenge') && hasActive(s, owner, H.lilith)) || (variant(s, 'cherub-hand') && hasActive(s, owner, H.cherubim)));
 

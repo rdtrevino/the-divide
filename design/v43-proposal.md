@@ -265,6 +265,17 @@ Robert likes Landslide but not on Favor. Firmament's old ability (the Tide won b
 
 **Crowd rule (three or more Choirs with the Tide gain 1 each, mirroring the losing side):** measured and not recommended. Games shorten to 7.3–7.4 Days, the winner reaches 1.9 Glory a Day, everyone piles onto one side (a lone loser drops to 3% of results at 4 players), and the deck spread rises to 0.133 (Fig Leaves 0.69, Scapegoat 0.72; seven cards outside the band). It removes the dilemma the Tide is built on: too many allies and nobody is paid.
 
+## Correction (November 18): Favor and Tree of Life were measured with their V42 abilities still on
+
+From round 3 on, Favor kept its V42 ripening store and Tree of Life its V42 free Altar take alongside each tested ability, so their numbers were too high. Fixed and re-measured (20,000 games, race to 12):
+
+| Version | Favor | Defiance | Tree of Life (momentum) | Spread | Outside 0.8–1.2 |
+|---|---|---|---|---|---|
+| Favor the upset; Defiance unchanged | 0.90 | 0.86 | 1.16 | 0.112 | Revelation 0.79 |
+| **Swap: Defiance the upset; Favor Defiance's protection** | **0.88** | **0.88** | 1.14 | 0.113 | Apple 0.80 (edge) |
+
+The other Favor versions tested in rounds 3–6 (First Fruits 1.24–1.55, landslide 1.28, partnership 1.33, the narrow win 1.37) carried the same extra store, worth roughly 0.3; their true values were lower. Leviathan's Landslide (1.00) and every other card were unaffected.
+
 ## Next
 
 Build all 18 as test switches, teach the bots to use them, measure each card's balance and the game's shape (Days, Glory per Day, the action mix), then go card by card as before.

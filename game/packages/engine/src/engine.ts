@@ -904,7 +904,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
       if (hasActive(s, seat, id) && setN >= 3 && (!variant(s, 'set-tide') || leansWithTide.has(seat))) { yield* gain(s, seat, variant(s, 'set-2') ? 2 : 1, id); log(s, 'set', `${p.name} gained 1 Glory (${cardName(id)}).`); }
     }
     // Test 'tree-swap' / 'tree-swap-tide' (Robert's idea): take an Altar card into your Choir, discarding one if it is full.
-    if (!variant(s, 'tree-mature') && (variant(s, 'tree-swap') || (variant(s, 'tree-swap-tide') && leansWithTide.has(seat)) || (variant(s, 'tree-swap-cost') && canSpend(s, seat, 1)) || (variant(s, 'tree-swap-lose') && !(gained[seat] > 0))) && hasActive(s, seat, H.treeOfLife) && canActivate(s, seat, H.treeOfLife)) {
+    if (!variant(s, 'tree-mature') && !variant(s, 'tree-momentum') && (variant(s, 'tree-swap') || (variant(s, 'tree-swap-tide') && leansWithTide.has(seat)) || (variant(s, 'tree-swap-cost') && canSpend(s, seat, 1)) || (variant(s, 'tree-swap-lose') && !(gained[seat] > 0))) && hasActive(s, seat, H.treeOfLife) && canActivate(s, seat, H.treeOfLife)) {
       const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.sanctuary === undefined || a.sanctuary === seat);
       if (opts.length) {
         const pick = yield* chooseOne(s, seat, 'tree.take', 'Tree of Life: take a card from the Altar into your Choir (discarding one if it is full)?', opts.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
@@ -930,7 +930,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (variant(s, 'mammon-store') && mam && hasActive(s, seat, H.mammon) && (!variant(s, 'store-tide') || leansWithTide.has(seat))) { mam.store = (mam.store ?? 0) + 1; log(s, 'mammon', `1 Glory is stored on ${p.name}'s Mammon (${mam.store} in all).`); }
     // Test 'favor-ripen': each Day your Choir leans with the Tide, 1 Glory ripens on Favor; at 3, take all 3.
     const fav = p.choir.find((c) => c.id === H.favor && !c.facedown);
-    if (variant(s, 'favor-ripen') && !variant(s, 'favor-late') && !variant(s, 'favor-momentum') && fav && hasActive(s, seat, H.favor) && leansWithTide.has(seat)) {
+    if (variant(s, 'favor-ripen') && !['favor-late', 'favor-momentum', 'favor-fruits', 'favor-fruits-alone', 'favor-fruits-bet', 'favor-landslide', 'favor-pair', 'favor-upset', 'favor-narrow', 'favor-spared', 'swap-defiance'].some((v) => variant(s, v)) && fav && hasActive(s, seat, H.favor) && leansWithTide.has(seat)) {
       fav.store = (fav.store ?? 0) + 1;
       if (fav.store >= 3) { fav.store = 0; yield* gain(s, seat, variant(s, 'favor-2') ? 2 : 3, H.favor); log(s, 'favor', `${p.name}'s Favor ripens: +3 Glory.`); }
       else log(s, 'favor', `1 Glory ripens on ${p.name}'s Favor (${fav.store} of 3).`);

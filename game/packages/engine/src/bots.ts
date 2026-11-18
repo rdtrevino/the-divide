@@ -112,6 +112,7 @@ function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
   if (id === H.favor && variant(s, 'favor-late')) return s.day >= 6 ? 1.2 : s.day >= 3 ? 0.8 : 0.4;
   if (id === H.favor && variant(s, 'favor-momentum')) return 0.25;
   if (id === H.leviathan && variant(s, 'lev-landslide')) return 0.3;
+  if (variant(s, 'swap-defiance') && variant(s, 'favor-upset')) { if (id === H.defiance) return 0.3; if (id === H.favor) return 0; }
   if (id === H.favor && variant(s, 'favor-spared')) return 0.2;
   if (id === H.favor && (variant(s, 'favor-landslide') || variant(s, 'favor-pair') || variant(s, 'favor-upset') || variant(s, 'favor-narrow'))) return 0.3;
   if (id === H.favor && (variant(s, 'favor-fruits') || variant(s, 'favor-fruits-alone') || variant(s, 'favor-fruits-bet'))) return 0.3;

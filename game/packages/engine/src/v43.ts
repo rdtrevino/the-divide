@@ -115,12 +115,13 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
     // Favor, Tide versions: 'favor-landslide' (Tide won by 3+ and you lean with it), 'favor-pair' (exactly two Choirs with the Tide, yours one of them),
     // 'favor-upset' (you lean with the Tide and more Choirs leaned against it than with it).
     const tide = s.tides[s.tides.length - 1];
-    if ((variant(s, 'favor-landslide') || variant(s, 'favor-pair') || variant(s, 'favor-upset') || variant(s, 'favor-narrow')) && hasActive(s, seat, H.favor) && tide && tide.dir !== 'neutral' && withTide.has(seat)) {
+    const upsetCard = variant(s, 'swap-defiance') ? H.defiance : H.favor;
+    if ((variant(s, 'favor-landslide') || variant(s, 'favor-pair') || variant(s, 'favor-upset') || variant(s, 'favor-narrow')) && hasActive(s, seat, upsetCard) && tide && tide.dir !== 'neutral' && withTide.has(seat)) {
       const sign = tide.dir === 'light' ? 1 : -1;
       const against = s.players.filter((o) => !withTide.has(o.seat) && !s.day_.figLeaves.includes(o.seat) && Math.sign(alignment(s, o.seat)) === -sign).length;
       // 'favor-narrow': Firmament's old ability (the Tide won by exactly 1), when Firmament takes Landslide ('firm-landslide').
       const ok = variant(s, 'favor-narrow') ? tide.margin === 1 : variant(s, 'favor-landslide') ? tide.margin >= 3 : variant(s, 'favor-pair') ? withTide.size === 2 : against > withTide.size;
-      if (ok) { yield* gain(s, seat, 1, H.favor); log(s, 'favor', `${p.name} gained 1 Glory (Favor).`); }
+      if (ok) { yield* gain(s, seat, 1, upsetCard); log(s, upsetCard === H.favor ? 'favor' : 'defiance', `${p.name} gained 1 Glory (${cardName(upsetCard)}).`); }
     }
     if (hasActive(s, seat, H.favor) && !['favor-fruits', 'favor-fruits-alone', 'favor-fruits-bet', 'favor-landslide', 'favor-pair', 'favor-upset', 'favor-narrow', 'favor-spared'].some((v) => variant(s, v))) {
       const n = variant(s, 'favor-late') ? (s.day >= 7 ? 2 : s.day >= 4 ? 1 : 0) : variant(s, 'favor-momentum') && withTide.has(seat) && ((s as any).lastWithTide ?? []).includes(seat) ? 1 : 0;
