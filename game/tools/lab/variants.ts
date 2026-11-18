@@ -254,3 +254,30 @@ Object.assign(VARIANTS, {
   d_m2_31_1: DOM(2, [3, 1], [1]),
   d_m2_42_2_bet: DOM(2, [4, 2], [2], { offerReward: 'match' }),
 } as Record<string, V>);
+
+// ---- Round 23: Fates. Secret Fate from a bag of 3 Light + 3 Dark; Choir cards matching the Tide pay; Fate Days pay at the end.
+const FATE = (perDay: number, choirPay: number, extra: V = {}): V => ({
+  hand: 3, choirStart: 2, choirMax: 4, fruits: true, omens: 0, crown: 1, deck: PLAIN44, offerReward: 'none', tieBreak: 'none',
+  target: 999, target3: 999, target4: 999, maxDays: 7, fate: { pool: [1, 1, 1, -1, -1, -1], perDay, choirPay }, ...extra,
+});
+Object.assign(VARIANTS, {
+  f_2_1: FATE(2, 1),
+  f_3_1: FATE(3, 1),
+  f_1_1: FATE(1, 1),
+  f_2_1_bet: FATE(2, 1, { offerReward: 'match' }),
+  f_2_1_known: FATE(2, 1, { fate: { pool: [1, 1, -1, -1], perDay: 2, choirPay: 1 } }), // 4p: always 2 v 2 (team sizes known)
+  f_2_1_d6: FATE(2, 1, { maxDays: 6 }),
+  f_2_1_d8: FATE(2, 1, { maxDays: 8 }),
+} as Record<string, V>);
+
+// ---- Round 24: the collection plate. Offers matching the Tide share a pot of 2 + 1 per losing Offer; Choir cards matching the Tide pay 1.
+const PLATE = (base: number, extra: V = {}): V => ({
+  hand: 3, choirStart: 2, choirMax: 4, fruits: true, omens: 0, crown: 1, deck: PLAIN44, tieBreak: 'none',
+  offerReward: 'pari', pariBase: base, choirCardPay: 1, ...extra,
+});
+Object.assign(VARIANTS, {
+  c_plate2: PLATE(2),
+  c_plate3: PLATE(3),
+  c_plate1: PLATE(1),
+  c_plate2_fate: PLATE(2, { target: 999, target3: 999, target4: 999, maxDays: 7, fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 2, choirPay: 1 } }),
+} as Record<string, V>);

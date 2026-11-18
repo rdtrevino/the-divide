@@ -302,5 +302,17 @@
  "d_m2_42_2_bet": {
   "target3": 15,
   "target4": 14
+ },
+ "c_plate2": {
+  "target3": 16,
+  "target4": 14
+ },
+ "c_plate3": {
+  "target3": 20,
+  "target4": 14
+ },
+ "c_plate1": {
+  "target3": 15,
+  "target4": 11
  }
 }

@@ -37,7 +37,11 @@ export interface Rules {
   fruitsBet: boolean; // First Fruits also pay the match reward
   omens: number; // facedown cards from the deck added to the Altar each Morning (noise)
   anonymous: boolean; // Offers are unattributed (shuffled facedown pile)
-  offerReward: 'flat' | 'match' | 'none' | 'matchPlus'; // matchPlus: +1 now, +1 more if it matches the Tide
+  offerReward: 'flat' | 'match' | 'none' | 'matchPlus' | 'pari'; // matchPlus: +1 now, +1 more if it matches the Tide; pari: winners share a pot
+  /** Collection plate: the pot is this base plus 1 per Offer on the losing side, shared evenly (rounded down) by the winning Offers. */
+  pariBase?: number;
+  /** Choir cards matching the Tide each earn this much at the Reaping (instead of a scoring table). */
+  choirCardPay?: number;
   score: ScoreTable | ((s: State, tide: Dir, margin: number) => number[]);
   leanStrength: boolean; // if true a Choir's lean is its sum, else only its sign matters for side
   order: 'rotate' | 'catchup'; // catchup: fewest Glory acts last
@@ -63,6 +67,9 @@ export interface Rules {
    *  (the size of their lean) and paid `dom[rank]`. Otherwise every Choir is ranked by strength, whatever its side, and paid `indiv[rank]`.
    *  Ties in strength go to the player with less Glory ('lowGlory'), or all tied players take the lower prize ('lower'). */
   pax?: { margin: number; dom: number[]; indiv: number[]; tie: 'lowGlory' | 'lower' };
+  /** Fates: each player secretly draws a Fate (1 Light, -1 Dark) from `pool`. Every Evening each Choir card matching the Tide earns
+   *  `choirPay`; every Day the Tide matches your Fate is worth `perDay`, scored only at the end (after maxDays). */
+  fate?: { pool: number[]; perDay: number; choirPay: number };
   /** Pantheon: each game shuffles a random selection of the original cards (picks[i] from pools[i]) into a base deck. */
   pantheon?: { base: DeckSpec; pools: string[][]; picks: number[] };
   /** Ties at the end: shared. */
@@ -130,6 +137,7 @@ export interface State {
   offerStats: number[]; // [Offers, Offers against own lean]
   calls: number[]; // Prophet: each player's named Tide this Day (0 = none)
   dayOffers: number[]; paxStats: number[]; gatherStats: number[];
+  fate: number[]; fateDays: number[]; fateStats: number[];
   prevLean: number[]; prevWith: boolean[]; dayStart: number[]; council: number[]; bounty: number[]; anathema: number; ordeal: boolean[];
 }
 
@@ -165,10 +173,18 @@ export function newGame(R: Rules, seed: number): State {
     src: Array.from({ length: R.n }, () => ({})), logs: [], decisions: Array(R.n).fill(0), switches: Array(R.n).fill(0), winners: [],
     preLastNet: null, gloryByDay: [], offerStats: [0, 0], calls: Array(R.n).fill(0),
     dayOffers: Array(R.n).fill(0), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0],
+    fate: Array(R.n).fill(0), fateDays: Array(R.n).fill(0), fateStats: [0, 0, 0, 0, 0, 0, 0],
     prevLean: Array(R.n).fill(0), prevWith: Array(R.n).fill(false), dayStart: Array(R.n).fill(0), council: Array(R.n).fill(-1), bounty: Array(R.n).fill(-1), anathema: -1, ordeal: Array(R.n).fill(false),
   };
   shuffle(s, s.deck);
   s.first = Math.floor(rnd(s) * R.n);
+  if (R.fate) {
+    let t0 = (seed ^ 0x2c1b3c6d) | 0;
+    const r = () => { let t = (t0 = (t0 + 0x6d2b79f5) | 0); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const bag = R.fate.pool.slice();
+    for (let k = bag.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [bag[k], bag[j]] = [bag[j], bag[k]]; }
+    s.fate = bag.slice(0, R.n);
+  }
   for (let p = 0; p < R.n; p++) {
     s.hand.push([]);
     s.choir.push([]);
@@ -188,6 +204,7 @@ export function clone(s: State): State {
     // metrics are not cloned deeply: rollouts must not rely on them
     src: s.src.map(() => ({})), logs: [], decisions: s.decisions.slice(), switches: s.switches.slice(), winners: [], gloryByDay: [], offerStats: [0, 0], calls: s.calls.slice(),
     dayOffers: s.dayOffers.slice(), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0],
+    fate: s.fate.slice(), fateDays: s.fateDays.slice(), fateStats: [0, 0, 0, 0, 0, 0, 0],
     prevLean: s.prevLean.slice(), prevWith: s.prevWith.slice(), dayStart: s.dayStart.slice(), council: s.council.slice(), bounty: s.bounty.slice(), ordeal: s.ordeal.slice(),
   };
 }
@@ -375,6 +392,13 @@ export function act(s: State, a: Action) {
     const [c] = s.hand[p].splice(a.i, 1);
     s.offerStats[0]++;
     s.dayOffers[p]++;
+    if (s.R.fate) {
+      const cv = sgn(val(s, c)), f = s.fate[p], l = lean(s, p);
+      s.fateStats[2]++;
+      if (cv !== 0 && cv === f) s.fateStats[3]++;
+      if (cv !== 0 && cv === l) s.fateStats[4]++;
+      if (l !== 0 && l !== f) { if (cv === f) s.fateStats[5]++; else if (cv === l) s.fateStats[6]++; }
+    }
     if (val(s, c) !== 0 && sgn(val(s, c)) === -lean(s, p)) s.offerStats[1]++;
     const hymn = Math.abs(val(s, c)) >= 2 && s.cards[c].ab === 'loud';
     s.altar.push({ c, up: hymn, by: p, kind: 1, seen: 1 << p });
@@ -540,6 +564,27 @@ export function paxScore(s: State, net: number): number[] {
   return out;
 }
 
+/** Fates: each Choir card matching the Tide earns choirPay; the Day is recorded for the matching Fates (scored at the end). */
+export function fateScore(s: State, tide: Dir): number[] {
+  const F = s.R.fate!;
+  const out = Array(s.R.n).fill(0);
+  for (let p = 0; p < s.R.n; p++) {
+    s.fateStats[1]++;
+    if (lean(s, p) === s.fate[p]) s.fateStats[0]++;
+    if (tide === 0) continue;
+    for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) out[p] += F.choirPay; }
+    if (s.fate[p] === tide) s.fateDays[p]++;
+  }
+  return out;
+}
+
+export function cardPay(s: State, tide: Dir): number[] {
+  const out = Array(s.R.n).fill(0);
+  if (tide === 0) return out;
+  for (let p = 0; p < s.R.n; p++) for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) out[p] += s.R.choirCardPay!; }
+  return out;
+}
+
 export function scoreTable(t: ScoreTable) {
   return (s: State, tide: Dir): number[] => {
     const n = s.R.n;
@@ -577,7 +622,7 @@ export function evening(s: State) {
   const top0 = Math.max(...s.glory);
   const lead0 = s.glory.filter((g) => g === top0).length === 1 && top0 > 0 ? s.glory.indexOf(top0) : -1;
   const f = typeof s.R.score === 'function' ? s.R.score : scoreTable(s.R.score);
-  const reap = s.R.pax ? paxScore(s, net) : f(s, tide, Math.abs(net));
+  const reap = s.R.choirCardPay ? cardPay(s, tide) : s.R.fate ? fateScore(s, tide) : s.R.pax ? paxScore(s, net) : f(s, tide, Math.abs(net));
   for (let p = 0; p < n; p++) if (s.ordeal[p] && reap[p] > 0) reap[p] *= 2;
   for (let p = 0; p < n; p++) if (choirHas(s, p, 'scapegoat') && s.glory[p] >= 1) {
     const q = soleLeader(s, p);
@@ -590,6 +635,12 @@ export function evening(s: State) {
     for (const a of s.altar) if (a.by >= 0 && (a.kind === 1 || (a.kind === 0 && s.R.fruitsBet)) && tide !== 0 && sgn(val(s, a.c)) === tide) gain(s, a.by, 1, a.kind === 1 ? 'bet' : 'fruitbet');
     for (const a of s.altar) if ((a.kind as number) === 3 && tide !== 0 && val(s, a.c) !== 0) gain(s, a.by, sgn(val(s, a.c)) === tide ? 1 : -1, 'ab:vessel');
     if (s.R.betLoss) for (const a of s.altar) if (a.by >= 0 && a.kind === 1 && tide !== 0 && sgn(val(s, a.c)) === -tide) gain(s, a.by, -s.R.betLoss, 'betloss');
+  }
+  if (s.R.offerReward === 'pari' && tide !== 0) {
+    const win = s.altar.filter((a) => a.by >= 0 && a.kind === 1 && sgn(val(s, a.c)) === tide);
+    const lose = s.altar.filter((a) => a.by >= 0 && a.kind === 1 && sgn(val(s, a.c)) === -tide).length;
+    const share = win.length ? Math.floor(((s.R.pariBase ?? 2) + lose) / win.length) : 0;
+    for (const a of win) gain(s, a.by, share, 'bet');
   }
   for (let p = 0; p < n; p++) if (s.calls[p] && tide !== 0 && s.calls[p] === tide) gain(s, p, 1, choirHas(s, p, 'prophecy') ? 'ab:prophecy' : 'ab:prophet');
   for (let p = 0; p < n; p++) if (s.calls[p] && choirHas(s, p, 'prophecy') && s.calls[p] !== tide) gain(s, p, -1, 'ab:prophecy');
@@ -607,6 +658,7 @@ export function evening(s: State) {
   s.gloryByDay.push(s.glory.slice());
   for (const a of s.altar) s.discard.push(a.c);
   s.altar = [];
+  if (s.R.fate && s.day >= s.R.maxDays) for (let p = 0; p < n; p++) gain(s, p, s.R.fate.perDay * s.fateDays[p], 'fate');
   if (s.glory.some((g) => g >= s.R.target) || s.day >= s.R.maxDays) {
     const top = Math.max(...s.glory);
     s.winners = s.glory.map((g, p) => (g === top ? p : -1)).filter((p) => p >= 0);

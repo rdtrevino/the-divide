@@ -38,6 +38,7 @@ const RATE: Record<string, number> = {
 const rate = (s: State, c: number) => RATE[ab(s, c) ?? ''] ?? 0;
 
 export function daysLeft(s: State) {
+  if (s.R.fate) return Math.max(1, s.R.maxDays - s.day + 1);
   const lead = Math.max(...s.glory);
   return Math.max(1, Math.min(6, ((s.R.target - lead) / s.R.target) * 7));
 }
@@ -125,11 +126,30 @@ function paxLater(s: State, p: number, mine: number) {
   for (let q = 0; q < s.R.n; q++) m += 0.9 * (q === p ? sgn(mine) : lean(s, q));
   return paxExp(s, p, mine, m, 2.4);
 }
-/** Today's expected Reaping and the value of the position later, for either scoring system. */
+/** Fates: what a Day is worth to p if the Tide is Light with probability pl, with Choir cards `cards` (values). */
+function fateDay(s: State, p: number, cards: number[], pl: number) {
+  const F = s.R.fate!;
+  let nL = 0, nD = 0;
+  for (const v of cards) { if (v > 0) nL++; else if (v < 0) nD++; }
+  return pl * (F.choirPay * nL + (s.fate[p] === 1 ? F.perDay : 0)) + (1 - pl) * (F.choirPay * nD + (s.fate[p] === -1 ? F.perDay : 0));
+}
+function fateLaterPl(s: State) {
+  let t = 0;
+  for (let q = 0; q < s.R.n; q++) t += lean(s, q);
+  return Math.max(0.25, Math.min(0.75, 0.5 + 0.07 * t));
+}
+let HYP: number[] | null = null; // hypothetical Choir values for the option being scored (Fates)
+const choirVals = (s: State, p: number) => s.choir[p].map((x) => (x.flip ? -val(s, x.c) : val(s, x.c)));
+
+/** Today's expected Reaping and the value of the position later, for any scoring system. */
 function expNow(s: State, p: number, mine: number, m: number, sd: number) {
+  if (s.R.choirCardPay && !s.R.fate) { const cv = HYP ?? choirVals(s, p); const pl = PHI(m / sd); return s.R.choirCardPay * (pl * cv.filter((v) => v > 0).length + (1 - pl) * cv.filter((v) => v < 0).length); }
+  if (s.R.fate) return fateDay(s, p, HYP ?? choirVals(s, p), PHI(m / sd));
   return s.R.pax ? paxExp(s, p, mine, m, sd) : reapExp(s, p, sgn(mine), PHI(m / sd));
 }
 function expLater(s: State, p: number, mine: number) {
+  if (s.R.choirCardPay && !s.R.fate) { const cv = HYP ?? choirVals(s, p); const pl = fateLaterPl(s); return s.R.choirCardPay * (pl * cv.filter((v) => v > 0).length + (1 - pl) * cv.filter((v) => v < 0).length); }
+  if (s.R.fate) return fateDay(s, p, HYP ?? choirVals(s, p), fateLaterPl(s));
   return s.R.pax ? paxLater(s, p, mine) : posVal(s, p, sgn(mine));
 }
 
@@ -157,6 +177,15 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
     if (s.R.offerReward === 'flat') return 1;
     if (s.R.offerReward === 'match') return sv === 0 ? 0 : pm - s.R.betLoss * (1 - pm);
     if (s.R.offerReward === 'matchPlus') return 1 + pm;
+    if (s.R.offerReward === 'pari') {
+      if (sv === 0) return 0;
+      // expected co-winners: Offers already made toward that side, plus players still to act who lean that way
+      let k = 0;
+      for (const al of s.altar) if (al.kind === 1 && al.by >= 0 && al.by !== p) k += al.by >= 0 && lean(s, al.by) === sv ? 0.7 : 0.3;
+      for (let st = s.step + 1; st < s.R.n * s.R.turns; st++) { const q = s.order[st % s.R.n]; if (q !== p) k += lean(s, q) === sv ? 0.6 : 0.2; }
+      const losers = Math.max(0, s.altar.filter((al) => al.kind === 1).length + (s.R.n * s.R.turns - s.step - 1) * 0.5 - k);
+      return pm * Math.floor(((s.R.pariBase ?? 2) + losers) / (1 + k) * 10) / 10;
+    }
     return 0;
   };
   for (const a of acts) {
@@ -181,8 +210,17 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
       const addVal = knownAdded ? val(s, added) : removedAltar;
       const removed = a.r >= 0 ? s.choir[p][a.r].c : -1;
       const ns = leanSum(s, p) + addVal - (removed >= 0 ? val(s, removed) : 0);
+      const cur = choirVals(s, p);
+      const hyp = cur.filter((_, j) => j !== a.r).concat([addVal]);
       const m = e.m - removedAltar;
       const inc = baseIncome + (knownAdded ? rate(s, added) : 0.12) - (removed >= 0 ? rate(s, removed) : 0);
+      if (s.R.fate || s.R.choirCardPay) {
+        // a Choir card pays every remaining Day it matches the Tide
+        HYP = hyp; const now = expNow(s, p, ns, m, sd), later = expLater(s, p, ns);
+        HYP = cur; const now0 = expNow(s, p, leanSum(s, p), e.m, sd), later0 = expLater(s, p, leanSum(s, p));
+        HYP = null;
+        sc = now - now0 + (dl - 1) * 0.8 * (later - later0) + inc * dl * 0.8 - baseIncome * dl * 0.8;
+      } else
       sc = expNow(s, p, ns, m, sd) + H * expLater(s, p, ns) + inc * dl * 0.8 - H * expLater(s, p, leanSum(s, p)) - baseIncome * dl * 0.8;
       if (a.t === 'gather' && s.altar[a.k].by >= 0 && s.altar[a.k].by !== p && choirHas(s, s.altar[a.k].by, 'snare')) sc -= 0.5;
       if (a.t === 'gather' && choirHas(s, p, 'pilgrim')) sc += 1;
@@ -205,7 +243,7 @@ export function heurAction(s: State, p: number, noise = 0.25): Action {
 export function heurFruit(s: State, p: number, noise = 0.25): number {
   const h = s.hand[p];
   if (!h.length) return 0;
-  const my = lean(s, p) || (sgn(h.reduce((t, c) => t + val(s, c), 0)) as Dir) || 1;
+  const my = s.R.fate ? ((sgn(2 * s.fate[p] + leanSum(s, p)) as Dir) || (s.fate[p] as Dir)) : lean(s, p) || (sgn(h.reduce((t, c) => t + val(s, c), 0)) as Dir) || 1;
   const dl = daysLeft(s);
   let best = 0, bs = -Infinity;
   for (let i = 0; i < h.length; i++) {
@@ -296,6 +334,20 @@ function determinize(s: State, p: number, salt: number): State {
     pool.splice(i, 1);
   }
   for (let q = 0; q < d.R.n; q++) if (q !== p) { const n = d.hand[q].length; d.hand[q] = pool.splice(0, n); }
+  if (d.R.fate) {
+    // Other players' Fates are secret: re-draw them from the bag (minus my own), leaning slightly toward their public Choir.
+    const bag = d.R.fate.pool.slice();
+    bag.splice(bag.indexOf(d.fate[p]), 1);
+    for (let q = 0; q < d.R.n; q++) {
+      if (q === p) continue;
+      const l = lean(d, q);
+      const ws = bag.map((f) => (l !== 0 && f === l ? 1.6 : 1));
+      let r = rnd(d) * ws.reduce((a, b) => a + b, 0), i = 0;
+      for (; i < ws.length - 1; i++) { r -= ws[i]; if (r <= 0) break; }
+      d.fate[q] = bag[i];
+      bag.splice(i, 1);
+    }
+  }
   d.deck = pool;
   return d;
 }
@@ -303,6 +355,7 @@ function determinize(s: State, p: number, salt: number): State {
 function value(s: State, q: number) {
   const dl = daysLeft(s);
   const H = Math.min(dl - 1, 2.5) * 0.5;
+  if (s.R.fate) return s.glory[q] + s.R.fate.perDay * s.fateDays[q] + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
   return s.glory[q] + H * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
 }
 function utility(s: State, p: number) {
