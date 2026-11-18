@@ -1,0 +1,131 @@
+{
+  "version": "V43",
+  "date": "2026-11-18",
+  "previous": "V42",
+  "changes": {
+    "Wisdom": {
+      "text": "When you Offer or Exalt, look at the top 2 cards of the Host deck. Put 1 into your hand and discard the other.",
+      "cadence": "When you Offer or Exalt",
+      "why": "Fuel for building (V43)"
+    },
+    "Gabriel": {
+      "text": "In the Morning: Look at another player's hand, then name Light or Dark. If they Offer a card of that alignment this Day, gain 1 Glory.",
+      "cadence": "In the Morning",
+      "why": "The seer: reading a hand becomes income (V43)"
+    },
+    "Tree of Life": {
+      "text": "At the end of the Day: If your Choir leaned with the Tide today and yesterday, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Growth through steady seasons (V43)"
+    },
+    "Hymn": {
+      "text": "When you Offer this card, it goes face up.",
+      "cadence": "When you Offer",
+      "why": "A +2 anchor and a loud public vote (V43)",
+      "value": 2,
+      "offering": "+2 Light"
+    },
+    "Lamentation": {
+      "text": "When you Offer this card, it goes face up.",
+      "cadence": "When you Offer",
+      "why": "Hymn's mirror (V43)",
+      "value": 2,
+      "offering": "+2 Dark"
+    },
+    "Martyr": {
+      "text": "When another card is discarded from your Choir, gain 1 Glory.",
+      "cadence": "When a card leaves your Choir",
+      "why": "Sacrifice and churn payoff (V43)"
+    },
+    "Tribute": {
+      "text": "Other players must pay you 1 Glory before they may Target any card in your Choir.",
+      "cadence": "Passive",
+      "why": "The fee goes to you, not the Pot (V43)"
+    },
+    "Remnant": {
+      "text": "At the end of the Day: If 2 or more places in your Choir are empty, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "The ascetic: pays while your Choir is small (V43)"
+    },
+    "Lilith": {
+      "text": "When a card is discarded from another player's Choir, you may put it into your hand.",
+      "cadence": "When a card leaves a Choir",
+      "why": "The scavenger (V43)"
+    },
+    "Parasite": {
+      "text": "When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if they lost Glory, you gain 1 Glory; if they gained Glory, discard this card.",
+      "cadence": "When you Exalt or Gather",
+      "why": "The infiltrator (V43)"
+    },
+    "Snare": {
+      "text": "When another player Gathers, flips, or discards a card you placed on the Altar, gain 1 Glory.",
+      "cadence": "Passive",
+      "why": "A trap for the hidden Altar (V43)"
+    },
+    "Eternity": {
+      "text": "At the end of the Day: You may keep one card on the Altar, face up, through the next Day.",
+      "cadence": "At the end of the Day",
+      "why": "The relic: a standing vote (V43)"
+    },
+    "Twilight": {
+      "text": "At the end of the Day: If the other cards in your Choir hold as many Light cards as Dark cards (at least 1 each), gain 2 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Diversity, ranked with the sets (V43)"
+    },
+    "Council": {
+      "text": "In the Morning: You may name another player. At the end of the Day, if your Choirs lean the same way, each of you gains 1 Glory.",
+      "cadence": "In the Morning",
+      "why": "The broker: rewards forming a partnership (V43)"
+    },
+    "Forger": {
+      "text": "When you Gather or Exalt, you may take the card from the discard pile instead.",
+      "cadence": "When you Gather or Exalt",
+      "why": "The recycler (V43)"
+    },
+    "Mirage": {
+      "text": "Other players cannot Gather, flip, look at, exchange, or destroy cards you placed on the Altar before the Evening.",
+      "cadence": "Passive",
+      "why": "Your votes stick (V43)"
+    },
+    "Apple": {
+      "text": "At the end of the Day: If your Choir leans the other way from yesterday, gain 2 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Switching sides is costly, so it pays more (V43)"
+    },
+    "Fig Leaves": {
+      "text": "In the Evening, before the Altar is revealed: You may have your Choir sit out this Day. It gains nothing, loses nothing, and does not count as leaning either way.",
+      "cadence": "In the Evening",
+      "why": "Decided after every turn, before the reveal (V43)"
+    },
+    "Raphael": {
+      "text": "When you Offer a Light card, you may turn it face up to destroy a face-up Dark card on the Altar.",
+      "cadence": "When you Offer",
+      "why": "Keeps the Offer's Glory (V43)"
+    },
+    "Azazel": {
+      "text": "When you Offer a Dark card, you may turn it face up to destroy a face-up Light card on the Altar.",
+      "cadence": "When you Offer",
+      "why": "Keeps the Offer's Glory (V43)"
+    },
+    "Flaming Sword": {
+      "text": "On your turn: No other player may Exalt or Gather until the start of your next turn.",
+      "cadence": "On your turn",
+      "why": "Shuts down building for a round (V43)"
+    },
+    "Leviathan": {
+      "text": "At the end of the Day: If the Tide won by 3 or more and your Choir leans with it, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "The landslide (V43)"
+    },
+    "Defiance": {
+      "text": "At the end of the Day: If your Choir leans with the Tide and more Choirs leaned against it than with it, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Defy the crowd and win (V43)"
+    },
+    "Favor": {
+      "text": "At the end of the Day: If 2 or more other players lost Glory this Day, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Leviathan's old ability: spared while others fall (V43)"
+    }
+  }
+}

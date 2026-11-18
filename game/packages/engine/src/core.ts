@@ -87,7 +87,18 @@ export const V42_RULES: readonly string[] = [
   // Bots value a card's ability, not only its alignment, when they build.
   'bot-engine',
 ];
-const V42_SET = new Set(V42_RULES);
+/**
+ * V43 rules (approved November 18, 2026): the engine reworks. Each was measured as a test switch first
+ * (design/v43-proposal.md). The race is to 12 (GLORY_TARGET in engine.ts).
+ */
+export const V43_RULES: readonly string[] = [
+  'wisdom-peek', 'gabriel-seer', 'tree-momentum', 'hymn-loud', 'martyr-sac', 'tribute-pay', 'remnant-asc2e',
+  'lilith-scavenge', 'parasite-feed', 'snare-trap', 'snare-nolook', 'eternity-relic', 'eternity-any', 'twilight-even',
+  'council-same', 'forger-both', 'mirage-all', 'apple-2', 'fig-evening', 'raph-free', 'sword-both', 'lev-landslide',
+  // Defiance takes the upset ability ('favor-upset' on Defiance), Favor takes Leviathan's old ability, and the Glory protection is dropped.
+  'favor-upset', 'swap-defiance', 'favor-spared', 'no-shield',
+];
+const V42_SET = new Set([...V42_RULES, ...V43_RULES]);
 /** A V42 rule, or a test switch named in the game's config. */
 export const variant = (s: GameState, v: string) => {
   const cv = s.config.variants;
@@ -157,6 +168,9 @@ export function baseValue(s: GameState, id: string): Value {
     return { light: 0, dark: 0 };
   }
   if (id === H.nephilim) return { light: 1, dark: 1 };
+  // V43 test 'hymn-loud': Hymn is Light +2 and Lamentation Dark +2.
+  if (variant(s, 'hymn-loud') && id === H.hymn) return { light: 2, dark: 0 };
+  if (variant(s, 'hymn-loud') && id === H.lamentation) return { light: 0, dark: 2 };
   if (h.alignment === 'light') return { light: h.value ?? 0, dark: 0 };
   if (h.alignment === 'dark') return { light: 0, dark: h.value ?? 0 };
   return { light: 0, dark: 0 };
@@ -229,7 +243,12 @@ export function removeFromChoir(s: GameState, seat: Seat, id: string): ChoirCard
 
 /** Discard a card from a Choir to the discard pile, honoring Absolution. */
 export function* discardFromChoir(s: GameState, seat: Seat, id: string, why: string): Gen<void> {
-  if (!removeFromChoir(s, seat, id)) return;
+  const gone = removeFromChoir(s, seat, id);
+  if (!gone) return;
+  // V43 tests. 'defiance-store': Glory stored on a card that leaves your Choir is yours.
+  if (variant(s, 'defiance-store') && (gone.store ?? 0) > 0 && hasActive(s, seat, H.defiance)) { const n = gone.store!; gone.store = 0; yield* gain(s, seat, n, H.defiance); log(s, 'defiance', `${pname(s, seat)} kept the ${n} Glory stored on ${cardName(id)} (Defiance).`); }
+  // 'martyr-sac': when another card is discarded from your Choir, gain 1 Glory.
+  if (variant(s, 'martyr-sac') && id !== H.martyr && id.startsWith('host-') && hasActive(s, seat, H.martyr) && canActivate(s, seat, H.martyr)) { yield* gain(s, seat, 1, H.martyr); log(s, 'martyr', `${pname(s, seat)} gained 1 Glory (Martyr).`); }
   if (id.startsWith('host-') && hasActive(s, seat, H.absolution) && canActivate(s, seat, H.absolution)) {
     const take = yield* yesNo(s, seat, 'absolution', `Absolution: return ${cardName(id)} to your hand instead of discarding it (then discard 1 card from your hand)?`);
     if (take) {
@@ -245,6 +264,17 @@ export function* discardFromChoir(s: GameState, seat: Seat, id: string, why: str
         log(s, 'absolution', `${pname(s, seat)} used Absolution to keep ${cardName(id)}.`);
       });
       if (ok && kept) return;
+    }
+  }
+  // 'lilith-scavenge': a card discarded from another player's Choir may go into a Lilith holder's hand.
+  if (variant(s, 'lilith-scavenge') && id.startsWith('host-')) {
+    for (const o of s.players) {
+      if (o.seat === seat || !hasActive(s, o.seat, H.lilith) || !canActivate(s, o.seat, H.lilith)) continue;
+      if (yield* yesNo(s, o.seat, 'lilith.take', `Lilith: ${cardName(id)} was discarded from ${pname(s, seat)}'s Choir. Put it into your hand?`)) {
+        o.hand.push(id);
+        log(s, 'lilith', `${pname(s, seat)} discarded ${cardName(id)} from their Choir (${why}); ${o.name} took it into their hand (Lilith).`);
+        return;
+      }
     }
   }
   if (id.startsWith('host-')) s.discard.push(id);
@@ -422,19 +452,22 @@ export function protectedFrom(s: GameState, actor: Seat, owner: Seat, kind: Targ
 /** Kept for older call sites: no card grants blanket immunity any more. */
 export const immune = (_s: GameState, _actor: Seat, _owner: Seat) => false;
 /** Defiance (V42): other players' abilities cannot make you lose or give up Glory. */
-export const glorySafe = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && hasActive(s, owner, H.defiance);
+// V43 test 'swap-defiance': Favor takes Defiance's protection, and Defiance takes Favor's upset ability.
+export const glorySafe = (s: GameState, actor: Seat, owner: Seat) => !variant(s, 'no-shield') && actor !== owner && hasActive(s, owner, variant(s, 'swap-defiance') ? H.favor : H.defiance); // 'no-shield': the protection is dropped
 /** Lilith (V42): other players' abilities cannot look at, take, or discard cards in your hand. */
-export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && (immune(s, actor, owner) || hasActive(s, owner, H.lilith));
+export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && (immune(s, actor, owner) || (!variant(s, 'lilith-scavenge') && hasActive(s, owner, H.lilith)) || (variant(s, 'cherub-hand') && hasActive(s, owner, H.cherubim)));
 
 /** Tribute: pay 1 Glory to the owner before Targeting a card in their Choir. Returns false if it cannot be paid. */
 export function canAffordTribute(s: GameState, actor: Seat, owner: Seat): boolean {
-  if (actor === owner || !hasActive(s, owner, H.tribute)) return true;
+  if (actor === owner || !hasActive(s, owner, H.tribute) || variant(s, 'tribute-toll')) return true;
   return canSpend(s, actor, 1);
 }
 export function* payTribute(s: GameState, actor: Seat, owner: Seat): Gen<boolean> {
   if (actor === owner || !hasActive(s, owner, H.tribute)) return true;
   if (!canSpend(s, actor, 1)) return false;
-  // V37: Tribute is paid to the Pot (was to Tribute's owner).
+  // V37: Tribute is paid to the Pot (was to Tribute's owner). V43 test 'tribute-pay': paid to Tribute's holder.
+  if (variant(s, 'tribute-pay')) { transfer(s, actor, owner, 1, H.tribute); log(s, 'tribute', `${pname(s, actor)} paid 1 Glory to ${pname(s, owner)} to Target their Choir (Tribute).`); return true; }
+  if (variant(s, 'tribute-toll')) return true; // the toll version has no targeting fee
   yield* pay(s, actor, 1, H.tribute);
   log(s, 'tribute', `${pname(s, actor)} paid 1 Glory to the Pot to Target ${pname(s, owner)}'s Choir (Tribute).`);
   return true;
@@ -449,7 +482,7 @@ export function targetableChoir(s: GameState, actor: Seat, owner: Seat, kind: Ta
 
 /** Altar cards that `seat` may Gather or destroy (Sanctuary protects for other players). */
 export function altarAvailable(s: GameState, seat: Seat): AltarCard[] {
-  return s.altar.filter((a) => a.sanctuary === undefined || a.sanctuary === seat);
+  return s.altar.filter((a) => (a.sanctuary === undefined || a.sanctuary === seat) && !(variant(s, 'mirage-all') && altarShielded(s, a, seat)));
 }
 
 export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
@@ -460,6 +493,8 @@ export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
 
 /** Mirage (V35): a player's facedown Offerings cannot be flipped, looked at, exchanged, or destroyed by others before the Evening. */
 export function altarShielded(s: GameState, a: AltarCard, actor: Seat): boolean {
+  // V43 test 'mirage-all': every card you placed on the Altar is protected, face up or down, from other players' Gathers and abilities.
+  if (variant(s, 'mirage-all')) return a.offeredBy !== null && a.offeredBy >= 0 && a.offeredBy !== actor && hasActive(s, a.offeredBy, H.mirage);
   return a.facedown && a.kind === 'offer' && a.offeredBy !== null && a.offeredBy !== actor && hasActive(s, a.offeredBy, H.mirage);
 }
 
@@ -470,4 +505,12 @@ export const altarSightBlocked = (s: GameState) => s.currentEvent === E.pandemon
 export function altarPeekable(s: GameState, actor: Seat): AltarCard[] {
   if (altarSightBlocked(s)) return [];
   return s.altar.filter((a) => a.facedown && !altarShielded(s, a, actor));
+}
+
+/** V43 test 'snare-trap': when another player Gathers, looks at, flips, or discards a card you placed on the Altar, gain 1 Glory. */
+export function* snareHit(s: GameState, actor: Seat, a: { offeredBy: Seat | null }): Gen<void> {
+  const o = a.offeredBy;
+  if (!variant(s, 'snare-trap') || o === null || o < 0 || o === actor || !hasActive(s, o, H.snare) || !canActivate(s, o, H.snare)) return;
+  yield* gain(s, o, 1, H.snare);
+  log(s, 'snare', `${pname(s, o)} gained 1 Glory (Snare).`);
 }

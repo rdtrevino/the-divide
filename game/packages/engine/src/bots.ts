@@ -40,7 +40,7 @@ function reapValue(net: number, tide: number, weight = 0.7) {
   const same = OTHERS.filter((o) => o !== 0 && Math.sign(o) === Math.sign(net));
   // Test 'reap-mirror': two with the Tide gain 1 each; a lone Choir against it loses 3, otherwise 1.
   if (dirOf(net) !== t) return -weight * (MIRROR && same.length === 0 ? 3 : 1);
-  const v = same.length === 0 ? 3 : same.length === 1 ? (MIRROR ? 1 : Math.abs(net) > Math.abs(same[0]) ? 2 : 1) : 0;
+  const v = same.length === 0 ? 3 : same.length === 1 ? (MIRROR && !PAIR21 ? 1 : Math.abs(net) > Math.abs(same[0]) ? 2 : 1) : CROWD1 ? 1 : 0;
   return v * weight;
 }
 
@@ -85,6 +85,8 @@ function leaderSeats(s: GameState, except?: Seat) {
 /** Other players' leans, read once per decision (for coalition scoring). */
 let OTHERS: number[] = [];
 let MIRROR = false;
+let PAIR21 = false;
+let CROWD1 = false;
 /**
  * Bot option 'bot-engine': value a Choir card's ability by the Glory it earns per Day held
  * (measured with tools/sim/income.ts), times the Days likely left. Without it, bots build only for lean.
@@ -97,7 +99,7 @@ const ENGINE_RATE: Record<string, number> = {
 function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
   if (!id || !variant(s, 'bot-engine')) return 0;
   if ((id === H.mammon && variant(s, 'mammon-store')) || id === H.providence) return variant(s, 'store-tide') ? 0.4 : 0.9;
-  if (id === H.favor && variant(s, 'favor-ripen')) return 0.35;
+  if (id === H.favor && variant(s, 'favor-ripen') && !variant(s, 'swap-defiance') && !variant(s, 'favor-upset') && !variant(s, 'favor-spared')) return 0.35;
   if ((id === H.seraphim || id === H.legion) && (variant(s, 'seraph-refund') || (id === H.legion && variant(s, 'legion-free')) || id === H.seraphim)) return 0.25;
   if (id === H.uriel || id === H.beelzebub) {
     const k = id === H.uriel ? 'light' : 'dark';
@@ -105,6 +107,24 @@ function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
     const pay = variant(s, 'set-2') ? 2 : 1;
     return n >= 3 ? pay : 0.15 * n * pay;
   }
+  // V43 tests
+  if (id === H.treeOfLife && variant(s, 'tree-mature')) return 0.5;
+  if (id === H.favor && variant(s, 'favor-late')) return s.day >= 6 ? 1.2 : s.day >= 3 ? 0.8 : 0.4;
+  if (id === H.favor && variant(s, 'favor-momentum')) return 0.25;
+  if (id === H.leviathan && variant(s, 'lev-landslide')) return 0.3;
+  if (variant(s, 'swap-defiance') && variant(s, 'favor-upset')) { if (id === H.defiance) return 0.3; if (id === H.favor) return variant(s, 'favor-spared') ? 0.2 : 0; }
+  if (id === H.favor && variant(s, 'favor-spared')) return 0.2;
+  if (id === H.favor && (variant(s, 'favor-landslide') || variant(s, 'favor-pair') || variant(s, 'favor-upset') || variant(s, 'favor-narrow'))) return 0.3;
+  if (id === H.favor && (variant(s, 'favor-fruits') || variant(s, 'favor-fruits-alone') || variant(s, 'favor-fruits-bet'))) return 0.3;
+  if (id === H.treeOfLife && variant(s, 'tree-momentum')) return 0.25;
+  if (id === H.remnant && variant(s, 'remnant-asc2e')) return choirLimit(s) - s.players[seat].choir.length > 2 ? 0.8 : 0;
+  if (id === H.remnant && (variant(s, 'remnant-asc1') || variant(s, 'remnant-asc2'))) { const empty = choirLimit(s) - s.players[seat].choir.length; return variant(s, 'remnant-asc2') ? Math.min(2, Math.max(0, empty - 1)) * 0.8 : empty > 1 ? 0.8 : 0; }
+  if (id === H.twilight && (variant(s, 'twilight-22') || variant(s, 'twilight-even'))) return 0.3;
+  if (id === H.council && variant(s, 'council-same')) return 0.35;
+  if (id === H.gabriel && variant(s, 'gabriel-seer')) return 0.35;
+  if (id === H.tribute && variant(s, 'tribute-toll')) return 0.3;
+  if (id === H.martyr && variant(s, 'martyr-sac')) return 0.35;
+  if (id === H.snare && variant(s, 'snare-trap')) return 0.2;
   return ENGINE_RATE[id] ?? 0;
 }
 function daysLeft(s: GameState) {
@@ -134,6 +154,8 @@ function bestCorrupt(s: GameState, seat: Seat, want: number, cards: string[]) {
 export function botAnswer(s: GameState, d: Decision): Answer {
   OTHERS = s.players.filter((p) => p.seat !== d.seat).map((p) => alignment(s, p.seat));
   MIRROR = variant(s, 'reap-mirror');
+  PAIR21 = variant(s, 'pair-21');
+  CROWD1 = variant(s, 'crowd-1');
   const r = rand(d.id * 7919 + d.seat * 104729 + (s.config.seed | 0));
   const seat = d.seat;
   const net = alignment(s, seat);
@@ -209,6 +231,47 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const pref = ['celestial-the-eclipse', 'celestial-the-arbiter', 'celestial-the-whisper', 'celestial-the-dominion', 'celestial-the-cantor', 'celestial-the-echo', 'celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-patron'];
       return one(pickBest(d.options, (o) => -pref.indexOf(o.id)).id);
     }
+    // V43 tests
+    case 'wisdom.keep': {
+      const o = pickBest(d.options, (x) => (want >= 0 ? signed(s, x.card) : -signed(s, x.card)) + engineVal(s, seat, x.card));
+      return one(o.id);
+    }
+    case 'seer.player': {
+      const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => s.players[x.seat!].hand.length + r * 0.1);
+      return one(o ? o.id : 'none');
+    }
+    case 'seer.dir': {
+      const cards = d.reveal ?? [];
+      const lt = cards.filter((c) => signed(s, c) > 0).length, dk = cards.filter((c) => signed(s, c) < 0).length;
+      return one(lt > dk ? 'light' : dk > lt ? 'dark' : r < 0.5 ? 'light' : 'dark');
+    }
+    case 'council.player': {
+      const o = d.options.find((x) => x.seat !== undefined && net !== 0 && Math.sign(alignment(s, x.seat)) === Math.sign(net));
+      return one(o ? o.id : 'none');
+    }
+    case 'eternity.keep': {
+      const o = d.options.find((x) => x.card && dirOf(signed(s, x.card)) === wantDir);
+      return one(o ? o.id : 'none');
+    }
+    case 'figLeaves.target': {
+      // Sit out yourself when your side is losing or crowded; otherwise sit out a rival who leans with the Altar alone.
+      const mine = d.options.find((x) => x.seat === seat);
+      const sharing = OTHERS.filter((x) => x !== 0 && Math.sign(x) === Math.sign(net)).length;
+      if (mine && net !== 0 && (sharing >= 2 || (altar !== 0 && dirOf(altar) !== dirOf(net)))) return one(mine.id);
+      const rival = d.options.find((x) => x.seat !== undefined && x.seat !== seat && altar !== 0 && dirOf(alignment(s, x.seat)) === dirOf(altar) && dirOf(alignment(s, x.seat)) !== dirOf(net));
+      return one(rival ? rival.id : mine ? mine.id : 'none');
+    }
+    case 'figLeaves.evening': {
+      const sharing = OTHERS.filter((x) => x !== 0 && Math.sign(x) === Math.sign(net)).length;
+      return one(net !== 0 && (sharing >= 2 || (altar !== 0 && dirOf(altar) !== dirOf(net))) ? 'yes' : 'no');
+    }
+    case 'lilith.take':
+      return one('yes');
+    case 'parasite.target': {
+      const leaders = leaderSeats(s, seat);
+      const o = byId((x) => x.seat !== undefined && leaders.includes(x.seat)) ?? d.options[0];
+      return one(o.id);
+    }
     case 'temptation.give': {
       const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => corruptValue(s, seat, want, x.card, x.seat!) - 0.3 * engineVal(s, seat, x.card));
       return one(o && corruptValue(s, seat, want, o.card, o.seat!) > 0 ? o.id : 'none');
@@ -280,6 +343,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         // V42 team tools, decided on your turn before the reveal.
         const sharing = OTHERS.filter((x) => x !== 0 && Math.sign(x) === Math.sign(net)).length;
         if (o.card === H.heresy) return net !== 0 && altar !== 0 && dirOf(altar) !== dirOf(net) && later <= 1;
+        if (o.card === H.figLeaves && variant(s, 'fig-other')) return later <= 1;
         if (o.card === H.figLeaves) return net !== 0 && (sharing >= 2 || (altar !== 0 && dirOf(altar) !== dirOf(net) && later <= 1));
         // Morning Star: late in the turn order, flip one card if that turns your lean toward the Altar.
         if (o.card === H.morningStar) return altar !== 0 && net !== 0 && dirOf(altar) !== dirOf(net) && later <= 1 && s.players[seat].choir.some((c) => !c.facedown && dirOf(net - 2 * signed(s, c.id)) === dirOf(altar));

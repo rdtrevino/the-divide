@@ -1,5 +1,48 @@
 # Changelog
 
+## V43 cards and Rulebook v13: a deck built around engines, a race to 12 (November 18, 2026)
+
+Robert's decisions of November 18, card by card. Not yet merged.
+
+**Rules**
+- **Race to 12** (was 10). Engines need Days to pay off: about 8 Days a game, and every card lands within 0.8–1.2 for bots.
+- Scoring is unchanged: alone ±3; two with the Tide 1 each; three or more with it nothing; against it with company −1. (A 2/1 pair and "three or more gain 1" were measured and not adopted.)
+- A new timing, *In the Evening* (before the Altar is revealed), for Fig Leaves.
+
+**Cards (24 changed)**
+
+| Card | Now |
+|---|---|
+| Wisdom | When you Offer or Exalt, look at the top 2 Host cards; put 1 into your hand, discard the other |
+| Gabriel | In the Morning: look at a player's hand, name Light or Dark; +1 if they Offer that alignment |
+| Tree of Life | +1 if your Choir leaned with the Tide today and yesterday |
+| Hymn, Lamentation | **+2**; they go face up when Offered |
+| Martyr | +1 when another card is discarded from your Choir |
+| Tribute | The fee for Targeting your Choir is paid to you |
+| Remnant | +1 if 2 or more places in your Choir are empty |
+| Lilith | Take a card discarded from another player's Choir into your hand |
+| Parasite | Exalt or Gather it into another player's Choir; +1 when they lose; discarded when they gain |
+| Snare | +1 when another player Gathers, flips, or discards a card you placed on the Altar |
+| Eternity | Keep one card on the Altar, face up, through the next Day |
+| Twilight | +2 if the other cards hold as many Light as Dark (at least 1 each) |
+| Council | Name a player in the Morning; if your Choirs lean the same way, each gains 1 |
+| Forger | Gather or Exalt from the discard pile |
+| Mirage | Other players cannot Gather, flip, look at, exchange, or destroy cards you placed on the Altar |
+| Apple | +2 (was +1) |
+| Fig Leaves | Decided in the Evening, before the reveal |
+| Raphael, Azazel | Destroying keeps the Offer's Glory |
+| Flaming Sword | No other player may Exalt or Gather until your next turn |
+| Leviathan | +1 if the Tide won by 3 or more and you lean with it |
+| Defiance | +1 if you lean with the Tide and more Choirs leaned against it than with it |
+| Favor | +1 if 2 or more other players lost Glory this Day |
+
+Full history, with every version measured: `design/v43-proposal.md`.
+
+**Code**
+- `V43_RULES` in `core.ts` and `GLORY_TARGET = 12`; the new abilities live in `engine/src/v43.ts`. The rejected versions remain as test switches.
+- New sim tools: `playrate.ts` (how often each card is held, Offered, Exalted, Gathered and used) and `usage.ts`.
+- Card data V43 (`cards/changes/V43.json`), Rulebook v13, the Learn page and the table's labels (race to 12).
+
 ## V42 cards and Rulebook v12: one deck, free Exalt, mirrored scoring (November 18, 2026)
 
 Robert's decisions of November 17 and 18, reviewed card by card. Not yet merged.

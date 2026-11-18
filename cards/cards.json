@@ -1,5 +1,5 @@
 {
-  "version": "V42",
+  "version": "V43",
   "date": "2026-11-18",
   "hosts": [
     {
@@ -18,27 +18,27 @@
     {
       "id": "host-wisdom",
       "name": "Wisdom",
-      "text": "On your turn: Look at the top card of the Host deck. You may discard it.",
+      "text": "When you Offer or Exalt, look at the top 2 cards of the Host deck. Put 1 into your hand and discard the other.",
       "openGame": true,
       "face": "art/faces/host/02-wisdom.jpg",
       "plate": "art/plates/host/02-wisdom.jpg",
       "number": 2,
       "alignment": "light",
       "value": 1,
-      "cadence": "On your turn",
+      "cadence": "When you Offer or Exalt",
       "oncePerGame": false
     },
     {
       "id": "host-gabriel",
       "name": "Gabriel",
-      "text": "On your turn: Look at another player's hand.",
+      "text": "In the Morning: Look at another player's hand, then name Light or Dark. If they Offer a card of that alignment this Day, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/03-gabriel.jpg",
       "plate": "art/plates/host/03-gabriel.jpg",
       "number": 3,
       "alignment": "light",
       "value": 1,
-      "cadence": "On your turn",
+      "cadence": "In the Morning",
       "oncePerGame": false
     },
     {
@@ -70,7 +70,7 @@
     {
       "id": "host-tree-of-life",
       "name": "Tree of Life",
-      "text": "At the end of the Day: You may take a card from the Altar into your Choir. If your Choir is full, discard one of its cards first.",
+      "text": "At the end of the Day: If your Choir leaned with the Tide today and yesterday, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/06-tree-of-life.jpg",
       "plate": "art/plates/host/06-tree-of-life.jpg",
@@ -109,20 +109,20 @@
     {
       "id": "host-hymn",
       "name": "Hymn",
-      "text": "You may Offer up to 2 Light Host cards to the Altar. If you Offer 2, place them face up. You gain only one reward.",
+      "text": "When you Offer this card, it goes face up.",
       "openGame": true,
       "face": "art/faces/host/09-hymn.jpg",
       "plate": "art/plates/host/09-hymn.jpg",
       "number": 9,
       "alignment": "light",
-      "value": 1,
-      "cadence": "Passive",
+      "value": 2,
+      "cadence": "When you Offer",
       "oncePerGame": false
     },
     {
       "id": "host-raphael",
       "name": "Raphael",
-      "text": "When you Offer a Light Host card, you may turn it face up and forgo its reward to destroy 1 face-up Dark card on the Altar.",
+      "text": "When you Offer a Light card, you may turn it face up to destroy a face-up Dark card on the Altar.",
       "openGame": true,
       "face": "art/faces/host/10-raphael.jpg",
       "plate": "art/plates/host/10-raphael.jpg",
@@ -161,14 +161,14 @@
     {
       "id": "host-martyr",
       "name": "Martyr",
-      "text": "At the end of the Day: If you lost Glory at the Reaping, you may replace a card in your Choir with a card from your hand.",
+      "text": "When another card is discarded from your Choir, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/13-martyr.jpg",
       "plate": "art/plates/host/13-martyr.jpg",
       "number": 13,
       "alignment": "light",
       "value": 1,
-      "cadence": "At the end of the Day",
+      "cadence": "When a card leaves your Choir",
       "oncePerGame": false
     },
     {
@@ -187,7 +187,7 @@
     {
       "id": "host-tribute",
       "name": "Tribute",
-      "text": "Other players must pay 1 Glory to the Pot before they may Target any card in your Choir with an ability.",
+      "text": "Other players must pay you 1 Glory before they may Target any card in your Choir.",
       "openGame": true,
       "face": "art/faces/host/15-tribute.jpg",
       "plate": "art/plates/host/15-tribute.jpg",
@@ -304,7 +304,7 @@
     {
       "id": "host-eternity",
       "name": "Eternity",
-      "text": "At the end of the Day: If you did not Offer this Day, gain 1 Glory.",
+      "text": "At the end of the Day: You may keep one card on the Altar, face up, through the next Day.",
       "openGame": true,
       "face": "art/faces/host/24-eternity.jpg",
       "plate": "art/plates/host/24-eternity.jpg",
@@ -343,7 +343,7 @@
     {
       "id": "host-twilight",
       "name": "Twilight",
-      "text": "At the end of the Day: If your Choir holds at least one Light and one Dark card, gain 1 Glory.",
+      "text": "At the end of the Day: If the other cards in your Choir hold as many Light cards as Dark cards (at least 1 each), gain 2 Glory.",
       "openGame": true,
       "face": "art/faces/host/27-twilight.jpg",
       "plate": "art/plates/host/27-twilight.jpg",
@@ -434,20 +434,20 @@
     {
       "id": "host-fig-leaves",
       "name": "Fig Leaves",
-      "text": "On your turn: Your Choir sits out this Day. It gains nothing, loses nothing, and does not count as leaning either way.",
+      "text": "In the Evening, before the Altar is revealed: You may have your Choir sit out this Day. It gains nothing, loses nothing, and does not count as leaning either way.",
       "openGame": true,
       "face": "art/faces/host/34-fig-leaves.jpg",
       "plate": "art/plates/host/34-fig-leaves.jpg",
       "number": 34,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "On your turn",
+      "cadence": "In the Evening",
       "oncePerGame": false
     },
     {
       "id": "host-flaming-sword",
       "name": "Flaming Sword",
-      "text": "On your turn: No other player may Exalt until the start of your next turn.",
+      "text": "On your turn: No other player may Exalt or Gather until the start of your next turn.",
       "openGame": true,
       "face": "art/faces/host/35-flaming-sword.jpg",
       "plate": "art/plates/host/35-flaming-sword.jpg",
@@ -486,20 +486,20 @@
     {
       "id": "host-council",
       "name": "Council",
-      "text": "On your turn: You may replace another card in your Choir with a card from your hand. Then each other player may do the same by paying you 1 Glory. Replaced cards are discarded.",
+      "text": "In the Morning: You may name another player. At the end of the Day, if your Choirs lean the same way, each of you gains 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/38-council.jpg",
       "plate": "art/plates/host/38-council.jpg",
       "number": 38,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "On your turn",
+      "cadence": "In the Morning",
       "oncePerGame": false
     },
     {
       "id": "host-mirage",
       "name": "Mirage",
-      "text": "Your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening.",
+      "text": "Other players cannot Gather, flip, look at, exchange, or destroy cards you placed on the Altar before the Evening.",
       "openGame": true,
       "face": "art/faces/host/39-mirage.jpg",
       "plate": "art/plates/host/39-mirage.jpg",
@@ -551,7 +551,7 @@
     {
       "id": "host-apple",
       "name": "Apple",
-      "text": "At the end of the Day: If your Choir leans the other way from yesterday, gain 1 Glory.",
+      "text": "At the end of the Day: If your Choir leans the other way from yesterday, gain 2 Glory.",
       "openGame": true,
       "face": "art/faces/host/43-apple.jpg",
       "plate": "art/plates/host/43-apple.jpg",
@@ -564,14 +564,14 @@
     {
       "id": "host-forger",
       "name": "Forger",
-      "text": "When you Gather, you may take any Host card from the discard pile instead of a card from the Altar.",
+      "text": "When you Gather or Exalt, you may take the card from the discard pile instead.",
       "openGame": true,
       "face": "art/faces/host/44-forger.jpg",
       "plate": "art/plates/host/44-forger.jpg",
       "number": 44,
       "alignment": "neutral",
       "value": 0,
-      "cadence": "When you Gather",
+      "cadence": "When you Gather or Exalt",
       "oncePerGame": false
     },
     {
@@ -603,7 +603,7 @@
     {
       "id": "host-favor",
       "name": "Favor",
-      "text": "At the end of each Day your Choir leans with the Tide, put 1 Glory on this card. When it holds 3, remove them and gain 2 Glory.",
+      "text": "At the end of the Day: If 2 or more other players lost Glory this Day, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/47-favor.jpg",
       "plate": "art/plates/host/47-favor.jpg",
@@ -642,20 +642,20 @@
     {
       "id": "host-lamentation",
       "name": "Lamentation",
-      "text": "You may Offer up to 2 Dark Host cards to the Altar. If you Offer 2, place them face up. You gain only one reward.",
+      "text": "When you Offer this card, it goes face up.",
       "openGame": true,
       "face": "art/faces/host/50-lamentation.jpg",
       "plate": "art/plates/host/50-lamentation.jpg",
       "number": 50,
       "alignment": "dark",
-      "value": 1,
-      "cadence": "Passive",
+      "value": 2,
+      "cadence": "When you Offer",
       "oncePerGame": false
     },
     {
       "id": "host-azazel",
       "name": "Azazel",
-      "text": "When you Offer a Dark Host card, you may turn it face up and forgo its reward to destroy 1 face-up Light card on the Altar.",
+      "text": "When you Offer a Dark card, you may turn it face up to destroy a face-up Light card on the Altar.",
       "openGame": true,
       "face": "art/faces/host/51-azazel.jpg",
       "plate": "art/plates/host/51-azazel.jpg",
@@ -694,7 +694,7 @@
     {
       "id": "host-leviathan",
       "name": "Leviathan",
-      "text": "At the end of the Day: If 2 or more other players lost Glory this Day, gain 1 Glory.",
+      "text": "At the end of the Day: If the Tide won by 3 or more and your Choir leans with it, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/54-leviathan.jpg",
       "plate": "art/plates/host/54-leviathan.jpg",
@@ -759,27 +759,27 @@
     {
       "id": "host-lilith",
       "name": "Lilith",
-      "text": "Other players' abilities cannot look at, take, or discard cards in your hand.",
+      "text": "When a card is discarded from another player's Choir, you may put it into your hand.",
       "openGame": true,
       "face": "art/faces/host/59-lilith.jpg",
       "plate": "art/plates/host/59-lilith.jpg",
       "number": 59,
       "alignment": "dark",
       "value": 1,
-      "cadence": "Passive",
+      "cadence": "When a card leaves a Choir",
       "oncePerGame": false
     },
     {
       "id": "host-parasite",
       "name": "Parasite",
-      "text": "On your turn: Move this card into another player's Choir. Its holder cannot discard it.",
+      "text": "When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if they lost Glory, you gain 1 Glory; if they gained Glory, discard this card.",
       "openGame": true,
       "face": "art/faces/host/60-parasite.jpg",
       "plate": "art/plates/host/60-parasite.jpg",
       "number": 60,
       "alignment": "dark",
       "value": 1,
-      "cadence": "On your turn",
+      "cadence": "When you Exalt or Gather",
       "oncePerGame": false
     },
     {
@@ -824,14 +824,14 @@
     {
       "id": "host-defiance",
       "name": "Defiance",
-      "text": "Other players' abilities cannot make you lose or give up Glory.",
+      "text": "At the end of the Day: If your Choir leans with the Tide and more Choirs leaned against it than with it, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/64-defiance.jpg",
       "plate": "art/plates/host/64-defiance.jpg",
       "number": 64,
       "alignment": "dark",
       "value": 1,
-      "cadence": "Passive",
+      "cadence": "At the end of the Day",
       "oncePerGame": false
     },
     {
@@ -863,7 +863,7 @@
     {
       "id": "host-remnant",
       "name": "Remnant",
-      "text": "At the end of the Day: You may take back a card you Offered today into your hand.",
+      "text": "At the end of the Day: If 2 or more places in your Choir are empty, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/67-remnant.jpg",
       "plate": "art/plates/host/67-remnant.jpg",
@@ -889,14 +889,14 @@
     {
       "id": "host-snare",
       "name": "Snare",
-      "text": "When another player Gathers a card you Offered this Day, gain 1 Glory.",
+      "text": "When another player Gathers, flips, or discards a card you placed on the Altar, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/69-snare.jpg",
       "plate": "art/plates/host/69-snare.jpg",
       "number": 69,
       "alignment": "dark",
       "value": 1,
-      "cadence": "When another player Gathers",
+      "cadence": "Passive",
       "oncePerGame": false
     },
     {

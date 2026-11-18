@@ -24,7 +24,7 @@ export function Countdown(p: { deadline: number | null; skew: number; class?: st
   return <span class={`countdown num${s <= 15 ? ' low' : ''} ${p.class ?? ''}`} data-tip="Time left for this choice. When it runs out, a bot makes it">{Math.floor(s / 60)}:{String(s % 60).padStart(2, '0')}</span>;
 }
 
-/** The race to 10: one marker per player on a 0 to 10 track. */
+/** The race to 12: one marker per player on a track to the target. */
 export function GloryTrack(p: { view: GameView; target: number }) {
   const max = Math.max(p.target, ...p.view.players.map((x) => x.glory));
   return (

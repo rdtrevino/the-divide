@@ -37,7 +37,7 @@ export interface AltarCard {
   offeredBy: Seat | null;
   day: number;
   /** How the card reached the Altar. Only 'offer' counts as an Offer (Snare, Mirage). */
-  kind?: 'seed' | 'fruits' | 'offer' | 'vessel' | 'other';
+  kind?: 'seed' | 'fruits' | 'offer' | 'vessel' | 'relic' | 'other';
   /** Players who have secretly seen this facedown card (Urim, Asmadai). */
   seenBy?: Seat[];
   /** Sanctuary: seat that protected this card for the rest of the Day. */
