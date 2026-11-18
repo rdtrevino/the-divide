@@ -95,12 +95,12 @@ function AltarBuilder() {
 function ReapingCalc() {
   const [side, setSide] = useState<'with' | 'against' | 'neutral'>('with');
   const [sharing, setSharing] = useState(2);
-  const [rank, setRank] = useState<'stronger' | 'weaker' | 'tied'>('stronger');
-  const result = side === 'against' ? -1 : side === 'neutral' ? 0 : sharing === 1 ? 3 : sharing === 2 ? (rank === 'stronger' ? 2 : 1) : 0;
-  const why = side === 'against' ? 'Leaning against the Tide costs 1 Glory.'
+  const [alone, setAlone] = useState(true);
+  const result = side === 'against' ? (alone ? -3 : -1) : side === 'neutral' ? 0 : sharing === 1 ? 3 : sharing === 2 ? 1 : 0;
+  const why = side === 'against' ? (alone ? 'Alone against the Tide: the worst result there is.' : 'Others lean Dark with you, so each of you loses only 1.')
     : side === 'neutral' ? 'A Neutral Choir neither gains nor loses.'
     : sharing === 1 ? 'Alone with the Tide: the best result there is.'
-    : sharing === 2 ? (rank === 'stronger' ? 'You share the Tide and lean harder than your partner.' : rank === 'weaker' ? 'You share the Tide, but your partner leans harder.' : 'An equal pair: 1 each.')
+    : sharing === 2 ? 'You share the Tide with one partner: 1 each.'
     : 'Three or more Choirs share the Tide, so none of them is paid. Someone should have switched sides.';
   return (
     <div class="learn-try">
@@ -115,10 +115,10 @@ function ReapingCalc() {
           {[1, 2, 3].map((k) => <button class={`chip${sharing === k ? ' on' : ''}`} onClick={() => setSharing(k)}>{k === 3 ? '3 or more' : k}</button>)}
         </div>
       )}
-      {side === 'with' && sharing === 2 && (
+      {side === 'against' && (
         <div class="learn-row">
-          <span class="learn-label">Your lean is</span>
-          {([['stronger', 'Stronger'], ['weaker', 'Weaker'], ['tied', 'Equal']] as const).map(([k, l]) => <button class={`chip${rank === k ? ' on' : ''}`} onClick={() => setRank(k)}>{l}</button>)}
+          <span class="learn-label">Choirs leaning Dark, yours included</span>
+          {([[true, '1'], [false, '2 or more']] as const).map(([k, l]) => <button class={`chip${alone === k ? ' on' : ''}`} onClick={() => setAlone(k)}>{l}</button>)}
         </div>
       )}
       <div class={`learn-result ${result > 0 ? 'gain' : result < 0 ? 'loss' : ''}`}>
@@ -144,23 +144,23 @@ const ACTIONS: Record<ActionKey, { title: string; icon: string; badge: string; t
   },
   gather: {
     title: 'Gather', icon: '❖', badge: 'Free', tone: '',
-    summary: 'Altar or deck → your Choir',
+    summary: 'Altar → your Choir',
     steps: [
-      'Take one card from the Altar, or the top card of the deck, into your Choir.',
+      'Take one card from the Altar into your Choir.',
       'You can take a facedown Altar card without knowing what it is.',
       'If your Choir already has 4 cards, discard one of them first.',
     ],
     why: 'Reshape your Choir for free, or pull a card off the Altar so it stops pushing the Tide.',
   },
   exalt: {
-    title: 'Exalt', icon: '▲', badge: 'Costs 1 Glory', tone: 'cost',
+    title: 'Exalt', icon: '▲', badge: 'Free', tone: '',
     summary: 'Hand → your Choir',
     steps: [
-      'Pay 1 Glory and play a card from your hand straight into your Choir.',
+      'Play a card from your hand straight into your Choir.',
       'If your Choir already has 4 cards, discard one of them first.',
       'The card never touches the Altar, so nobody sees it coming.',
     ],
-    why: 'The private way to change your Choir. You pay for the secrecy.',
+    why: 'Build exactly the Choir you want. It costs no Glory, but you give up the Offer.',
   },
 };
 
@@ -207,9 +207,9 @@ const TIMINGS: Record<TimingKey, { title: string; when: string; cards: string[];
     tip: 'Each one is a free extra move every Day, so they are worth more the earlier you have them.',
   },
   reaping: {
-    title: 'At the Reaping', when: 'When the Tide is scored',
+    title: 'At the end of the Day', when: 'After the Tide is scored',
     cards: ['host-twilight', 'host-uriel'],
-    how: 'Works in the Evening, after the Tide is set. Some pay Glory on a condition; others change how your Choir is scored.',
+    how: 'Works in the Evening, after every Choir is scored. Most pay Glory on a condition; some store it on the card for later.',
     tip: 'These pay every Evening, on top of the Tide. A few of them can carry you to 10.',
   },
   always: {
@@ -360,7 +360,7 @@ const STEPS: Step[] = [
         <ul class="learn-list">
           <li><b>Offer</b> a card to the Altar, facedown, and <b>gain 1 Glory</b>.</li>
           <li><b>Gather</b> a card into your Choir, <b>free</b>.</li>
-          <li><b>Exalt</b> a card from your hand into your Choir for <b>1 Glory</b>.</li>
+          <li><b>Exalt</b> a card from your hand into your Choir, <b>free</b>.</li>
         </ul>
         <p class="muted">A hidden Offer can help you, hurt a rival, or bluff: the table only sees it in the Evening.</p>
       </>
@@ -380,12 +380,12 @@ const STEPS: Step[] = [
     title: 'The Reaping',
     body: (
       <>
-        <p>Now the Choirs leaning with the Tide share it:</p>
+        <p>Now every Choir is scored. Alone, you win or lose big:</p>
         <ul class="learn-list">
-          <li><b>Yours alone:</b> gain 3.</li>
-          <li><b>Two Choirs:</b> the stronger lean gains 2, the weaker 1.</li>
-          <li><b>Three or more:</b> nobody gains.</li>
-          <li><b>Leaning against the Tide:</b> lose 1.</li>
+          <li><b>Alone with the Tide:</b> gain 3. <b>Alone against it:</b> lose 3.</li>
+          <li><b>Two with the Tide:</b> gain 1 each.</li>
+          <li><b>Three or more with it:</b> nobody gains.</li>
+          <li><b>Against it with company:</b> lose 1 each.</li>
         </ul>
         <p class="muted">So you want allies to win the Tide, but as few as possible. Then the Altar is cleared, hands are refilled, and a new Day begins.</p>
       </>
@@ -398,7 +398,7 @@ const STEPS: Step[] = [
       <>
         <p>Your Choir is your side, and it is also your engine. Its cards' abilities are yours to use.</p>
         <ul class="learn-list">
-          <li><b>Grow it</b> with a Gather (free) or an Exalt (1 Glory). It holds 4 cards; when it is full, a new card replaces one of yours, which is discarded.</li>
+          <li><b>Grow it</b> with a Gather from the Altar or an Exalt from your hand, both free. It holds 4 cards; when it is full, a new card replaces one of yours, which is discarded.</li>
           <li><b>Every card does two jobs.</b> Its value moves your lean; its ability earns you Glory or gets in someone's way.</li>
           <li><b>Neutral cards</b> add an ability without moving your lean, so you can build without changing sides.</li>
         </ul>

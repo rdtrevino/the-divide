@@ -48,21 +48,22 @@ Testing showed engine building never paid back: turn actions were 85% Offer, 14%
 | Tree of Life | At the end of the Day: You may take a card from the Altar into your Choir. If your Choir is full, discard one of its cards first. (No cost) |
 | Zealot | At the end of the Day: If every other card in your Choir (at least 3) shares one alignment, gain 1 Glory. (The earlier version could never pay: Zealot itself is Neutral) |
 | Flaming Sword | On your turn: No other player may Exalt until the start of your next turn. (Anathema's mirror) |
-| Temptation | On your turn: Draw 2 cards, then discard 1 card from your hand. (It worked only on deck Gathers) |
+| Temptation | On your turn: Play a card from your hand into another player's Choir. If their Choir is full, they discard one of its cards first. (It worked only on deck Gathers; this is the one repeatable way to change a rival's lean) |
 | Mercy | If yours is the only Choir against the Tide, lose 1 instead of 3, then discard this card. |
 | Outcast | When you have the least Glory (or are tied for it), gain 1 Glory at the end of the Day. (The Exalt clause is gone) |
 
-### Measured (bots that value card abilities; 20,000 games for balance, 1,000 per player count for shape)
+### Measured, final (V42 as the default rules; bots that value card abilities)
 
 | | 3 players | 4 players |
 |---|---|---|
-| Days | 7.2 | 7.5 |
-| Winner's Glory per Day | 1.65 | 1.53 |
-| Turn actions: Offer / Gather / Exalt | 62% / 17% / 21% | 64% / 16% / 20% |
-| Glory from Offers / the Tide / cards | 44% / 29% / 27% | 49% / 22% / 29% |
-| A lone Choir against the Tide | 7% of Reaping results | 5% |
+| Days | 7.1 (median 7, 90% within 10) | 7.7 (median 7, 90% within 10) |
+| Winner's Glory per Day | 1.51 | 1.39 |
+| Winner's Days: 0 / 1 / 2 / 3 / 4 / 5+ Glory | 22% / 34% / 24% / 11% / 7% / 3% | 24% / 36% / 23% / 10% / 5% / 2% |
+| Turn actions: Offer / Gather / Exalt | 57% / 15% / 28% | 59% / 15% / 26% |
+| Glory from Offers / the Tide / cards | 41% / 31% / 28% | 46% / 23% / 30% |
+| A lone Choir against the Tide | 8% of Reaping results | 6% |
 
-Card balance, now counted over every card a player **held at the end of any Day** (fair to stores and spent cards): every card is between 0.82 (Fig Leaves) and 1.26 (Providence); spread 0.102.
+Card balance (20,000 games), counted over every card a player **held at the end of any Day**: every card is between 0.77 (Fig Leaves) and 1.26 (Providence); spread 0.115. Temptation 0.89.
 
 ## Light (23)
 
