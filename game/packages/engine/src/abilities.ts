@@ -5,7 +5,7 @@ import {
   alignment, activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
   drawHost, drawTo, enterChoir, gain, handLimit, hasActive, log, lose, markToday, others, payTribute, peekHost,
   pname, protectedFrom, immune, glorySafe, handProtected, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, choirLimit,
-  colorsOf, activation, altarShielded, altarPeekable, canSpend, pay, variant, makeRoom,
+  colorsOf, activation, altarShielded, altarPeekable, canSpend, pay, variant, makeRoom, discardableForRoom,
 } from './core';
 import { randInt } from './rng';
 import type { Gen, GameState, Seat } from './types';
@@ -275,10 +275,23 @@ export const TURN: Record<string, TurnAbility> = {
   [H.temptation]: {
     // Tests: 'temptation-draw' (draw 2, discard 1), 'temptation-d2' (draw 2, discard 2),
     // 'temptation-swap' (discard any number, draw that many), all on your turn. 'temptation-eod' is in engine.ts.
-    can: (s, seat) => (variant(s, 'temptation-draw') || variant(s, 'temptation-d2')) ? (s.hostDeck.length + s.discard.length) > 0 : variant(s, 'temptation-swap') && s.players[seat].hand.length > 0,
+    can: (s, seat) => variant(s, 'temptation-give') ? temptationPairs(s, seat).length > 0 : (variant(s, 'temptation-draw') || variant(s, 'temptation-d2')) ? (s.hostDeck.length + s.discard.length) > 0 : variant(s, 'temptation-swap') && s.players[seat].hand.length > 0,
     *run(s, seat) {
       const p = s.players[seat];
       if (variant(s, 'temptation-swap')) { yield* temptationSwap(s, seat); return; }
+      if (variant(s, 'temptation-give')) {
+        // Test 'temptation-give': play a card from your hand into another player's Choir.
+        const pairs = temptationPairs(s, seat);
+        const pick = yield* chooseOne(s, seat, 'temptation.give', "Temptation: play a card from your hand into another player's Choir.", pairs.map(({ c, o }) => ({ id: `${c}|${o}`, label: `${cardName(c)} into ${pname(s, o)}'s Choir`, card: c, seat: o })), true);
+        if (!pick) return;
+        const [c, os] = pick.split('|'); const o = Number(os);
+        if (!(yield* payTribute(s, seat, o))) return;
+        if (!(yield* makeRoom(s, o, 'Temptation'))) return;
+        p.hand.splice(p.hand.indexOf(c), 1);
+        yield* enterChoir(s, o, c);
+        log(s, 'temptation', `${pname(s, seat)} played ${cardName(c)} into ${pname(s, o)}'s Choir (Temptation).`);
+        return;
+      }
       yield* drawTo(s, seat, 2);
       const n = variant(s, 'temptation-d2') ? 2 : 1;
       for (let k = 0; k < n; k++) {
@@ -653,4 +666,15 @@ export function* temptationSwap(s: GameState, seat: Seat): Gen<void> {
   for (const i of idx) s.discard.push(...p.hand.splice(i, 1));
   yield* drawTo(s, seat, idx.length);
   log(s, 'temptation', `${p.name} discarded ${idx.length} card(s) and drew ${idx.length} (Temptation).`);
+}
+
+function temptationPairs(s: GameState, seat: Seat) {
+  const out: { c: string; o: Seat }[] = [];
+  const hand = [...new Set(s.players[seat].hand)];
+  for (const o of others(s, seat)) {
+    if (protectedFrom(s, seat, o.seat, 'replace') || !canAffordTribute(s, seat, o.seat)) continue;
+    if (o.choir.length >= choirLimit(s) && !discardableForRoom(s, o).length) continue;
+    for (const c of hand) out.push({ c, o: o.seat });
+  }
+  return out;
 }

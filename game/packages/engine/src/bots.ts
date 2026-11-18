@@ -112,6 +112,25 @@ function daysLeft(s: GameState) {
 }
 const engineVal = (s: GameState, seat: Seat, id: string | undefined) => engineRate(s, seat, id) * daysLeft(s);
 
+/** Temptation (test 'temptation-corrupt'): what playing `card` into `o`'s Choir is worth to `seat`. */
+function corruptValue(s: GameState, seat: Seat, want: number, card: string | undefined, o: Seat): number {
+  if (!card) return 0;
+  const on = alignment(s, o);
+  const nn = on + signed(s, card);
+  if (on === 0 || Math.sign(nn) === Math.sign(on)) return 0;
+  // Pull a partner off my side, so I lean alone (+3 instead of +1).
+  if (Math.sign(on) === Math.sign(want)) return 1.6;
+  // Push a rival over to my side only if that does not crowd it; push the leader off their side.
+  const lead = Math.max(...s.players.map((x) => x.glory));
+  return s.players[o].glory === lead ? 1.0 : 0.3;
+}
+function bestCorrupt(s: GameState, seat: Seat, want: number, cards: string[]) {
+  let best = { v: 0, card: '', to: -1 };
+  if (!variant(s, 'temptation-corrupt') || !hasActive(s, seat, H.temptation)) return best;
+  for (const c of cards) for (const o of s.players) if (o.seat !== seat) { const v = corruptValue(s, seat, want, c, o.seat); if (v > best.v) best = { v, card: c, to: o.seat }; }
+  return best;
+}
+
 export function botAnswer(s: GameState, d: Decision): Answer {
   OTHERS = s.players.filter((p) => p.seat !== d.seat).map((p) => alignment(s, p.seat));
   MIRROR = variant(s, 'reap-mirror');
@@ -180,7 +199,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         const room = p.choir.length < choirLimit(s);
         const refund = (c: string) => (variant(s, 'seraph-refund') && ((hasActive(s, seat, H.seraphim) && signed(s, c) > 0) || (hasActive(s, seat, H.legion) && signed(s, c) < 0)) ? 1 : 0);
         const best = Math.max(...p.hand.filter((c) => p.glory >= exaltCostFor(s, seat, c)).map((c) => { const n1 = net + signed(s, c) - (room ? 0 : worst?.v ?? 0); return reapValue(n1, altar, w) + fut(n1) + engineVal(s, seat, c) - (room ? 0 : engineVal(s, seat, worst?.id)) - exaltCostFor(s, seat, c) + refund(c); }));
-        scores.exalt = best + 0.2;
+        scores.exalt = Math.max(best, bestCorrupt(s, seat, want, p.hand).v) + 0.2;
       }
       const ids = Object.keys(scores);
       const choice = pickBest(ids, (x) => scores[x] + r * 0.4);
@@ -190,9 +209,23 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const pref = ['celestial-the-eclipse', 'celestial-the-arbiter', 'celestial-the-whisper', 'celestial-the-dominion', 'celestial-the-cantor', 'celestial-the-echo', 'celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-patron'];
       return one(pickBest(d.options, (o) => -pref.indexOf(o.id)).id);
     }
+    case 'temptation.give': {
+      const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => corruptValue(s, seat, want, x.card, x.seat!) - 0.3 * engineVal(s, seat, x.card));
+      return one(o && corruptValue(s, seat, want, o.card, o.seat!) > 0 ? o.id : 'none');
+    }
+    case 'temptation.target': {
+      const card = d.options.find((o) => o.card)?.card;
+      const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => corruptValue(s, seat, want, card, x.seat!));
+      return one(o && corruptValue(s, seat, want, card, o.seat!) > 0 ? o.id : 'none');
+    }
     case 'firstFruits':
     case 'offer.card':
     case 'exalt.card': {
+      if (d.tag === 'exalt.card') {
+        const bc = bestCorrupt(s, seat, want, d.options.map((x) => x.card!).filter(Boolean));
+        const selfBest = Math.max(...d.options.map((x) => (want >= 0 ? signed(s, x.card) : -signed(s, x.card)) + engineVal(s, seat, x.card)));
+        if (bc.v > 0 && bc.v >= selfBest) { const oc = d.options.find((x) => x.card === bc.card); if (oc) return one(oc.id); }
+      }
       const o = pickBest(d.options, (o) => {
         const v = signed(s, o.card);
         if (d.tag === 'offer.card' || d.tag === 'firstFruits') return reapValue(net, altar + v, w) + (dirOf(v) === wantDir ? 0.5 : dirOf(v) === 'neutral' ? 0.1 : -0.3);
@@ -269,6 +302,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
           const p = s.players[seat];
           return p.choir.filter((c) => c.id.startsWith('host-')).some((c) => p.hand.some((h) => (want >= 0 ? 1 : -1) * (signed(s, h) - signed(s, c.id)) > 0));
         }
+        if (o.card === H.temptation && variant(s, 'temptation-give')) return s.players[seat].hand.some((c) => s.players.some((x) => x.seat !== seat && corruptValue(s, seat, want, c, x.seat) > 0));
         if (o.card === H.ordeal) return dirOf(altar) === wantDir && later <= 1;
         if (o.id.startsWith('restore')) return false; // V38: wait for the Reaping, when the Tide is known
         return true;

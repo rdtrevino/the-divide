@@ -4,7 +4,7 @@ import {
   activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
   canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
   eventOn, gain, handLimit, hasActive, isCelestial, log, lose, makeRoom, markToday, opposite, pay, pname, seatFromOpt,
-  seatOpt, stat, transfer, usedToday, yesNo, choirLimit, variant, leastGloryOthers, immune, glorySafe, handProtected, others,
+  seatOpt, stat, transfer, usedToday, yesNo, choirLimit, variant, leastGloryOthers, immune, glorySafe, handProtected, others, protectedFrom, canAffordTribute, payTribute,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
@@ -455,6 +455,28 @@ function* doExalt(s: GameState, seat: Seat): Gen<void> {
   const cost = exaltCost(s, seat, card);
   // Set the chosen card aside first, so Absolution's hand discard cannot take it.
   p.hand.splice(p.hand.indexOf(card), 1);
+  // Test 'temptation-corrupt': with Temptation, you may play the card into another player's Choir instead.
+  let into = seat;
+  if (variant(s, 'temptation-corrupt') && hasActive(s, seat, H.temptation) && canActivate(s, seat, H.temptation)) {
+    const targets = others(s, seat).filter((o) => !protectedFrom(s, seat, o.seat, 'replace') && canAffordTribute(s, seat, o.seat) && (o.choir.length < choirLimit(s) || discardableForRoom(s, o).length > 0));
+    if (targets.length) {
+      const pick = yield* chooseOne(s, seat, 'temptation.target', `Temptation: play ${cardName(card)} into another player's Choir instead of yours?`, targets.map((o) => ({ ...seatOpt(s, o.seat), card })), true);
+      if (pick) {
+        const t = seatFromOpt(pick);
+        if (yield* payTribute(s, seat, t)) into = t;
+      }
+    }
+  }
+  if (into !== seat) {
+    const ok = yield* activation(s, seat, H.temptation, function* () {
+      if (!(yield* makeRoom(s, into, 'Temptation'))) return;
+      yield* enterChoir(s, into, card);
+      log(s, 'temptation', `${p.name} Exalted ${cardName(card)} into ${pname(s, into)}'s Choir (Temptation).`);
+    });
+    if (!ok || !s.players[into].choir.some((c) => c.id === card)) { s.discard.push(card); }
+    stat(s, { type: 'action', seat, card, source: 'exalt' });
+    return;
+  }
   if (!(yield* makeRoom(s, seat, 'Exalt'))) { p.hand.push(card); return; }
   yield* pay(s, seat, cost, 'exalt');
   yield* enterChoir(s, seat, card);
