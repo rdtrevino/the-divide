@@ -80,7 +80,16 @@ The lab scores allegiance in secret and reveals it at the end. At a table, if pl
 
 ## Exploit checks
 
-(Filled in from Round 30 when it finishes.)
+One player with a fixed plan among Monte Carlo players (win ratio; 1.00 is a fair share; Rounds 27, 29 and 30):
+
+| Strategy | Oaths + soft Miser | Fates (2-2-2 bag) + soft Miser | Oaths, no Miser | Multiplied Fates, hard Miser |
+|---|---|---|---|---|
+| Always Offer (pure contributor) | **0.29** | 0.51 | 0.12 | 0.91 |
+| Never Offer (pure free-rider) | **0.21** | 0.28 | 0.59 | 0.00 |
+| Never change sides | 0.50 | — | 0.38 | — |
+| Random | 0.12 | — | — | — |
+
+With the soft Miser's Rule, neither giving everything nor keeping everything works: the decision is how much to give, and when. Without it, free-riding is the best simple plan (0.59); with the hard version, contributing is (0.91).
 
 ## What the simulations cannot show
 
@@ -94,6 +103,6 @@ The bots do not talk. These need people:
 
 ## Next
 
-1. Fill in the exploit checks; test a 3-player bag and the "final allegiance only" scoring.
+1. Test a 3-player Oath bag and the "final allegiance only" scoring.
 2. Rebuild the engine layer on this core: which of the 69 abilities serve self vs side when allegiance is secret and movable.
 3. A print-and-play and an online table for people to try it.
