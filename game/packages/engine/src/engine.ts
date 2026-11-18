@@ -1,10 +1,10 @@
 // The game loop: setup, then each Day's Morning, Noon (turns) and Evening, then the endgame.
-import { TURN } from './abilities';
+import { TURN, temptationSwap } from './abilities';
 import {
   activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
   canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
   eventOn, gain, handLimit, hasActive, isCelestial, log, lose, makeRoom, markToday, opposite, pay, pname, seatFromOpt,
-  seatOpt, stat, transfer, usedToday, yesNo, choirLimit, variant, leastGloryOthers,
+  seatOpt, stat, transfer, usedToday, yesNo, choirLimit, variant, leastGloryOthers, immune, glorySafe, handProtected, others, protectedFrom, canAffordTribute, payTribute,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
@@ -16,11 +16,12 @@ export const GLORY_TARGET = 10;
 export const MAX_DAYS = 60;
 /** The Glory target: 10, or 'target-N' to test others. */
 export const gloryTarget = (s: GameState) => Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? GLORY_TARGET);
-export const OPEN_SET_ASIDE_HOSTS = [H.revelation, H.knowledge, H.bounty, H.flamingSword, H.belial, H.hubris];
+/** V42: one deck of 69 cards, all with art. Ithuriel, Urim and Asmadai (no art) are retired; their abilities moved to Revelation, Knowledge and Belial. */
+export const OPEN_SET_ASIDE_HOSTS = [H.ithuriel, H.urim, H.asmadai];
 export const OPEN_SET_ASIDE_EVENTS = [E.sabbath, E.equilibrium, E.armageddon];
 
 function freshDay(): GameState['day_'] {
-  return { usedToday: {}, ordeal: [], mercy: [], defiance: [], prophecy: {}, lots: {}, actionsTaken: [], eclipsed: {}, figLeaves: [], heresy: [], handLimitBonus: 0 };
+  return { usedToday: {}, ordeal: [], mercy: [], defiance: [], prophecy: {}, lots: {}, actionsTaken: [], eclipsed: {}, figLeaves: [], heresy: [], handLimitBonus: 0, bounty: {} };
 }
 
 // ---------------------------------------------------------------- setup
@@ -31,7 +32,7 @@ export function createState(cfg: GameConfig): GameState {
   const s: GameState = {
     config: cfg, rng: cfg.seed | 0, day: 0, phase: 'setup', players: [], hostDeck: [], discard: [], altar: [],
     eventDeck: [], eventDiscard: [], currentEvent: null, firstPlayer: 0, active: null, tides: [], lastAlignColor: {},
-    carriedSeed: null, pacts: [], bonds: [], scapegoats: [], anathema: [], confession: [], morningStar: [],
+    carriedSeed: null, pacts: [], bonds: [], scapegoats: [], anathema: [], confession: [], morningStar: [], immune: [], silenced: [],
     day_: freshDay(), turnUsed: [], log: [], stats: [], seq: 0, decisionSeq: 0, result: null, celestialPool: [],
   };
   const hosts = HOSTS.filter((h) => !OPEN_SET_ASIDE_HOSTS.includes(h.id as any)).map((h) => h.id);
@@ -178,6 +179,28 @@ export function* morning(s: GameState): Gen<void> {
       });
     }
   }
+  // Test 'heresy-morning': Heresy is decided in the Morning, before anyone Offers.
+  if (variant(s, 'heresy-morning')) for (const p of s.players) {
+    if (!hasActive(s, p.seat, H.heresy) || !canActivate(s, p.seat, H.heresy)) continue;
+    if (yield* yesNo(s, p.seat, 'heresy.morning', 'Heresy: your Choir counts as leaning the opposite way this Day?')) {
+      yield* activation(s, p.seat, H.heresy, function* () { s.day_.heresy.push(p.seat); log(s, 'heresy', `${p.name}'s Choir counts as leaning the opposite way this Day (Heresy).`); });
+    }
+  }
+  if (variant(s, 'bounty-morning')) for (const p of s.players) {
+    if (!hasActive(s, p.seat, H.bounty)) continue;
+    const t = yield* chooseOne(s, p.seat, 'bounty.player', 'Bounty: name a player. If they lose Glory at this Reaping, you gain 1.', others(s, p.seat).map((o) => seatOpt(s, o.seat)), variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft'));
+    if (t) s.day_.bounty[p.seat] = seatFromOpt(t);
+  }
+  // Covenant (V42, In the Morning): name a player; if neither of you Offers this Day, each gains 1 Glory.
+  for (const p of s.players) {
+    if (!hasActive(s, p.seat, H.covenant) || !canActivate(s, p.seat, H.covenant)) continue;
+    const t = yield* chooseOne(s, p.seat, 'covenant.player', 'Covenant: name a player. If neither of you Offers this Day, each of you gains 1 Glory.', others(s, p.seat).map((o) => seatOpt(s, o.seat)), true);
+    if (!t) continue;
+    yield* activation(s, p.seat, H.covenant, function* () {
+      s.pacts.push({ a: p.seat, b: seatFromOpt(t), action: 'offer', broken: false, day: s.day });
+      log(s, 'covenant', `${p.name} made a Covenant with ${pname(s, seatFromOpt(t))}: if neither Offers this Day, both gain 1 Glory.`);
+    });
+  }
   if (s.currentEvent === E.castingLots) {
     const seats = s.players.filter((p) => eventOn(s, E.castingLots, p.seat));
     const answers = yield* askAll(s, seats.map((p) => ({ seat: p.seat, tag: 'lots', prompt: 'Casting Lots: secretly predict the Tide. Correct gains 1 Glory (2 for Neutral); wrong loses 1.', options: [{ id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }, { id: 'neutral', label: 'Neutral' }], min: 1, max: 1 })));
@@ -227,29 +250,37 @@ export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
   // Two rounds per Day: each Choir card still activates at most once per Day.
   s.turnUsed = [];
   s.morningStar = s.morningStar.filter((m) => m.seat !== seat);
-  s.anathema = s.anathema.filter((a) => a.by !== seat);
+  // Anathema (V42) lasts until the end of its holder's next turn; Flaming Sword until the start of it.
+  s.anathema = s.anathema.filter((a) => a.by !== seat || a.endAfter);
+  for (const a of s.anathema) if (a.by === seat && a.endAfter) a.armed = true;
+  s.silenced = s.silenced.filter((x) => x.by !== seat); // Silence lasts until the silencer's next turn
   const p = s.players[seat];
   log(s, 'turn', `${p.name}'s turn.`);
 
-  let actions = 1;
-  const fw = p.choir.find((c) => c.id === H.freeWill && !c.facedown && !c.used);
-  if (fw && canActivate(s, seat, H.freeWill)) {
-    const use = yield* yesNo(s, seat, 'freeWill', 'Free Will (once per game): take two actions this turn?');
-    if (use) {
-      fw.used = true;
-      s.turnUsed.push(H.freeWill);
-      if (yield* activation(s, seat, H.freeWill, function* () { log(s, 'freeWill', `${p.name} takes two actions this turn (Free Will).`); })) actions = 2;
-    }
-  }
-  for (let i = 0; i < actions; i++) yield* takeAction(s, seat, i);
+  try {
+  yield* takeAction(s, seat, 0);
   yield* activationPhase(s, seat);
+  // Free Will (V42): a second action, paid for during this turn's activations.
+  if (s.day_.extraAction === seat) {
+    s.day_.extraAction = undefined;
+    yield* takeAction(s, seat, 1);
+    yield* activationPhase(s, seat);
+  }
+  } finally {
+    s.anathema = s.anathema.filter((a) => !(a.by === seat && a.armed));
+  }
 
   for (const c of s.confession) if (c.seat === seat) c.turnsLeft--;
   s.confession = s.confession.filter((c) => c.turnsLeft > 0);
 }
 
-export function exaltCost(s: GameState, seat: Seat): number {
+export function exaltCost(s: GameState, seat: Seat, card?: string): number {
   if (eventOn(s, E.divineCalling, seat)) return 0;
+  // Test 'exalt-free': Exalt costs no Glory.
+  if (variant(s, 'exalt-free')) return 0;
+  // Seraphim (V42): Exalting a Light card costs nothing. Test 'legion-free': Legion does the same for Dark.
+  if (card && hasActive(s, seat, H.seraphim) && colorsOf(s, null, card).light) return 0;
+  if (card && variant(s, 'legion-free') && hasActive(s, seat, H.legion) && colorsOf(s, null, card).dark) return 0;
   if (hasActive(s, seat, H.outcast)) {
     const min = Math.min(...s.players.map((p) => p.glory));
     if (s.players[seat].glory === min) return 0;
@@ -265,10 +296,9 @@ function canRoom(s: GameState, seat: Seat) {
 export function legalActions(s: GameState, seat: Seat): ('offer' | 'gather' | 'exalt')[] {
   const p = s.players[seat];
   const out: ('offer' | 'gather' | 'exalt')[] = [];
-  if (p.hand.length && !s.anathema.some((a) => a.target === seat)) out.push('offer');
-  if (canRoom(s, seat) && (altarAvailable(s, seat).length || s.hostDeck.length || s.discard.length)) out.push('gather');
-  const cost = exaltCost(s, seat);
-  if (p.hand.length && canRoom(s, seat) && !eventOn(s, E.fast, seat) && p.glory >= cost) out.push('exalt');
+  if (p.hand.length && !s.anathema.some((a) => a.target === seat && (a.action ?? 'offer') === 'offer')) out.push('offer');
+  if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && canRoom(s, seat) && (altarAvailable(s, seat).length || (!variant(s, 'gather-altar') && (s.hostDeck.length || s.discard.length)) || (hasActive(s, seat, H.forger) && s.discard.length))) out.push('gather');
+  if (!s.anathema.some((a) => a.target === seat && a.action === 'exalt') && canRoom(s, seat) && !eventOn(s, E.fast, seat) && p.hand.some((c) => p.glory >= exaltCost(s, seat, c))) out.push('exalt');
   return out;
 }
 
@@ -278,7 +308,7 @@ function* takeAction(s: GameState, seat: Seat, index: number): Gen<void> {
     log(s, 'pass', `${pname(s, seat)} has no legal action and passes.`);
     return;
   }
-  const labels: Record<string, string> = { offer: 'Offer: play a card to the Altar and gain 1 Glory', gather: 'Gather: take a card into your Choir', exalt: `Exalt: pay ${exaltCost(s, seat)} Glory to play a card from your hand into your Choir` };
+  const labels: Record<string, string> = { offer: 'Offer: play a card to the Altar and gain 1 Glory', gather: variant(s, 'gather-altar') ? 'Gather: take a card from the Altar into your Choir' : 'Gather: take a card into your Choir', exalt: exaltCost(s, seat) ? `Exalt: pay ${exaltCost(s, seat)} Glory to play a card from your hand into your Choir` : 'Exalt: play a card from your hand into your Choir' };
   const a = (yield* chooseOne(s, seat, 'action', index ? 'Free Will: choose your second action.' : 'Choose your action.', legal.map((id) => ({ id, label: labels[id] }))))!;
   s.day_.actionsTaken.push({ seat, action: a as any });
   for (const pact of s.pacts) if ((pact.a === seat || pact.b === seat) && pact.action === a && pact.day === s.day) pact.broken = true;
@@ -339,12 +369,13 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
       });
     }
     if (forgone) continue;
+    // Test 'offer-noglory': an Offer earns no Glory; it only sways the Altar.
+    if (variant(s, 'offer-noglory')) continue;
     // The Offer's reward is 1 Glory (V40: no longer a choice of 1 Glory or 1 card).
-    // Mammon: once per Day, take this Glory from a player instead of the Pot.
-    // V38: only when the Offer includes a Dark card.
-    const mamFrom = s.players.filter((o) => o.seat !== seat && o.glory > 0);
+    // Mammon: when the Offer includes a Dark card, take this Glory from another player instead of the Pot.
+    const mamFrom = s.players.filter((o) => o.seat !== seat && o.glory > 0 && !glorySafe(s, seat, o.seat));
     const mamOk = offered.some((c) => col(c).dark);
-    if (mamOk && hasActive(s, seat, H.mammon) && canActivate(s, seat, H.mammon) && mamFrom.length) {
+    if (mamOk && !variant(s, 'mammon-store') && hasActive(s, seat, H.mammon) && canActivate(s, seat, H.mammon) && mamFrom.length) {
       const pick = yield* chooseOne(s, seat, 'mammon.offer', 'Mammon: take this Glory from a player instead of the Pot?', mamFrom.map((o) => seatOpt(s, o.seat)), true);
       if (pick) {
         const from = seatFromOpt(pick);
@@ -361,10 +392,11 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
 function* doGather(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
   const opts = altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id }));
-  if (s.hostDeck.length || s.discard.length) opts.push({ id: 'deck', label: hasActive(s, seat, H.temptation) ? 'From the top of the Host deck (Temptation: look at 2)' : 'From the top of the Host deck', card: undefined });
+  // Test 'gather-altar': Gather takes a card from the Altar only (no blind draw from the deck).
+  if (!variant(s, 'gather-altar') && (s.hostDeck.length || s.discard.length)) opts.push({ id: 'deck', label: hasActive(s, seat, H.temptation) ? 'From the top of the Host deck (Temptation: look at 2)' : 'From the top of the Host deck', card: undefined });
   // V37: Forger may take any Host card from the discard pile (was the top card only).
   if (hasActive(s, seat, H.forger) && s.discard.length && canActivate(s, seat, H.forger)) for (const c of [...new Set(s.discard.filter((x) => x.startsWith('host-')))]) opts.push({ id: 'discard:' + c, label: `From the discard pile (Forger): ${cardName(c)}`, card: c });
-  if (hasActive(s, seat, H.favor) && canActivate(s, seat, H.favor)) for (const o of s.players) if (o.seat !== seat && o.hand.length) opts.push({ id: 'favor:' + o.seat, label: `From ${o.name}'s hand (Favor)`, card: undefined });
+  if (!variant(s, 'favor-ripen') && hasActive(s, seat, H.favor) && canActivate(s, seat, H.favor)) for (const o of s.players) if (o.seat !== seat && o.hand.length && !handProtected(s, seat, o.seat)) opts.push({ id: 'favor:' + o.seat, label: `From ${o.name}'s hand (Favor)`, card: undefined });
   const src = (yield* chooseOne(s, seat, 'gather.source', 'Gather: choose where to take a card from.', opts))!;
   if (!(yield* makeRoom(s, seat, 'Gather'))) return;
 
@@ -418,21 +450,42 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
 
 function* doExalt(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
-  const cost = exaltCost(s, seat);
-  const card = (yield* chooseOne(s, seat, 'exalt.card', `Exalt: choose a card from your hand to play into your Choir (cost ${cost}).`, p.hand.map((c) => cardOpt(c))))!;
+  const affordable = p.hand.filter((c) => p.glory >= exaltCost(s, seat, c));
+  const card = (yield* chooseOne(s, seat, 'exalt.card', exaltCost(s, seat) ? `Exalt: choose a card from your hand to play into your Choir (cost ${exaltCost(s, seat)}).` : 'Exalt: choose a card from your hand to play into your Choir.', affordable.map((c) => cardOpt(c))))!;
+  const cost = exaltCost(s, seat, card);
   // Set the chosen card aside first, so Absolution's hand discard cannot take it.
   p.hand.splice(p.hand.indexOf(card), 1);
-  if (!(yield* makeRoom(s, seat, 'Exalt'))) { p.hand.push(card); return; }
-  let paidTo: Seat | undefined;
-  if (cost > 0 && hasActive(s, seat, H.mammon) && canActivate(s, seat, H.mammon)) {
-    const pick = yield* chooseOne(s, seat, 'mammon.exalt', 'Mammon: pay your Exalt cost to the player with the least Glory instead of the Pot (choose among ties)?', leastGloryOthers(s, seat).map((o) => seatOpt(s, o.seat)), true);
-    if (pick) {
-      if (yield* activation(s, seat, H.mammon, function* () {})) paidTo = seatFromOpt(pick);
+  // Test 'temptation-corrupt': with Temptation, you may play the card into another player's Choir instead.
+  let into = seat;
+  if (variant(s, 'temptation-corrupt') && hasActive(s, seat, H.temptation) && canActivate(s, seat, H.temptation)) {
+    const targets = others(s, seat).filter((o) => !protectedFrom(s, seat, o.seat, 'replace') && canAffordTribute(s, seat, o.seat) && (o.choir.length < choirLimit(s) || discardableForRoom(s, o).length > 0));
+    if (targets.length) {
+      const pick = yield* chooseOne(s, seat, 'temptation.target', `Temptation: play ${cardName(card)} into another player's Choir instead of yours?`, targets.map((o) => ({ ...seatOpt(s, o.seat), card })), true);
+      if (pick) {
+        const t = seatFromOpt(pick);
+        if (yield* payTribute(s, seat, t)) into = t;
+      }
     }
   }
-  yield* pay(s, seat, cost, 'exalt', paidTo);
+  if (into !== seat) {
+    const ok = yield* activation(s, seat, H.temptation, function* () {
+      if (!(yield* makeRoom(s, into, 'Temptation'))) return;
+      yield* enterChoir(s, into, card);
+      log(s, 'temptation', `${p.name} Exalted ${cardName(card)} into ${pname(s, into)}'s Choir (Temptation).`);
+    });
+    if (!ok || !s.players[into].choir.some((c) => c.id === card)) { s.discard.push(card); }
+    stat(s, { type: 'action', seat, card, source: 'exalt' });
+    return;
+  }
+  if (!(yield* makeRoom(s, seat, 'Exalt'))) { p.hand.push(card); return; }
+  yield* pay(s, seat, cost, 'exalt');
   yield* enterChoir(s, seat, card);
   stat(s, { type: 'action', seat, card, source: 'exalt' });
+  // Test 'seraph-refund': Seraphim (Legion) pays 1 Glory when you Exalt a Light (Dark) card.
+  if (variant(s, 'seraph-refund')) {
+    if (hasActive(s, seat, H.seraphim) && colorsOf(s, null, card).light && card !== H.seraphim) { yield* gain(s, seat, 1, H.seraphim); log(s, 'seraphim', `${p.name} gained 1 Glory (Seraphim).`); }
+    if (hasActive(s, seat, H.legion) && colorsOf(s, null, card).dark && card !== H.legion) { yield* gain(s, seat, 1, H.legion); log(s, 'legion', `${p.name} gained 1 Glory (Legion).`); }
+  }
   log(s, 'exalt', `${p.name} Exalted ${cardName(card)}${cost ? '' : ' at no cost'}.`);
 }
 
@@ -498,14 +551,14 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
   // V38 Mirage: remember each holder's facedown Offerings; at the Reaping, 1 Glory if one is still there and matches the Tide.
   (s.day_ as any).mirageCards = Object.fromEntries(mirageDraw.map((seat) => [seat, s.altar.filter((a) => a.facedown && a.offeredBy === seat && a.kind === 'offer').map((a) => a.id)]));
   const hidden = s.altar.filter((a) => a.facedown);
+  (s.day_ as any).reveal = { down: hidden.length, up: s.altar.length - hidden.length };
   for (const a of s.altar) { a.facedown = false; a.seenBy = undefined; }
   if (hidden.length) log(s, 'reveal', `The Altar is revealed: ${hidden.map((a) => cardName(a.id)).join(', ')}.`);
 
   // Covenants resolve in the Evening.
   for (const pact of s.pacts) {
     if (pact.broken) {
-      for (const x of [pact.a, pact.b]) yield* lose(s, x, 1, H.covenant);
-      log(s, 'covenant', `The Covenant between ${pname(s, pact.a)} and ${pname(s, pact.b)} was broken. Each loses 1 Glory.`);
+      log(s, 'covenant', `The Covenant between ${pname(s, pact.a)} and ${pname(s, pact.b)} was broken: one of them Offered. No Glory.`);
     } else {
       for (const x of [pact.a, pact.b]) yield* gain(s, x, 1, H.covenant);
       log(s, 'covenant', `The Covenant between ${pname(s, pact.a)} and ${pname(s, pact.b)} held. Each gains 1 Glory.`);
@@ -524,42 +577,21 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
   // At the Reaping, before scoring (V41: the four timing labels; these were "In the Evening" and now see the Tide).
   for (const seat of order) {
     const p = s.players[seat];
-    if (hasActive(s, seat, H.providence) && canActivate(s, seat, H.providence) && canSpend(s, seat, 1)) {
-      const altar = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !a.facedown && (a.sanctuary === undefined || a.sanctuary === seat));
-      const mine = p.choir.filter((c) => c.id.startsWith('host-'));
-      if (altar.length && mine.length) {
-        const pick = yield* chooseOne(s, seat, 'providence', 'Providence: exchange a face-up Altar card with a card from your Choir?', altar.flatMap(({ a, i }) => mine.map((m) => ({ id: `${i}|${m.id}`, label: `Take ${cardName(a.id)}, give ${cardName(m.id)}`, card: a.id }))), true);
-        if (pick) yield* pay(s, seat, 1, H.providence); // V38: costs 1 Glory
-        if (pick) yield* activation(s, seat, H.providence, function* () {
-          const [i, mid] = pick.split('|');
-          const a = s.altar[Number(i)];
-          const removed = removeChoirCard(s, seat, mid);
-          if (!removed || !a) return;
-          s.altar.splice(s.altar.indexOf(a), 1, { id: mid, facedown: false, offeredBy: seat, day: s.day, kind: 'other' });
-          yield* enterChoir(s, seat, a.id);
-          log(s, 'providence', `${p.name} exchanged ${cardName(mid)} for ${cardName(a.id)} on the Altar (Providence).`);
-        });
-      }
-    }
-    // V38 Eternity: take 1 card from the Altar into your hand (was: keep it as the next Seed).
-    const eternityOpts = altarAvailable(s, seat);
-    if (hasActive(s, seat, H.eternity) && canActivate(s, seat, H.eternity) && eternityOpts.length) {
-      const pick = yield* chooseOne(s, seat, 'eternity.hand', 'Eternity: take a card from the Altar into your hand?', eternityOpts.map((a) => ({ id: String(s.altar.indexOf(a)), label: cardName(a.id), card: a.id })), true);
-      if (pick !== null) yield* activation(s, seat, H.eternity, function* () {
-        const [a] = s.altar.splice(Number(pick), 1);
-        p.hand.push(a.id);
-        log(s, 'eternity', `${p.name} took ${cardName(a.id)} from the Altar into their hand (Eternity).`);
-      });
-    }
+    // Eternity (V42): 1 Glory if you did not Offer this Day.
+    if (hasActive(s, seat, H.eternity) && !s.day_.actionsTaken.some((x) => x.seat === seat && x.action === 'offer')) { yield* gain(s, seat, 1, H.eternity); log(s, 'eternity', `${p.name} did not Offer today and gains 1 Glory (Eternity).`); }
     const net = alignment(s, seat);
     if (hasActive(s, seat, H.twilight)) {
       const has = (k: 'light' | 'dark') => activeCards(p).some((c) => colorsOf(s, seat, c.id)[k]);
       if (has('light') && has('dark')) { yield* gain(s, seat, 1, H.twilight); log(s, 'twilight', `${p.name} gained 1 Glory (Twilight).`); }
     }
-    if (hasActive(s, seat, H.zealot)) {
-      const mags = s.players.map((o) => Math.abs(alignment(s, o.seat)));
-      const mine = Math.abs(net);
-      if (mine > 0 && mags.filter((m) => m >= mine).length === 1) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
+    // Zealot (V42): 1 Glory if your Choir has 3 or more cards, all of one color.
+    if (hasActive(s, seat, H.zealot) && !variant(s, 'zealot-open')) {
+      const cards = activeCards(p);
+      const all = (k: 'light' | 'dark') => cards.every((c) => colorsOf(s, seat, c.id)[k]);
+      // Test 'zealot-others': every other card in your Choir (at least 3) shares one alignment.
+      const zo = cards.filter((c) => c.id !== H.zealot);
+      const allO = (k: 'light' | 'dark') => zo.every((c) => colorsOf(s, seat, c.id)[k]);
+      if (variant(s, 'zealot-others') ? zo.length >= 3 && (allO('light') || allO('dark')) : cards.length >= 3 && (all('light') || all('dark'))) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
     }
     if (hasActive(s, seat, H.moderation) && net === 0) { yield* gain(s, seat, 1, H.moderation); log(s, 'moderation', `${p.name} gained 1 Glory (Moderation).`); }
   }
@@ -569,17 +601,26 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
 
   // 4. Refresh the Altar (Remnant first).
   for (const seat of order) {
-    if (hasActive(s, seat, H.remnant) && s.altar.length && canActivate(s, seat, H.remnant)) {
-      const pick = yield* chooseOne(s, seat, 'remnant', 'Remnant: take a card from the Altar into your hand (then discard 1 card from your hand)?', s.altar.map((a, i) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
+    // Tests: 'remnant-own' (only a card you Offered), 'remnant-cost' (pay 1 Glory).
+    const rOpts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !variant(s, 'remnant-own') || (a.offeredBy === seat && a.kind !== 'vessel'));
+    if (!variant(s, 'remnant-off') && hasActive(s, seat, H.remnant) && rOpts.length && canActivate(s, seat, H.remnant) && (!variant(s, 'remnant-cost') || s.players[seat].glory >= 1)) {
+      const pick = yield* chooseOne(s, seat, 'remnant', 'Remnant: take a card from the Altar into your hand (then discard 1 card from your hand)?', rOpts.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
+      if (pick !== null && variant(s, 'remnant-cost')) yield* pay(s, seat, 1, H.remnant);
       if (pick !== null) yield* activation(s, seat, H.remnant, function* () {
         const [a] = s.altar.splice(Number(pick), 1);
         const p = s.players[seat];
         p.hand.push(a.id);
+        // 'remnant-own': no discard here; Upkeep (next) discards down to, or draws up to, the hand limit.
+        if (variant(s, 'remnant-own')) { log(s, 'remnant', `${p.name} took back ${cardName(a.id)} from the Altar into their hand (Remnant).`); return; }
         const d = yield* chooseOne(s, seat, 'remnant.discard', 'Remnant: discard 1 card from your hand.', p.hand.map((c) => cardOpt(c)));
         if (d) { p.hand.splice(p.hand.indexOf(d), 1); s.discard.push(d); }
         log(s, 'remnant', `${p.name} took ${cardName(a.id)} from the Altar into their hand (Remnant).`);
       });
     }
+  }
+  // Test 'temptation-eod': at the end of the Day, discard any number of cards from your hand, then draw that many.
+  if (variant(s, 'temptation-eod')) for (const seat of order) {
+    if (hasActive(s, seat, H.temptation) && s.players[seat].hand.length && canActivate(s, seat, H.temptation)) yield* activation(s, seat, H.temptation, function* () { yield* temptationSwap(s, seat); });
   }
   const keep = s.day_.eternityKeep;
   for (const a of s.altar) {
@@ -640,56 +681,14 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     }
   }
 
-  // Choices made once the Tide is known: the Eclipse and Fig Leaves.
-  for (const seat of order) {
-    const p = s.players[seat];
-    // V38 Uriel and Beelzebub: pay 1 Glory to double this Reaping.
-    for (const [id, color] of [[H.uriel, 'Light'], [H.beelzebub, 'Dark']] as const) {
-      if (!hasActive(s, seat, id) || !canActivate(s, seat, id) || !canSpend(s, seat, 1)) continue;
-      if (!(yield* yesNo(s, seat, 'doubler.pay', `${cardName(id)}: the Tide is ${tide.dir}. Pay 1 Glory to double the ${color} Offering values in your Choir this Reaping?`))) continue;
-      yield* pay(s, seat, 1, id);
-      yield* activation(s, seat, id, function* () {
-        (((s.day_ as any).doublerPaid ??= {})[seat] ??= []).push(id);
-        log(s, 'doubler', `${p.name} paid 1 Glory to double their ${color} values (${cardName(id)}).`);
-      });
-    }
-    // V38 Morning Star: pay 1 Glory at the Reaping to invert one Choir card for this Reaping.
-    if (hasActive(s, seat, H.morningStar) && canActivate(s, seat, H.morningStar) && canSpend(s, seat, 1)) {
-      const opts = p.choir.filter((c) => !c.facedown && c.id.startsWith('host-') && c.id !== H.nephilim && (colorsOf(s, null, c.id).light || colorsOf(s, null, c.id).dark));
-      const pick = yield* chooseOne(s, seat, 'morningStar.reap', `Morning Star: the Tide is ${tide.dir}. Treat one Host card in your Choir as the opposite alignment for this Reaping?`, opts.map((c) => cardOpt(c.id)), true);
-      if (pick) yield* pay(s, seat, 1, H.morningStar);
-      if (pick) yield* activation(s, seat, H.morningStar, function* () {
-        s.morningStar = s.morningStar.filter((m) => m.seat !== seat);
-        s.morningStar.push({ seat, card: pick });
-        log(s, 'morningStar', `${p.name} inverted ${cardName(pick)} for this Reaping (Morning Star).`);
-      });
-    }
-    if (hasActive(s, seat, H.heresy) && canActivate(s, seat, H.heresy) && tide.dir !== 'neutral') {
-      const net = alignment(s, seat, { reaping: true });
-      if (net !== 0 && (yield* yesNo(s, seat, 'heresy', `Heresy: the Tide is ${tide.dir} and your Alignment is ${net > 0 ? 'Light' : 'Dark'} ${Math.abs(net)}. Score your Alignment in reverse this Reaping?`))) {
-        yield* activation(s, seat, H.heresy, function* () {
-          s.day_.heresy.push(seat);
-          log(s, 'heresy', `${p.name} scores in reverse this Reaping (Heresy).`);
-        });
-      }
-    }
-    if (hasActive(s, seat, H.figLeaves) && canActivate(s, seat, H.figLeaves)) {
-      const net = alignment(s, seat, { reaping: true });
-      if (net !== 0 && (yield* yesNo(s, seat, 'figLeaves', `Fig Leaves: the Tide is ${tide.dir} and your Alignment is ${net > 0 ? 'Light' : 'Dark'} ${Math.abs(net)}. Treat your Choir as Neutral this Reaping?`))) {
-        yield* activation(s, seat, H.figLeaves, function* () {
-          s.day_.figLeaves.push(seat);
-          log(s, 'figLeaves', `${p.name} covered their Choir with Fig Leaves.`);
-        });
-      }
-    }
-  }
-
   // Alignment scoring.
   // V41 coalition scoring. Choirs leaning with the Tide share it: alone 3; two, 2 for the stronger lean and 1 for
   // the weaker (a tie, 1 each); three or more, nothing. A Choir leaning against the Tide loses 1. Neutral: nothing.
   const delta: Record<number, number> = {};
   const nets: Record<number, number> = {};
   const withTide: { seat: Seat; str: number; dbl: number }[] = [];
+  const leansWithTide = new Set<Seat>();
+  const against: { seat: Seat; dbl: number }[] = [];
   for (const p of s.players) {
     const seat = p.seat;
     let net = alignment(s, seat, { reaping: true });
@@ -705,53 +704,114 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (s.day_.heresy.includes(seat)) match = !match;
     if (p.celestial === C.whisper && s.day_.whisperCall && s.day_.whisperCall === tide.dir) match = true;
     const dbl = s.day_.ordeal.includes(seat) ? 2 : 1;
-    if (match) withTide.push({ seat, str: Math.abs(net), dbl });
-    else delta[seat] = -1 * dbl;
+    if (match) { withTide.push({ seat, str: Math.abs(net), dbl }); leansWithTide.add(seat); }
+    else { delta[seat] = -1 * dbl; against.push({ seat, dbl }); }
+  }
+  // Test 'reap-mirror' (Robert): the loss mirrors the win. A lone Choir against the Tide loses 3; otherwise 1 each.
+  if (variant(s, 'reap-mirror') && against.length === 1) delta[against[0].seat] = -3 * against[0].dbl;
+  // Test 'scapegoat-sac' / 'scapegoat-sac-free': if you share the Tide, sacrifice one of the others sharing it.
+  if (variant(s, 'scapegoat-sac') || variant(s, 'scapegoat-sac-free') || variant(s, 'scapegoat-sac2') || variant(s, 'scapegoat-crowd')) for (const w of [...withTide]) {
+    if (withTide.length < (variant(s, 'scapegoat-crowd') ? 3 : 2) || !withTide.includes(w) || !hasActive(s, w.seat, H.scapegoat) || !canActivate(s, w.seat, H.scapegoat)) continue;
+    const free = variant(s, 'scapegoat-sac-free');
+    const cost = free ? 0 : variant(s, 'scapegoat-sac2') ? 2 : 1;
+    if (!canSpend(s, w.seat, cost)) continue;
+    const others2 = withTide.filter((x) => x.seat !== w.seat);
+    const pick = yield* chooseOne(s, w.seat, 'scapegoat.sac', `Scapegoat: ${withTide.length} Choirs share the Tide. ${free ? '' : 'Pay 1 Glory to '}Name one of them to score nothing and not count?`, others2.map((x) => seatOpt(s, x.seat)), true);
+    if (!pick) continue;
+    if (cost) yield* pay(s, w.seat, cost, H.scapegoat);
+    const t = seatFromOpt(pick);
+    withTide.splice(withTide.findIndex((x) => x.seat === t), 1);
+    log(s, 'scapegoat', `${pname(s, w.seat)} made ${pname(s, t)} the Scapegoat: they score nothing this Reaping.`);
   }
   if (withTide.length === 1) delta[withTide[0].seat] = 3 * withTide[0].dbl;
   if (withTide.length === 2) {
     const [a, b] = withTide;
-    delta[a.seat] = (a.str > b.str ? 2 : 1) * a.dbl;
-    delta[b.seat] = (b.str > a.str ? 2 : 1) * b.dbl;
+    // Test 'reap-mirror': two with the Tide gain 1 each.
+    delta[a.seat] = (variant(s, 'reap-mirror') ? 1 : a.str > b.str ? 2 : 1) * a.dbl;
+    delta[b.seat] = (variant(s, 'reap-mirror') ? 1 : b.str > a.str ? 2 : 1) * b.dbl;
+  }
+  // Test 'scapegoat-deny' (Robert): pay 1 Glory so another player who would gain at this Reaping gains nothing.
+  if (variant(s, 'scapegoat-deny')) for (const seat of order) {
+    if (!hasActive(s, seat, H.scapegoat) || !canActivate(s, seat, H.scapegoat) || !canSpend(s, seat, 1)) continue;
+    const gaining = others(s, seat).filter((o) => delta[o.seat] > 0 && !glorySafe(s, seat, o.seat));
+    if (!gaining.length) continue;
+    const pick = yield* chooseOne(s, seat, 'scapegoat.deny', 'Scapegoat: pay 1 Glory so one of these players gains nothing at this Reaping?', gaining.map((o) => seatOpt(s, o.seat)), true);
+    if (!pick) continue;
+    yield* pay(s, seat, 1, H.scapegoat);
+    const t = seatFromOpt(pick);
+    delta[t] = 0;
+    log(s, 'scapegoat', `${pname(s, seat)} paid 1 Glory: ${pname(s, t)} gains nothing this Reaping (Scapegoat).`);
+  }
+  // Mercy (V42, spent): if you share the Tide, score 3 as if you were alone, then discard Mercy.
+  const spentMercy: Seat[] = [];
+  if (withTide.length >= 2 && !variant(s, 'mercy-spare')) for (const w of withTide) {
+    if (!hasActive(s, w.seat, H.mercy) || !canActivate(s, w.seat, H.mercy)) continue;
+    if (!(yield* yesNo(s, w.seat, 'mercy', `Mercy: ${withTide.length} Choirs share the Tide. Score 3 as if you were alone, then discard Mercy?`))) continue;
+    if (yield* activation(s, w.seat, H.mercy, function* () { log(s, 'mercy', `${pname(s, w.seat)} scores 3 as if alone, and Mercy is spent.`); })) { delta[w.seat] = 3 * w.dbl; spentMercy.push(w.seat); }
+  }
+  // Test 'mercy-spare': if yours is the only Choir against the Tide, lose 1 instead of 3, then discard Mercy.
+  if (variant(s, 'mercy-spare') && variant(s, 'reap-mirror') && against.length === 1) {
+    const a = against[0];
+    if (hasActive(s, a.seat, H.mercy) && canActivate(s, a.seat, H.mercy) && (yield* yesNo(s, a.seat, 'mercy', 'Mercy: yours is the only Choir against the Tide. Lose 1 instead of 3, then discard Mercy?'))) {
+      if (yield* activation(s, a.seat, H.mercy, function* () { log(s, 'mercy', `${pname(s, a.seat)} is spared: loses 1 instead of 3, and Mercy is spent.`); })) { delta[a.seat] = -1 * a.dbl; spentMercy.push(a.seat); }
+    }
   }
   log(s, 'share', withTide.length === 0 ? 'No Choir leans with the Tide.' : withTide.length >= 3 ? `${withTide.length} Choirs lean with the Tide, so none of them scores.` : withTide.length === 1 ? `${pname(s, withTide[0].seat)} leans with the Tide alone.` : `${withTide.map((w) => pname(s, w.seat)).join(' and ')} share the Tide.`);
+  const prevLean = { ...s.lastAlignColor };
+  for (const seat of spentMercy) yield* discardFromChoir(s, seat, H.mercy, 'Mercy');
   for (const p of s.players) s.lastAlignColor[p.seat] = dirOf(nets[p.seat]);
 
-  // Loss adjustments: Scapegoat, Raguel bonds, Mercy.
   const loss: Record<number, number> = {};
   for (const p of s.players) loss[p.seat] = delta[p.seat] < 0 ? -delta[p.seat] : 0;
-  for (const p of s.players) {
-    if (!loss[p.seat]) continue;
-    s.scapegoats = s.scapegoats.filter((x: any) => x.day === s.day); // V38: Scapegoat covers only the Day it is used
-    const sg = s.scapegoats.findIndex((x) => x.from === p.seat);
-    if (sg >= 0) {
-      const to = s.scapegoats[sg].to;
-      s.scapegoats.splice(sg, 1);
-      loss[to] = (loss[to] ?? 0) + loss[p.seat];
-      log(s, 'scapegoat', `${pname(s, to)} takes ${p.name}'s Reaping loss (Scapegoat).`);
-      loss[p.seat] = 0;
+  // Mercy (V42): you never lose Glory at the Reaping.
+  // Scapegoat (V42): if you would lose Glory at the Reaping, a player of your choice loses it instead.
+  for (const seat of order) {
+    if (!loss[seat] || !hasActive(s, seat, H.scapegoat) || !canActivate(s, seat, H.scapegoat) || variant(s, 'scapegoat-sac') || variant(s, 'scapegoat-sac-free') || variant(s, 'scapegoat-sac2') || variant(s, 'scapegoat-crowd') || variant(s, 'scapegoat-deny')) continue;
+    if (variant(s, 'scapegoat-cost') && !canSpend(s, seat, 1)) continue;
+    const targets = others(s, seat).filter((o) => !glorySafe(s, seat, o.seat));
+    if (!targets.length) continue;
+    const pick = yield* chooseOne(s, seat, 'scapegoat', `Scapegoat: you would lose ${loss[seat]} Glory. Choose a player to lose it instead.`, targets.map((o) => seatOpt(s, o.seat)));
+    if (!pick) continue;
+    const to = seatFromOpt(pick);
+    if (variant(s, 'scapegoat-cost')) yield* pay(s, seat, 1, H.scapegoat);
+    if (yield* activation(s, seat, H.scapegoat, function* () { log(s, 'scapegoat', `${pname(s, to)} takes ${pname(s, seat)}'s Reaping loss (Scapegoat).`); })) {
+      loss[to] = (loss[to] ?? 0) + loss[seat];
+      loss[seat] = 0;
     }
   }
-  for (const b of s.bonds) {
-    if (!hasActive(s, b.owner, H.raguel)) continue;
-    // V34: only the Raguel holder's loss is shared. V38: the Bound player loses 1 and the holder loses 1 less.
-    // As in V34, a Bound player who is losing anyway at this Reaping loses the larger amount, not both.
-    if (loss[b.owner] > 0) {
-      loss[b.bound] = Math.max(loss[b.bound], 1);
-      loss[b.owner] -= 1;
-      log(s, 'raguel', `${pname(s, b.bound)} is Bound to ${pname(s, b.owner)} and loses 1 Glory; ${pname(s, b.owner)} loses 1 less (Raguel).`);
-    }
-  }
-  for (const seat of s.day_.mercy) loss[seat] = 0;
 
   const lost: Record<number, number> = {};
+  const gained: Record<number, number> = {};
   for (const seat of order) {
     const p = s.players[seat];
     const g = delta[seat] > 0 ? yield* gain(s, seat, delta[seat], 'reaping') : 0;
     const l = loss[seat] ? yield* lose(s, seat, loss[seat], 'reaping') : 0;
     lost[seat] = l;
+    gained[seat] = g;
     stat(s, { type: 'reaping', seat, amount: g - l, data: { net: nets[seat], tide: tide.dir } });
     if (g || l) log(s, 'reaping', `${p.name} ${g ? `gains ${g}` : `loses ${l}`} Glory at the Reaping (Alignment ${nets[seat]}).`);
+  }
+
+  // Bounty (V42): if the player you named lost Glory at this Reaping, gain 1.
+  for (const [k, t] of Object.entries(s.day_.bounty)) {
+    const seat = Number(k);
+    // Test 'bounty-bet' / 'bounty-bet-soft' (Robert): +1 if they lose; -1 if they do not lose (strict) or only if they gain (soft).
+    if ((variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft')) && hasActive(s, seat, H.bounty)) {
+      if (lost[t] > 0) { yield* gain(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory: ${pname(s, seat)} collects the Bounty.`); }
+      else if (variant(s, 'bounty-bet') || gained[t] > 0) { yield* lose(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} did not lose: ${pname(s, seat)}'s Bounty costs them 1 Glory.`); }
+      continue;
+    }
+    const spent = (s.day_ as any).bountySpent?.[seat];
+    if ((hasActive(s, seat, H.bounty) || spent) && lost[t] > 0 && (!variant(s, 'bounty-with') || leansWithTide.has(seat)) && (!variant(s, 'bounty-nogain') || !(gained[seat] > 0))) { yield* gain(s, seat, spent ? (variant(s, 'bounty-spent3') ? 3 : 2) : 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory, so ${pname(s, seat)} collects the Bounty (1 Glory).`); }
+  }
+  // Raguel (V42): each Reaping your Bound player gains Glory, you gain 1.
+  for (const b of s.bonds) {
+    // Tests: 'raguel-fate' (also lose 1 when they lose), 'raguel-nogain' (only if you gained nothing yourself).
+    if (variant(s, 'raguel-fate') && hasActive(s, b.owner, H.raguel) && lost[b.bound] > 0) { yield* lose(s, b.owner, 1, H.raguel); log(s, 'raguel', `${pname(s, b.bound)} lost Glory, so ${pname(s, b.owner)} loses 1 (Raguel).`); continue; }
+    if (!hasActive(s, b.owner, H.raguel) || !(gained[b.bound] > 0)) continue;
+    if (variant(s, 'raguel-nogain') && gained[b.owner] > 0) continue;
+    yield* gain(s, b.owner, 1, H.raguel);
+    log(s, 'raguel', `${pname(s, b.bound)} gained at the Reaping, so ${pname(s, b.owner)} gains 1 Glory (Raguel).`);
   }
 
   // Martyr: if you lost Glory, replace a Choir card with a card from your hand.
@@ -771,12 +831,19 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   // Other At the Reaping abilities.
   for (const seat of order) {
     const p = s.players[seat];
+    // Tests 'veil-secret' and 'zealot-open': facedown and face-up counts at the reveal.
+    const rv = (s.day_ as any).reveal ?? { down: 0, up: 0 };
+    if ((variant(s, 'veil-secret') || variant(s, 'veil-more') || variant(s, 'veil-4')) && hasActive(s, seat, H.veil) && (variant(s, 'veil-more') ? rv.down > rv.up : rv.down >= (variant(s, 'veil-4') ? 4 : 3))) { yield* gain(s, seat, 1, H.veil); log(s, 'veil', `${p.name} gained 1 Glory (Veil).`); }
+    if (variant(s, 'zealot-open') && hasActive(s, seat, H.zealot) && rv.up > rv.down) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
     if (hasActive(s, seat, H.stillness) && tide.dir === 'neutral') { yield* gain(s, seat, 1, H.stillness); log(s, 'stillness', `${p.name} gained 1 Glory (Stillness).`); }
-    if (hasActive(s, seat, H.firmament) && tide.dir !== 'neutral' && tide.margin === 1) { yield* gain(s, seat, 1, H.firmament); log(s, 'firmament', `${p.name} gained 1 Glory (Firmament).`); }
+    if (hasActive(s, seat, H.firmament) && tide.dir !== 'neutral' && tide.margin === 1 && (!variant(s, 'firm-with') || leansWithTide.has(seat))) { yield* gain(s, seat, 1, H.firmament); log(s, 'firmament', `${p.name} gained 1 Glory (Firmament).`); }
     const mc: string[] | undefined = (s.day_ as any).mirageCards?.[seat];
-    if (mc && tide.dir !== 'neutral' && mc.some((id) => s.altar.some((a) => a.id === id) && colorsOf(s, null, id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.mirage); log(s, 'mirage', `${p.name} gained 1 Glory (Mirage).`); }
+    if (mc && !variant(s, 'mirage-protect') && tide.dir !== 'neutral' && (!variant(s, 'mirage-hedge') || (nets[seat] !== 0 && !leansWithTide.has(seat))) && mc.some((id) => s.altar.some((a) => a.id === id) && colorsOf(s, null, id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.mirage); log(s, 'mirage', `${p.name} gained 1 Glory (Mirage).`); }
     // Vessel (V40): 1 Glory if the card it placed today is still on the Altar and matches the Tide.
-    if (hasActive(s, seat, H.vessel) && tide.dir !== 'neutral' && s.altar.some((a) => a.kind === 'vessel' && a.offeredBy === seat && colorsOf(s, null, a.id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.vessel); log(s, 'vessel', `${p.name} gained 1 Glory (Vessel).`); }
+    // Test 'vessel-noglory': no Glory; the card is pure influence.
+    if (!variant(s, 'vessel-noglory') && hasActive(s, seat, H.vessel) && tide.dir !== 'neutral' && s.altar.some((a) => a.kind === 'vessel' && a.offeredBy === seat && colorsOf(s, null, a.id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.vessel); log(s, 'vessel', `${p.name} gained 1 Glory (Vessel).`); }
+    // Test 'vessel-bet': lose 1 if your Vessel card is still on the Altar and opposes the Tide.
+    if (variant(s, 'vessel-bet') && hasActive(s, seat, H.vessel) && tide.dir !== 'neutral' && s.altar.some((a) => a.kind === 'vessel' && a.offeredBy === seat && colorsOf(s, null, a.id)[opposite(tide.dir as 'light' | 'dark') as 'light' | 'dark'])) { yield* lose(s, seat, 1, H.vessel); log(s, 'vessel', `${p.name} lost 1 Glory (Vessel).`); }
     const call = s.day_.prophecy[seat];
     if (call) { // V38: a Neutral Tide is a miss
       if (call === tide.dir) { yield* gain(s, seat, 1, H.prophecy); log(s, 'prophecy', `${p.name}'s Prophecy came true: +1 Glory.`); }
@@ -784,19 +851,63 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     }
     // V38 Outcast: 1 Glory at the Reaping while you have the least Glory.
     if (hasActive(s, seat, H.outcast) && p.glory === Math.min(...s.players.map((o) => o.glory))) { yield* gain(s, seat, 1, H.outcast); log(s, 'outcast', `${p.name} gained 1 Glory (Outcast).`); }
-    // V37 Apple: 1 Glory if your Alignment is the opposite color from the previous Day's Tide (was: double your gain).
+    // Apple (V42): 1 Glory if your Choir leans the other way from yesterday (it rewards switching sides).
     if (hasActive(s, seat, H.apple)) {
-      const prev = s.tides.find((t) => t.day === s.day - 1);
-      if (prev && prev.dir !== 'neutral' && nets[seat] !== 0 && dirOf(nets[seat]) === opposite(prev.dir)) { yield* gain(s, seat, 1, H.apple); log(s, 'apple', `${p.name} gained 1 Glory (Apple).`); }
+      const was = prevLean[seat];
+      if (was && was !== 'neutral' && nets[seat] !== 0 && dirOf(nets[seat]) === opposite(was)) { yield* gain(s, seat, 1, H.apple); log(s, 'apple', `${p.name} switched sides and gains 1 Glory (Apple).`); }
     }
-    if (hasActive(s, seat, H.leviathan)) {
-      // V37: 1 Glory if any other player lost Glory this Reaping, but only if your Alignment did not gain you Glory.
-      if (!(delta[seat] > 0) && s.players.some((o) => o.seat !== seat && lost[o.seat] > 0)) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
+    // Uriel and Beelzebub (V42): 1 Glory if your Choir holds 3 or more cards of their color.
+    for (const [id, k] of [[H.uriel, 'light'], [H.beelzebub, 'dark']] as const) {
+      // Tests: 'set-others' (3 others besides the card itself), 'set-tide' (and your Choir leans with the Tide).
+      const setN = activeCards(p).filter((c) => colorsOf(s, seat, c.id)[k] && (!variant(s, 'set-others') || c.id !== id)).length;
+      if (hasActive(s, seat, id) && setN >= 3 && (!variant(s, 'set-tide') || leansWithTide.has(seat))) { yield* gain(s, seat, variant(s, 'set-2') ? 2 : 1, id); log(s, 'set', `${p.name} gained 1 Glory (${cardName(id)}).`); }
     }
+    // Test 'tree-swap' / 'tree-swap-tide' (Robert's idea): take an Altar card into your Choir, discarding one if it is full.
+    if ((variant(s, 'tree-swap') || (variant(s, 'tree-swap-tide') && leansWithTide.has(seat)) || (variant(s, 'tree-swap-cost') && canSpend(s, seat, 1)) || (variant(s, 'tree-swap-lose') && !(gained[seat] > 0))) && hasActive(s, seat, H.treeOfLife) && canActivate(s, seat, H.treeOfLife)) {
+      const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.sanctuary === undefined || a.sanctuary === seat);
+      if (opts.length) {
+        const pick = yield* chooseOne(s, seat, 'tree.take', 'Tree of Life: take a card from the Altar into your Choir (discarding one if it is full)?', opts.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
+        if (pick !== null && (yield* makeRoom(s, seat, 'Tree of Life'))) {
+          if (variant(s, 'tree-swap-cost')) yield* pay(s, seat, 1, H.treeOfLife);
+          const [taken] = s.altar.splice(Number(pick), 1);
+          yield* activation(s, seat, H.treeOfLife, function* () { yield* enterChoir(s, seat, taken.id); log(s, 'treeOfLife', `${p.name} took ${cardName(taken.id)} from the Altar into their Choir (Tree of Life).`); });
+        }
+      }
+    }
+    // Tree of Life (V42): fruit ripens. Each Reaping your Choir leans with the Tide, put 1 Glory on it; at 3, take all 3.
+    const tree = p.choir.find((c) => c.id === H.treeOfLife && !c.facedown);
+    if (tree && !['tree-swap', 'tree-swap-tide', 'tree-swap-cost', 'tree-swap-lose'].some((v) => variant(s, v)) && hasActive(s, seat, H.treeOfLife) && leansWithTide.has(seat) && (!variant(s, 'tree-gain') || delta[seat] > 0)) {
+      tree.store = (tree.store ?? 0) + 1;
+      if (tree.store >= (variant(s, 'tree-4') ? 4 : 3)) { tree.store = 0; yield* gain(s, seat, variant(s, 'tree-2') ? 2 : 3, H.treeOfLife); log(s, 'treeOfLife', `${p.name}'s Tree of Life bears fruit.`); if (variant(s, 'tree-fall')) yield* discardFromChoir(s, seat, H.treeOfLife, 'Tree of Life'); }
+      else log(s, 'treeOfLife', `1 Glory ripens on ${p.name}'s Tree of Life (${tree.store} of 3).`);
+    }
+    // Providence (V42): if your Choir leans with the Tide, put 1 Glory from the Pot on it.
+    const prov = p.choir.find((c) => c.id === H.providence && !c.facedown);
+    if (prov && hasActive(s, seat, H.providence) && (!variant(s, 'store-tide') || leansWithTide.has(seat))) { prov.store = (prov.store ?? 0) + 1; log(s, 'providence', `1 Glory is stored on ${p.name}'s Providence (${prov.store} in all).`); }
+    // Test 'mammon-store': Mammon is the Dark store, like Providence.
+    const mam = p.choir.find((c) => c.id === H.mammon && !c.facedown);
+    if (variant(s, 'mammon-store') && mam && hasActive(s, seat, H.mammon) && (!variant(s, 'store-tide') || leansWithTide.has(seat))) { mam.store = (mam.store ?? 0) + 1; log(s, 'mammon', `1 Glory is stored on ${p.name}'s Mammon (${mam.store} in all).`); }
+    // Test 'favor-ripen': each Day your Choir leans with the Tide, 1 Glory ripens on Favor; at 3, take all 3.
+    const fav = p.choir.find((c) => c.id === H.favor && !c.facedown);
+    if (variant(s, 'favor-ripen') && fav && hasActive(s, seat, H.favor) && leansWithTide.has(seat)) {
+      fav.store = (fav.store ?? 0) + 1;
+      if (fav.store >= 3) { fav.store = 0; yield* gain(s, seat, variant(s, 'favor-2') ? 2 : 3, H.favor); log(s, 'favor', `${p.name}'s Favor ripens: +3 Glory.`); }
+      else log(s, 'favor', `1 Glory ripens on ${p.name}'s Favor (${fav.store} of 3).`);
+    }
+    // Leviathan (V42): 1 Glory if two or more other players lost Glory at this Reaping.
+    if (hasActive(s, seat, H.leviathan) && s.players.filter((o) => o.seat !== seat && lost[o.seat] > 0).length >= 2) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
+    // Test 'hubris-day' (Robert): at the end of the Day, if the player with the most Glory gained 3 or more this Day (from anything), they give 1 to you.
+    if ((variant(s, 'hubris-day') || variant(s, 'hubris-day4')) && hasActive(s, seat, H.hubris)) {
+      const dayGain = (x: Seat) => s.stats.filter((e) => e.type === 'glory' && e.seat === x && e.day === s.day && (e.amount ?? 0) > 0).reduce((t, e) => t + (e.amount ?? 0), 0);
+      const max = Math.max(...s.players.map((o) => o.glory));
+      const payers = s.players.filter((o) => o.seat !== seat && o.glory === max && dayGain(o.seat) >= (variant(s, 'hubris-day4') ? 4 : 3) && !glorySafe(s, seat, o.seat)).map((o) => o.seat);
+      const l = payers.length > 1 ? seatFromOpt((yield* chooseOne(s, seat, 'hubris', 'Hubris: choose which leader gives you 1.', payers.map((x) => seatOpt(s, x))))!) : payers[0];
+      if (l !== undefined && transfer(s, l, seat, 1, H.hubris)) log(s, 'hubris', `${pname(s, l)} gave 1 Glory to ${p.name} (Hubris).`);
+    } else
     if (hasActive(s, seat, H.hubris)) {
       // Ruling confirmed November 16, 2026: one leader pays 1 Glory in total. When several tied leaders
       // gained, the Hubris holder chooses which one (the general rule for ties on most-Glory cards).
-      const payers = leadersBefore.filter((l) => l !== seat && delta[l] > 0 && s.players[l].glory > 0);
+      const payers = leadersBefore.filter((l) => l !== seat && delta[l] >= (variant(s, 'hubris-3') ? 3 : 1) && s.players[l].glory > 0 && !glorySafe(s, seat, l));
       const l = payers.length > 1 ? seatFromOpt((yield* chooseOne(s, seat, 'hubris', 'Hubris: the tied leaders both gained Glory. Choose who gives you 1.', payers.map((x) => seatOpt(s, x))))!) : payers[0];
       if (l !== undefined) {
         const t = transfer(s, l, seat, 1, H.hubris);

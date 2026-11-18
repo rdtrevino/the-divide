@@ -1,5 +1,29 @@
 # Changelog
 
+## V42 cards and Rulebook v12: one deck, free Exalt, mirrored scoring (November 18, 2026)
+
+Robert's decisions of November 17 and 18, reviewed card by card. Not yet merged.
+
+**Rules**
+- **Exalt costs no Glory.** It costs the card and the Offer you give up. Building was a losing move before (turns were 85% Offer and 1% Exalt); now about 58% Offer, 15% Gather, 27% Exalt.
+- **Gather takes from the Altar only** (blind deck draws were 2–3% of Gathers and lose to a free Exalt).
+- **Mirrored Reaping.** With the Tide: alone 3, two 1 each, three or more 0. Against it: alone lose 3, otherwise lose 1. How strongly you lean no longer matters.
+- **One deck of 69 Host cards**, all with art, for every way to play. Ithuriel, Urim and Asmadai (no art) are retired; their abilities moved to Revelation, Knowledge and Belial. No once-per-game cards: five are "spent" (use it, then discard it).
+- **Every Light or Dark card is +1.** "At the Reaping" becomes **"At the end of the Day"**; no card says "color".
+
+**Cards (46 changed).** Michael, Gabriel, Providence, Tree of Life, Free Will, Seraphim, Uriel, Covenant, Mercy, Revelation, Morning Star, Knowledge, Deliverance, Remnant; Anathema, Favor, Temptation, Legion, Beelzebub, Leviathan, Hubris, Belial, Mammon, Lilith, Parasite, Winnowing, Silence, Scapegoat, Defiance, Bounty, Abaddon; Vessel, Eternity, Raguel, Zealot, Shroud (renamed **Acolyte**), Firmament, Fig Leaves, Flaming Sword, Outcast, Heresy, Mirage, Veil, Apple. Full before and after, with win ratios: `design/v42-deck.md`. Parked alternatives: `design/parked-abilities.md`.
+
+**Measured** (bots that value card abilities): 7.1 Days a game at 3 players, 7.7 at 4; the winner earns 1.4–1.5 Glory a Day; turns are 57–59% Offer, 15% Gather, 26–28% Exalt; Glory comes from Offers 41–46%, the Tide 23–31%, cards 28–30%; every card between 0.77 and 1.26 (counted over cards held at the end of any Day).
+
+**Code**
+- The approved choices are the engine's rules (`V42_RULES` in `core.ts`). The rejected alternatives remain as test switches; `-name` turns one rule off and `v41-rules` turns them all off, for comparisons.
+- Bots value a card's ability when they build, use the stores, Temptation and Morning Star, and target rivals' facedown Offers with Winnowing.
+- New sim tools: `income.ts` (Glory a card earns per Day held), `shape.ts` (game length, Glory sources, action mix), `held.ts` (card balance over cards held at the end of any Day).
+- `cards/tools/apply_changes.py` now handles values, renames and deck changes; `cards/changes/V42.json`.
+- Rulebook v12, the Learn page (actions, the Reaping, a new scoring calculator) and the action labels.
+
+**Still to do:** an Advanced pass on the Celestials and Events (written for the earlier scoring; Divine Calling has no effect now), and reprinting the changed card faces (see the Reprint List in `cards/The_Divide_Cards_V42.xlsx`).
+
 ## Race to 10, a Learn step on building your Choir, current-rules stats (November 17, 2026)
 
 Robert's decisions. Still card data V41 and rulebook v11 (no card text changes; no V41 games had been recorded yet).

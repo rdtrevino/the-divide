@@ -1,0 +1,319 @@
+{
+  "version": "V42",
+  "date": "2026-11-18",
+  "previous": "V41",
+  "changes": {
+    "Michael": {
+      "text": "On your turn: Discard a card from another player's Choir, then discard this card.",
+      "cadence": "On your turn",
+      "why": "Spent: use it, then discard it (V42)"
+    },
+    "Gabriel": {
+      "text": "On your turn: Look at another player's hand.",
+      "cadence": "On your turn",
+      "why": "The Base game has no Event deck (V42)"
+    },
+    "Providence": {
+      "text": "At the end of each Day your Choir leans with the Tide, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card.",
+      "cadence": "At the end of the Day",
+      "why": "A store: an engine that grows (V42)"
+    },
+    "Tree of Life": {
+      "text": "At the end of the Day: You may take a card from the Altar into your Choir. If your Choir is full, discard one of its cards first.",
+      "cadence": "At the end of the Day",
+      "why": "Builds from the Altar (V42)"
+    },
+    "Free Will": {
+      "text": "On your turn: Take a second action, then discard this card.",
+      "cadence": "On your turn",
+      "why": "No once-per-game abilities: spent instead (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Light"
+    },
+    "Seraphim": {
+      "text": "When you Exalt a Light card, gain 1 Glory.",
+      "cadence": "When you Exalt",
+      "why": "Exalt is free (V42): rewards building a Light Choir"
+    },
+    "Uriel": {
+      "text": "At the end of the Day: If your Choir has 3 or more other Light cards, gain 2 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "A set to complete (V42)"
+    },
+    "Martyr": {
+      "text": "At the end of the Day: If you lost Glory at the Reaping, you may replace a card in your Choir with a card from your hand.",
+      "cadence": "At the end of the Day",
+      "why": "Timing label (V42)",
+      "wording": true
+    },
+    "Covenant": {
+      "text": "In the Morning: You may name another player. If neither of you Offers this Day, each of you gains 1 Glory.",
+      "cadence": "In the Morning",
+      "why": "Simpler pact, made in the Morning (V42)"
+    },
+    "Mercy": {
+      "text": "If yours is the only Choir against the Tide, lose 1 instead of 3, then discard this card.",
+      "cadence": "At the Reaping",
+      "why": "Spent; spares the lone loser under mirrored scoring (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Light"
+    },
+    "Revelation": {
+      "text": "On your turn: Flip a facedown Altar card face up. You may then flip a face-up Altar card facedown.",
+      "cadence": "On your turn",
+      "why": "Ithuriel's ability, with art; one deck for every mode (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Light",
+      "openGame": true
+    },
+    "Morning Star": {
+      "text": "On your turn: Choose a card in your Choir. It counts as the opposite alignment this Day.",
+      "cadence": "On your turn",
+      "why": "Chosen before the reveal, free (V42)"
+    },
+    "Knowledge": {
+      "text": "On your turn: Secretly look at up to 3 facedown Altar cards.",
+      "cadence": "On your turn",
+      "why": "Urim's ability, with art; one deck for every mode (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Light",
+      "openGame": true
+    },
+    "Deliverance": {
+      "text": "On your turn: Swap a card between any two players' Choirs, then discard this card.",
+      "cadence": "On your turn",
+      "why": "No once-per-game abilities: spent instead (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Light"
+    },
+    "Remnant": {
+      "text": "At the end of the Day: You may take back a card you Offered today into your hand.",
+      "cadence": "At the end of the Day",
+      "why": "Only your own Offer (V42)"
+    },
+    "Anathema": {
+      "text": "On your turn: No other player may Offer until the start of your next turn.",
+      "cadence": "On your turn",
+      "why": "Blocks everyone else (V42)"
+    },
+    "Favor": {
+      "text": "At the end of each Day your Choir leans with the Tide, put 1 Glory on this card. When it holds 3, remove them and gain 2 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "A growth engine (V42)"
+    },
+    "Temptation": {
+      "text": "On your turn: Play a card from your hand into another player's Choir. If their Choir is full, they discard one of its cards first.",
+      "cadence": "On your turn",
+      "why": "Builds a rival's Choir: pull them onto or off a side (V42)"
+    },
+    "Legion": {
+      "text": "When you Exalt a Dark card, gain 1 Glory.",
+      "cadence": "When you Exalt",
+      "why": "Seraphim's mirror (V42)"
+    },
+    "Beelzebub": {
+      "text": "At the end of the Day: If your Choir has 3 or more other Dark cards, gain 2 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "A set to complete (V42)"
+    },
+    "Leviathan": {
+      "text": "At the end of the Day: If 2 or more other players lost Glory this Day, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Was too strong (V42)"
+    },
+    "Hubris": {
+      "text": "At the end of the Day: If the player with the most Glory gained 4 or more Glory this Day, they give 1 to you.",
+      "cadence": "At the end of the Day",
+      "why": "Checks the whole Day (V42)",
+      "openGame": true
+    },
+    "Belial": {
+      "text": "On your turn: Look at a facedown Altar card. You may swap it with a card from your hand.",
+      "cadence": "On your turn",
+      "why": "Asmadai's ability, with art; one deck for every mode (V42)",
+      "openGame": true
+    },
+    "Mammon": {
+      "text": "At the end of each Day your Choir leans with the Tide, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card.",
+      "cadence": "At the end of the Day",
+      "why": "The Dark store (V42)"
+    },
+    "Lilith": {
+      "text": "Other players' abilities cannot look at, take, or discard cards in your hand.",
+      "cadence": "Passive",
+      "why": "The cards it named changed (V42)"
+    },
+    "Parasite": {
+      "text": "On your turn: Move this card into another player's Choir. Its holder cannot discard it.",
+      "cadence": "On your turn",
+      "why": "An attack, not a dead card (V42)"
+    },
+    "Winnowing": {
+      "text": "On your turn: Discard up to 2 facedown Altar cards without looking at them.",
+      "cadence": "On your turn",
+      "why": "A blind strike at hidden Offers (V42)"
+    },
+    "Silence": {
+      "text": "On your turn: Choose a player. Their Choir's abilities do not work until your next turn.",
+      "cadence": "On your turn",
+      "why": "Repeatable, decided on your turn (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Dark"
+    },
+    "Scapegoat": {
+      "text": "When another player would gain Glory at the Reaping, you may pay 1 Glory. They gain nothing.",
+      "cadence": "At the Reaping",
+      "why": "Denies a gain (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Dark"
+    },
+    "Defiance": {
+      "text": "Other players' abilities cannot make you lose or give up Glory.",
+      "cadence": "Passive",
+      "why": "Works without Events (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Dark"
+    },
+    "Bounty": {
+      "text": "In the Morning: You may name a player. At the end of the Day, if they lost Glory, gain 1 Glory. If they gained Glory, lose 1 Glory.",
+      "cadence": "In the Morning",
+      "why": "One deck for every mode; a bet (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Dark",
+      "openGame": true
+    },
+    "Abaddon": {
+      "text": "On your turn: Replace every Altar card with the top card of the Host deck, then discard this card.",
+      "cadence": "On your turn",
+      "why": "No once-per-game abilities: spent instead (V42)",
+      "oncePerGame": false,
+      "value": 1,
+      "offering": "+1 Dark"
+    },
+    "Vessel": {
+      "text": "On your turn: You may place a card from your hand on the Altar facedown (this is not an Offer). At the end of the Day, if it is still there, gain 1 Glory if it matches the Tide, or lose 1 if it opposes it.",
+      "cadence": "On your turn",
+      "why": "A bet; no draw (V42)"
+    },
+    "Eternity": {
+      "text": "At the end of the Day: If you did not Offer this Day, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Pays for building (V42)"
+    },
+    "Raguel": {
+      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At the end of the Day, if they gained Glory, gain 1 Glory. If they lost Glory, lose 1 Glory.",
+      "cadence": "When this enters your Choir",
+      "why": "Shared fate (V42)"
+    },
+    "Twilight": {
+      "text": "At the end of the Day: If your Choir holds at least one Light and one Dark card, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Timing label (V42)",
+      "wording": true
+    },
+    "Zealot": {
+      "text": "At the end of the Day: If every other card in your Choir (at least 3) shares one alignment, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Rewards committing to a side (V42)"
+    },
+    "Stillness": {
+      "text": "At the end of the Day: If the Tide was Neutral (a tie or an empty Altar), gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Timing label (V42)",
+      "wording": true
+    },
+    "Shroud": {
+      "text": "This card's alignment matches the previous Day's Tide: Light +1 after a Light Tide, Dark +1 after a Dark Tide. After a Neutral Tide, or on Day 1, it is Neutral.",
+      "cadence": "Passive",
+      "why": "Follows yesterday's Tide; renamed Acolyte (V42)",
+      "rename": "Acolyte",
+      "value": 1
+    },
+    "Firmament": {
+      "text": "At the end of the Day: If the Tide won by exactly 1 and your Choir leans with it, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Must lean with the Tide (V42)"
+    },
+    "Moderation": {
+      "text": "At the end of the Day: If your Choir leans neither way, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Timing label (V42)",
+      "wording": true
+    },
+    "Fig Leaves": {
+      "text": "On your turn: Your Choir sits out this Day. It gains nothing, loses nothing, and does not count as leaning either way.",
+      "cadence": "On your turn",
+      "why": "Chosen before the reveal (V42)"
+    },
+    "Flaming Sword": {
+      "text": "On your turn: No other player may Exalt until the start of your next turn.",
+      "cadence": "On your turn",
+      "why": "Anathema's mirror for Exalt (V42)",
+      "openGame": true
+    },
+    "Outcast": {
+      "text": "At the end of the Day: If you have the least Glory (or are tied for it), gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Exalt is free, so only the catch-up remains (V42)"
+    },
+    "Heresy": {
+      "text": "On your turn: You may pay 1 Glory. Your Choir counts as leaning the opposite way this Day.",
+      "cadence": "On your turn",
+      "why": "Chosen before the reveal, for a price (V42)"
+    },
+    "Mirage": {
+      "text": "Your facedown Offerings cannot be flipped, looked at, exchanged, or destroyed before the Evening.",
+      "cadence": "Passive",
+      "why": "Protection only (V42)"
+    },
+    "Veil": {
+      "text": "At the end of the Day: If more Altar cards were facedown than face up when it was revealed, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Pays for a hidden Altar (V42)"
+    },
+    "Prophecy": {
+      "text": "In the Morning: Declare Light or Dark. At the end of the Day, if the Tide matches, gain 1 Glory; otherwise (a Neutral Tide included), lose 1 Glory.",
+      "cadence": "In the Morning",
+      "why": "Timing label (V42)",
+      "wording": true
+    },
+    "Apple": {
+      "text": "At the end of the Day: If your Choir leans the other way from yesterday, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Rewards switching sides (V42)"
+    },
+    "Forger": {
+      "text": "When you Gather, you may take any Host card from the discard pile instead of a card from the Altar.",
+      "cadence": "When you Gather",
+      "why": "Gather takes from the Altar only (V42)",
+      "wording": true
+    },
+    "Ithuriel": {
+      "text": "On your turn: Flip one facedown card on the Altar face up.",
+      "cadence": "On your turn",
+      "why": "Retired: no art; ability moved to Revelation, Knowledge or Belial (V42)",
+      "openGame": false
+    },
+    "Urim": {
+      "text": "On your turn: Secretly look at up to 3 facedown cards on the Altar.",
+      "cadence": "On your turn",
+      "why": "Retired: no art; ability moved to Revelation, Knowledge or Belial (V42)",
+      "openGame": false
+    },
+    "Asmadai": {
+      "text": "On your turn: Look at one facedown card on the Altar. You may exchange it with a card from your hand. The new card stays facedown.",
+      "cadence": "On your turn",
+      "why": "Retired: no art; ability moved to Revelation, Knowledge or Belial (V42)",
+      "openGame": false
+    }
+  }
+}

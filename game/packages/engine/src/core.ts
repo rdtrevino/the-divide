@@ -70,7 +70,31 @@ export const pname = (s: GameState, seat: Seat) => s.players[seat].name;
 // ---------------------------------------------------------------- queries
 
 export const others = (s: GameState, seat: Seat) => s.players.filter((p) => p.seat !== seat);
-export const variant = (s: GameState, v: string) => !!s.config.variants?.includes(v);
+/**
+ * V42 rules (approved November 18, 2026). Each was measured as a test switch first; these are now the game.
+ * Where a card's code still branches on one of these names, the branch it takes here is the rule.
+ * The other switches in the code are the rejected or parked alternatives (see design/parked-abilities.md).
+ */
+export const V42_RULES: readonly string[] = [
+  // Actions and the Reaping
+  'exalt-free', 'gather-altar', 'reap-mirror',
+  // Cards
+  'scapegoat-deny', 'silence-free', 'firm-with', 'tree-swap', 'rev-swap', 'bounty-bet-soft', 'bounty-morning',
+  'anathema-start', 'hubris-day4', 'mirage-protect', 'veil-more', 'winnowing-blind', 'winnowing-blind2', 'remnant-own',
+  'set-others', 'set-2', 'raguel-fate', 'heresy-cost', 'morningstar-free', 'vessel-bet', 'vessel-nodraw', 'shroud-same',
+  'seraph-refund', 'mammon-store', 'favor-ripen', 'favor-2', 'store-tide', 'zealot-others', 'sword-exalt',
+  'temptation-give', 'mercy-spare',
+  // Bots value a card's ability, not only its alignment, when they build.
+  'bot-engine',
+];
+const V42_SET = new Set(V42_RULES);
+/** A V42 rule, or a test switch named in the game's config. */
+export const variant = (s: GameState, v: string) => {
+  const cv = s.config.variants;
+  if (cv?.includes(v)) return true;
+  // '-name' turns one V42 rule off (tests and comparisons); 'v41-rules' turns them all off.
+  return V42_SET.has(v) && !cv?.includes('v41-rules') && !cv?.includes('-' + v);
+};
 export const isCelestial = (s: GameState, seat: Seat, id: string) => s.players[seat].celestial === id;
 
 /** A Host card is active when it is face up in a Choir. */
@@ -127,8 +151,9 @@ export function baseValue(s: GameState, id: string): Value {
   if (!h) return { light: 0, dark: 0 };
   if (id === H.shroud) {
     const prev = previousTide(s);
-    if (prev === 'light') return { light: 0, dark: 2 };
-    if (prev === 'dark') return { light: 2, dark: 0 };
+    const same = variant(s, 'shroud-same'); // test: follows yesterday's Tide instead of opposing it
+    if (prev === 'light') return same ? { light: 1, dark: 0 } : { light: 0, dark: 1 };
+    if (prev === 'dark') return same ? { light: 0, dark: 1 } : { light: 1, dark: 0 };
     return { light: 0, dark: 0 };
   }
   if (id === H.nephilim) return { light: 1, dark: 1 };
@@ -153,18 +178,14 @@ export function alignment(s: GameState, seat: Seat, opts: AlignOpts = {}): numbe
   const p = s.players[seat];
   let light = 0;
   let dark = 0;
-  // V38: Uriel and Beelzebub double only on a Reaping where their holder paid 1 Glory for them.
-  const paid: string[] = (s.day_ as any).doublerPaid?.[seat] ?? [];
-  const uriel = opts.reaping && hasActive(s, seat, H.uriel) && paid.includes(H.uriel);
-  const beel = opts.reaping && hasActive(s, seat, H.beelzebub) && paid.includes(H.beelzebub);
   for (const c of p.choir) {
     if (c.facedown || !c.id.startsWith('host-')) continue;
     if (c.id === H.nephilim) continue; // its two values are Neutral
     if (opts.reaping && s.day_.eclipsed[seat] === c.id) continue;
     let v = baseValue(s, c.id);
     if (s.morningStar.some((m) => m.seat === seat && m.card === c.id)) v = { light: v.dark, dark: v.light };
-    light += v.light * (uriel ? 2 : 1);
-    dark += v.dark * (beel ? 2 : 1);
+    light += v.light;
+    dark += v.dark;
   }
   return light - dark;
 }
@@ -235,6 +256,7 @@ export function* discardFromChoir(s: GameState, seat: Seat, id: string, why: str
 /** Host cards of a blocked color cannot activate on The Flood / Let There Be Light. */
 export function blockedByEvent(s: GameState, seat: Seat, id: string): boolean {
   if (!id.startsWith('host-')) return false;
+  if (s.silenced?.some((x) => x.target === seat)) return true; // Silence (V42)
   const col = colorsOf(s, seat, id);
   if (col.light && eventOn(s, E.flood, seat)) return true;
   if (col.dark && eventOn(s, E.letThereBeLight, seat)) return true;
@@ -260,20 +282,6 @@ export function* activation(s: GameState, seat: Seat, source: string, run: () =>
   }
   stat(s, { type: 'activate', seat, card: source });
   log(s, 'activate', `${pname(s, seat)} activated ${cardName(source)}.`);
-  // Silence: another player may negate this as it is activated.
-  const sil = s.players.find((p) => p.seat !== seat && p.choir.some((c) => c.id === H.silence && !c.facedown && !c.used));
-  if (sil && canActivate(s, sil.seat, H.silence)) {
-    const use = yield* yesNo(s, sil.seat, 'silence', `${pname(s, seat)} is activating ${cardName(source)}. Use Silence to negate it (once per game)?`);
-    if (use) {
-      const card = sil.choir.find((c) => c.id === H.silence)!;
-      card.used = true;
-      if (eventOn(s, E.tithe, sil.seat)) yield* pay(s, sil.seat, 1, E.tithe);
-      stat(s, { type: 'activate', seat: sil.seat, card: H.silence });
-      stat(s, { type: 'negated', seat, card: source, data: { by: sil.seat } });
-      log(s, 'silence', `${pname(s, sil.seat)} used Silence. ${cardName(source)} has no effect.`);
-      return false;
-    }
-  }
   yield* run();
   return true;
 }
@@ -293,7 +301,7 @@ export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
   s.players[seat].choir.push({ id, facedown: false, used: false });
   stat(s, { type: 'enter_choir', seat, card: id });
   if (id === H.raguel) {
-    const targets = others(s, seat).filter((p) => !hasActive(s, p.seat, H.lilith));
+    const targets = others(s, seat).filter((p) => !immune(s, seat, p.seat));
     const t = yield* chooseOne(s, seat, 'raguel.bind', 'Raguel entered your Choir: choose another player to be Bound to you.', targets.map((p) => seatOpt(s, p.seat)));
     if (t) {
       const bound = seatFromOpt(t);
@@ -405,10 +413,18 @@ export type TargetKind = 'look' | 'reveal' | 'copy' | 'flip' | 'replace' | 'disc
 /** Whether `actor` may Target `owner`'s cards with this kind of effect (ignoring Tribute cost). */
 export function protectedFrom(s: GameState, actor: Seat, owner: Seat, kind: TargetKind): boolean {
   if (actor === owner) return false;
+  if (immune(s, actor, owner)) return true;
   if ((kind === 'replace' || kind === 'discard') && hasActive(s, owner, H.cherubim)) return true;
-  if ((kind === 'look' || kind === 'reveal' || kind === 'copy' || kind === 'flip') && hasActive(s, owner, H.veil)) return true;
+  if ((kind === 'look' || kind === 'reveal' || kind === 'copy' || kind === 'flip') && hasActive(s, owner, H.veil) && !variant(s, 'veil-secret') && !variant(s, 'veil-more') && !variant(s, 'veil-4')) return true;
   return false;
 }
+
+/** Kept for older call sites: no card grants blanket immunity any more. */
+export const immune = (_s: GameState, _actor: Seat, _owner: Seat) => false;
+/** Defiance (V42): other players' abilities cannot make you lose or give up Glory. */
+export const glorySafe = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && hasActive(s, owner, H.defiance);
+/** Lilith (V42): other players' abilities cannot look at, take, or discard cards in your hand. */
+export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && (immune(s, actor, owner) || hasActive(s, owner, H.lilith));
 
 /** Tribute: pay 1 Glory to the owner before Targeting a card in their Choir. Returns false if it cannot be paid. */
 export function canAffordTribute(s: GameState, actor: Seat, owner: Seat): boolean {

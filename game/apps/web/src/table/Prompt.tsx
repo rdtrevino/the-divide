@@ -12,7 +12,7 @@ import { isButton, type Pick } from './pick';
 
 const ACTION_ICON: Record<string, string> = { offer: '✦', gather: '❖', exalt: '▲' };
 const ACTIONS = ['offer', 'gather', 'exalt'] as const;
-const ACTION_LABEL: Record<string, string> = { offer: 'Offer: play a card to the Altar and gain 1 Glory', gather: 'Gather: take a card into your Choir', exalt: 'Exalt: pay 1 Glory to play a card from your hand into your Choir' };
+const ACTION_LABEL: Record<string, string> = { offer: 'Offer: play a card to the Altar and gain 1 Glory', gather: 'Gather: take a card from the Altar into your Choir', exalt: 'Exalt: play a card from your hand into your Choir' };
 
 /** Why an action is not offered to you right now, from what your seat can see. */
 function whyNot(view: GameView, seat: number, id: string): string {
