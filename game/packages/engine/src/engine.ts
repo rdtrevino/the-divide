@@ -763,8 +763,10 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   if (withTide.length === 2) {
     const [a, b] = withTide;
     // Test 'reap-mirror': two with the Tide gain 1 each.
-    delta[a.seat] = (variant(s, 'reap-mirror') ? 1 : a.str > b.str ? 2 : 1) * a.dbl;
-    delta[b.seat] = (variant(s, 'reap-mirror') ? 1 : b.str > a.str ? 2 : 1) * b.dbl;
+    // V43 test 'pair-21' (Robert): with mirrored scoring, a pair is 2 for the stronger lean and 1 for the weaker again (1 each if equal).
+    const flat = variant(s, 'reap-mirror') && !variant(s, 'pair-21');
+    delta[a.seat] = (flat ? 1 : a.str > b.str ? 2 : 1) * a.dbl;
+    delta[b.seat] = (flat ? 1 : b.str > a.str ? 2 : 1) * b.dbl;
   }
   // Test 'scapegoat-deny' (Robert): pay 1 Glory so another player who would gain at this Reaping gains nothing.
   if (variant(s, 'scapegoat-deny')) for (const seat of order) {

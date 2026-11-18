@@ -112,7 +112,16 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
       else if (variant(s, 'favor-fruits-bet') && colorsOf(s, null, fruit)[k === 'light' ? 'dark' : 'light']) { yield* lose(s, seat, 1, H.favor); log(s, 'favor', `${p.name}'s First Fruits opposed the Tide: -1 Glory (Favor).`); }
     }
     // Favor: 'favor-late' (Day 4+: 1, Day 7+: 2) or 'favor-momentum' (with the Tide today and yesterday: 1).
-    if (hasActive(s, seat, H.favor) && !variant(s, 'favor-fruits') && !variant(s, 'favor-fruits-alone') && !variant(s, 'favor-fruits-bet')) {
+    // Favor, Tide versions: 'favor-landslide' (Tide won by 3+ and you lean with it), 'favor-pair' (exactly two Choirs with the Tide, yours one of them),
+    // 'favor-upset' (you lean with the Tide and more Choirs leaned against it than with it).
+    const tide = s.tides[s.tides.length - 1];
+    if ((variant(s, 'favor-landslide') || variant(s, 'favor-pair') || variant(s, 'favor-upset')) && hasActive(s, seat, H.favor) && tide && tide.dir !== 'neutral' && withTide.has(seat)) {
+      const sign = tide.dir === 'light' ? 1 : -1;
+      const against = s.players.filter((o) => !withTide.has(o.seat) && !s.day_.figLeaves.includes(o.seat) && Math.sign(alignment(s, o.seat)) === -sign).length;
+      const ok = variant(s, 'favor-landslide') ? tide.margin >= 3 : variant(s, 'favor-pair') ? withTide.size === 2 : against > withTide.size;
+      if (ok) { yield* gain(s, seat, 1, H.favor); log(s, 'favor', `${p.name} gained 1 Glory (Favor).`); }
+    }
+    if (hasActive(s, seat, H.favor) && !['favor-fruits', 'favor-fruits-alone', 'favor-fruits-bet', 'favor-landslide', 'favor-pair', 'favor-upset'].some((v) => variant(s, v))) {
       const n = variant(s, 'favor-late') ? (s.day >= 7 ? 2 : s.day >= 4 ? 1 : 0) : variant(s, 'favor-momentum') && withTide.has(seat) && ((s as any).lastWithTide ?? []).includes(seat) ? 1 : 0;
       if (n) { yield* gain(s, seat, n, H.favor); log(s, 'favor', `${p.name} gained ${n} Glory (Favor).`); }
     }

@@ -462,6 +462,7 @@ export const TURN: Record<string, TurnAbility> = {
     *run(s, seat) {
       if (variant(s, 'sword-exalt')) {
         for (const p of others(s, seat)) s.anathema.push({ target: p.seat, by: seat, action: 'exalt' });
+        if (variant(s, 'sword-both')) for (const p of others(s, seat)) s.anathema.push({ target: p.seat, by: seat, action: 'gather' }); // V43 test: Gather too
         log(s, 'flamingSword', `No other player may Exalt until ${pname(s, seat)}'s next turn (Flaming Sword).`);
         return;
       }

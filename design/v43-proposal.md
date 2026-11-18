@@ -222,6 +222,23 @@ Engines need Days to pay off, so the longer race suits them: every card except R
 
 Spread 0.107 with the bold versions, the fairest yet; only Favor (1.24) sits outside 0.8–1.2.
 
+## Round 4 (November 18): Favor and the Tide; the pair rule
+
+Round 3 approved (except Favor). Measured at the race to 12, 20,000 games each.
+
+| Favor version | Win ratio |
+|---|---|
+| Landslide: if the Tide won by 3 or more and your Choir leans with it, gain 1 Glory | 1.26 |
+| Partnership: if exactly two Choirs lean with the Tide and yours is one, gain 1 Glory | 1.33 |
+| **Upset: if your Choir leans with the Tide and more Choirs leaned against it than with it, gain 1 Glory** | **1.15–1.17** |
+
+Flaming Sword dipped to 0.74–0.77 with the new deck: **No other player may Exalt or Gather until the start of your next turn** brings it to 0.86.
+
+| Pair rule (two Choirs with the Tide) | Days (3 / 4) | Winner per Day | Glory from the Tide | Cards outside 0.8–1.2 | Spread |
+|---|---|---|---|---|---|
+| **1 each (V42)** | 8.3 / 8.7 | 1.71 / 1.61 | 27% / 19% | **none** | **0.101** |
+| 2 for the stronger lean, 1 for the weaker | 7.8 / 8.3 | 1.85 / 1.70 | 30% / 21% | Fig Leaves 0.76, Apple 0.78, Tree of Life 1.27 | 0.100 |
+
 ## Next
 
 Build all 18 as test switches, teach the bots to use them, measure each card's balance and the game's shape (Days, Glory per Day, the action mix), then go card by card as before.
