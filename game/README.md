@@ -17,7 +17,7 @@ The online version of The Divide. Everything here is TypeScript.
 
 ```
 npm install
-npm test                                   # engine tests (79, including about 1,500 bot games) and server tests
+npm test                                   # engine tests (101, including about 1,500 bot games) and server tests (11)
 npm run dev                                # the whole site locally at http://127.0.0.1:8787
 npm run deploy                             # publish (see SITE.md)
 cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements

@@ -3,6 +3,7 @@ import { setTide, type GameView } from '@divide/engine';
 import { useContext, useState } from 'preact/hooks';
 import { Card } from '../components/Card';
 import { textOf } from '../lib/cards';
+import { altarNote } from './bits';
 import { PickCtx } from './pick';
 
 export function Center(p: { view: GameView }) {
@@ -12,7 +13,8 @@ export function Center(p: { view: GameView }) {
   const shown = view.altar.filter((a) => !a.facedown && a.id);
   const hidden = view.altar.filter((a) => a.facedown).length;
   // The engine's own count, applied to the cards everyone can see.
-  const tally = setTide({ altar: shown.map((a) => ({ id: a.id })), currentEvent: view.event, tides: view.tides, day: view.day } as any);
+  // It needs the game's rules settings too (the card values read them): online games use the standard rules.
+  const tally = setTide({ altar: shown.map((a) => ({ id: a.id })), currentEvent: view.event, tides: view.tides, day: view.day, config: { variants: [] } } as any);
   const unknown = new Map<string, number>();
   const discardOpts = view.discard.filter((id) => pick.card.has(id));
   return (
@@ -49,7 +51,7 @@ export function Center(p: { view: GameView }) {
               key = `altar-fd-${who}-${n}`;
             }
             const opt = pick.altar.get(i) ?? (a.id ? pick.card.get(a.id) : undefined);
-            const tag = a.facedown && a.id ? 'Facedown' : a.sanctuary !== undefined ? 'Sanctuary' : a.kind === 'seed' ? 'Seed' : undefined;
+            const tag = a.facedown && a.id ? 'Facedown' : a.sanctuary !== undefined ? 'Sanctuary' : a.kind === 'seed' ? 'Creation' : a.kind === 'relic' ? 'Eternity' : undefined;
             const who = a.offeredBy !== null ? view.players[a.offeredBy]?.name : null;
             return (
               <Card
@@ -67,7 +69,7 @@ export function Center(p: { view: GameView }) {
                 selected={!!opt && pick.selected.has(opt)}
                 onClick={opt ? () => pick.choose(opt) : undefined}
                 onDblClick={opt ? () => pick.choose(opt, true) : undefined}
-                note={a.facedown && a.id ? (a.offeredBy === view.you ? 'Facedown: only you know this card until the Evening.' : 'You have seen this facedown card. The table has not.') : who ? `${a.kind === 'fruits' ? 'First Fruits from' : 'Offered by'} ${who}` : a.kind === 'seed' ? 'The Seed' : undefined}
+                note={a.facedown && a.id ? (a.offeredBy === view.you ? 'Facedown: only you know this card until the Evening.' : 'You have seen this facedown card. The table has not.') : altarNote(a.kind, who)}
               />
             );
           })}

@@ -4,7 +4,7 @@ import type { GameView, LogEntry } from '@divide/engine';
 import { useEffect } from 'preact/hooks';
 import { Card } from '../components/Card';
 import { nameOf } from '../lib/cards';
-import { DIR_LABEL, seatColor } from './bits';
+import { DIR_LABEL, altarNote, seatColor } from './bits';
 
 interface TideData { tide: { dir: string; light: number; dark: number; margin: number }; event: string | null; altar: { id: string; offeredBy: number | null; kind?: string }[] }
 
@@ -48,7 +48,7 @@ export function Evening(p: { day: number; log: LogEntry[]; view: GameView; onClo
           <span class="scale-n dark num">{tide.dark}<small>Dark</small></span>
         </div>
         <div class="evening-altar">
-          {data.altar.map((a) => <Card id={a.id} w="var(--cw-evening)" compact owner={a.offeredBy} tag={a.kind === 'seed' ? 'Seed' : undefined} note={a.offeredBy !== null ? `${a.kind === 'fruits' ? 'First Fruits from' : a.kind === 'offer' ? 'Offered by' : 'Placed by'} ${p.view.players[a.offeredBy]?.name}` : undefined} />)}
+          {data.altar.map((a) => <Card id={a.id} w="var(--cw-evening)" compact owner={a.offeredBy} tag={a.kind === 'seed' ? 'Creation' : a.kind === 'relic' ? 'Eternity' : undefined} note={altarNote(a.kind, a.offeredBy !== null ? p.view.players[a.offeredBy]?.name ?? null : null)} />)}
           {!data.altar.length && <span class="muted">The Altar was empty.</span>}
         </div>
         <div class="evening-cols">

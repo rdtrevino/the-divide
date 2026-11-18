@@ -115,7 +115,7 @@ function Lobby(p: { snap: RoomSnap; send: (m: ClientMsg) => void; onRename: (n: 
               <span class="muted">
                 {open > 0
                   ? `${open} seat${open > 1 ? 's are' : ' is'} empty. Wait for friends, add a bot, or switch to 3 players.`
-                  : `${people} ${people === 1 ? 'person' : 'people'} and ${room.seats.length - people} bot${room.seats.length - people === 1 ? '' : 's'}. Celestials and the first player are dealt at random.`}
+                  : `${people} ${people === 1 ? 'person' : 'people'} and ${room.seats.length - people} bot${room.seats.length - people === 1 ? '' : 's'}. ${room.options.advanced ? 'Celestials and the first player are' : 'The first player is'} dealt at random.`}
               </span>
             </div>
           ) : (

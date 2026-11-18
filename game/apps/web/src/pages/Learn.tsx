@@ -47,8 +47,8 @@ function ChoirBuilder() {
   return (
     <div class="learn-try" data-no-zoom>
       <div class="eyebrow">Try it: pick up to 4 cards for your Choir</div>
-      <div class="learn-cards">
-        {CHOIR_POOL.map((id) => <Card id={id} w={104} compact selectable={!picked.includes(id)} selected={picked.includes(id)} onClick={() => toggle(id)} />)}
+      <div class="learn-pick">
+        {CHOIR_POOL.map((id) => <Card id={id} w="calc((100cqw - 40px) / 6)" compact selectable={!picked.includes(id)} selected={picked.includes(id)} onClick={() => toggle(id)} />)}
       </div>
       <div class={`learn-result ${leanClass(net)}`}>
         Light {light} − Dark {dark} = <b>{net === 0 ? 'Neutral (0)' : `${lean(net)} ${Math.abs(net)}`}</b>
@@ -58,7 +58,7 @@ function ChoirBuilder() {
   );
 }
 
-// This Evening's Altar, already revealed: Light 3 against Dark 4, so one Gather of Silence flips the Tide.
+// This Evening's Altar, already revealed: Light 2 against Dark 3, so one Gather of Silence makes the Tide Neutral.
 const ALTAR = ['host-wisdom', 'host-free-will', 'host-council', 'host-serpent', 'host-silence', 'host-leviathan'];
 
 function AltarBuilder() {
@@ -191,7 +191,7 @@ function Actions() {
   );
 }
 
-type TimingKey = 'morning' | 'turn' | 'reaping' | 'always';
+type TimingKey = 'morning' | 'turn' | 'evening' | 'reaping' | 'always';
 
 const TIMINGS: Record<TimingKey, { title: string; when: string; cards: string[]; how: string; tip: string }> = {
   morning: {
@@ -206,11 +206,17 @@ const TIMINGS: Record<TimingKey, { title: string; when: string; cards: string[];
     how: 'After your action, use each “On your turn” card in your Choir once. They never use up your action.',
     tip: 'Each one is a free extra move every Day, so they are worth more the earlier you have them.',
   },
+  evening: {
+    title: 'In the Evening', when: 'Before the Altar is revealed',
+    cards: ['host-fig-leaves'],
+    how: 'Works after every turn, just before the facedown cards on the Altar are turned over. Fig Leaves can have your Choir sit out the Day.',
+    tip: 'You decide knowing every move but not every card. Read the Offers you saw go down.',
+  },
   reaping: {
-    title: 'At the end of the Day', when: 'After the Tide is scored',
+    title: 'At the end of the Day', when: 'After the Choirs are scored',
     cards: ['host-twilight', 'host-uriel'],
     how: 'Works in the Evening, after every Choir is scored. Most pay Glory on a condition; some store it on the card for later.',
-    tip: 'These pay every Evening, on top of the Tide. A few of them can carry you to 10.',
+    tip: 'These pay every Evening, on top of the Tide. A few of them can carry you to 12.',
   },
   always: {
     title: 'Always on', when: 'No label, or “When…”',
@@ -220,14 +226,14 @@ const TIMINGS: Record<TimingKey, { title: string; when: string; cards: string[];
   },
 };
 
-/** The four timing labels, each with real cards. */
+/** The four timing labels, and abilities that are always on, each with real cards. */
 function Timings() {
   const [t, setT] = useState<TimingKey>('turn');
   const info = TIMINGS[t];
   return (
     <div class="learn-try">
       <div class="eyebrow">Every ability starts with when it works. Tap one.</div>
-      <div class="learn-actions four" role="tablist" aria-label="When abilities work">
+      <div class="learn-actions five" role="tablist" aria-label="When abilities work">
         {(Object.keys(TIMINGS) as TimingKey[]).map((k) => (
           <button role="tab" aria-selected={t === k} class={`learn-act${t === k ? ' on' : ''}`} onClick={() => setT(k)}>
             <b>{TIMINGS[k].title}</b>
@@ -242,7 +248,7 @@ function Timings() {
           <p class="muted">{info.tip}</p>
         </div>
       </div>
-      <p class="learn-small">◆ <b>Once per game</b> cards, like Free Will and Mercy, are turned sideways when used. Save them for the Day they decide.</p>
+      <p class="learn-small">◆ <b>Spent cards</b>, like Free Will and Mercy, end with “then discard this card”: they work once. Save them for the Day they decide.</p>
     </div>
   );
 }
@@ -278,10 +284,10 @@ const STEPS: Step[] = [
     ),
     side: (
       <div class="learn-track">
-        {[['Ada', 10, 'var(--seat-0)'], ['Ben', 8, 'var(--seat-1)'], ['Cy', 5, 'var(--seat-2)']].map(([n, g, c]) => (
-          <div class="lt-row"><span>{n}</span><div class="lt-bar"><i style={{ width: `${(Number(g) / 12) * 100}%`, background: c as string }} /><em style={{ left: `${(10 / 12) * 100}%` }} /></div><b class="num">{g}</b></div>
+        {[['Ada', 12, 'var(--seat-0)'], ['Ben', 9, 'var(--seat-1)'], ['Cy', 6, 'var(--seat-2)']].map(([n, g, c]) => (
+          <div class="lt-row"><span>{n}</span><div class="lt-bar"><i style={{ width: `${(Number(g) / 14) * 100}%`, background: c as string }} /><em style={{ left: `${(12 / 14) * 100}%` }} title="12 Glory" /></div><b class="num">{g}</b></div>
         ))}
-        <p class="muted small">Ada reached 12, so the game is over. Ada wins.</p>
+        <p class="muted small">The line marks 12. Ada reached it, so the game is over, and Ada has the most: Ada wins.</p>
       </div>
     ),
   },
@@ -474,6 +480,12 @@ export function Learn() {
     setI(next);
     history.replaceState(null, '', `#${next + 1}`);
   };
+  // A link to another step (such as /learn#5) while already on this page changes only the hash.
+  useEffect(() => {
+    const onHash = () => setI(fromHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.closest?.('input, textarea, select')) return;

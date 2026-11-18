@@ -1031,3 +1031,18 @@ describe('V44 Advanced pass: Celestials and Events for the current scoring', () 
     expect(s.altar.map((a) => a.id)).not.toContain(H.moloch);
   });
 });
+
+describe('Site review fixes (V44)', () => {
+  it("the table's Altar tally can count a partial state with no rules settings (it crashed at First Fruits)", () => {
+    expect(() => setTide({ altar: [{ id: H.hymn }, { id: H.moloch }], currentEvent: null, tides: [], day: 1 } as any)).not.toThrow();
+    expect(setTide({ altar: [{ id: H.hymn }, { id: H.moloch }], currentEvent: null, tides: [], day: 1 } as any)).toMatchObject({ light: 2, dark: 1 });
+  });
+  it('Anathema stops only the other players: its holder may still Offer (a Free Will second action)', () => {
+    const s = blank();
+    choir(s, 0, H.anathema);
+    hand(s, 0, H.wisdom, H.gabriel);
+    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: (d) => [d.options.find((o) => o.card === H.anathema)?.id ?? 'end'] });
+    expect(legalActions(s, 0)).toContain('offer');
+    expect(legalActions(s, 1)).not.toContain('offer');
+  });
+});

@@ -203,7 +203,9 @@ export const TURN: Record<string, TurnAbility> = {
     can: (s, seat) => s.players[seat].hand.length > 0,
     *run(s, seat) {
       const h = s.players[seat].hand;
-      const pick = yield* chooseOne(s, seat, 'vessel.hand', 'Vessel: place a card from your hand on the Altar facedown, then draw 1 card? At the Reaping, if it is still there and matches the Tide, you gain 1 Glory.', h.map((c) => cardOpt(c)), true);
+      const draw = variant(s, 'vessel-nodraw') ? '' : ', then draw 1 card';
+      const bet = variant(s, 'vessel-bet') ? ' gain 1 Glory if it matches the Tide, or lose 1 if it opposes it' : ' gain 1 Glory if it matches the Tide';
+      const pick = yield* chooseOne(s, seat, 'vessel.hand', `Vessel: place a card from your hand on the Altar facedown${draw}? It is not an Offer. At the end of the Day, if it is still there,${bet}.`, h.map((c) => cardOpt(c)), true);
       if (!pick) return;
       h.splice(h.indexOf(pick), 1);
       s.altar.push({ id: pick, facedown: !variant(s, 'vessel-open'), offeredBy: seat, day: s.day, kind: 'vessel' }); // test 'vessel-open': face up
@@ -277,8 +279,10 @@ export const TURN: Record<string, TurnAbility> = {
     // V42: no player may Offer, you included, until the end of your next turn.
     can: (s, seat) => !s.anathema.some((a) => a.by === seat && a.action === 'offer'),
     *run(s, seat) {
-      for (const p of s.players) s.anathema.push({ target: p.seat, by: seat, action: 'offer', endAfter: !variant(s, 'anathema-start') });
-      log(s, 'anathema', `No player may Offer until the end of ${pname(s, seat)}'s next turn (Anathema).`);
+      // V42 'anathema-start': no other player may Offer until the start of your next turn (the holder is free, e.g. a Free Will second action).
+      const start = variant(s, 'anathema-start');
+      for (const p of s.players) if (!start || p.seat !== seat) s.anathema.push({ target: p.seat, by: seat, action: 'offer', endAfter: !start });
+      log(s, 'anathema', start ? `No other player may Offer until the start of ${pname(s, seat)}'s next turn (Anathema).` : `No player may Offer until the end of ${pname(s, seat)}'s next turn (Anathema).`);
     },
   },
   [H.temptation]: {
@@ -437,7 +441,7 @@ export const TURN: Record<string, TurnAbility> = {
     // V42: choose a player; their Choir's abilities do not work until your next turn (was a once-per-game cancel).
     can: (s, seat) => (variant(s, 'silence-free') || canSpend(s, seat, 1)) && others(s, seat).length > 0,
     *run(s, seat) {
-      const t = yield* chooseOne(s, seat, 'silence.player', "Silence: pay 1 Glory. Choose a player whose Choir's abilities do not work until your next turn.", others(s, seat).map((p) => seatOpt(s, p.seat)), true);
+      const t = yield* chooseOne(s, seat, 'silence.player', `Silence: ${variant(s, 'silence-free') ? '' : 'pay 1 Glory. '}Choose a player whose Choir's abilities do not work until your next turn.`, others(s, seat).map((p) => seatOpt(s, p.seat)), true);
       if (!t) return;
       if (!variant(s, 'silence-free')) yield* pay(s, seat, 1, H.silence);
       s.silenced.push({ target: seatFromOpt(t), by: seat });
@@ -448,7 +452,7 @@ export const TURN: Record<string, TurnAbility> = {
     // V42: name a player; if they lose Glory at the Reaping, gain 1.
     can: (s, seat) => !variant(s, 'bounty-morning') && s.day_.bounty[seat] === undefined,
     *run(s, seat) {
-      const t = yield* chooseOne(s, seat, 'bounty.player', 'Bounty: name a player. If they lose Glory at this Reaping, you gain 1.', others(s, seat).map((p) => seatOpt(s, p.seat)), variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft'));
+      const t = yield* chooseOne(s, seat, 'bounty.player', bountyPrompt(s), others(s, seat).map((p) => seatOpt(s, p.seat)), variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft'));
       if (!t) return;
       s.day_.bounty[seat] = seatFromOpt(t);
       log(s, 'bounty', `${pname(s, seat)} put a Bounty on ${pname(s, seatFromOpt(t))}.`);
@@ -463,7 +467,7 @@ export const TURN: Record<string, TurnAbility> = {
       if (variant(s, 'sword-exalt')) {
         for (const p of others(s, seat)) s.anathema.push({ target: p.seat, by: seat, action: 'exalt' });
         if (variant(s, 'sword-both')) for (const p of others(s, seat)) s.anathema.push({ target: p.seat, by: seat, action: 'gather' }); // V43 test: Gather too
-        log(s, 'flamingSword', `No other player may Exalt until ${pname(s, seat)}'s next turn (Flaming Sword).`);
+        log(s, 'flamingSword', `No other player may Exalt${variant(s, 'sword-both') ? ' or Gather' : ''} until the start of ${pname(s, seat)}'s next turn (Flaming Sword).`);
         return;
       }
       const t = yield* chooseOne(s, seat, 'flamingSword.player', 'Flaming Sword: choose a player who cannot Gather until the start of your next turn.', others(s, seat).map((p) => seatOpt(s, p.seat)));
@@ -549,7 +553,7 @@ export const TURN: Record<string, TurnAbility> = {
     can: (s, seat) => s.altar.some((a) => tempestOk(s, seat, a)),
     *run(s, seat) {
       const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => tempestOk(s, seat, a));
-      const pick = yield* chooseOne(s, seat, 'tempest', 'The Tempest: destroy one Host card on the Altar.', opts.map(({ a, i }) => ({ id: String(i), label: altarLabel(s, a, seat), card: a.facedown && a.offeredBy !== seat ? undefined : a.id })));
+      const pick = yield* chooseOne(s, seat, 'tempest', variant(s, 'tempest-up') ? 'The Tempest: destroy a face-up card on the Altar.' : 'The Tempest: destroy one Host card on the Altar.', opts.map(({ a, i }) => ({ id: String(i), label: altarLabel(s, a, seat), card: a.facedown && a.offeredBy !== seat ? undefined : a.id })));
       if (pick === null) return;
       const [a] = s.altar.splice(Number(pick), 1);
       s.discard.push(a.id);
@@ -630,6 +634,11 @@ function parasiteTargets(s: GameState, seat: Seat): Seat[] {
     .filter((p) => !immune(s, seat, p.seat) && (p.choir.length < choirLimit(s) || (!protectedFrom(s, seat, p.seat, 'discard') && canAffordTribute(s, seat, p.seat))))
     .map((p) => p.seat);
 }
+
+/** Bounty's prompt, as the card works under the current rules. */
+export const bountyPrompt = (s: GameState) => variant(s, 'bounty-bet-soft') || variant(s, 'bounty-bet')
+  ? `Bounty: name a player. If they lose Glory at the Reaping, you gain 1; if they ${variant(s, 'bounty-bet') ? 'do not lose' : 'gain'}, you lose 1.`
+  : 'Bounty: name a player. If they lose Glory at the Reaping, you gain 1.';
 
 function tempestOk(s: GameState, seat: Seat, a: GameState['altar'][number]) {
   // V44 test 'tempest-offer': only on a turn you Offered.
