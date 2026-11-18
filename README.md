@@ -10,7 +10,7 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 |---|---|
 | `rules/` | `The_Divide_Rulebook_v14.md`: the complete rules, organized for new players: the game in one minute, a Day at a glance (Morning, Noon, Evening), the actions and scoring as tables, then Celestials, Events, rulings by topic, Hidden Roles, and the glossary. The site's Rules page shows it with a search. |
 | `cards/` | `The_Divide_Cards_V44.xlsx` (tabs: all cards, Open Game deck, changes since V32, reprint list), `cards.csv` (same data, one row per card), and `cards.json` (structured for the web build). To change card text, write a change set in `cards/changes/` and run `python3 cards/tools/apply_changes.py cards/changes/<VERSION>.json`; it updates all of these and the engine's copy together. |
-| `design/` | `design-decisions.md`: the principles behind the rules, open questions, parked ideas, and the playtest watch list. `balance.md`: the measured win ratio of every Host card, Celestial and Event under the current rules. |
+| `design/` | **`vision.md`: the heart of the game, the principles every rule is measured against.** `design-decisions.md`: the principles behind the rules, open questions, parked ideas, and the playtest watch list. `balance.md`: the measured win ratio of every Host card, Celestial and Event under the current rules. |
 | `art/faces/` | Every card face as last printed (Host, Celestial, Event, Fate and Turn), about 370 DPI. |
 | `art/plates/` | The illustration alone for every card, for the web build. |
 | `art/overview/` | Contact sheets for a quick look at all the art. |

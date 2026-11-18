@@ -2,6 +2,8 @@
 
 The standing principles behind the rules, what is still open, and what to watch in playtesting. Current to card data V44 and rulebook v14 (November 18, 2026).
 
+**Start with `vision.md`:** the core dilemma and principles that every decision here serves.
+
 Where everything else lives:
 
 - **The rules and every card ruling:** the rulebook (`rules/`), whose Rulings section settles the questions card text leaves open.
