@@ -105,6 +105,17 @@ function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
     const pay = variant(s, 'set-2') ? 2 : 1;
     return n >= 3 ? pay : 0.15 * n * pay;
   }
+  // V43 tests
+  if (id === H.treeOfLife && variant(s, 'tree-mature')) return 0.5;
+  if (id === H.favor && variant(s, 'favor-late')) return s.day >= 6 ? 1.2 : s.day >= 3 ? 0.8 : 0.4;
+  if (id === H.favor && variant(s, 'favor-momentum')) return 0.25;
+  if (id === H.remnant && (variant(s, 'remnant-asc1') || variant(s, 'remnant-asc2'))) { const empty = choirLimit(s) - s.players[seat].choir.length; return variant(s, 'remnant-asc2') ? Math.min(2, Math.max(0, empty - 1)) * 0.8 : empty > 1 ? 0.8 : 0; }
+  if (id === H.twilight && (variant(s, 'twilight-22') || variant(s, 'twilight-even'))) return 0.3;
+  if (id === H.council && variant(s, 'council-same')) return 0.35;
+  if (id === H.gabriel && variant(s, 'gabriel-seer')) return 0.35;
+  if (id === H.tribute && variant(s, 'tribute-toll')) return 0.3;
+  if (id === H.martyr && variant(s, 'martyr-sac')) return 0.35;
+  if (id === H.snare && variant(s, 'snare-trap')) return 0.2;
   return ENGINE_RATE[id] ?? 0;
 }
 function daysLeft(s: GameState) {
@@ -208,6 +219,35 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     case 'celestial.pick': {
       const pref = ['celestial-the-eclipse', 'celestial-the-arbiter', 'celestial-the-whisper', 'celestial-the-dominion', 'celestial-the-cantor', 'celestial-the-echo', 'celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-patron'];
       return one(pickBest(d.options, (o) => -pref.indexOf(o.id)).id);
+    }
+    // V43 tests
+    case 'wisdom.keep': {
+      const o = pickBest(d.options, (x) => (want >= 0 ? signed(s, x.card) : -signed(s, x.card)) + engineVal(s, seat, x.card));
+      return one(o.id);
+    }
+    case 'seer.player': {
+      const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => s.players[x.seat!].hand.length + r * 0.1);
+      return one(o ? o.id : 'none');
+    }
+    case 'seer.dir': {
+      const cards = d.reveal ?? [];
+      const lt = cards.filter((c) => signed(s, c) > 0).length, dk = cards.filter((c) => signed(s, c) < 0).length;
+      return one(lt > dk ? 'light' : dk > lt ? 'dark' : r < 0.5 ? 'light' : 'dark');
+    }
+    case 'council.player': {
+      const o = d.options.find((x) => x.seat !== undefined && net !== 0 && Math.sign(alignment(s, x.seat)) === Math.sign(net));
+      return one(o ? o.id : 'none');
+    }
+    case 'eternity.keep': {
+      const o = d.options.find((x) => x.card && dirOf(signed(s, x.card)) === wantDir);
+      return one(o ? o.id : 'none');
+    }
+    case 'lilith.take':
+      return one('yes');
+    case 'parasite.target': {
+      const leaders = leaderSeats(s, seat);
+      const o = byId((x) => x.seat !== undefined && leaders.includes(x.seat)) ?? d.options[0];
+      return one(o.id);
     }
     case 'temptation.give': {
       const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => corruptValue(s, seat, want, x.card, x.seat!) - 0.3 * engineVal(s, seat, x.card));

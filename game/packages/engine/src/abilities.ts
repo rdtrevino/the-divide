@@ -5,7 +5,7 @@ import {
   alignment, activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
   drawHost, drawTo, enterChoir, gain, handLimit, hasActive, log, lose, markToday, others, payTribute, peekHost,
   pname, protectedFrom, immune, glorySafe, handProtected, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, choirLimit,
-  colorsOf, activation, altarShielded, altarPeekable, canSpend, pay, variant, makeRoom, discardableForRoom,
+  colorsOf, activation, altarShielded, altarPeekable, canSpend, pay, variant, makeRoom, discardableForRoom, snareHit,
 } from './core';
 import { randInt } from './rng';
 import type { Gen, GameState, Seat } from './types';
@@ -57,7 +57,7 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.wisdom]: {
-    can: (s) => s.hostDeck.length + s.discard.length > 0,
+    can: (s) => !variant(s, 'wisdom-peek') && s.hostDeck.length + s.discard.length > 0,
     *run(s, seat) {
       const [top] = peekHost(s, 1);
       if (!top) return;
@@ -73,7 +73,7 @@ export const TURN: Record<string, TurnAbility> = {
   },
   [H.gabriel]: {
     // V42: look at another player's hand (was the top Event card).
-    can: (s, seat) => gabrielTargets(s, seat).length > 0,
+    can: (s, seat) => !variant(s, 'gabriel-seer') && gabrielTargets(s, seat).length > 0,
     *run(s, seat) {
       const t = yield* chooseOne(s, seat, 'gabriel.player', "Gabriel: look at another player's hand.", gabrielTargets(s, seat).map((p) => seatOpt(s, p.seat)));
       if (!t) return;
@@ -171,7 +171,7 @@ export const TURN: Record<string, TurnAbility> = {
   },
   [H.parasite]: {
     // V42: move this card into another player's Choir. Its holder cannot discard it.
-    can: (s, seat) => parasiteTargets(s, seat).length > 0,
+    can: (s, seat) => !variant(s, 'parasite-feed') && parasiteTargets(s, seat).length > 0,
     *run(s, seat) {
       const t = yield* chooseOne(s, seat, 'parasite.player', "Parasite: move it into another player's Choir.", parasiteTargets(s, seat).map((p) => seatOpt(s, p)));
       if (!t) return;
@@ -212,7 +212,7 @@ export const TURN: Record<string, TurnAbility> = {
   [H.council]: {
     // V37: you may replace another card in your Choir with a card from your hand; then each other
     // player may do the same by paying you 1 Glory (was: a unanimous vote, then everyone swaps).
-    can: () => true,
+    can: (s) => !variant(s, 'council-same'),
     *run(s, seat) {
       log(s, 'council', `${pname(s, seat)} called a Council.`);
       const who = s.players.filter((p) => p.seat === seat || canSpend(s, p.seat, 1));
@@ -351,6 +351,7 @@ export const TURN: Record<string, TurnAbility> = {
         if (pick === null) return;
         const [c] = s.altar.splice(Number(pick), 1);
         s.discard.push(c.id);
+        yield* snareHit(s, seat, c);
         log(s, 'winnowing', `${pname(s, seat)} winnowed a facedown card from the Altar: it was ${cardName(c.id)}.`);
         // Test 'winnowing-blind2': up to 2 facedown cards.
         if (variant(s, 'winnowing-blind2')) {
@@ -360,6 +361,7 @@ export const TURN: Record<string, TurnAbility> = {
           if (p2 === null) return;
           const [c2] = s.altar.splice(Number(p2), 1);
           s.discard.push(c2.id);
+          yield* snareHit(s, seat, c2);
           log(s, 'winnowing', `${pname(s, seat)} winnowed a second facedown card from the Altar: it was ${cardName(c2.id)}.`);
         }
         return;
@@ -406,6 +408,7 @@ export const TURN: Record<string, TurnAbility> = {
       const keep = s.altar.filter((a) => (a.sanctuary !== undefined && a.sanctuary !== seat) || altarShielded(s, a, seat));
       const gone = s.altar.filter((a) => !keep.includes(a));
       s.discard.push(...gone.map((a) => a.id));
+      for (const a of gone) yield* snareHit(s, seat, a);
       const fresh = gone.map(() => drawHost(s)).filter((c): c is string => !!c).map((id) => ({ id, facedown: false, offeredBy: null, day: s.day, kind: 'other' as const }));
       s.altar = [...keep, ...fresh];
       yield* discardFromChoir(s, seat, H.abaddon, 'Abaddon');
@@ -470,6 +473,7 @@ export const TURN: Record<string, TurnAbility> = {
       const a = s.altar[Number(pick)];
       a.facedown = false;
       a.seenBy = undefined;
+      yield* snareHit(s, seat, a);
       log(s, 'revelation', `${pname(s, seat)} revealed ${cardName(a.id)} on the Altar (Revelation).`);
       // Test 'rev-swap' (Robert): then flip a face-up Altar card facedown.
       if (variant(s, 'rev-swap')) {
@@ -497,6 +501,7 @@ export const TURN: Record<string, TurnAbility> = {
         const seen = picks.map((i) => s.altar[Number(i)]);
         // seenBy is kept for the computer players' memory; people see the cards once, here, and then must remember them.
         for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
+        for (const a of seen) yield* snareHit(s, seat, a);
         log(s, 'knowledge', `${pname(s, seat)} looked at ${seen.length} facedown card${seen.length === 1 ? '' : 's'} on the Altar (Knowledge).`);
         // Ruling confirmed November 16, 2026: shown once, then hidden again.
         yield* ask(s, { seat, tag: 'knowledge.seen', prompt: `Knowledge: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}. Remember them: they go back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: seen.map((a) => a.id), confirm: true });
@@ -511,6 +516,7 @@ export const TURN: Record<string, TurnAbility> = {
       if (pick === null) return;
       const a = s.altar[Number(pick)];
       a.seenBy = [...(a.seenBy ?? []), seat];
+      yield* snareHit(s, seat, a);
       log(s, 'belial', `${pname(s, seat)} looked at a facedown card on the Altar (Belial).`);
       const hand = s.players[seat].hand;
       // Ruling confirmed November 16, 2026: shown once (here or in the exchange choice below), then hidden again.
@@ -535,6 +541,7 @@ export const TURN: Record<string, TurnAbility> = {
       if (pick === null) return;
       const [a] = s.altar.splice(Number(pick), 1);
       s.discard.push(a.id);
+      yield* snareHit(s, seat, a);
       log(s, 'tempest', `${pname(s, seat)} destroyed ${cardName(a.id)} on the Altar (the Tempest).`);
     },
   },
