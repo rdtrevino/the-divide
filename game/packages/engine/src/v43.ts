@@ -104,9 +104,10 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
       if (n) { yield* gain(s, seat, n, H.favor); log(s, 'favor', `${p.name} gained ${n} Glory (Favor).`); }
     }
     // Remnant: 'remnant-asc2' (1 per empty place, up to 2) or 'remnant-asc1' (1 if any place is empty).
-    if ((variant(s, 'remnant-asc2') || variant(s, 'remnant-asc1')) && hasActive(s, seat, H.remnant)) {
+    // 'remnant-asc2e': 1 if 2 or more places are empty.
+    if ((variant(s, 'remnant-asc2') || variant(s, 'remnant-asc1') || variant(s, 'remnant-asc2e')) && hasActive(s, seat, H.remnant)) {
       const empty = Math.max(0, choirLimit(s) - p.choir.length);
-      const n = variant(s, 'remnant-asc2') ? Math.min(2, empty) : empty > 0 ? 1 : 0;
+      const n = variant(s, 'remnant-asc2') ? Math.min(2, empty) : variant(s, 'remnant-asc2e') ? (empty >= 2 ? 1 : 0) : empty > 0 ? 1 : 0;
       if (n) { yield* gain(s, seat, n, H.remnant); log(s, 'remnant', `${p.name} gained ${n} Glory (Remnant).`); }
     }
   }

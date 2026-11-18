@@ -109,6 +109,7 @@ function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
   if (id === H.treeOfLife && variant(s, 'tree-mature')) return 0.5;
   if (id === H.favor && variant(s, 'favor-late')) return s.day >= 6 ? 1.2 : s.day >= 3 ? 0.8 : 0.4;
   if (id === H.favor && variant(s, 'favor-momentum')) return 0.25;
+  if (id === H.remnant && variant(s, 'remnant-asc2e')) return choirLimit(s) - s.players[seat].choir.length > 2 ? 0.8 : 0;
   if (id === H.remnant && (variant(s, 'remnant-asc1') || variant(s, 'remnant-asc2'))) { const empty = choirLimit(s) - s.players[seat].choir.length; return variant(s, 'remnant-asc2') ? Math.min(2, Math.max(0, empty - 1)) * 0.8 : empty > 1 ? 0.8 : 0; }
   if (id === H.twilight && (variant(s, 'twilight-22') || variant(s, 'twilight-even'))) return 0.3;
   if (id === H.council && variant(s, 'council-same')) return 0.35;
