@@ -658,6 +658,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   const nets: Record<number, number> = {};
   const withTide: { seat: Seat; str: number; dbl: number }[] = [];
   const leansWithTide = new Set<Seat>();
+  const against: { seat: Seat; dbl: number }[] = [];
   for (const p of s.players) {
     const seat = p.seat;
     let net = alignment(s, seat, { reaping: true });
@@ -674,8 +675,10 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (p.celestial === C.whisper && s.day_.whisperCall && s.day_.whisperCall === tide.dir) match = true;
     const dbl = s.day_.ordeal.includes(seat) ? 2 : 1;
     if (match) { withTide.push({ seat, str: Math.abs(net), dbl }); leansWithTide.add(seat); }
-    else delta[seat] = -1 * dbl;
+    else { delta[seat] = -1 * dbl; against.push({ seat, dbl }); }
   }
+  // Test 'reap-mirror' (Robert): the loss mirrors the win. A lone Choir against the Tide loses 3; otherwise 1 each.
+  if (variant(s, 'reap-mirror') && against.length === 1) delta[against[0].seat] = -3 * against[0].dbl;
   // Test 'scapegoat-sac' / 'scapegoat-sac-free': if you share the Tide, sacrifice one of the others sharing it.
   if (variant(s, 'scapegoat-sac') || variant(s, 'scapegoat-sac-free') || variant(s, 'scapegoat-sac2') || variant(s, 'scapegoat-crowd')) for (const w of [...withTide]) {
     if (withTide.length < (variant(s, 'scapegoat-crowd') ? 3 : 2) || !withTide.includes(w) || !hasActive(s, w.seat, H.scapegoat) || !canActivate(s, w.seat, H.scapegoat)) continue;
@@ -693,8 +696,9 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   if (withTide.length === 1) delta[withTide[0].seat] = 3 * withTide[0].dbl;
   if (withTide.length === 2) {
     const [a, b] = withTide;
-    delta[a.seat] = (a.str > b.str ? 2 : 1) * a.dbl;
-    delta[b.seat] = (b.str > a.str ? 2 : 1) * b.dbl;
+    // Test 'reap-mirror': two with the Tide gain 1 each.
+    delta[a.seat] = (variant(s, 'reap-mirror') ? 1 : a.str > b.str ? 2 : 1) * a.dbl;
+    delta[b.seat] = (variant(s, 'reap-mirror') ? 1 : b.str > a.str ? 2 : 1) * b.dbl;
   }
   // Test 'scapegoat-deny' (Robert): pay 1 Glory so another player who would gain at this Reaping gains nothing.
   if (variant(s, 'scapegoat-deny')) for (const seat of order) {

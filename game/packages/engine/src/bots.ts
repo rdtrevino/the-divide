@@ -37,9 +37,10 @@ function reapValue(net: number, tide: number, weight = 0.7) {
   // V41 coalition scoring: alone with the Tide 3; two, 2 for the stronger and 1 for the weaker; three or more 0; against it, -1.
   const t = dirOf(tide);
   if (t === 'neutral' || net === 0) return 0;
-  if (dirOf(net) !== t) return -weight;
   const same = OTHERS.filter((o) => o !== 0 && Math.sign(o) === Math.sign(net));
-  const v = same.length === 0 ? 3 : same.length === 1 ? (Math.abs(net) > Math.abs(same[0]) ? 2 : 1) : 0;
+  // Test 'reap-mirror': two with the Tide gain 1 each; a lone Choir against it loses 3, otherwise 1.
+  if (dirOf(net) !== t) return -weight * (MIRROR && same.length === 0 ? 3 : 1);
+  const v = same.length === 0 ? 3 : same.length === 1 ? (MIRROR ? 1 : Math.abs(net) > Math.abs(same[0]) ? 2 : 1) : 0;
   return v * weight;
 }
 
@@ -83,6 +84,7 @@ function leaderSeats(s: GameState, except?: Seat) {
 
 /** Other players' leans, read once per decision (for coalition scoring). */
 let OTHERS: number[] = [];
+let MIRROR = false;
 /**
  * Bot option 'bot-engine': value a Choir card's ability by the Glory it earns per Day held
  * (measured with tools/sim/income.ts), times the Days likely left. Without it, bots build only for lean.
@@ -112,6 +114,7 @@ const engineVal = (s: GameState, seat: Seat, id: string | undefined) => engineRa
 
 export function botAnswer(s: GameState, d: Decision): Answer {
   OTHERS = s.players.filter((p) => p.seat !== d.seat).map((p) => alignment(s, p.seat));
+  MIRROR = variant(s, 'reap-mirror');
   const r = rand(d.id * 7919 + d.seat * 104729 + (s.config.seed | 0));
   const seat = d.seat;
   const net = alignment(s, seat);
