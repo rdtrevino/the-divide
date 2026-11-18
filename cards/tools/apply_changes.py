@@ -14,7 +14,8 @@ and updates, in step:
   - cards/cards.csv, regenerated from the workbook's main sheet
 
 Every changed card is marked "Reprint: rules changed", unless its entry has "wording": true (a wording-only
-change). Requires openpyxl.
+change). A Host entry may also carry (V42): "value" (Offering value) with "offering" (the workbook's Offering
+text), "rename" (a new card name), "openGame" (false retires the card) and "oncePerGame". Requires openpyxl.
 """
 import csv
 import json
@@ -49,6 +50,11 @@ def main(change_path: str) -> None:
                 card["text"] = changes[k]["text"]
                 if "cadence" in changes[k]:
                     card["cadence"] = changes[k]["cadence"]
+                for f in ("value", "openGame", "oncePerGame"):
+                    if f in changes[k]:
+                        card[f] = changes[k][f]
+                if "rename" in changes[k]:
+                    card["name"] = changes[k]["rename"]
     missing = set(changes) - set(old_text)
     if missing:
         sys.exit(f"Unknown cards: {sorted(missing)}")
@@ -69,12 +75,17 @@ def main(change_path: str) -> None:
     status_col = head.index("Print status")
     note_col = head.index("Rules change vs printed card")
     cad_col = head.index("Cadence")
+    off_col, open_col = head.index("Offering"), head.index("In open game")
     for row in main_ws.iter_rows(min_row=2):
         k = (row[0].value, row[2].value)
         if k in changes:
             row[eff].value = changes[k]["text"]
             if "cadence" in changes[k]:
                 row[cad_col].value = changes[k]["cadence"]
+            if "offering" in changes[k]:
+                row[off_col].value = changes[k]["offering"]
+            if changes[k].get("openGame") is False:
+                row[open_col].value = "No (retired)"
             if changes[k].get("wording"):
                 if row[status_col].value == "Up to date":
                     row[status_col].value = "Reprint when convenient: wording only"
@@ -121,6 +132,12 @@ def main(change_path: str) -> None:
     prio = {"New card": 0, "Rules changed": 1, "Wording only": 2}
     sort_rows(rp_ws, key=lambda r: (prio.get(r[0], 9), deck_order(r[1]), num_key(r[2])))
 
+    renames = {k[1]: c["rename"] for k, c in changes.items() if "rename" in c}
+    for ws in wb:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if isinstance(cell.value, str) and cell.value in renames:
+                    cell.value = renames[cell.value]
     wb.save(new_xlsx)
     archive = ROOT / "sources/card-data" / old_xlsx.name
     shutil.move(str(old_xlsx), archive)
