@@ -1,7 +1,6 @@
 // Small pieces of the table: countdowns, the Glory track, the Tide record, player status notes.
 import type { GameView } from '@divide/engine';
 import { useEffect, useState } from 'preact/hooks';
-import { nameOf } from '../lib/cards';
 
 export const seatColor = (seat: number) => `var(--seat-${seat % 4})`;
 export const DIR_LABEL: Record<string, string> = { light: 'Light', dark: 'Dark', neutral: 'Neutral' };
@@ -107,4 +106,3 @@ export const altarNote = (kind: string | undefined, who: string | null) => {
 export const alignText = (n: number | null) => (n === null ? '' : n === 0 ? 'Neutral' : `${n > 0 ? 'Light' : 'Dark'} ${Math.abs(n)}`);
 export const alignTone = (n: number | null) => (!n ? 'neutral' : n > 0 ? 'light' : 'dark');
 export const listNames = (names: string[]) => (names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);
-export { nameOf };

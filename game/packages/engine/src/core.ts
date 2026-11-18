@@ -500,9 +500,12 @@ export function targetableChoir(s: GameState, actor: Seat, owner: Seat, kind: Ta
   return s.players[owner].choir.filter((c) => c.id.startsWith('host-') && filter(c));
 }
 
+/** Sanctuary: a protected Altar card can be Gathered or destroyed only by the player who protected it. */
+export const sanctuaryAllows = (a: AltarCard, seat: Seat) => a.sanctuary === undefined || a.sanctuary === seat;
+
 /** Altar cards that `seat` may Gather or destroy (Sanctuary protects for other players). */
 export function altarAvailable(s: GameState, seat: Seat): AltarCard[] {
-  return s.altar.filter((a) => (a.sanctuary === undefined || a.sanctuary === seat) && !(variant(s, 'mirage-all') && altarShielded(s, a, seat)));
+  return s.altar.filter((a) => sanctuaryAllows(a, seat) && !(variant(s, 'mirage-all') && altarShielded(s, a, seat)));
 }
 
 export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {

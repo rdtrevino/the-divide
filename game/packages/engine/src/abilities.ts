@@ -5,7 +5,7 @@ import {
   activation, activeCards, alignment, altarAvailable, altarLabel, altarPeekable, altarShielded, ask, askAll,
   canAffordTribute, canSpend, cardOpt, choirLimit, chooseOne, colorsOf, discardFromChoir, discardFromHand,
   discardableForRoom, drawHost, drawTo, enterChoir, gain, glorySafe, handLimit, handProtected, log, lose, makeRoom,
-  others, pay, payTribute, peekHost, pname, protectedFrom, removeFromChoir, seatFromOpt, seatOpt, snareHit,
+  others, pay, payTribute, peekHost, pname, protectedFrom, removeFromChoir, sanctuaryAllows, seatFromOpt, seatOpt, snareHit,
   targetableChoir, variant,
 } from './core';
 import { randInt } from './rng';
@@ -340,10 +340,10 @@ export const TURN: Record<string, TurnAbility> = {
   },
   [H.winnowing]: {
     // Test 'winnowing-blind': discard a facedown Altar card without looking at it.
-    can: (s, seat) => variant(s, 'winnowing-blind') ? s.altar.some((a) => a.facedown && !altarShielded(s, a, seat) && (a.sanctuary === undefined || a.sanctuary === seat)) : winnowingHand(s, seat),
+    can: (s, seat) => variant(s, 'winnowing-blind') ? winnowable(s, seat).length > 0 : winnowingHand(s, seat),
     *run(s, seat) {
       if (variant(s, 'winnowing-blind')) {
-        const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.facedown && !altarShielded(s, a, seat) && (a.sanctuary === undefined || a.sanctuary === seat));
+        const opts = winnowable(s, seat);
         const pick = yield* chooseOne(s, seat, 'winnowing.altar', 'Winnowing: discard a facedown Altar card without looking at it.', opts.map(({ a, i }) => ({ id: String(i), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), true);
         if (pick === null) return;
         const [c] = s.altar.splice(Number(pick), 1);
@@ -352,7 +352,7 @@ export const TURN: Record<string, TurnAbility> = {
         log(s, 'winnowing', `${pname(s, seat)} winnowed a facedown card from the Altar: it was ${cardName(c.id)}.`);
         // Test 'winnowing-blind2': up to 2 facedown cards.
         if (variant(s, 'winnowing-blind2')) {
-          const more = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.facedown && !altarShielded(s, a, seat) && (a.sanctuary === undefined || a.sanctuary === seat));
+          const more = winnowable(s, seat);
           if (!more.length) return;
           const p2 = yield* chooseOne(s, seat, 'winnowing.altar', 'Winnowing: discard a second facedown Altar card without looking at it?', more.map(({ a, i }) => ({ id: String(i), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), true);
           if (p2 === null) return;
@@ -621,7 +621,7 @@ export const bountyPrompt = (s: GameState) => variant(s, 'bounty-bet-soft') || v
 function tempestOk(s: GameState, seat: Seat, a: GameState['altar'][number]) {
   // V44 test 'tempest-offer': only on a turn you Offered.
   if (variant(s, 'tempest-offer') && !s.day_.actionsTaken.some((x) => x.seat === seat && x.action === 'offer')) return false;
-  return (a.sanctuary === undefined || a.sanctuary === seat) && !altarShielded(s, a, seat) && (!variant(s, 'tempest-up') || !a.facedown);
+  return sanctuaryAllows(a, seat) && !altarShielded(s, a, seat) && (!variant(s, 'tempest-up') || !a.facedown);
 }
 
 function patronTargets(s: GameState, seat: Seat): Seat[] {
@@ -642,6 +642,10 @@ function echoTargets(s: GameState, seat: Seat) {
   return out;
 }
 
+/** Test 'winnowing-blind': the facedown Altar cards Winnowing may discard, with their positions. */
+function winnowable(s: GameState, seat: Seat) {
+  return s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.facedown && !altarShielded(s, a, seat) && sanctuaryAllows(a, seat));
+}
 function winnowingHand(s: GameState, seat: Seat) {
   return others(s, seat).some((p) => p.hand.length && !protectedFrom(s, seat, p.seat, 'discard') && !handProtected(s, seat, p.seat));
 }

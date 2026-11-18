@@ -129,7 +129,7 @@ describe('a full game', () => {
     while (x.last('a').room.status === 'playing' && guard++ < 5000) {
       check('a', 0); check('b', 1); check('w', null);
       let acted = false;
-      for (const [id, seat] of [['a', 0], ['b', 1]] as const) {
+      for (const id of ['a', 'b'] as const) {
         const d = x.last(id).view!.decisions[0];
         if (!d) continue;
         x.core.handle(id, { t: 'answer', id: d.id, choice: botAnswer(g().state, d) });
@@ -157,6 +157,10 @@ describe('a full game', () => {
     expect(replay.state.result).toEqual(g().state.result);
     const rows = buildRows(done, 'V38');
     expect(rows.game).toMatchObject({ player_count: 4, human_count: 2, card_version: 'V38', room_code: 'ABCDE' });
+    // The turn timer setting and the moves it made are stored with the game.
+    expect(rows.game.timer_seconds).toBe(done.timer);
+    expect(rows.game.auto_inputs).toBe(JSON.stringify(done.auto));
+    expect(buildRows({ ...done, auto: [0, 2] }, 'V38').game.auto_inputs).toBe('[0,2]');
     expect(rows.seats.map((s) => s.player_id)).toEqual(['robert', 'ana', null, null]);
     expect(rows.seats.reduce((a, s) => a + s.win_share, 0)).toBeCloseTo(1);
     expect(rows.seats.map((s) => s.turn_order).sort()).toEqual([0, 1, 2, 3]);

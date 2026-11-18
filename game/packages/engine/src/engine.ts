@@ -5,8 +5,8 @@ import {
   activation, activeCards, alignment, altarAvailable, altarLabel, altarShielded, ask, askAll, baseHandLimit, baseValue,
   canActivate, canAffordTribute, canSpend, cardOpt, choirLimit, chooseOne, colorsOf, dirOf, discardFromChoir,
   discardFromHand, discardableForRoom, drawHost, drawTo, enterChoir, eventOn, gain, glorySafe, handProtected, hasActive,
-  isCelestial, log, lose, makeRoom, markToday, opposite, others, pay, payTribute, pname, protectedFrom, seatFromOpt,
-  seatOpt, snareHit, stat, transfer, usedToday, variant, yesNo,
+  isCelestial, log, lose, makeRoom, markToday, opposite, others, pay, payTribute, pname, protectedFrom, sanctuaryAllows,
+  seatFromOpt, seatOpt, snareHit, stat, transfer, usedToday, variant, yesNo,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
@@ -384,7 +384,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
     let forgone = false;
     for (const [hid, mine, theirs] of [[H.raphael, 'light', 'dark'], [H.azazel, 'dark', 'light']] as const) {
       if (forgone || !hasActive(s, seat, hid) || !offered.some((c) => col(c)[mine]) || !canActivate(s, seat, hid)) continue;
-      const targets = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !a.facedown && col(a.id)[theirs] && (a.sanctuary === undefined || a.sanctuary === seat) && !altarShielded(s, a, seat));
+      const targets = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !a.facedown && col(a.id)[theirs] && sanctuaryAllows(a, seat) && !altarShielded(s, a, seat));
       if (!targets.length) continue;
       const pick = yield* chooseOne(s, seat, hid === H.raphael ? 'raphael' : 'azazel', `${cardName(hid)}: turn your Offering face up and forgo its reward to destroy a face-up ${theirs === 'dark' ? 'Dark' : 'Light'} card on the Altar?`, targets.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
       if (pick === null) continue;
@@ -921,7 +921,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     }
     // Test 'tree-swap' / 'tree-swap-tide' (Robert's idea): take an Altar card into your Choir, discarding one if it is full.
     if (!variant(s, 'tree-mature') && !variant(s, 'tree-momentum') && (variant(s, 'tree-swap') || (variant(s, 'tree-swap-tide') && leansWithTide.has(seat)) || (variant(s, 'tree-swap-cost') && canSpend(s, seat, 1)) || (variant(s, 'tree-swap-lose') && !(gained[seat] > 0))) && hasActive(s, seat, H.treeOfLife) && canActivate(s, seat, H.treeOfLife)) {
-      const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => a.sanctuary === undefined || a.sanctuary === seat);
+      const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => sanctuaryAllows(a, seat));
       if (opts.length) {
         const pick = yield* chooseOne(s, seat, 'tree.take', 'Tree of Life: take a card from the Altar into your Choir (discarding one if it is full)?', opts.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
         if (pick !== null && (yield* makeRoom(s, seat, 'Tree of Life'))) {

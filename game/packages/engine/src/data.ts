@@ -1,4 +1,4 @@
-// Card data, generated from the V33 card file (cards/cards.json in the design repo).
+// Card data: a copy of the repository's cards/cards.json, written by cards/tools/apply_changes.py.
 import raw from './cards.data.json';
 
 export type HostAlignment = 'light' | 'dark' | 'neutral' | 'variable' | 'both';
@@ -27,10 +27,11 @@ export interface SimpleDef {
   numeral?: string;
 }
 
-export const HOSTS: HostDef[] = (raw as any).hosts;
-export const CELESTIALS: SimpleDef[] = (raw as any).celestials;
-export const EVENTS: SimpleDef[] = (raw as any).events;
-export const FATES: SimpleDef[] = (raw as any).fates;
+const data = raw as unknown as { hosts: HostDef[]; celestials: SimpleDef[]; events: SimpleDef[]; fates: SimpleDef[] };
+export const HOSTS = data.hosts;
+export const CELESTIALS = data.celestials;
+export const EVENTS = data.events;
+export const FATES = data.fates;
 
 export const HOST: Record<string, HostDef> = Object.fromEntries(HOSTS.map((h) => [h.id, h]));
 export const CELESTIAL: Record<string, SimpleDef> = Object.fromEntries(CELESTIALS.map((c) => [c.id, c]));

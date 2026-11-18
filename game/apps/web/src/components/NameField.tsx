@@ -1,7 +1,8 @@
 // Choosing your name. A taken name asks for its player code; your own code is shown so you can use
 // your name on another device.
+import { formatCode } from '@divide/protocol';
 import { useState } from 'preact/hooks';
-import { codeFor, formatCode, lastTypedName, useName } from '../lib/identity';
+import { codeFor, lastTypedName, useName } from '../lib/identity';
 
 export function NameForm(p: { action: string; onDone: (name: string) => void; initial?: string; busy?: boolean; id?: string; children?: any; before?: any }) {
   const [name, setName] = useState(p.initial ?? lastTypedName());

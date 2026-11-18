@@ -5,7 +5,7 @@ import { Site } from '../components/Site';
 import { NameForm, PlayerCode } from '../components/NameField';
 import { getName } from '../lib/identity';
 import { useRoom, type RoomSnap } from '../lib/room';
-import { Link, go } from '../lib/router';
+import { Link } from '../lib/router';
 import { seatColor } from '../table/bits';
 import { Chat } from '../table/Side';
 import { Table } from '../table/Table';
@@ -158,5 +158,3 @@ function Lobby(p: { snap: RoomSnap; send: (m: ClientMsg) => void; onRename: (n: 
     </Site>
   );
 }
-
-export const leave = () => go('/');

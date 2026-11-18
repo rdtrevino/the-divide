@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { claimName, formatCode, verifyName, type NameStore } from '../src/names';
+import { formatCode } from '@divide/protocol';
+import { claimName, verifyName, type NameStore } from '../src/names';
 
 function memory(): NameStore & { rows: Map<string, { name: string; keyHash: string | null }> } {
   const rows = new Map<string, { name: string; keyHash: string | null }>();
