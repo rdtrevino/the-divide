@@ -75,7 +75,10 @@ export function statusNotes(view: GameView, seat: number): { text: string; tone?
   for (const b of view.bonds) {
     if (b.bound === seat) out.push({ text: `Bound to ${name(b.owner)} (Raguel)` });
   }
-  for (const a of view.anathema) if (a.target === seat) out.push({ text: 'Anathema: cannot Offer', tone: 'bad' });
+  const blocked = (act: string) => view.anathema.some((a) => a.target === seat && (a.action ?? 'offer') === act);
+  if (blocked('offer')) out.push({ text: 'Anathema: cannot Offer', tone: 'bad' });
+  const sword = ['exalt', 'gather'].filter(blocked).map((x) => x[0].toUpperCase() + x.slice(1));
+  if (sword.length) out.push({ text: `Flaming Sword: cannot ${sword.join(' or ')}`, tone: 'bad' });
   return out;
 }
 
@@ -88,13 +91,18 @@ export function choirTag(view: GameView, seat: number, id: string | null, used: 
   return undefined;
 }
 
-/** What a lean means at the Reaping, in one line. */
+/** What a lean means at the Reaping, in one line. How strongly a Choir leans does not matter, only which way. */
 export const alignTip = (n: number | null, whose: string) => {
-  if (n === null) return `${whose} Alignment`;
-  if (n === 0) return `${whose} Choir is balanced: it gains and loses nothing at the Reaping`;
+  if (n === null) return `${whose} lean`;
+  if (n === 0) return `${whose} Choir leans neither way: it gains and loses nothing at the Reaping`;
   const dir = n > 0 ? 'Light' : 'Dark';
-  const k = Math.min(3, Math.abs(n));
-  return `${whose} Choir leans ${dir} ${Math.abs(n)}: +${k} Glory on a ${dir} Tide, −${k} on a ${n > 0 ? 'Dark' : 'Light'} one`;
+  return `${whose} Choir leans ${dir}. On a ${dir} Tide: alone +3, two +1 each, three or more 0. On a ${n > 0 ? 'Dark' : 'Light'} Tide: alone −3, otherwise −1`;
+};
+/** Who put a card on the Altar, and how. */
+export const altarNote = (kind: string | undefined, who: string | null) => {
+  if (kind === 'seed') return 'Revealed by Creation';
+  if (!who) return undefined;
+  return kind === 'fruits' ? `First Fruits from ${who}` : kind === 'offer' ? `Offered by ${who}` : kind === 'vessel' ? `Placed by ${who} (Vessel; not an Offer)` : kind === 'relic' ? `Kept on the Altar by Eternity` : `Placed by ${who}`;
 };
 export const alignText = (n: number | null) => (n === null ? '' : n === 0 ? 'Neutral' : `${n > 0 ? 'Light' : 'Dark'} ${Math.abs(n)}`);
 export const alignTone = (n: number | null) => (!n ? 'neutral' : n > 0 ? 'light' : 'dark');

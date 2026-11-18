@@ -1,5 +1,36 @@
 # Changelog
 
+## Site review: fixes across the table, the Learn page, the rulebook and the docs (November 18, 2026)
+
+No card text or balance changes. Found by playing full Base and Advanced games in the browser (desktop and phone) and reading every page, prompt and log line against the V44 rules.
+
+**The table**
+- **Fixed a crash at First Fruits.** The Altar's Light/Dark tally gave the engine a partial game state without its rules settings, and the card values have read those settings since V43 (Hymn and Lamentation). The table broke as soon as a face-up card reached the Altar. Fixed in the table and made safe in the engine; a test covers it.
+- **Anathema** no longer stops its own holder from Offering (it matters with a Free Will second action). The card says "No other player".
+- **Bounty and Council** now pay Tithe and log whom they named, like every other *In the Morning* ability.
+- **Flaming Sword** shows as "Flaming Sword: cannot Exalt or Gather" (it was labelled Anathema), and an unavailable action says why (Flaming Sword, The Fast, an empty Altar); the stale "Exalt costs 1 Glory" reason is gone.
+- **The lean tooltip** explains the current scoring (alone +3, two +1 each, three or more 0; against: alone −3, otherwise −1), not the old "+N on a Light Tide".
+- **The log says "lean"**: "gains 3 Glory at the Reaping (leans Light)" instead of "(Alignment 2)". Exalt no longer says "at no cost" every time; Raphael and Azazel no longer say they gave up the reward; Apple, Uriel and Beelzebub log the 2 Glory they pay.
+- **Prompts match the current cards:** Vessel (no draw; it can lose 1), Silence (free), Bounty and Prophecy (the losing half), Flaming Sword and Anathema (until the start of your next turn), the Tempest (face-up), the Whisper, Eternity (any card).
+- **Altar labels:** Creation's cards say Creation (not "the Seed"); Vessel's and Eternity's cards say who put them there and how.
+- **Lobby:** a Base game no longer promises Celestials.
+
+**The Learn page**
+- The "goal" graphic now shows the race to 12 (bars, line and caption).
+- Picking Choir cards in the "Your Choir leans" demo no longer pushes them into the heading and border; on a phone, chosen cards no longer cover the row above.
+- The timing step adds *In the Evening* (Fig Leaves), says "spent" cards (not "once per game, turned sideways"), and "carry you to 12".
+- A link to another step (`/learn#5`) works while you are already on the page.
+
+**Rulebook v14** (wording only)
+- First Fruits is the third step of Morning in the glossary too.
+- The glossary no longer says Lilith protects your hand or Defiance your Glory; it names what does protect (Cherubim, Tribute, Mirage).
+- New ruling, **At the Reaping**: Bounty, Raguel, Favor and Parasite count only Glory gained or lost at the Reaping, which is what the game does (Raguel's and Favor's rulings said "the whole Day" and "any source").
+- Vessel's ruling no longer contradicts Snare's; the Flood's example is Martyr (Hymn's ability is not in a Choir); "Build for later" lists Tree of Life instead of Favor; *In the Evening* is listed wherever activation timings are.
+
+**Docs:** the top-level README describes V44 (one deck of 69, free Exalt, mirrored scoring, race to 12, test counts); SITE.md and game/README no longer mention the 2 Seeds option or old test counts; the Cards page's checkbox reads "Current deck only".
+
+**Cards (wording, still V44).** Favor, Raguel, Bounty and Parasite now say "at the Reaping", which is what the game always counted: "If 2 or more other players lost Glory at the Reaping", "if they gained (lost) Glory at the Reaping". No rule changes, so the card version stays V44 and the stats carry on. `cards/changes/V44-wording.json`; `apply_changes.py` now accepts a wording pass within a version. The rulebook's rulings for them are shorter to match.
+
 ## V44 cards and Rulebook v14: Celestials and Events for the current game; the deck numbered Light, Neutral, Dark (November 18, 2026)
 
 Not yet merged. Full review, every option measured, and the renumbering table: `design/v44-advanced.md`.

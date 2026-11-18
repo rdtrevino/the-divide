@@ -10,7 +10,7 @@ New players: **Learn to play** (https://thedivide.pages.dev/learn) walks through
 
 1. Open the site, type your name, and press **Start a new table**.
 2. Send the link (or the 5-letter code) to your friends. Anyone who opens it takes an empty seat.
-3. The host (whoever opened the table) can **Add a bot** to any empty seat, switch between 3 and 4 players, set the time per decision, and turn on the optional 2-Seeds rule.
+3. The host (whoever opened the table) can **Add a bot** to any empty seat, switch between 3 and 4 players, set the time per decision, and turn on the Advanced game (Celestials and Events).
 4. **Start the game.** Celestials and the first player are dealt at random.
 
 At the table:
@@ -79,7 +79,7 @@ For questions the page does not answer, the database can be queried directly in 
 SELECT celestial, COUNT(*) AS seats, SUM(win_share) AS wins,
        ROUND(SUM(win_share) / SUM(1.0 / g.player_count), 2) AS win_ratio
 FROM game_players gp JOIN games g ON g.id = gp.game_id
-WHERE gp.is_bot = 0 AND g.card_version = 'V38'
+WHERE gp.is_bot = 0 AND g.card_version = 'V44'
 GROUP BY celestial ORDER BY win_ratio DESC;
 ```
 
@@ -130,12 +130,12 @@ New card art: put the plate in `art/plates/` and point the card's `plate` at it 
 - **Hosting:** Cloudflare's free plan, at a workers.dev address. GitHub Pages cannot run live tables or a database.
 - **Access:** anyone with a table's link can join it. The Stats page is open to anyone with the site address.
 - **Player identity in the stats:** by name. A name belongs to whoever used it first (their player code proves it on another device), so the stats never mix two people under one name. No accounts or passwords.
-- **Rule variants:** none in real games, except the optional 2 Seeds rule the host can switch on.
+- **Rule variants:** none in real games. The host chooses the Base or the Advanced game (the 2 Seeds option was retired in V41).
 
 ## Known limits
 
 - Hidden Roles (5 and 6 players) is not playable online; the engine does not implement it yet.
 - Bots cannot bluff or make deals.
-- Ithuriel, Urim and Asmadai have no art yet and are drawn with a placeholder.
+- Ithuriel, Urim and Asmadai were retired in V42 and have no art; the Cards page shows them, with a placeholder, only when "Current deck only" is unchecked.
 - Table chat keeps the last 100 lines. A table nobody opens for two weeks is deleted (its finished games stay in the stats).
 - Publishing from this project's cloud sessions uses the KV setup (`wrangler.kv.jsonc`), because Cloudflare's standard static-assets upload is refused through the session's network proxy. `wrangler.jsonc` (static assets) is the standard setup and is used by `npm run dev`; the Worker serves the site either way.

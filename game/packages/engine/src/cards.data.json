@@ -343,7 +343,7 @@
     {
       "id": "host-raguel",
       "name": "Raguel",
-      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At the end of the Day, if they gained Glory, gain 1 Glory. If they lost Glory, lose 1 Glory.",
+      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At the end of the Day, if they gained Glory at the Reaping, gain 1 Glory; if they lost Glory at the Reaping, lose 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/27-raguel.jpg",
       "plate": "art/plates/host/27-raguel.jpg",
@@ -629,7 +629,7 @@
     {
       "id": "host-favor",
       "name": "Favor",
-      "text": "At the end of the Day: If 2 or more other players lost Glory this Day, gain 1 Glory.",
+      "text": "At the end of the Day: If 2 or more other players lost Glory at the Reaping, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/49-favor.jpg",
       "plate": "art/plates/host/49-favor.jpg",
@@ -798,7 +798,7 @@
     {
       "id": "host-parasite",
       "name": "Parasite",
-      "text": "When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if they lost Glory, you gain 1 Glory; if they gained Glory, discard this card.",
+      "text": "When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if they lost Glory at the Reaping, you gain 1 Glory; if they gained Glory at the Reaping, discard this card.",
       "openGame": true,
       "face": "art/faces/host/62-parasite.jpg",
       "plate": "art/plates/host/62-parasite.jpg",
@@ -863,7 +863,7 @@
     {
       "id": "host-bounty",
       "name": "Bounty",
-      "text": "In the Morning: You may name a player. At the end of the Day, if they lost Glory, gain 1 Glory. If they gained Glory, lose 1 Glory.",
+      "text": "In the Morning: You may name a player. At the end of the Day, if they lost Glory at the Reaping, gain 1 Glory; if they gained Glory at the Reaping, lose 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/67-bounty.jpg",
       "plate": "art/plates/host/67-bounty.jpg",

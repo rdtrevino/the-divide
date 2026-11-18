@@ -22,7 +22,7 @@ export function Cards() {
         </div>
         <div class="chips">
           {FILTERS.map(([f, label]) => <button class={`chip${filter === f ? ' on' : ''}`} onClick={() => setFilter(f)}>{label}</button>)}
-          <label class="check"><input type="checkbox" checked={open} onChange={(e) => setOpen((e.target as HTMLInputElement).checked)} /> Open Game deck only</label>
+          <label class="check"><input type="checkbox" checked={open} onChange={(e) => setOpen((e.target as HTMLInputElement).checked)} /> Current deck only</label>
         </div>
       </div>
       {(filter === 'all' || filter === 'celestial') && (

@@ -114,7 +114,7 @@ export const V44_RULES: readonly string[] = [
 const V42_SET = new Set([...V42_RULES, ...V43_RULES, ...V44_RULES]);
 /** A V42 rule, or a test switch named in the game's config. */
 export const variant = (s: GameState, v: string) => {
-  const cv = s.config.variants;
+  const cv = s.config?.variants; // a partial state (such as the table's Altar tally) may have no config
   if (cv?.includes(v)) return true;
   // '-name' turns one V42 rule off (tests and comparisons); 'v41-rules' turns them all off.
   return V42_SET.has(v) && !cv?.includes('v41-rules') && !cv?.includes('-' + v);

@@ -74,7 +74,10 @@ export function* morningV43(s: GameState): Gen<void> {
     }
     if (variant(s, 'council-same') && hasActive(s, p.seat, H.council) && canActivate(s, p.seat, H.council)) {
       const pick = yield* chooseOne(s, p.seat, 'council.player', 'Council: name a player. If your Choirs lean the same way at the end of the Day, each of you gains 1 Glory.', others(s, p.seat).map((o) => seatOpt(s, o.seat)), true);
-      if (pick) (day(s).council ??= {})[p.seat] = seatFromOpt(pick);
+      if (pick) yield* activation(s, p.seat, H.council, function* () {
+        (day(s).council ??= {})[p.seat] = seatFromOpt(pick);
+        log(s, 'council', `${p.name} called a Council with ${pname(s, seatFromOpt(pick))}: if their Choirs lean the same way at the end of the Day, each gains 1 Glory.`);
+      });
     }
   }
 }
@@ -140,8 +143,8 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
     for (const c of [...p.choir]) {
       const by = (c as any).by;
       if (c.id !== H.parasite || c.facedown || by === undefined) continue;
-      if (lost[p.seat] > 0) { yield* gain(s, by, 1, H.parasite); log(s, 'parasite', `${pname(s, by)} fed on ${p.name}'s loss: +1 Glory (Parasite).`); }
-      else if (gained[p.seat] > 0 && removeFromChoir(s, p.seat, H.parasite)) { s.discard.push(H.parasite); log(s, 'parasite', `${p.name} prospered, and the Parasite in their Choir is discarded.`); }
+      if (lost[p.seat] > 0) { yield* gain(s, by, 1, H.parasite); log(s, 'parasite', `${pname(s, by)} fed on ${p.name}'s loss at the Reaping: +1 Glory (Parasite).`); }
+      else if (gained[p.seat] > 0 && removeFromChoir(s, p.seat, H.parasite)) { s.discard.push(H.parasite); log(s, 'parasite', `${p.name} gained Glory at the Reaping, and the Parasite in their Choir is discarded.`); }
     }
   }
   (s as any).lastWithTide = [...withTide];
@@ -158,7 +161,7 @@ export function* keepRelics(s: GameState, order: Seat[]): Gen<Set<object>> {
     // 'eternity-any': keep any card on the Altar (Robert).
     const opts = s.altar.filter((a) => !kept.has(a) && (variant(s, 'eternity-any') ? a.kind !== 'relic' : a.offeredBy === seat && a.kind === 'offer' && a.day === s.day));
     if (!opts.length) continue;
-    const pick = yield* chooseOne(s, seat, 'eternity.keep', 'Eternity: keep one card you Offered today on the Altar, face up, through the next Day?', opts.map((a) => ({ id: String(s.altar.indexOf(a)), label: cardName(a.id), card: a.id })), true);
+    const pick = yield* chooseOne(s, seat, 'eternity.keep', variant(s, 'eternity-any') ? 'Eternity: keep one card on the Altar, face up, through the next Day?' : 'Eternity: keep one card you Offered today on the Altar, face up, through the next Day?', opts.map((a) => ({ id: String(s.altar.indexOf(a)), label: cardName(a.id), card: a.id })), true);
     if (pick === null) continue;
     const a = s.altar[Number(pick)];
     kept.add(a);

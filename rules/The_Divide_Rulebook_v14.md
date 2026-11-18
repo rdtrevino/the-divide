@@ -80,7 +80,7 @@ The game is played in rounds called **Days**. Every Day has three phases: **Morn
 | | 2. Predictions | Abilities marked *In the Morning* (such as Prophecy, Gabriel, Council) are used now. A card kept with Eternity returns to the Altar, face up. |
 | | 3. First Fruits | Everyone reveals 1 card from hand onto the Altar at once, then draws 1. |
 | **Noon** | Turns | Each player, clockwise from the first player: one action, then activate your Choir. |
-| **Evening** | 1. Reveal the Altar | First, abilities marked *In the Evening* (Fig Leaves). Then turn every facedown Altar card face up. |
+| **Evening** | 1. Reveal the Altar | First, abilities marked *In the Evening* (Fig Leaves; in the Advanced game, the Eclipse). Then turn every facedown Altar card face up. |
 | | 2. Set the Tide | Total the Altar's Light and Darkness. The heavier side is the Tide. |
 | | 3. The Reaping | Score every Choir, then resolve *At the end of the Day* abilities. |
 | | 4. Refresh the Altar | Discard every card left on the Altar (except one kept with Eternity). |
@@ -167,7 +167,7 @@ Then a new Day begins.
 
 **The facedown Altar is where the bluffing lives.** An Offer can help your side, quietly sink a partner who is getting too strong, or set a trap. First Fruits shows you one honest card from every hand each Morning; everything after that has to be read from behavior.
 
-**Build for later.** Offers pay now; your Choir pays every Day. A Choir card you Exalt early keeps earning, so the turn you skip an Offer to build is an investment. Stores and sets (Providence, Mammon, Favor, Uriel, Beelzebub) pay most to the patient.
+**Build for later.** Offers pay now; your Choir pays every Day. A Choir card you Exalt early keeps earning, so the turn you skip an Offer to build is an investment. Stores, sets and streaks (Providence, Mammon, Uriel, Beelzebub, Tree of Life) pay most to the patient.
 
 **Advice for your first game:**
 
@@ -231,7 +231,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 ### **General**
 
-**Activating.** To activate is to use an ability you choose to use, in the Morning, on your turn, or at the end of the Day. Always-on abilities are never activated. On your turn, each Choir card activates at most once.
+**Activating.** To activate is to use an ability you choose to use, in the Morning, on your turn, in the Evening, or at the end of the Day. Always-on abilities are never activated. On your turn, each Choir card activates at most once.
 
 **The most or least Glory.** When a card names the player with the most or the least Glory and several players are tied, the player using the card chooses among them, unless the card says otherwise (Envy hits every tied leader).
 
@@ -247,7 +247,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Divine Calling (Event).** Pays for every Exalt into your own Choir, including one from the discard pile with Forger. Playing a card into another player's Choir (Temptation, the Patron, Parasite) is not an Exalt into your Choir and pays nothing.
 
-**The Flood and Let There Be Light.** Every ability of the named alignment is off for that Day: abilities a player would activate and abilities that work on their own (such as Hymn, Snare, or Cherubim's protection). The cards still count toward your lean. On a Let There Be Light Day, Parasite may be discarded like any other card.
+**The Flood and Let There Be Light.** Every ability of the named alignment is off for that Day: abilities a player would activate and abilities that work on their own (such as Martyr, Snare, or Cherubim's protection). The cards still count toward your lean. On a Let There Be Light Day, Parasite may be discarded like any other card.
 
 **Casting Lots.** The predictions pay out at the Reaping, once the Tide is known.
 
@@ -269,7 +269,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Snare.** Pays for each card you placed on the Altar (an Offer, First Fruits, Vessel's card) that another player Gathers, flips (Revelation), or discards (Winnowing, Abaddon, Raphael, Azazel, the Tempest).
 
-**Vessel.** Its card goes on the Altar facedown but is not an Offer: it earns no reward and no Offer abilities trigger (Raphael, Azazel, Hymn, Lamentation, Snare, Remnant). If the card has been Gathered or destroyed, or the Tide is Neutral, it neither gains nor loses.
+**Vessel.** Its card goes on the Altar facedown but is not an Offer: it earns no reward and no Offer abilities trigger (Raphael, Azazel, the Tempest, Wisdom, Gabriel's call, Hymn and Lamentation going face up). Snare still pays if another player takes or discards it. If the card has been Gathered or destroyed, or the Tide is Neutral, it neither gains nor loses.
 
 **Remnant.** Counts the empty places in your Choir at the end of the Day: with the limit of 4, you need 2 or fewer cards, Remnant included.
 
@@ -291,13 +291,15 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Scapegoat.** Used at the Reaping, after the scores are known and before anyone gains: pay 1 Glory and one player who would gain from the Tide gains nothing.
 
-**Raguel.** Compares the Bound player's Glory over the whole Day. If they gained, you gain 1; if they lost, you lose 1.
+**Raguel.** If the Bound player neither gains nor loses at the Reaping, nothing happens. If Raguel leaves your Choir, the Bond ends.
 
-**Bounty and Prophecy.** Named or declared in the Morning, settled at the end of the Day. A Bounty target who neither gains nor loses costs you nothing. A Neutral Tide is a miss for Prophecy: you lose 1.
+**Bounty and Prophecy.** Named or declared in the Morning, settled at the end of the Day. A Bounty target who neither gains nor loses at the Reaping costs you nothing. A Neutral Tide is a miss for Prophecy: you lose 1.
+
+**At the Reaping.** Bounty, Raguel, Favor and Parasite count only the Glory a player gains or loses at the Reaping (from the Tide, after Mercy, Scapegoat and the like). Glory from Offers or other cards' abilities does not count for them.
 
 **Hubris.** Counts all Glory the leader gained that Day, from any source. If several leaders are tied and qualify, you choose which one gives you 1.
 
-**Tree of Life, Favor, Leviathan, and Defiance.** Tree of Life compares your Choir's side with the Tide today and yesterday. Favor counts the other players who lost Glory that Day, from any source. Leviathan needs the Tide's winning margin to be 3 or more. Defiance counts the Choirs leaning with and against the Tide; Neutral Choirs and Choirs sitting out count for neither.
+**Tree of Life, Favor, Leviathan, and Defiance.** Tree of Life compares your Choir's side with the Tide today and yesterday. Favor counts the other players who lost Glory at that Day's Reaping. Leviathan needs the Tide's winning margin to be 3 or more. Defiance counts the Choirs leaning with and against the Tide; Neutral Choirs and Choirs sitting out count for neither.
 
 **Apple.** Compares your Choir's lean today with your Choir's lean yesterday. A Neutral lean on either Day pays nothing.
 
@@ -323,7 +325,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Temptation.** Playing a card into another player's Choir is Targeting: Cherubim blocks it and Tribute must be paid. If their Choir is full, they choose which of their cards to discard.
 
-**Parasite.** It goes straight into another player's Choir when you Exalt or Gather it (Cherubim blocks this; Tribute must be paid). Its holder cannot discard it, not even to make room; other players' abilities can still remove it. Remember who placed it: that player gains when its holder loses.
+**Parasite.** It goes straight into another player's Choir when you Exalt or Gather it (Cherubim blocks this; Tribute must be paid). Its holder cannot discard it, not even to make room; other players' abilities can still remove it. Remember who placed it: at the end of each Day, that player gains 1 if its holder lost Glory at the Reaping, and Parasite is discarded if its holder gained.
 
 **The Patron.** Works like Temptation: playing a card into another player's Choir is Targeting, so Cherubim blocks it and Tribute must be paid. If their Choir is full, they choose which of their cards to discard.
 
@@ -428,7 +430,7 @@ A Fallen player might spend a Day Offering Light because their Choir leans Light
 
 **Abyss.** *(Hidden Roles)* The four spaces at the dark end of the Balance. If the marker finishes here, the Fallen control the world.
 
-**Activate.** To use a Host ability you choose to use, in the Morning, on your turn, or at the end of the Day. After your action, you may activate each card in your Choir whose ability works on your turn, once per turn. Always-on abilities are never activated.
+**Activate.** To use a Host ability you choose to use, in the Morning, on your turn, in the Evening, or at the end of the Day. After your action, you may activate each card in your Choir whose ability works on your turn, once per turn. Always-on abilities are never activated.
 
 **Alignment (lean).** The net difference between the Light and Darkness values of the Host cards in your Choir. A net toward Light is a Light Alignment, a net toward Dark is a Dark Alignment, and an equal split is Neutral (net zero). Scored during the Reaping.
 
@@ -466,7 +468,7 @@ A Fallen player might spend a Day Offering Light because their Choir leans Light
 
 **Fate.** *(Hidden Roles)* Your secret faction: Faithful, Fallen, or Forsaken. Drawn at setup and revealed at game end.
 
-**First Fruits.** The fourth step of Morning: every player reveals 1 card from hand at the same time, face up on the Altar, then draws 1. It earns no Glory and is not an Offer.
+**First Fruits.** The third step of Morning: every player reveals 1 card from hand at the same time, face up on the Altar, then draws 1. It earns no Glory and is not an Offer.
 
 **Flip.** To turn a card Facedown or face up. A kind of Targeting when done to another player's card.
 
@@ -510,7 +512,7 @@ A Fallen player might spend a Day Offering Light because their Choir leans Light
 
 **Set the Tide.** The Evening step that totals the Altar's Light against its Darkness to determine the Tide and its winning margin. *(Hidden Roles)* The Balance marker then moves by margin, up to 2 spaces.
 
-**Target.** An ability Targets when it is aimed at another player or at their cards. The six kinds of Targeting are Look at, Reveal, Copy, Flip, Replace, and Discard. Some cards protect against Targeting your Choir (Tribute, Cherubim) and some protect your hand (Lilith) or your Glory (Defiance).
+**Target.** An ability Targets when it is aimed at another player or at their cards. The six kinds of Targeting are Look at, Reveal, Copy, Flip, Replace, and Discard. Cherubim protects your Choir from being Replaced or Discarded, Tribute charges a player 1 Glory to Target it, and Mirage protects the cards you placed on the Altar.
 
 **Tide.** The Day's prevailing direction: Light, Dark, or Neutral. It is set each Evening by the Altar's totals and governs Reaping scoring.
 

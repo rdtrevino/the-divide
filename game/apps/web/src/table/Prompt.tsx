@@ -19,15 +19,19 @@ function whyNot(view: GameView, seat: number, id: string): string {
   const me = view.players[seat];
   const hand = me.hand?.length ?? me.handCount;
   if (id === 'offer') {
-    if (view.anathema.some((a) => a.target === seat)) return 'Anathema: you cannot Offer until it ends';
+    if (view.anathema.some((a) => a.target === seat && (a.action ?? 'offer') === 'offer')) return 'Anathema: you cannot Offer until it ends';
     if (!hand) return 'You have no cards in hand';
   }
   if (id === 'exalt') {
-    if (view.event === 'event-the-fast') return 'The Fast: no Glory may be spent today';
+    if (view.event === 'event-the-fast') return 'The Fast: no one may Exalt today';
+    if (view.anathema.some((a) => a.target === seat && a.action === 'exalt')) return 'Flaming Sword: you cannot Exalt until it ends';
     if (!hand) return 'You have no cards in hand';
-    if (me.glory < 1) return `Costs 1 Glory. You have ${me.glory}`;
   }
-  if (id === 'gather') return 'Nothing you can take into your Choir now';
+  if (id === 'gather') {
+    if (view.anathema.some((a) => a.target === seat && a.action === 'gather')) return 'Flaming Sword: you cannot Gather until it ends';
+    if (!view.altar.length) return 'The Altar is empty';
+    return 'Nothing you can take into your Choir now';
+  }
   return 'Not possible right now';
 }
 
