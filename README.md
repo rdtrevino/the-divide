@@ -10,14 +10,15 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 |---|---|
 | `rules/` | `The_Divide_Rulebook_v14.md`: the complete rules, organized for new players: the game in one minute, a Day at a glance (Morning, Noon, Evening), the actions and scoring as tables, then Celestials, Events, rulings by topic, Hidden Roles, and the glossary. The site's Rules page shows it with a search. |
 | `cards/` | `The_Divide_Cards_V44.xlsx` (tabs: all cards, Open Game deck, changes since V32, reprint list), `cards.csv` (same data, one row per card), and `cards.json` (structured for the web build). To change card text, write a change set in `cards/changes/` and run `python3 cards/tools/apply_changes.py cards/changes/<VERSION>.json`; it updates all of these and the engine's copy together. |
-| `design/` | `design-decisions.md`: every standing decision, card ruling, and the playtest watch list. One write-up per rework: `v42-deck.md`, `v43-proposal.md` and `v43-results.md` (the Host deck), `v44-advanced.md` (the Celestials and Events). |
+| `design/` | `design-decisions.md`: the principles behind the rules, open questions, parked ideas, and the playtest watch list. `balance.md`: the measured win ratio of every Host card, Celestial and Event under the current rules. |
 | `art/faces/` | Every card face as last printed (Host, Celestial, Event, Fate and Turn), about 370 DPI. |
 | `art/plates/` | The illustration alone for every card, for the web build. |
 | `art/overview/` | Contact sheets for a quick look at all the art. |
 | `game/` | The online game: rules engine, computer players, balance simulator, the live server and the website. See `game/README.md` and `game/SITE.md`. |
 | `print/` | The scripts that render the Claude Design deck sheets into print PDFs, and how to use them. |
-| `sources/` | Archived originals: earlier card spreadsheets, rulebook drafts, print sheets, the V28 print kit, and the Claude Design HTML bundles. Reference only. |
-| `CHANGELOG.md` | What changed in each version, and which cards need reprinting. |
+| `CHANGELOG.md` | What changed in each version and why, what was tried and rejected, and which cards need reprinting. |
+
+Earlier card spreadsheets, rulebook drafts, print sheets, design write-ups and simulator reports are in the git history (removed November 18, 2026); the CHANGELOG records what each one decided.
 
 ## Sources of truth
 
@@ -36,9 +37,9 @@ A card game of divine ambition for 3 to 6 players by Robert Treviño. Players fe
 ## Online game
 
 - **Play:** https://thedivide.pages.dev (3 or 4 players, bots fill empty seats). Every finished game is saved to the stats database and shown on the site's Stats page. Guide: `game/SITE.md`.
-- **Engine:** every Open Game rule and card is implemented and tested in `game/packages/engine` (`npm test` runs 101 engine tests, including about 1,500 full bot games, and 11 server tests).
+- **Engine:** every Open Game rule and card is implemented and tested in `game/packages/engine` (`npm test` runs 92 engine tests, including about 600 full bot games, and 11 server tests).
 - **Stats database:** Cloudflare D1 database `divide-stats`. The schema and balance views are in `game/apps/server/migrations/0001_init.sql`.
-- **Balance testing:** `game/tools/sim` plays thousands of bot games; `ab.ts`, `ab2.ts` and `ab3.ts` compare rule variants and measure every card on identical seeds, and `advanced.ts` measures the Celestials and Events.
+- **Balance testing:** `game/tools/sim` plays thousands of bot games on fixed seeds: `npm run sim` and `card-balance.ts` measure every card, `advanced.ts` the Celestials and Events. To test a rule change, run them on a branch and on `main` and compare.
 
 ## Next
 

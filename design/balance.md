@@ -1,22 +1,111 @@
-# V44: the Advanced pass on the Celestials and Events
+# Balance: the current rules, measured
 
-November 18, 2026. The Host deck was reworked for V42 and V43 (free Exalt, Gather from the Altar, mirrored coalition scoring, the race to 12). The Celestials and Events were still written for the older game. This pass reads each one against the current rules, changes the ones that no longer work, and measures every Celestial's win ratio. It also renumbers the Host deck: Light, then Neutral, then Dark.
+Bot measurements of the V44 rules, from the simulator in `game/tools/sim` (all-bot games; bots cannot bluff or make deals, so the bluffing and political cards are where people will differ). Win ratio is actual wins over the wins expected by chance: 1.00 is fair, and the target is 0.75 to 1.25 for every card. The Stats page on the site shows the same measure from real games beside a bot baseline.
 
-## How it was measured
+To re-measure after a rules change: `npm run sim`, `npx tsx card-balance.ts` and `npx tsx advanced.ts` in `game/tools/sim` (see `game/README.md`).
 
-`game/tools/sim/advanced.ts` plays all-bot Advanced games, half at 3 players and half at 4, and reports each Celestial's win ratio (actual wins over the wins expected by chance; 1.00 is fair) overall and by player count, plus what each Event does to its Day: Glory gained and lost across the table, and how much the leader and the last-placed player gained (measured from the start of that Day).
+## The Host deck
 
-Every option was a test switch measured on identical seeds against the V43 rules. The final numbers are 60,000 games of V44 against 40,000 of V43.
+Measured November 18, 2026 on the V43 rules, which are the Host deck's current rules (V44 changed only Celestials, Events and card numbers). Win ratio over 20,000 games (every card a player held at the end of any Day). Play rate over 3,000 games: the share of games in which any player held the card in their Choir, and how often per game it was Offered, Exalted or Gathered, and its ability did something.
 
-```
-cd game/tools/sim && npx tsx advanced.ts 20000 0 out.json [switches...]
-```
+| Game | 3 players | 4 players |
+|---|---|---|
+| Days | 8.2 (90% within 11) | 8.5 (90% within 11) |
+| Winner's Glory per Day | 1.56 | 1.51 |
+| Turns: Offer / Gather / Exalt | 49 / 19 / 32 | 50 / 19 / 30 |
+| Glory from Offers / the Tide / cards | 35 / 27 / 38 | 39 / 19 / 42 |
 
-The bots were also taught what a player would see (`bot-v44`): they judge the Day's Event for the Oracle (the leader wants quiet Days, a trailer wants swings, a side wants the Event that favors its cards), skip optional abilities on a Tithe Day unless they pay, value an Exalt on a Divine Calling Day, take a Purgatory Day's safety into account, and make the Cantor's second Offer with a Neutral card too. Before this, the bots buried Events at random and underplayed the Cantor, so those two Celestials' numbers were noise.
+All 69 cards are within 0.8–1.2; spread 0.114.
 
-## Results
+### Light
 
-Every Celestial now lands between **0.95 and 1.05** (V43: 0.84 to 1.10), and within 0.92 to 1.06 at each player count. Games run a median of 8 Days at 3 and at 4 players (V43: 8 and 9).
+| Card | Win ratio | Held in (games) | Offered / game | Exalted / game | Gathered / game | Ability / game |
+|---|---|---|---|---|---|---|
+| Michael | 0.95 | 10% | 0.25 | 0.05 | 0.04 | 0.19 |
+| Wisdom | 0.93 | 18% | 0.25 | 0.05 | 0.03 | 1.70 |
+| Gabriel | 1.04 | 66% | 0.11 | 0.34 | 0.23 | 7.22 |
+| Providence | 1.17 | 70% | 0.11 | 0.43 | 0.24 | 0.52 |
+| Confession | 0.95 | 40% | 0.20 | 0.15 | 0.15 | 2.11 |
+| Tree of Life | 1.14 | 54% | 0.13 | 0.23 | 0.22 | 0.61 |
+| Free Will | 0.97 | 11% | 0.26 | 0.05 | 0.03 | 0.15 |
+| Seraphim | 0.88 | 53% | 0.16 | 0.22 | 0.22 | 0.38 |
+| Hymn | 0.85 | 28% | 0.22 | 0.10 | 0.07 | 0.00 |
+| Raphael | 0.88 | 18% | 0.27 | 0.05 | 0.02 | 0.10 |
+| Sanctuary | 0.88 | 19% | 0.25 | 0.05 | 0.03 | 1.00 |
+| Uriel | 0.98 | 61% | 0.10 | 0.26 | 0.27 | 0.30 |
+| Martyr | 1.09 | 66% | 0.10 | 0.35 | 0.23 | 0.89 |
+| Covenant | 0.86 | 29% | 0.23 | 0.11 | 0.08 | 0.76 |
+| Tribute | 0.91 | 18% | 0.24 | 0.06 | 0.03 | 0.01 |
+| Mercy | 0.89 | 16% | 0.24 | 0.05 | 0.04 | 0.05 |
+| Revelation | 0.85 | 17% | 0.26 | 0.05 | 0.03 | 1.84 |
+| Cherubim | 0.80 | 19% | 0.23 | 0.05 | 0.03 | 0.00 |
+| Morning Star | 0.97 | 18% | 0.25 | 0.04 | 0.03 | 0.07 |
+| Absolution | 0.90 | 18% | 0.24 | 0.04 | 0.03 | 0.27 |
+| Knowledge | 0.86 | 19% | 0.24 | 0.05 | 0.03 | 0.94 |
+| Deliverance | 0.84 | 15% | 0.24 | 0.05 | 0.03 | 0.12 |
+| Remnant | 0.93 | 19% | 0.24 | 0.06 | 0.04 | 0.08 |
+
+### Dark
+
+| Card | Win ratio | Held in (games) | Offered / game | Exalted / game | Gathered / game | Ability / game |
+|---|---|---|---|---|---|---|
+| Anathema | 1.10 | 16% | 0.22 | 0.03 | 0.03 | 0.67 |
+| Serpent | 0.84 | 16% | 0.24 | 0.04 | 0.02 | 0.71 |
+| Favor | 1.12 | 39% | 0.18 | 0.18 | 0.12 | 0.42 |
+| Temptation | 0.84 | 16% | 0.24 | 0.03 | 0.03 | 0.36 |
+| Legion | 0.89 | 47% | 0.16 | 0.22 | 0.15 | 0.32 |
+| Lamentation | 0.90 | 21% | 0.23 | 0.07 | 0.04 | 0.00 |
+| Azazel | 0.87 | 17% | 0.25 | 0.04 | 0.02 | 0.08 |
+| Moloch | 0.98 | 30% | 0.20 | 0.12 | 0.09 | 0.31 |
+| Beelzebub | 1.01 | 53% | 0.11 | 0.25 | 0.19 | 0.31 |
+| Leviathan | 0.99 | 55% | 0.12 | 0.32 | 0.15 | 0.31 |
+| Hubris | 0.97 | 24% | 0.23 | 0.09 | 0.06 | 0.13 |
+| Belial | 0.85 | 17% | 0.25 | 0.04 | 0.02 | 1.11 |
+| Mammon | 1.12 | 69% | 0.12 | 0.47 | 0.18 | 0.49 |
+| Envy | 0.98 | 16% | 0.22 | 0.04 | 0.02 | 0.28 |
+| Lilith | 0.97 | 17% | 0.23 | 0.04 | 0.03 | 0.66 |
+| Parasite | 1.00 | 14% | 0.24 | 0.04 | 0.02 | 0.05 |
+| Winnowing | 0.86 | 17% | 0.23 | 0.04 | 0.02 | 0.55 |
+| Silence | 0.88 | 17% | 0.24 | 0.04 | 0.02 | 0.33 |
+| Scapegoat | 0.87 | 16% | 0.23 | 0.04 | 0.02 | 0.21 |
+| Defiance | 0.87 | 55% | 0.14 | 0.31 | 0.16 | 0.11 |
+| Bounty | 0.90 | 23% | 0.21 | 0.08 | 0.04 | 0.00 |
+| Abaddon | 0.93 | 13% | 0.24 | 0.04 | 0.03 | 0.10 |
+| Snare | 1.02 | 41% | 0.17 | 0.19 | 0.13 | 0.31 |
+
+### Neutral
+
+| Card | Win ratio | Held in (games) | Offered / game | Exalted / game | Gathered / game | Ability / game |
+|---|---|---|---|---|---|---|
+| Vessel | 0.93 | 49% | 0.19 | 0.25 | 0.15 | 5.94 |
+| Eternity | 0.98 | 49% | 0.20 | 0.23 | 0.16 | 2.01 |
+| Ordeal | 0.93 | 16% | 0.31 | 0.05 | 0.01 | 0.22 |
+| Raguel | 0.81 | 22% | 0.30 | 0.07 | 0.05 | 0.43 |
+| Twilight | 1.00 | 65% | 0.15 | 0.38 | 0.20 | 0.28 |
+| Zealot | 0.93 | 23% | 0.30 | 0.08 | 0.05 | 0.15 |
+| Stillness | 1.05 | 55% | 0.17 | 0.30 | 0.17 | 0.63 |
+| Acolyte | 0.81 | 17% | 0.25 | 0.04 | 0.02 | 0.00 |
+| Nephilim | 0.86 | 17% | 0.30 | 0.05 | 0.01 | 0.00 |
+| Firmament | 1.03 | 43% | 0.21 | 0.20 | 0.13 | 0.40 |
+| Moderation | 0.90 | 58% | 0.18 | 0.31 | 0.18 | 0.35 |
+| Fig Leaves | 0.82 | 17% | 0.28 | 0.06 | 0.01 | 0.81 |
+| Flaming Sword | 0.83 | 16% | 0.29 | 0.05 | 0.01 | 1.00 |
+| Outcast | 0.98 | 66% | 0.15 | 0.39 | 0.21 | 0.98 |
+| Heresy | 0.91 | 16% | 0.29 | 0.05 | 0.01 | 0.14 |
+| Council | 1.04 | 72% | 0.14 | 0.43 | 0.22 | 1.83 |
+| Mirage | 0.83 | 16% | 0.30 | 0.06 | 0.02 | 0.00 |
+| Veil | 0.82 | 22% | 0.28 | 0.07 | 0.05 | 0.05 |
+| Prophecy | 0.98 | 16% | 0.30 | 0.05 | 0.01 | 0.68 |
+| Watchers | 0.90 | 16% | 0.31 | 0.06 | 0.01 | 1.11 |
+| Apple | 0.80 | 16% | 0.29 | 0.05 | 0.01 | 0.00 |
+| Forger | 0.81 | 17% | 0.30 | 0.05 | 0.01 | 0.17 |
+| Jubilee | 0.91 | 17% | 0.30 | 0.06 | 0.01 | 1.20 |
+
+"Ability / game" is read from the game log, so always-on cards (Hymn, Lamentation, Cherubim, Mirage, Acolyte, Nephilim) show 0, and a few cards whose log lines name them differently (Bounty, Tribute) are undercounted.
+
+## The Celestials
+
+Measured on 60,000 Advanced games of V44 against 40,000 of V43. Every Celestial now lands between **0.95 and 1.05** (V43: 0.84 to 1.10), and within 0.92 to 1.06 at each player count. Games run a median of 8 Days at 3 and at 4 players (V43: 8 and 9).
 
 | Celestial | V43 | V44 | V44 at 3 / 4 players |
 |---|---|---|---|
@@ -30,8 +119,6 @@ Every Celestial now lands between **0.95 and 1.05** (V43: 0.84 to 1.10), and wit
 | VIII. The Whisper | 1.09 | **1.05** | 1.05 / 1.05 |
 | IX. The Arbiter | 0.84 | **1.01** | 1.04 / 0.97 |
 
-## The Celestials, one by one
-
 | Celestial | Verdict | V44 text | Why |
 |---|---|---|---|
 | **I. The Tempest** | Too strong | When you Offer, you may destroy a face-up card on the Altar. | It removed a facedown vote every Day for free, and a vote decides a 3-Glory swing under mirrored scoring (1.09 to 1.15 across runs). Every other destroy ability (Raphael, Azazel) takes a face-up card on a turn you Offer; the Tempest now does the same. Face-up only alone: 1.11; with Tithe no longer charging it (below): 1.15; on Offer turns too: 1.00. |
@@ -44,7 +131,7 @@ Every Celestial now lands between **0.95 and 1.05** (V43: 0.84 to 1.10), and wit
 | **VIII. The Whisper** | Works | In the Morning: Name Light or Dark aloud. At the Reaping, if the Tide matches, your Choir counts as leaning with it. | Wording only: timing label, and "counts as leaning with it" in place of "scores as if aligned". |
 | **IX. The Arbiter** | Broken by mirrored scoring | When you gain Glory at the Reaping, take 1 of it from another player: one whose Choir leaned against the Tide, if any of them has Glory. | The Reaping now pays 3 or 1, so "gain 2 or more" meant only a lone win, while any loss handed 1 Glory to an opponent: a power that hurt its holder (0.84). Without the giving: 0.94. Taking on every gain from any player: 1.08 to 1.12. From a player against the Tide only: 0.91 to 0.93. From a player against the Tide, else anyone: 1.01. |
 
-## The Events, one by one
+## The Events
 
 Glory gained and lost per Day across the table; the leader's and the last-placed player's gain that Day. Every Day averages about 5 Glory gained.
 
@@ -72,80 +159,8 @@ The Sabbath, Equilibrium and Armageddon move the Balance and are used only in Hi
 
 Divine Calling and Purgatory now come up a little more often in bot games (7% of Days each, against 5.5–6% for the others) because the bots' Oracle picks them; that is the Oracle working.
 
-## Engine switches
-
-All are on by default (`V44_RULES` in `game/packages/engine/src/core.ts`); `-name` turns one off.
-
-| Switch | What it does |
-|---|---|
-| `tempest-up`, `tempest-offer` | The Tempest destroys a face-up card, on a turn you Offer |
-| `oracle-two` | The Oracle chooses between the top 2 Events |
-| `cantor-chorus`, `cantor-chorus-n` | The Cantor's second card shares the first's alignment (Neutral pairs too); both go face up |
-| `patron-target` | The Patron is always Targeting |
-| `arbiter-judge`, `arbiter-any` | The Arbiter takes from a player against the Tide, else anyone; it never gives |
-| `dominion-5` | The Dominion's hand is 5 |
-| `calling-reward` | Divine Calling: an Exalt pays 1 |
-| `purgatory-spare` | Purgatory: no losses at the Reaping; a Neutral Choir gains 1 |
-| `tithe-host` | Tithe charges Host abilities only |
-| `bot-v44` | Bots judge Events and play the Cantor fully |
-
-Measured and not adopted: `cantor-up` (only the second card face up), `arbiter-nogive`, `arbiter-take`.
-
-## Watch in play
+## Watch in play (Advanced)
 
 - **The Echo** varies most by player count (0.97 at 3, 1.05 at 4): more Choirs to copy from.
 - **The Oracle and the Patron** (0.95) depend on judgment the bots only approximate; people should do better with both.
 - **Purgatory** speeds the game up a little; if Days of reprieve feel flat, a Neutral Choir could gain 2.
-
-## Renumbering: Light, then Neutral, then Dark
-
-The Host deck is now numbered 1–23 Light, 24–46 Neutral (Acolyte and Nephilim included), 47–69 Dark, keeping each group's order. Remnant (Light) and Jubilee (Neutral) were numbered at the end and moved into their groups. Retired cards keep 70–72. The face and plate images in `art/` are renamed to match, and each renumbered card's Reprint List entry notes its new number, since the number is printed on the face.
-
-| New | Card | Group | Was |
-|---|---|---|---|
-| 23 | Remnant | Light | 67 |
-| 24 | Vessel | Neutral | 23 |
-| 25 | Eternity | Neutral | 24 |
-| 26 | Ordeal | Neutral | 25 |
-| 27 | Raguel | Neutral | 26 |
-| 28 | Twilight | Neutral | 27 |
-| 29 | Zealot | Neutral | 28 |
-| 30 | Stillness | Neutral | 29 |
-| 31 | Acolyte | Neutral (Acolyte) | 30 |
-| 32 | Nephilim | Neutral (Nephilim) | 31 |
-| 33 | Firmament | Neutral | 32 |
-| 34 | Moderation | Neutral | 33 |
-| 35 | Fig Leaves | Neutral | 34 |
-| 36 | Flaming Sword | Neutral | 35 |
-| 37 | Outcast | Neutral | 36 |
-| 38 | Heresy | Neutral | 37 |
-| 39 | Council | Neutral | 38 |
-| 40 | Mirage | Neutral | 39 |
-| 41 | Veil | Neutral | 40 |
-| 42 | Prophecy | Neutral | 41 |
-| 43 | Watchers | Neutral | 42 |
-| 44 | Apple | Neutral | 43 |
-| 45 | Forger | Neutral | 44 |
-| 46 | Jubilee | Neutral | 68 |
-| 47 | Anathema | Dark | 45 |
-| 48 | Serpent | Dark | 46 |
-| 49 | Favor | Dark | 47 |
-| 50 | Temptation | Dark | 48 |
-| 51 | Legion | Dark | 49 |
-| 52 | Lamentation | Dark | 50 |
-| 53 | Azazel | Dark | 51 |
-| 54 | Moloch | Dark | 52 |
-| 55 | Beelzebub | Dark | 53 |
-| 56 | Leviathan | Dark | 54 |
-| 57 | Hubris | Dark | 55 |
-| 58 | Belial | Dark | 56 |
-| 59 | Mammon | Dark | 57 |
-| 60 | Envy | Dark | 58 |
-| 61 | Lilith | Dark | 59 |
-| 62 | Parasite | Dark | 60 |
-| 63 | Winnowing | Dark | 61 |
-| 64 | Silence | Dark | 62 |
-| 65 | Scapegoat | Dark | 63 |
-| 66 | Defiance | Dark | 64 |
-| 67 | Bounty | Dark | 65 |
-| 68 | Abaddon | Dark | 66 |

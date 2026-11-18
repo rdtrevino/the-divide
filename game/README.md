@@ -6,7 +6,6 @@ The online version of The Divide. Everything here is TypeScript.
 |---|---|
 | `packages/engine` | The rules engine. Deterministic: a game is its config (with a seed) plus the ordered list of player inputs, so any game can be replayed exactly. Every Host, Celestial, and Event ability is implemented here. |
 | `tools/sim` | The balance simulator. Plays thousands of all-bot games and reports win rates by Celestial and card. |
-| `reports/` | Saved simulator reports. |
 | `packages/protocol` | The messages between the browser and a game table, and the shapes of the stats API. |
 | `apps/server` | The Cloudflare Worker: live game tables (one Durable Object each), bots and the turn timer, and the stats database (D1 `divide-stats`, schema in `migrations/`). |
 | `apps/web` | The website, drawn after the printed cards: lobby, game table, cards, rules, stats and game records. |
