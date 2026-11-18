@@ -87,7 +87,18 @@ export const V42_RULES: readonly string[] = [
   // Bots value a card's ability, not only its alignment, when they build.
   'bot-engine',
 ];
-const V42_SET = new Set(V42_RULES);
+/**
+ * V43 rules (approved November 18, 2026): the engine reworks. Each was measured as a test switch first
+ * (design/v43-proposal.md). The race is to 12 (GLORY_TARGET in engine.ts).
+ */
+export const V43_RULES: readonly string[] = [
+  'wisdom-peek', 'gabriel-seer', 'tree-momentum', 'hymn-loud', 'martyr-sac', 'tribute-pay', 'remnant-asc2e',
+  'lilith-scavenge', 'parasite-feed', 'snare-trap', 'snare-nolook', 'eternity-relic', 'eternity-any', 'twilight-even',
+  'council-same', 'forger-both', 'mirage-all', 'apple-2', 'fig-evening', 'raph-free', 'sword-both', 'lev-landslide',
+  // Defiance takes the upset ability ('favor-upset' on Defiance), Favor takes Leviathan's old ability, and the Glory protection is dropped.
+  'favor-upset', 'swap-defiance', 'favor-spared', 'no-shield',
+];
+const V42_SET = new Set([...V42_RULES, ...V43_RULES]);
 /** A V42 rule, or a test switch named in the game's config. */
 export const variant = (s: GameState, v: string) => {
   const cv = s.config.variants;

@@ -80,7 +80,7 @@ export function* morningV43(s: GameState): Gen<void> {
 }
 
 /** At the end of the Day (after scoring): the V43 test payoffs. */
-export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number, number>, lost: Record<number, number>, withTide: Set<Seat>): Gen<void> {
+export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number, number>, lost: Record<number, number>, withTide: Set<Seat>, scored?: { dir: string; margin: number }): Gen<void> {
   for (const seat of order) {
     const p = s.players[seat];
     // Gabriel: +1 if the named player Offered a card of the named alignment.
@@ -101,7 +101,7 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
     // 'tree-momentum': Tree of Life takes Favor's momentum ability (with the Tide today and yesterday: 1 Glory).
     if (variant(s, 'tree-momentum') && hasActive(s, seat, H.treeOfLife) && withTide.has(seat) && ((s as any).lastWithTide ?? []).includes(seat)) { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name} gained 1 Glory (Tree of Life).`); }
     // 'favor-fruits': 1 Glory if the card you gave as First Fruits matches the Tide.
-    const tdir = s.tides[s.tides.length - 1]?.dir;
+    const tdir = (scored ?? s.tides[s.tides.length - 1])?.dir;
     const fruit = day(s).fruits?.[seat];
     if ((variant(s, 'favor-fruits') || variant(s, 'favor-fruits-alone') || variant(s, 'favor-fruits-bet')) && hasActive(s, seat, H.favor) && fruit && tdir && tdir !== 'neutral') {
       const k = tdir as 'light' | 'dark';
@@ -114,7 +114,7 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
     // Favor: 'favor-late' (Day 4+: 1, Day 7+: 2) or 'favor-momentum' (with the Tide today and yesterday: 1).
     // Favor, Tide versions: 'favor-landslide' (Tide won by 3+ and you lean with it), 'favor-pair' (exactly two Choirs with the Tide, yours one of them),
     // 'favor-upset' (you lean with the Tide and more Choirs leaned against it than with it).
-    const tide = s.tides[s.tides.length - 1];
+    const tide = scored ?? s.tides[s.tides.length - 1];
     const upsetCard = variant(s, 'swap-defiance') ? H.defiance : H.favor;
     if ((variant(s, 'favor-landslide') || variant(s, 'favor-pair') || variant(s, 'favor-upset') || variant(s, 'favor-narrow')) && hasActive(s, seat, upsetCard) && tide && tide.dir !== 'neutral' && withTide.has(seat)) {
       const sign = tide.dir === 'light' ? 1 : -1;

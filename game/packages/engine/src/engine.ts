@@ -12,7 +12,7 @@ import { randInt, shuffle } from './rng';
 import type { Dir, GameConfig, GameState, Gen, Seat, TideRecord } from './types';
 
 /** The game ends after the first Reaping at which any player has this much Glory (V41: 10). */
-export const GLORY_TARGET = 10;
+export const GLORY_TARGET = 12; // V43: the race is to 12 (was 10)
 /** Engine safety cap only; the rules have no Day limit. */
 export const MAX_DAYS = 60;
 /** The Glory target: 10, or 'target-N' to test others. */
@@ -853,7 +853,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     yield* gain(s, b.owner, 1, H.raguel);
     log(s, 'raguel', `${pname(s, b.bound)} gained at the Reaping, so ${pname(s, b.owner)} gains 1 Glory (Raguel).`);
   }
-  yield* endOfDayV43(s, order, gained, lost, leansWithTide);
+  yield* endOfDayV43(s, order, gained, lost, leansWithTide, tide);
 
   // Martyr: if you lost Glory, replace a Choir card with a card from your hand.
   for (const seat of order) {
