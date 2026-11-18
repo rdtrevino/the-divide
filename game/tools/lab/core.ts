@@ -69,7 +69,9 @@ export interface Rules {
   pax?: { margin: number; dom: number[]; indiv: number[]; tie: 'lowGlory' | 'lower' };
   /** Fates: each player secretly draws a Fate (1 Light, -1 Dark) from `pool`. Every Evening each Choir card matching the Tide earns
    *  `choirPay`; every Day the Tide matches your Fate is worth `perDay`, scored only at the end (after maxDays). */
-  fate?: { pool: number[]; perDay: number; choirPay: number; mult?: boolean; oath?: boolean };
+  fate?: { pool: number[]; perDay: number; choirPay: number; mult?: boolean; oath?: boolean; oathHand?: boolean };
+  /** Soft Miser's Rule: at the end, the player(s) who Offered the fewest cards lose this much Glory (unless everyone is tied). */
+  miserTax?: number;
   /** The Miser's Rule: at the end, the player(s) who Offered the fewest cards cannot win (unless everyone is tied). */
   miser?: boolean;
   /** Pantheon: each game shuffles a random selection of the original cards (picks[i] from pools[i]) into a base deck. */
@@ -363,12 +365,13 @@ export function legal(s: State, p: number): Action[] {
   const full = s.choir[p].length >= s.R.choirMax;
   const rs = full ? s.choir[p].map((_, j) => j) : [-1];
   if (!(s.anathema >= 0 && s.anathema !== p)) for (let i = 0; i < s.hand[p].length; i++) out.push({ t: 'offer', i });
-  for (let i = 0; i < s.hand[p].length; i++) for (const r of rs) out.push({ t: 'exalt', i, r });
+  for (let i = 0; i < s.hand[p].length; i++) { if (s.R.fate?.oathHand && s.cards[s.hand[p][i]].ab === 'oath') continue; for (const r of rs) out.push({ t: 'exalt', i, r }); }
   for (let k = 0; k < s.altar.length; k++) {
     const a = s.altar[k];
     if (!a.up && !s.R.gatherBlind && a.by !== p) continue;
     if (a.by >= 0 && a.by !== p && (choirHas(s, a.by, 'sanctuary') || choirHas(s, a.by, 'trumpet2')) && a.kind === 1) continue;
     if (a.by >= 0 && a.by !== p && choirHas(s, a.by, 'mirage')) continue;
+    if (s.R.fate?.oathHand && s.cards[a.c].ab === 'oath') { out.push({ t: 'gather', k, r: -1 }); continue; }
     for (const r of rs) out.push({ t: 'gather', k, r });
   }
   if (!out.length) out.push({ t: 'pass' });
@@ -442,11 +445,15 @@ export function act(s: State, a: Action) {
   } else {
     const [x] = s.altar.splice(a.k, 1);
     if (s.cards[x.c].ab === 'oath') s.oathStats[x.by >= 0 && x.by !== p ? 1 : 3]++;
+    if (s.R.fate?.oathHand && s.cards[x.c].ab === 'oath') {
+      s.hand[p].push(x.c);
+    } else {
     { const gv = sgn(val(s, x.c)), l0 = lean(s, p); s.gatherStats[gv === 0 || l0 === 0 ? 2 : gv === l0 ? 0 : 1]++; }
     replaceAt(s, p, a.r);
     enter(s, p, x.c);
     if (x.by >= 0 && x.by !== p && choirHas(s, x.by, 'snare')) gain(s, x.by, 1, 'ab:snare');
     if (choirHas(s, p, 'pilgrim')) gain(s, p, 1, 'ab:pilgrim');
+    }
   }
   if (lean(s, p) !== before && s.phase === 'noon') s.switches[p]++;
   afterAction(s, p);
@@ -706,6 +713,10 @@ export function evening(s: State) {
   s.altar = [];
   if (s.R.fate && s.day >= s.R.maxDays) for (let p = 0; p < n; p++) gain(s, p, s.R.fate.perDay * s.fateDays[p], 'fate');
   if (s.glory.some((g) => g >= s.R.target) || s.day >= s.R.maxDays) {
+    if (s.R.miserTax) {
+      const lo = Math.min(...s.offersBy);
+      if (s.offersBy.some((x) => x !== lo)) for (let p = 0; p < n; p++) if (s.offersBy[p] === lo) gain(s, p, -s.R.miserTax, 'miser');
+    }
     let eligible = [...Array(n).keys()];
     if (s.R.miser) {
       const lo = Math.min(...s.offersBy);

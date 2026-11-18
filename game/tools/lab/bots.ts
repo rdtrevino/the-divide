@@ -357,7 +357,14 @@ function determinize(s: State, p: number, salt: number): State {
 
 /** The Miser's Rule: the risk of ending with the fewest Offers, larger as the end nears. */
 function miserRisk(s: State, q: number) {
-  if (!s.R.miser) return 0;
+  if (!s.R.miser && !s.R.miserTax) return 0;
+  if (s.R.miserTax) {
+    let lo2 = Infinity;
+    for (let k = 0; k < s.R.n; k++) if (k !== q) lo2 = Math.min(lo2, s.offersBy[k]);
+    const g = s.offersBy[q] - lo2;
+    const dl2 = daysLeft(s);
+    return g < 0 ? s.R.miserTax * (2 / (dl2 + 1)) * 1.2 : g === 0 ? s.R.miserTax * 0.5 * (2 / (dl2 + 1)) : 0;
+  }
   let lo = Infinity;
   for (let k = 0; k < s.R.n; k++) if (k !== q) lo = Math.min(lo, s.offersBy[k]);
   const gap = s.offersBy[q] - lo; // below 0: I am the miser
@@ -365,7 +372,7 @@ function miserRisk(s: State, q: number) {
   return gap < 0 ? (3 + 1.5 * -gap) * (2 / (dl + 1)) : gap === 0 ? 1.5 * (2 / (dl + 1)) : 0;
 }
 function value(s: State, q: number) {
-  if (s.R.miser) return valueBase(s, q) - miserRisk(s, q);
+  if (s.R.miser || s.R.miserTax) return valueBase(s, q) - miserRisk(s, q);
   return valueBase(s, q);
 }
 function valueBase(s: State, q: number) {

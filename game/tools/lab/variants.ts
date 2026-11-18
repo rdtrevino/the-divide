@@ -324,3 +324,12 @@ Object.assign(VARIANTS, {
   oath_miser: OATH({ miser: true }),
   oath_n8: OATH({ deck: { ...OATH_DECK, L1: 16, D1: 16, N: 8 } }),
 } as Record<string, V>);
+
+// ---- Round 29: Oaths that cannot be Exalted (a Gathered Oath goes to hand), and the soft Miser's Rule (fewest Offers lose 3 Glory)
+const OATH2 = (extra: V = {}): V => FATE(1, 0, { deck: OATH_DECK, fate: { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true, oathHand: true }, ...extra });
+Object.assign(VARIANTS, {
+  oath2: OATH2(),
+  oath2_tax3: OATH2({ miserTax: 3 }),
+  fm_tax3: MF([1, 1, 1, -1, -1, -1], { miserTax: 3 }),
+  fmF2_tax3: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3 }),
+} as Record<string, V>);
