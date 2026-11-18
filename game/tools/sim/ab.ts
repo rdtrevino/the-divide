@@ -1,5 +1,5 @@
 // A/B test balance variants against the current rules on identical seeds.
-// Usage: npx tsx ab.ts --games 20000 --variants arbiter-catchup,confession-pure
+// Usage: npx tsx ab.ts --games 20000 --variants reap-mirror,crowd-1
 import { cardName, playBotGame } from '@divide/engine';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a, i, all) => (a.startsWith('--') ? [a.slice(2), all[i + 1]] : [])).filter((x) => x.length));

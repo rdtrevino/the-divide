@@ -1,7 +1,7 @@
 // Card flow and starting Choir: compare dealing rules on identical seeds.
 // Usage: npx tsx flow.ts <games> <players> <out.json> <config> [config...]
 // A config is variants joined by '+', or 'B' for the current rules. Dealing variants:
-//   choir-N   deal N random Choir cards (the rule is 3)
+//   choir-N   deal N random Choir cards (the rule is 2)
 //   pick-K    deal K extra hand cards and choose K of them as the Choir (not a rule; tested in V40)
 // The V40 report (reports/v40-dealing-2026-11-17.md) was measured with since-removed variants for the
 // Offer draw, the First Fruits draw and a hand of 4; check out commit history to rerun those.
@@ -59,6 +59,7 @@ for (const code of CONFIGS) {
   let days = 0, winG = 0, margin = 0, lead1 = 0, lead1g = 0, lead3 = 0, lead3g = 0, comeback = 0, startLuck = 0, startLuckG = 0, day1Swing = 0, reapAbs = 0, reapCount = 0, cappedReap = 0, offerG = 0, bonusG = 0;
   const probe: Probe = { core: 0, actions: {}, handAtAction: 0, actionCount: 0, rewards: {}, startNet: null, choirAtAction: 0 };
   const cel: Record<string, { w: number; e: number }> = {};
+  const celRatio = (id: string) => (cel[id] ? +(cel[id].w / cel[id].e).toFixed(2) : null);
   for (let i = 0; i < N; i++) {
     probe.startNet = null;
     const s = play(900000 + i, Array(n).fill('smart'), variants, probe);
@@ -70,8 +71,9 @@ for (const code of CONFIGS) {
     const pre = gloryAfterDay(s, s.day - 1); const m = Math.max(...pre);
     if (!s.result!.winners.some((w) => pre[w] === m)) comeback++;
     // Starting-deal luck: does the player dealt the strongest-leaning starting Choir win more often?
-    if (probe.startNet) {
-      const mags = probe.startNet.map((x) => Math.min(3, Math.abs(x)));
+    const startNet = probe.startNet as number[] | null; // set by play()
+    if (startNet) {
+      const mags = startNet.map((x) => Math.min(3, Math.abs(x)));
       const k = soleLeader(mags);
       if (k >= 0) { startLuckG++; startLuck += share(s, k) * n; }
     }
@@ -118,8 +120,9 @@ for (const code of CONFIGS) {
     actionMix: Object.fromEntries(Object.entries(probe.actions).map(([k, v]) => [k, +((v / acts) * 100).toFixed(0)])),
     offerDrawPct: rw ? +(((probe.rewards.card ?? 0) / rw) * 100).toFixed(1) : 0,
     celestialSpread: +sd.toFixed(3),
-    dominion: +((cel['celestial-the-dominion'].w / cel['celestial-the-dominion'].e)).toFixed(2),
-    cantor: +((cel['celestial-the-cantor'].w / cel['celestial-the-cantor'].e)).toFixed(2),
+    // Win ratios of two Celestials (null in the Base game, which has none).
+    dominion: celRatio('celestial-the-dominion'),
+    cantor: celRatio('celestial-the-cantor'),
     secPerGame: +((Date.now() - t0) / 1000 / (3 * N)).toFixed(3),
   };
   results.push(row);

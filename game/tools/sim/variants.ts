@@ -1,14 +1,15 @@
 // Measure decision density, skill, tension, economy, and balance for rule variants and mixtures.
-// Usage: npx tsx variants.ts <gamesPerTest> <outFile> [configCodes...]
+// Usage: npx tsx variants.ts <gamesPerTest> <outFile> [config...]
+// A config is 'B' (the current rules), 'T<n>' (race to n Glory), or test switches joined by '+' (e.g. reap-mirror+crowd-1).
+// The letter codes of earlier reports (K, R, C, N) and 'M<n>' named rules since removed from the engine.
 import { writeFileSync } from 'node:fs';
 import { Game, botAnswer, type Decision, type GameState } from '@divide/engine';
 
 const N = Number(process.argv[2] ?? 3000);
 const OUT = process.argv[3] ?? 'variants.json';
-const CODES: Record<string, string> = { K: 'catchup-order', R: 'two-rounds', C: 'celestial-draft', N: 'snake-rounds' };
-const CONFIGS = process.argv.slice(4).length ? process.argv.slice(4) : ['B', 'R', 'K', 'C', 'RC'];
+const CONFIGS = process.argv.slice(4).length ? process.argv.slice(4) : ['B'];
 const NAMES = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
-const CORE = new Set(['action', 'offer.card', 'offer.second', 'gather.source', 'exalt.card', 'firstFruits', 'offer.reward', 'ithuriel', 'urim', 'asmadai', 'asmadai.swap', 'upkeep.keep', 'choir.discard', 'activate', 'celestial.pick']);
+const CORE = new Set(['action', 'offer.card', 'offer.second', 'gather.source', 'exalt.card', 'firstFruits', 'choir.discard', 'activate']);
 
 function rnd(seed: number) { let t = (seed + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
 function randomAnswer(d: Decision, salt: number) {
@@ -41,8 +42,13 @@ function gloryAfterDay(s: GameState, day: number) {
 
 const results: any[] = [];
 for (const code of CONFIGS) {
-  const variants = code.split('+').flatMap((t) => (t === 'B' ? [] : /^T\d+$/.test(t) ? ['target-' + t.slice(1)] : /^M\d+$/.test(t) ? ['maxdays-' + t.slice(1)] : t.split('').map((c) => CODES[c])));
-  const row: any = { code, variants: variants.join('+') || 'baseline (V36)' };
+  const variants = code.split('+').flatMap((t) => {
+    if (t === 'B') return [];
+    if (/^T\d+$/.test(t)) return ['target-' + t.slice(1)];
+    if (/^[A-Z]+$/.test(t) || /^M\d+$/.test(t)) throw new Error(`Config "${t}" named a rule since removed from the engine. Use B, T<n>, or test switch names.`);
+    return [t];
+  });
+  const row: any = { code, variants: variants.join('+') || 'baseline (current rules)' };
   for (const n of [3, 4]) {
     const t0 = Date.now();
     const counts = { all: Array(n).fill(0), core: Array(n).fill(0) };
@@ -54,7 +60,7 @@ for (const code of CONFIGS) {
       const firsts: number[] = [];
       const s = play(900000 + i, Array(n).fill('smart'), variants, counts, firsts);
       for (const e of s.stats) if (e.type === 'glory' && e.seat !== undefined && firsts[e.day] !== undefined) posGlory[(e.seat - firsts[e.day] + n) % n] += e.amount ?? 0;
-      days += s.day; dayHist[s.day] = (dayHist[s.day] ?? 0) + 1; if (s.day >= Number(variants.find((v) => v.startsWith('maxdays-'))?.slice(8) ?? 12) && !s.players.some((p) => p.glory - 0 >= Number(variants.find((v) => v.startsWith('target-'))?.slice(7) ?? 99))) capped++;
+      days += s.day; dayHist[s.day] = (dayHist[s.day] ?? 0) + 1; if (s.day >= 12 && !s.players.some((p) => p.glory - 0 >= Number(variants.find((v) => v.startsWith('target-'))?.slice(7) ?? 99))) capped++;
       const d3 = gloryAfterDay(s, 3), d5 = gloryAfterDay(s, s.day - 1);
       const t3 = Math.max(...d3), t5 = Math.max(...d5);
       const l3 = d3.flatMap((g, k) => (g === t3 ? [k] : []));
