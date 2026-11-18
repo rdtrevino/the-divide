@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { alignment, baseValue, lose } from '../src/core';
+import { alignment, baseValue } from '../src/core';
 import { C, E, H } from '../src/data';
-import { endGame, evening, legalActions, reaping, setTide, takeTurn, morning } from '../src/engine';
+import { activationPhase, endGame, evening, legalActions, reaping, setTide, takeTurn, morning } from '../src/engine';
 import { Game, RuleError } from '../src/game';
 import { viewFor } from '../src/view';
 import { botAnswer } from '../src/bots';
@@ -82,9 +82,8 @@ describe('The Reaping', () => {
     reap(s);
     expect(s.players[0].glory).toBe(6);
   });
-  it('Famine skips Alignment scoring; the V43 Purgatory paid Neutral Choirs and cost the others 1', () => {
+  it('Famine skips Alignment scoring', () => {
     const s = blank();
-    s.config.variants!.push('-purgatory-spare'); // V44 changed Purgatory (tested below)
     choir(s, 0, H.wisdom);
     choir(s, 1, H.twilight);
     s.players.forEach((p) => (p.glory = 2));
@@ -92,9 +91,6 @@ describe('The Reaping', () => {
     s.currentEvent = E.famine;
     reap(s);
     expect(glory(s)).toEqual([2, 2, 2]);
-    s.currentEvent = E.purgatory;
-    reap(s);
-    expect(glory(s)).toEqual([1, 3, 3]);
   });
   it('False Prophecy scores the opposite direction', () => {
     const s = blank();
@@ -160,10 +156,7 @@ describe('Actions', () => {
     hand(t, 0, H.wisdom);
     t.players[0].glory = 3;
     t.currentEvent = E.fast;
-    const { asked } = drive(t, takeTurn(t, 0), { action: ['offer'] });
-    const act = asked.find((d) => d.tag === 'action');
-    expect(act).toBeDefined();
-    expect(act!.options.map((o) => o.id)).toEqual(['offer', 'gather']);
+    expect(legalActions(t, 0)).toEqual(['offer']); // and an empty Altar leaves nothing to Gather
   });
 });
 
@@ -174,8 +167,7 @@ describe('Protection and reactions', () => {
     choir(s, 1, H.cherubim, H.wisdom);
     choir(s, 2, H.moloch);
     for (const [id, by] of [[H.gabriel, 1], [H.envy, 2], [H.hymn, 2]] as const) { s.hostDeck = s.hostDeck.filter((x) => x !== id); s.altar.push({ id, facedown: true, offeredBy: by, day: 1, kind: 'offer' }); }
-    const { asked } = drive(s, takeTurn(s, 0), {
-      action: ['gather'], 'gather.source': ['deck'],
+    const { asked } = drive(s, activationPhase(s, 0), {
       activate: (d) => [d.options.find((o) => o.card === H.winnowing)?.id ?? d.options.find((o) => o.card === H.michael)?.id ?? 'end'],
       'winnowing.altar': (d) => [d.options.find((o) => o.id !== 'none')!.id],
       'michael.target': (d) => [d.options.find((o) => o.seat === 2)?.id ?? 'none'],
@@ -190,8 +182,7 @@ describe('Protection and reactions', () => {
     choir(s, 0, H.michael);
     s.players[0].glory = 2;
     choir(s, 1, H.tribute, H.wisdom);
-    drive(s, takeTurn(s, 0), {
-      action: ['gather'], 'gather.source': ['deck'],
+    drive(s, activationPhase(s, 0), {
       activate: (d) => [d.options.find((o) => o.card === H.michael)?.id ?? 'end'],
       'michael.target': (d) => [d.options.find((o) => o.seat === 1)!.id],
     });
@@ -215,7 +206,8 @@ describe('Protection and reactions', () => {
     const s = blank();
     choir(s, 0, H.parasite, H.moloch, H.azazel, H.envy); // a full Choir of 4
     s.currentEvent = E.letThereBeLight;
-    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'] });
+    altar(s, H.wisdom);
+    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'] });
     const room = asked.find((d) => d.options.some((o) => o.card === H.moloch) && d.options.length >= 3);
     expect(room?.options.some((o) => o.card === H.parasite)).toBe(true);
   });
@@ -233,7 +225,7 @@ describe('Protection and reactions', () => {
     const s = blank();
     choir(s, 0, H.confession);
     s.currentEvent = E.flood;
-    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'] });
+    const { asked } = drive(s, activationPhase(s, 0));
     expect(asked.some((d) => d.tag === 'activate' && d.options.some((o) => o.card === H.confession))).toBe(false);
   });
 });
@@ -244,7 +236,7 @@ describe('V34 card changes', () => {
       const s = blank();
       choir(s, 0, H.confession);
       hand(s, 0, ...cards);
-      drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: (d) => [d.options.find((o) => o.card === H.confession)?.id ?? 'end'] });
+      drive(s, activationPhase(s, 0), { activate: (d) => [d.options.find((o) => o.card === H.confession)?.id ?? 'end'] });
       return s.players[0].glory;
     };
     expect(run([H.wisdom, H.twilight])).toBe(1);
@@ -254,9 +246,8 @@ describe('V34 card changes', () => {
 });
 
 describe('Glory routing', () => {
-  it('the Arbiter (V34): at the Reaping, takes 1 of its gain from a rival (from the Pot if no one has Glory)', () => {
+  it('the Arbiter: at the Reaping, takes 1 of its gain from a rival (from the Pot if no one has Glory)', () => {
     const s = blank(3, [C.arbiter]);
-    s.config.variants!.push('-arbiter-judge'); // the V43 Arbiter (V44 is tested below)
     choir(s, 0, H.wisdom, H.gabriel); // Light 2, alone with the Tide: gains 3
     altar(s, H.confession);
     reap(s);
@@ -264,15 +255,6 @@ describe('Glory routing', () => {
     s.players[2].glory = 4;
     reap(s);
     expect(glory(s)).toEqual([6, 0, 3]);
-  });
-  it('the Arbiter (V34): gives 1 of its Reaping loss to a player of its choice', () => {
-    const s = blank(3, [C.arbiter]);
-    s.config.variants!.push('-arbiter-judge');
-    choir(s, 0, H.moloch, H.envy); // Dark 2
-    s.players[0].glory = 5;
-    altar(s, H.confession);
-    reap(s, { 'arbiter.give': ['p2'] });
-    expect(glory(s)).toEqual([2, 0, 1]); // alone against the Tide, loses 3 (V42), and gives 1 of it to a player
   });
   it('Glory moves between players only through card abilities: old gift inputs do not replay', () => {
     const cfg = { seed: 3, mode: 'open' as const, players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) };
@@ -365,7 +347,7 @@ describe('V35: First Fruits and facedown Offers', () => {
     choir(s, 0, H.knowledge);
     fd(s, H.moloch, 1);
     fd(s, H.wisdom, 2);
-    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.knowledge), knowledge: (d) => d.options.map((o) => o.id) });
+    const { asked } = drive(s, activationPhase(s, 0), { activate: pick(H.knowledge), knowledge: (d) => d.options.map((o) => o.id) });
     const shown = asked.find((d) => d.tag === 'knowledge.seen')!;
     expect(shown.seat).toBe(0);
     expect([...shown.reveal!].sort()).toEqual([H.moloch, H.wisdom].sort());
@@ -377,7 +359,7 @@ describe('V35: First Fruits and facedown Offers', () => {
     const s = blank();
     choir(s, 0, H.belial);
     fd(s, H.wisdom, 1);
-    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.belial), belial: (d) => [d.options[0].id] });
+    const { asked } = drive(s, activationPhase(s, 0), { activate: pick(H.belial), belial: (d) => [d.options[0].id] });
     expect(asked.find((d) => d.tag === 'belial.seen')!.reveal).toEqual([H.wisdom]);
     expect(viewFor(s, 0, []).altar.find((a) => a.offeredBy === 1)!.id).toBeNull();
   });
@@ -406,7 +388,7 @@ describe('V35: First Fruits and facedown Offers', () => {
     s.currentEvent = E.pandemonium;
     choir(s, 0, H.knowledge);
     fd(s, H.moloch, 1);
-    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.knowledge) });
+    const { asked } = drive(s, activationPhase(s, 0), { activate: pick(H.knowledge) });
     expect(asked.some((d) => d.tag === 'knowledge')).toBe(false);
   });
   it('Vessel pays 1 Glory at the Reaping only if its card is still on the Altar and matches the Tide (V40)', () => {
@@ -424,7 +406,7 @@ describe('V35: First Fruits and facedown Offers', () => {
     const s = blank();
     choir(s, 0, H.vessel);
     hand(s, 0, H.wisdom);
-    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: pick(H.vessel), 'vessel.hand': (d) => [d.options.find((o) => o.card === H.wisdom)!.id] });
+    drive(s, activationPhase(s, 0), { activate: pick(H.vessel), 'vessel.hand': (d) => [d.options.find((o) => o.card === H.wisdom)!.id] });
     expect(s.altar.some((a) => a.kind === 'vessel' && a.facedown && a.id === H.wisdom)).toBe(true);
     expect(s.players[0].glory).toBe(0);
     expect(s.players[0].hand).toHaveLength(0);
@@ -459,26 +441,6 @@ describe('the race to 12', () => {
       if (s.day > 1) expect(Math.max(...byDay(s.day - 1))).toBeLessThan(12);
     }
   });
-  it('the Arbiter gives to the other player with the least Glory; ties are the holder\'s choice', () => {
-    const s = blank();
-    s.config.variants!.push('-arbiter-judge');
-    s.players[0].celestial = C.arbiter;
-    s.players[0].glory = 5;
-    s.players[1].glory = 2;
-    s.players[2].glory = 2;
-    const { asked } = drive(s, lose(s, 0, 2, 'reaping'), { 'arbiter.give': (d) => [d.options[1].id] });
-    const d = asked.find((x) => x.tag === 'arbiter.give')!;
-    expect(d.options.map((o) => o.seat)).toEqual([1, 2]);
-    expect(s.players[2].glory).toBe(3);
-    const t = blank();
-    t.config.variants!.push('-arbiter-judge');
-    t.players[0].celestial = C.arbiter;
-    t.players[0].glory = 5;
-    t.players[1].glory = 4;
-    t.players[2].glory = 1;
-    drive(t, lose(t, 0, 2, 'reaping'));
-    expect(t.players[2].glory).toBe(2);
-  });
 });
 
 describe('V37 card changes', () => {
@@ -489,7 +451,7 @@ describe('V37 card changes', () => {
       choir(s, 0, H.envy);
       s.players[0].glory = mine;
       s.players[1].glory = 5;
-      drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: act(H.envy) });
+      drive(s, activationPhase(s, 0), { activate: act(H.envy) });
       return s.players[1].glory;
     };
     expect(run(2)).toBe(4);
@@ -556,7 +518,7 @@ describe('V38 balance changes', () => {
       s.hostDeck = s.hostDeck.filter((x) => x !== c);
       s.altar.push({ id: c, facedown: true, offeredBy: 1, day: 1, kind: 'offer' });
     }
-    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: act(H.knowledge), knowledge: (d) => d.options.slice(0, 3).map((o) => o.id) });
+    const { asked } = drive(s, activationPhase(s, 0), { activate: act(H.knowledge), knowledge: (d) => d.options.slice(0, 3).map((o) => o.id) });
     expect(asked.find((d) => d.tag === 'knowledge')!.max).toBe(3);
     expect(s.altar.filter((a) => a.seenBy?.includes(0))).toHaveLength(3);
     expect(s.players[0].glory).toBe(0);
@@ -567,19 +529,6 @@ describe('V38 balance changes', () => {
     s.day_.prophecy[0] = 'light';
     reap(s);
     expect(s.players[0].glory).toBe(1);
-  });
-  it('the Arbiter (V38) takes from a player only when it gains 2 or more', () => {
-    const run = (cards: string[]) => {
-      const s = blank(3, [C.arbiter]);
-      s.config.variants!.push('-arbiter-judge');
-      choir(s, 0, ...cards);
-      s.players.forEach((p) => (p.glory = 3));
-      altar(s, H.confession);
-      reap(s);
-      return glory(s).reduce((a: number, b: number) => a + b, 0) - 9; // Glory from the Pot
-    };
-    expect(run([H.wisdom])).toBe(2); // gains 3, 1 of it taken from a player
-    expect(run([H.wisdom, H.gabriel])).toBe(2);
   });
   it('Outcast gains 1 at the Reaping while it holds the least Glory', () => {
     const s = blank();
@@ -600,7 +549,7 @@ describe('V38 balance changes', () => {
     reap(s);
     expect(s.players[0].choir.find((c) => c.id === H.mammon)!.store).toBe(1);
     const g = s.players[0].glory;
-    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: (d) => [d.options.find((o) => o.card === H.mammon)?.id ?? 'end'] });
+    drive(s, activationPhase(s, 0), { activate: (d) => [d.options.find((o) => o.card === H.mammon)?.id ?? 'end'] });
     expect(s.players[0].glory).toBe(g + 1);
     expect(s.players[0].choir.some((c) => c.id === H.mammon)).toBe(false);
   });
@@ -614,13 +563,6 @@ describe('starting deal', () => {
       expect(p.choir).toHaveLength(2);
       expect(p.hand).toHaveLength(p.celestial === C.dominion ? 5 : 3);
     }
-  });
-  it("'choir-N' and 'pick-K' change the deal for testing", () => {
-    const cfg = (v: string) => new Game({ seed: 23, mode: 'open', variants: [v], players: ['A', 'B', 'C'].map((name) => ({ name, isBot: false })) });
-    for (const p of cfg('choir-3').state.players) expect(p.choir).toHaveLength(3);
-    const g = cfg('pick-2');
-    expect(g.pending.map((d) => d.tag)).toEqual(['choir.pick', 'choir.pick', 'choir.pick']);
-    for (const p of g.state.players) expect(p.choir).toHaveLength(0);
   });
 });
 
@@ -877,13 +819,11 @@ describe('V42 one deck: no once-per-game cards', () => {
   });
   it('Gather (V42) takes a card from the Altar only', () => {
     const s = blank();
-    s.config.variants = [];
     choir(s, 0, H.wisdom);
     expect(legalActions(s, 0)).not.toContain('gather'); // an empty Altar: nothing to Gather
     altar(s, H.moloch);
-    const { asked } = drive(s, takeTurn(s, 0), { action: ['gather'] });
+    drive(s, takeTurn(s, 0), { action: ['gather'] });
     expect(s.players[0].choir.map((c) => c.id)).toContain(H.moloch);
-    expect(asked.find((d) => d.tag === 'gather.source')?.options.some((o) => o.id === 'deck') ?? false).toBe(false);
   });
   it('spent cards: Free Will (second action), Abaddon (replace the Altar), Michael (cast a card out), then each is discarded', () => {
     const s = blank();
@@ -915,7 +855,7 @@ describe('V42 one deck: no once-per-game cards', () => {
     hand(s, 1, H.wisdom, H.hymn);
     drive(s, takeTurn(s, 0), { action: ['offer'], activate: act(H.anathema) });
     expect(legalActions(s, 1)).not.toContain('offer');
-    drive(s, takeTurn(s, 1), { action: ['gather'], 'gather.source': ['deck'] });
+    drive(s, takeTurn(s, 1), { action: ['exalt'] });
     drive(s, takeTurn(s, 0), { action: ['offer'], activate: () => ['end'] }); // you may Offer on your next turn
     expect(legalActions(s, 1)).toContain('offer'); // it ended at the start of your turn
   });
@@ -969,7 +909,7 @@ describe('V44 Advanced pass: Celestials and Events for the current scoring', () 
     choir(s, 1, H.cherubim);
     choir(s, 2, H.tribute);
     s.players[0].glory = 2;
-    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: cel(C.patron) });
+    drive(s, activationPhase(s, 0), { activate: cel(C.patron) });
     expect(s.players[1].choir.map((c) => c.id)).toEqual([H.cherubim]); // the only other choice, Ben, is protected
     expect(s.players[2].choir.map((c) => c.id)).toContain(H.moloch);
     expect(s.players[0].glory).toBe(1);
@@ -1041,7 +981,7 @@ describe('Site review fixes (V44)', () => {
     const s = blank();
     choir(s, 0, H.anathema);
     hand(s, 0, H.wisdom, H.gabriel);
-    drive(s, takeTurn(s, 0), { action: ['gather'], 'gather.source': ['deck'], activate: (d) => [d.options.find((o) => o.card === H.anathema)?.id ?? 'end'] });
+    drive(s, activationPhase(s, 0), { activate: (d) => [d.options.find((o) => o.card === H.anathema)?.id ?? 'end'] });
     expect(legalActions(s, 0)).toContain('offer');
     expect(legalActions(s, 1)).not.toContain('offer');
   });

@@ -1,12 +1,11 @@
 // The shape of a game: length, the winner's Glory per Day, where Glory comes from, and the action mix.
-// Usage: npx tsx shape.ts GAMES variant[+variant...]
+// Usage: npx tsx shape.ts GAMES
 import { Game, botAnswer } from '@divide/engine';
 const N = Number(process.argv[2] ?? 1000);
-const V = (process.argv[3] ?? '').split('+').filter(Boolean);
 for (const n of [3, 4]) {
   let days = 0, winPerDay = 0, lose3 = 0, reaps = 0; const gs: Record<string, number> = {}; const acts: Record<string, number> = {}; const src: Record<string, number> = {};
   for (let i = 0; i < N; i++) {
-    const g = new Game({ seed: 515151 + i, mode: 'open', variants: V, players: Array.from({ length: n }, (_, k) => ({ name: 'P' + k, isBot: true })) });
+    const g = new Game({ seed: 515151 + i, mode: 'open', players: Array.from({ length: n }, (_, k) => ({ name: 'P' + k, isBot: true })) });
     while (!g.over) for (const d of [...g.pending]) if (g.pending.includes(d)) { const a = botAnswer(g.state, d); if (d.tag === 'action') acts[a[0]] = (acts[a[0]] ?? 0) + 1; if (d.tag === 'gather.source') gs[a[0].split(':')[0]] = (gs[a[0].split(':')[0]] ?? 0) + 1; g.answer(d.seat, d.id, a); }
     const s = g.state as any; days += s.day;
     const w = s.result.winners[0]; winPerDay += s.players[w].glory / s.day;

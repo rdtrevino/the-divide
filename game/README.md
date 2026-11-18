@@ -17,24 +17,19 @@ The online version of The Divide. Everything here is TypeScript.
 
 ```
 npm install
-npm test                                   # engine tests (101, including about 1,500 bot games) and server tests (11)
+npm test                                   # engine tests (92, including about 600 bot games) and server tests (11)
 npm run dev                                # the whole site locally at http://127.0.0.1:8787
 npm run deploy                             # publish (see SITE.md)
+npm run sim -- --games 20000 --players 3,4 # balance report: every Celestial and Host card
+cd tools/sim && npx tsx card-balance.ts 20000 0 out.json  # every card on fixed seeds (run offsets in parallel and merge)
+cd tools/sim && npx tsx advanced.ts 20000 0 out.json      # Advanced game: Celestial win ratios, what each Event does
 cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements
-npm run sim -- --games 20000 --players 3,4 # balance report
-cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a rule variant
-cd tools/sim && npx tsx advanced.ts 20000 0 out.json [switches]  # Advanced game: Celestial win ratios, what each Event does
+cd tools/sim && npx tsx baseline.ts 10000  # the bot column on the Stats page (after a rules change)
 ```
 
-## Rule switches
+## Testing a rule change
 
-The engine's game config takes a list of `variants`, used by the simulator and the tests, never in real games:
-
-- **Adopted rules are on by default.** Each rework from V42 to V44 was measured as a switch first; the adopted ones are listed in `V42_RULES`, `V43_RULES` and `V44_RULES` in `packages/engine/src/core.ts`. `-name` turns one off, and `v41-rules` turns them all off.
-- **Test switches** are the alternatives measured and not adopted. Each is named and explained beside the code it changes (search for `variant(s, '`); `../design/parked-abilities.md` lists the ones worth reviving.
-- **Numbers:** `target-N` (the race to N Glory), `limit-N` (Choir size), `choir-N` (starting Choir cards) and `pick-K` (choose the starting Choir from K extra cards).
-
-Measure a switch against the current rules on identical seeds with `cd tools/sim && npx tsx ab.ts --games 20000 --variants my-switch`, or every card with `npx tsx ab3.ts 20000 0 out.json base` (run several offsets in parallel and merge the counts). What each version changed, and the reports behind it, are in `../CHANGELOG.md` and `reports/`.
+The engine plays only the current rules. To measure a change, make it on a branch and run the same simulator commands there and on `main`: the seeds are fixed, so the two reports compare like for like. The rules measured and rejected along the way are recorded in `../CHANGELOG.md`.
 
 ## Engine rulings
 

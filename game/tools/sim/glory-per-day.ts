@@ -1,8 +1,7 @@
 // How much Glory players make in a Day, from every source, and how long games run.
-// Usage: npx tsx glory-per-day.ts <games> [variant+variant ...]
+// Usage: npx tsx glory-per-day.ts <games>
 import { playBotGame } from '@divide/engine';
 const N = Number(process.argv[2] ?? 2000);
-const V = process.argv[3] ? process.argv[3].split('+') : [];
 for (const n of [3, 4]) {
   const hist = [0, 0, 0, 0, 0, 0]; // net Glory in a Day: 0 or less, 1, 2, 3, 4, 5+
   const win = [0, 0, 0, 0, 0, 0];
@@ -10,7 +9,7 @@ for (const n of [3, 4]) {
   const lens: number[] = [];
   const bySource: Record<string, number> = {};
   for (let g = 0; g < N; g++) {
-    const s = playBotGame({ seed: 222000 + g, mode: 'open', variants: V, players: ['A', 'B', 'C', 'D'].slice(0, n).map((name) => ({ name, isBot: true })) }).state;
+    const s = playBotGame({ seed: 222000 + g, mode: 'open', players: ['A', 'B', 'C', 'D'].slice(0, n).map((name) => ({ name, isBot: true })) }).state;
     days += s.day; lens.push(s.day);
     const w = s.result!.winners[0];
     const per: Record<string, number> = {};

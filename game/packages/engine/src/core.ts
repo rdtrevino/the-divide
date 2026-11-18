@@ -70,55 +70,6 @@ export const pname = (s: GameState, seat: Seat) => s.players[seat].name;
 // ---------------------------------------------------------------- queries
 
 export const others = (s: GameState, seat: Seat) => s.players.filter((p) => p.seat !== seat);
-/**
- * V42 rules (approved November 18, 2026). Each was measured as a test switch first; these are now the game.
- * Where a card's code still branches on one of these names, the branch it takes here is the rule.
- * The other switches in the code are the rejected or parked alternatives (see design/parked-abilities.md).
- */
-export const V42_RULES: readonly string[] = [
-  // Actions and the Reaping
-  'exalt-free', 'gather-altar', 'reap-mirror',
-  // Cards
-  'scapegoat-deny', 'silence-free', 'firm-with', 'tree-swap', 'rev-swap', 'bounty-bet-soft', 'bounty-morning',
-  'anathema-start', 'hubris-day4', 'mirage-protect', 'veil-more', 'winnowing-blind', 'winnowing-blind2', 'remnant-own',
-  'set-others', 'set-2', 'raguel-fate', 'heresy-cost', 'morningstar-free', 'vessel-bet', 'vessel-nodraw', 'shroud-same',
-  'seraph-refund', 'mammon-store', 'favor-ripen', 'favor-2', 'store-tide', 'zealot-others', 'sword-exalt',
-  'temptation-give', 'mercy-spare',
-  // Bots value a card's ability, not only its alignment, when they build.
-  'bot-engine',
-];
-/**
- * V43 rules (approved November 18, 2026): the engine reworks. Each was measured as a test switch first
- * (design/v43-proposal.md). The race is to 12 (GLORY_TARGET in engine.ts).
- */
-export const V43_RULES: readonly string[] = [
-  'wisdom-peek', 'gabriel-seer', 'tree-momentum', 'hymn-loud', 'martyr-sac', 'tribute-pay', 'remnant-asc2e',
-  'lilith-scavenge', 'parasite-feed', 'snare-trap', 'snare-nolook', 'eternity-relic', 'eternity-any', 'twilight-even',
-  'council-same', 'forger-both', 'mirage-all', 'apple-2', 'fig-evening', 'raph-free', 'sword-both', 'lev-landslide',
-  // Defiance takes the upset ability ('favor-upset' on Defiance), Favor takes Leviathan's old ability, and the Glory protection is dropped.
-  'favor-upset', 'swap-defiance', 'favor-spared', 'no-shield',
-];
-/**
- * V44 rules: the Advanced pass on the Celestials and Events, for V43's scoring (design/v44-advanced.md).
- * Each was measured as a test switch first.
- */
-export const V44_RULES: readonly string[] = [
-  // Celestials
-  'tempest-up', 'tempest-offer', 'oracle-two', 'cantor-chorus', 'cantor-chorus-n', 'patron-target', 'arbiter-judge', 'arbiter-any',
-  'dominion-5',
-  // Events
-  'calling-reward', 'purgatory-spare', 'tithe-host',
-  // Bots judge the Day's Event (the Oracle, Tithe, Purgatory, Divine Calling) and make the Cantor's second Offer.
-  'bot-v44',
-];
-const ADOPTED = new Set([...V42_RULES, ...V43_RULES, ...V44_RULES]);
-/** An adopted rule (V42 to V44), or a test switch named in the game's config. */
-export const variant = (s: GameState, v: string) => {
-  const cv = s.config?.variants; // a partial state (such as the table's Altar tally) may have no config
-  if (cv?.includes(v)) return true;
-  // '-name' turns one adopted rule off (tests and comparisons); 'v41-rules' turns them all off.
-  return ADOPTED.has(v) && !cv?.includes('v41-rules') && !cv?.includes('-' + v);
-};
 export const isCelestial = (s: GameState, seat: Seat, id: string) => s.players[seat].celestial === id;
 
 /** A Host card is active when it is face up in a Choir. */
@@ -134,12 +85,8 @@ export function hasActive(s: GameState, seat: Seat, id: string): boolean {
   return activeCards(s.players[seat]).some((c) => c.id === id) && !blockedByEvent(s, seat, id);
 }
 
-/** Whether the current Event applies to this player (Defiance ignores it). */
-export function eventOn(s: GameState, ev: string, seat?: Seat): boolean {
-  if (s.currentEvent !== ev) return false;
-  if (seat !== undefined && s.day_.defiance.includes(seat)) return false;
-  return true;
-}
+/** Whether this is the Day's Event. */
+export const eventOn = (s: GameState, ev: string) => s.currentEvent === ev;
 
 export function usedToday(s: GameState, seat: Seat, key: string) {
   return !!s.day_.usedToday[`${seat}:${key}`];
@@ -150,13 +97,16 @@ export function markToday(s: GameState, seat: Seat, key: string) {
 
 export function handLimit(s: GameState, seat: Seat): number {
   let n = baseHandLimit(s, seat);
-  if (eventOn(s, E.manna, seat)) n += s.day_.handLimitBonus;
+  if (eventOn(s, E.manna)) n += s.day_.handLimitBonus;
   return n;
 }
-// Test 'dominion-5': the Dominion's hand limit is 5.
-export const baseHandLimit = (s: GameState, seat: Seat) => (isCelestial(s, seat, C.dominion) ? (variant(s, 'dominion-5') ? 5 : 4) : 3);
+/** The hand limit: 3, or 5 for the Dominion (V44). */
+export const baseHandLimit = (s: GameState, seat: Seat) => (isCelestial(s, seat, C.dominion) ? 5 : 3);
 
-export const previousTide = (s: GameState): Dir | null => {
+/** What a card's value depends on: the Day and the Tides so far (Acolyte follows yesterday's Tide). */
+export type TideHistory = Pick<GameState, 'day' | 'tides'>;
+
+export const previousTide = (s: TideHistory): Dir | null => {
   const prev = s.tides.find((t) => t.day === s.day - 1);
   return prev ? prev.dir : null;
 };
@@ -167,20 +117,17 @@ export const opposite = (d: Dir): Dir => (d === 'light' ? 'dark' : d === 'dark' 
 export interface Value { light: number; dark: number }
 
 /** Offering value of a Host card in any zone, before Choir-only modifiers. */
-export function baseValue(s: GameState, id: string): Value {
+export function baseValue(s: TideHistory, id: string): Value {
   const h = HOST[id];
   if (!h) return { light: 0, dark: 0 };
+  // Acolyte (the card id is still host-shroud): its alignment matches the previous Day's Tide.
   if (id === H.shroud) {
     const prev = previousTide(s);
-    const same = variant(s, 'shroud-same'); // test: follows yesterday's Tide instead of opposing it
-    if (prev === 'light') return same ? { light: 1, dark: 0 } : { light: 0, dark: 1 };
-    if (prev === 'dark') return same ? { light: 0, dark: 1 } : { light: 1, dark: 0 };
+    if (prev === 'light') return { light: 1, dark: 0 };
+    if (prev === 'dark') return { light: 0, dark: 1 };
     return { light: 0, dark: 0 };
   }
   if (id === H.nephilim) return { light: 1, dark: 1 };
-  // V43 test 'hymn-loud': Hymn is Light +2 and Lamentation Dark +2.
-  if (variant(s, 'hymn-loud') && id === H.hymn) return { light: 2, dark: 0 };
-  if (variant(s, 'hymn-loud') && id === H.lamentation) return { light: 0, dark: 2 };
   if (h.alignment === 'light') return { light: h.value ?? 0, dark: 0 };
   if (h.alignment === 'dark') return { light: 0, dark: h.value ?? 0 };
   return { light: 0, dark: 0 };
@@ -265,10 +212,8 @@ export function removeFromChoir(s: GameState, seat: Seat, id: string): ChoirCard
 export function* discardFromChoir(s: GameState, seat: Seat, id: string, why: string): Gen<void> {
   const gone = removeFromChoir(s, seat, id);
   if (!gone) return;
-  // V43 tests. 'defiance-store': Glory stored on a card that leaves your Choir is yours.
-  if (variant(s, 'defiance-store') && (gone.store ?? 0) > 0 && hasActive(s, seat, H.defiance)) { const n = gone.store!; gone.store = 0; yield* gain(s, seat, n, H.defiance); log(s, 'defiance', `${pname(s, seat)} kept the ${n} Glory stored on ${cardName(id)} (Defiance).`); }
-  // 'martyr-sac': when another card is discarded from your Choir, gain 1 Glory.
-  if (variant(s, 'martyr-sac') && id !== H.martyr && id.startsWith('host-') && hasActive(s, seat, H.martyr) && canActivate(s, seat, H.martyr)) { yield* gain(s, seat, 1, H.martyr); log(s, 'martyr', `${pname(s, seat)} gained 1 Glory (Martyr).`); }
+  // Martyr (V43): when another card is discarded from your Choir, gain 1 Glory.
+  if (id !== H.martyr && id.startsWith('host-') && hasActive(s, seat, H.martyr) && canActivate(s, seat, H.martyr)) { yield* gain(s, seat, 1, H.martyr); log(s, 'martyr', `${pname(s, seat)} gained 1 Glory (Martyr).`); }
   if (id.startsWith('host-') && hasActive(s, seat, H.absolution) && canActivate(s, seat, H.absolution)) {
     const take = yield* yesNo(s, seat, 'absolution', `Absolution: return ${cardName(id)} to your hand instead of discarding it (then discard 1 card from your hand)?`);
     if (take) {
@@ -282,8 +227,8 @@ export function* discardFromChoir(s: GameState, seat: Seat, id: string, why: str
       if (ok && kept) return;
     }
   }
-  // 'lilith-scavenge': a card discarded from another player's Choir may go into a Lilith holder's hand.
-  if (variant(s, 'lilith-scavenge') && id.startsWith('host-')) {
+  // Lilith (V43): a card discarded from another player's Choir may go into a Lilith holder's hand.
+  if (id.startsWith('host-')) {
     for (const o of s.players) {
       if (o.seat === seat || !hasActive(s, o.seat, H.lilith) || !canActivate(s, o.seat, H.lilith)) continue;
       if (yield* yesNo(s, o.seat, 'lilith.take', `Lilith: ${cardName(id)} was discarded from ${pname(s, seat)}'s Choir. Put it into your hand?`)) {
@@ -304,28 +249,28 @@ export function blockedByEvent(s: GameState, seat: Seat, id: string): boolean {
   if (!id.startsWith('host-')) return false;
   if (s.silenced?.some((x) => x.target === seat)) return true; // Silence (V42)
   const col = colorsOf(s, seat, id);
-  if (col.light && eventOn(s, E.flood, seat)) return true;
-  if (col.dark && eventOn(s, E.letThereBeLight, seat)) return true;
+  if (col.light && eventOn(s, E.flood)) return true;
+  if (col.dark && eventOn(s, E.letThereBeLight)) return true;
   return false;
 }
 
 /** Whether a player could pay to activate this ability right now. */
 export function canActivate(s: GameState, seat: Seat, id: string): boolean {
   if (blockedByEvent(s, seat, id)) return false;
-  if (tithed(s, seat, id) && s.players[seat].glory < 1) return false;
+  if (tithed(s, id) && s.players[seat].glory < 1) return false;
   return true;
 }
 
-/** Tithe charges for Host abilities. V44 'tithe-host': it no longer charges Celestial powers (the card says Host ability). */
-const tithed = (s: GameState, seat: Seat, id: string) => eventOn(s, E.tithe, seat) && (!variant(s, 'tithe-host') || id.startsWith('host-'));
+/** Tithe charges for Host abilities only, not Celestial powers (V44). */
+const tithed = (s: GameState, id: string) => eventOn(s, E.tithe) && id.startsWith('host-');
 
 /**
- * Activate an ability: pay Tithe, open the Silence window, then run it.
+ * Activate an ability: pay Tithe, then run it.
  * Returns true if the ability resolved, false if it was negated or could not be paid.
  */
 export function* activation(s: GameState, seat: Seat, source: string, run: () => Gen<void>): Gen<boolean> {
   if (blockedByEvent(s, seat, source)) return false;
-  if (tithed(s, seat, source)) {
+  if (tithed(s, source)) {
     if (s.players[seat].glory < 1) return false;
     yield* pay(s, seat, 1, E.tithe);
   }
@@ -341,9 +286,8 @@ export function discardableForRoom(s: GameState, p: Player): ChoirCard[] {
   return p.choir.filter((c) => c.id.startsWith('host-') && !(c.id === H.parasite && !c.facedown && !blockedByEvent(s, p.seat, c.id)));
 }
 
+/** A Choir holds up to 4 cards (V41). */
 export const CHOIR_LIMIT = 4;
-/** The Choir limit: 4 (V41), or 'limit-N' for testing. */
-export const choirLimit = (s: GameState) => Number((s.config.variants ?? []).find((v) => v.startsWith('limit-'))?.slice(6) ?? CHOIR_LIMIT);
 
 /** Put a card into a Choir. Caller must ensure there is room. Handles entry triggers. */
 export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
@@ -362,7 +306,7 @@ export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
 /** Make room in a full Choir by discarding (player's choice among voluntary options). Returns false if impossible. */
 export function* makeRoom(s: GameState, seat: Seat, why: string): Gen<boolean> {
   const p = s.players[seat];
-  if (p.choir.length < choirLimit(s)) return true;
+  if (p.choir.length < CHOIR_LIMIT) return true;
   const opts = discardableForRoom(s, p);
   if (!opts.length) return false;
   const pick = yield* chooseOne(s, seat, 'choir.discard', `Your Choir is full. Choose a card to discard (${why}).`, opts.map((c) => cardOpt(c.id)));
@@ -383,17 +327,14 @@ function addRaw(s: GameState, seat: Seat, n: number, source: GlorySource) {
 
 /**
  * Gain Glory from the Pot.
- * The Arbiter (V34): at the Reaping, 1 of the Glory it gains is taken from a player of its choice.
+ * The Arbiter (V44): whenever it gains at the Reaping, 1 of that Glory is taken from a player whose Choir leaned
+ * against the Tide (any player with Glory, if none of them has any).
  */
 export function* gain(s: GameState, seat: Seat, n: number, source: GlorySource): Gen<number> {
   if (n <= 0) return 0;
-  // V38: the Arbiter takes from a player only when it gains 2 or more at once.
-  // V44 test 'arbiter-take': whenever it gains at the Reaping (a pair's 1 included).
-  if (isCelestial(s, seat, C.arbiter) && source === 'reaping' && n >= (variant(s, 'arbiter-take') || variant(s, 'arbiter-judge') ? 1 : 2)) {
-    // V44 test 'arbiter-judge': only from a player whose Choir leaned against the Tide (the losers pay the winner).
-    let rich = others(s, seat).filter((p) => p.glory > 0 && (!variant(s, 'arbiter-judge') || s.day_.against?.includes(p.seat)));
-    // Test 'arbiter-any': if no one who leaned against the Tide has Glory, take it from any player.
-    if (!rich.length && variant(s, 'arbiter-any')) rich = others(s, seat).filter((p) => p.glory > 0);
+  if (isCelestial(s, seat, C.arbiter) && source === 'reaping') {
+    let rich = others(s, seat).filter((p) => p.glory > 0 && s.day_.against?.includes(p.seat));
+    if (!rich.length) rich = others(s, seat).filter((p) => p.glory > 0);
     if (rich.length) {
       const t = yield* chooseOne(s, seat, 'arbiter.take', `The Arbiter: you gain ${n} Glory at the Reaping. Choose a player to take 1 of it from.`, rich.map((p) => seatOpt(s, p.seat)));
       const from = seatFromOpt(t!);
@@ -408,34 +349,15 @@ export function* gain(s: GameState, seat: Seat, n: number, source: GlorySource):
   return n;
 }
 
-/** The other players tied for the least Glory (V36: the Arbiter gives to them; the giver chooses among ties). */
-export function leastGloryOthers(s: GameState, seat: Seat) {
-  const os = others(s, seat);
-  const min = Math.min(...os.map((p) => p.glory));
-  return os.filter((p) => p.glory === min);
-}
-
-/**
- * Lose Glory to the Pot (never below 0).
- * The Arbiter (V34): at the Reaping, 1 of the Glory it loses goes to a player of its choice.
- */
+/** Lose Glory to the Pot (never below 0). */
 export function* lose(s: GameState, seat: Seat, n: number, source: GlorySource): Gen<number> {
   const amt = Math.min(n, s.players[seat].glory);
   if (amt <= 0) return 0;
   addRaw(s, seat, -amt, source);
-  // V44 tests 'arbiter-nogive' / 'arbiter-take': the Arbiter no longer hands a lost Glory to the poorest player.
-  if (isCelestial(s, seat, C.arbiter) && source === 'reaping' && !variant(s, 'arbiter-nogive') && !variant(s, 'arbiter-take') && !variant(s, 'arbiter-judge')) {
-    const t = yield* chooseOne(s, seat, 'arbiter.give', `The Arbiter: you lose ${amt} Glory at the Reaping. Give 1 of it to the player with the least Glory (choose among ties).`, leastGloryOthers(s, seat).map((p) => seatOpt(s, p.seat)));
-    if (t) {
-      const to = seatFromOpt(t);
-      addRaw(s, to, 1, 'arbiter');
-      log(s, 'glory', `${pname(s, seat)} gave 1 lost Glory to ${pname(s, to)} (the Arbiter).`);
-    }
-  }
   return amt;
 }
 
-/** Pay Glory as a cost (Exalt, Tithe, Tribute, Michael). The Arbiter pays a chosen player. */
+/** Pay Glory as a cost (Tithe, Michael, Silence...), to the Pot or, with `to`, to a player (Council). */
 export function* pay(s: GameState, seat: Seat, n: number, source: GlorySource, to?: Seat): Gen<boolean> {
   if (n <= 0) return true;
   if (s.players[seat].glory < n) return false;
@@ -448,7 +370,7 @@ export function* pay(s: GameState, seat: Seat, n: number, source: GlorySource, t
   return true;
 }
 
-export const canSpend = (s: GameState, seat: Seat, n: number) => n === 0 || (!eventOn(s, E.fast, seat) && s.players[seat].glory >= n);
+export const canSpend = (s: GameState, seat: Seat, n: number) => n === 0 || (!eventOn(s, E.fast) && s.players[seat].glory >= n);
 
 /** Move Glory directly between players (Mammon, Hubris, Tribute). Not from the Pot. */
 export function transfer(s: GameState, from: Seat, to: Seat, n: number, source: GlorySource): number {
@@ -466,30 +388,20 @@ export type TargetKind = 'look' | 'reveal' | 'copy' | 'flip' | 'replace' | 'disc
 /** Whether `actor` may Target `owner`'s cards with this kind of effect (ignoring Tribute cost). */
 export function protectedFrom(s: GameState, actor: Seat, owner: Seat, kind: TargetKind): boolean {
   if (actor === owner) return false;
-  if ((kind === 'replace' || kind === 'discard') && hasActive(s, owner, H.cherubim)) return true;
-  if ((kind === 'look' || kind === 'reveal' || kind === 'copy' || kind === 'flip') && hasActive(s, owner, H.veil) && !variant(s, 'veil-secret') && !variant(s, 'veil-more') && !variant(s, 'veil-4')) return true;
-  return false;
+  // Cherubim: cards in its holder's Choir cannot be replaced or discarded by other players.
+  return (kind === 'replace' || kind === 'discard') && hasActive(s, owner, H.cherubim);
 }
 
-/** Defiance (V42): other players' abilities cannot make you lose or give up Glory. */
-// V43 test 'swap-defiance': Favor takes Defiance's protection, and Defiance takes Favor's upset ability.
-export const glorySafe = (s: GameState, actor: Seat, owner: Seat) => !variant(s, 'no-shield') && actor !== owner && hasActive(s, owner, variant(s, 'swap-defiance') ? H.favor : H.defiance); // 'no-shield': the protection is dropped
-/** Lilith (V42): other players' abilities cannot look at, take, or discard cards in your hand. */
-export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && ((!variant(s, 'lilith-scavenge') && hasActive(s, owner, H.lilith)) || (variant(s, 'cherub-hand') && hasActive(s, owner, H.cherubim)));
-
-/** Tribute: pay 1 Glory to the owner before Targeting a card in their Choir. Returns false if it cannot be paid. */
+/** Tribute: pay 1 Glory to its holder before Targeting a card in their Choir. False if it cannot be paid. */
 export function canAffordTribute(s: GameState, actor: Seat, owner: Seat): boolean {
-  if (actor === owner || !hasActive(s, owner, H.tribute) || variant(s, 'tribute-toll')) return true;
+  if (actor === owner || !hasActive(s, owner, H.tribute)) return true;
   return canSpend(s, actor, 1);
 }
-export function* payTribute(s: GameState, actor: Seat, owner: Seat): Gen<boolean> {
+export function payTribute(s: GameState, actor: Seat, owner: Seat): boolean {
   if (actor === owner || !hasActive(s, owner, H.tribute)) return true;
   if (!canSpend(s, actor, 1)) return false;
-  // V37: Tribute is paid to the Pot (was to Tribute's owner). V43 test 'tribute-pay': paid to Tribute's holder.
-  if (variant(s, 'tribute-pay')) { transfer(s, actor, owner, 1, H.tribute); log(s, 'tribute', `${pname(s, actor)} paid 1 Glory to ${pname(s, owner)} to Target their Choir (Tribute).`); return true; }
-  if (variant(s, 'tribute-toll')) return true; // the toll version has no targeting fee
-  yield* pay(s, actor, 1, H.tribute);
-  log(s, 'tribute', `${pname(s, actor)} paid 1 Glory to the Pot to Target ${pname(s, owner)}'s Choir (Tribute).`);
+  transfer(s, actor, owner, 1, H.tribute);
+  log(s, 'tribute', `${pname(s, actor)} paid 1 Glory to ${pname(s, owner)} to Target their Choir (Tribute).`);
   return true;
 }
 
@@ -505,7 +417,7 @@ export const sanctuaryAllows = (a: AltarCard, seat: Seat) => a.sanctuary === und
 
 /** Altar cards that `seat` may Gather or destroy (Sanctuary protects for other players). */
 export function altarAvailable(s: GameState, seat: Seat): AltarCard[] {
-  return s.altar.filter((a) => sanctuaryAllows(a, seat) && !(variant(s, 'mirage-all') && altarShielded(s, a, seat)));
+  return s.altar.filter((a) => sanctuaryAllows(a, seat) && !altarShielded(s, a, seat));
 }
 
 export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
@@ -514,11 +426,9 @@ export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
   return cardName(a.id) + (a.facedown ? ' (your facedown card)' : '') + by;
 }
 
-/** Mirage (V35): a player's facedown Offerings cannot be flipped, looked at, exchanged, or destroyed by others before the Evening. */
+/** Mirage (V43): every card its holder placed on the Altar, face up or down, is protected from other players' Gathers and abilities. */
 export function altarShielded(s: GameState, a: AltarCard, actor: Seat): boolean {
-  // V43 test 'mirage-all': every card you placed on the Altar is protected, face up or down, from other players' Gathers and abilities.
-  if (variant(s, 'mirage-all')) return a.offeredBy !== null && a.offeredBy >= 0 && a.offeredBy !== actor && hasActive(s, a.offeredBy, H.mirage);
-  return a.facedown && a.kind === 'offer' && a.offeredBy !== null && a.offeredBy !== actor && hasActive(s, a.offeredBy, H.mirage);
+  return a.offeredBy !== null && a.offeredBy >= 0 && a.offeredBy !== actor && hasActive(s, a.offeredBy, H.mirage);
 }
 
 /** Pandemonium (V35): no card on the Altar may be flipped or looked at before the Evening. */
@@ -530,10 +440,10 @@ export function altarPeekable(s: GameState, actor: Seat): AltarCard[] {
   return s.altar.filter((a) => a.facedown && !altarShielded(s, a, actor));
 }
 
-/** V43 test 'snare-trap': when another player Gathers, looks at, flips, or discards a card you placed on the Altar, gain 1 Glory. */
+/** Snare (V43): when another player Gathers, looks at, flips, or discards a card you placed on the Altar, gain 1 Glory. */
 export function* snareHit(s: GameState, actor: Seat, a: { offeredBy: Seat | null }): Gen<void> {
   const o = a.offeredBy;
-  if (!variant(s, 'snare-trap') || o === null || o < 0 || o === actor || !hasActive(s, o, H.snare) || !canActivate(s, o, H.snare)) return;
+  if (o === null || o < 0 || o === actor || !hasActive(s, o, H.snare) || !canActivate(s, o, H.snare)) return;
   yield* gain(s, o, 1, H.snare);
   log(s, 'snare', `${pname(s, o)} gained 1 Glory (Snare).`);
 }

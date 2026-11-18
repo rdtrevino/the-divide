@@ -42,22 +42,3 @@ describe('replay is deterministic', () => {
     }
   });
 });
-
-describe('test switches run cleanly', () => {
-  const sets = [['choir-3'], ['limit-3'], ['pick-2'], ['target-10'], ['choir-3', 'limit-3', 'target-10']];
-  for (const variants of sets) {
-    it(variants.join('+'), () => {
-      for (let seed = 1; seed <= 40; seed++) {
-        const n = 3 + (seed % 2);
-        const g = playBotGame({ ...cfg(seed * 13 + n, n), variants, advanced: seed % 3 === 0 });
-        const s = g.state;
-        const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
-        expect(new Set(zones).size).toBe(zones.length);
-        expect(zones.length).toBe(69);
-        expect(s.result).not.toBeNull();
-        const r = Game.replay(g.config, g.inputs);
-        expect(r.state.result).toEqual(s.result);
-      }
-    });
-  }
-});
