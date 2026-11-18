@@ -49,7 +49,13 @@ export interface Metrics {
   split: Record<string, number>; // share of Days by side split, e.g. '2v2', '3v1', '2v1n'
   underdog: number; // share of decided Tides won by the side with fewer Choirs
   neutralChoir: number; // share of player-Days with a Neutral Choir
-  abilities: Record<string, { wr: number; held: number; glory: number }>; // win ratio and play rate of each ability in final Choirs; Glory it produced per game
+  abilities: Record<string, { wr: number; held: number; glory: number }>;
+  altarSize: number; facedownAtReveal: number; // cards on the Altar at the reveal
+  crownGain: number; othersGain: number; crownPartnered: number; // Reaping gain rate of the sole leader vs everyone else; leader shared a winning side
+  leadChanges: number; // times per game the sole leader changes
+  lossDays: number; // share of player-Days with a Reaping loss (Reaping only)
+  sideGain: number[];
+  spread: Record<string, number[]>; // 10th and 90th percentile across games: days, winner's ability share, winner's Glory // mean Evening Glory change for Choirs [with the Tide, against it, Neutral], and the table mean // win ratio and play rate of each ability in final Choirs; Glory it produced per game
 }
 
 const TIDE_KEYS = new Set(['reaping', 'bet', 'fruitbet', 'ab:herald', 'ab:banner', 'ab:bond', 'ab:store', 'ab:tithe', 'ab:stillness', 'ab:banner2', 'ab:hedge', 'ab:store3', 'ab:prophet', 'ab:zealot2', 'ab:zealot1', 'ab:traitor']);
@@ -59,6 +65,9 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
   let days = 0, dec = 0, tide = 0, offer = 0, abil = 0, tot = 0, reapSum = 0, pd = 0, gainN = 0, lossN = 0, zero = 0, close = 0, neu = 0,
     lastF = 0, crowd = 0, same = 0, sw = 0, l3 = 0, l3n = 0, marg = 0, wg = 0, testedWins = 0, reapG = 0, cross = 0, offs = 0, bet = 0, und = 0, undN = 0, neuC = 0;
   const split: Record<string, number> = {};
+  const sg = [0, 0, 0, 0], sn = [0, 0, 0, 0];
+  const gDays: number[] = [], gAbil: number[] = [], gWin: number[] = [];
+  let alt = 0, fdn = 0, cg = 0, cn = 0, og = 0, on = 0, cp = 0, lc = 0, rl = 0;
   const abH: Record<string, number> = {}, abW: Record<string, number> = {}, abG: Record<string, number> = {};
   const seat = Array(n).fill(0);
   states.forEach((s, gi) => {
@@ -72,6 +81,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
       for (const [k, v] of Object.entries(s.src[p])) if (k.startsWith('ab:')) abG[k.slice(3)] = (abG[k.slice(3)] ?? 0) + v;
     }
     const share = 1 / s.winners.length;
+    { let a = 0, t = 0; for (const w of s.winners) for (const [k, v] of Object.entries(s.src[w])) { if (v <= 0) continue; t += v; if (k.startsWith('ab:')) a += v; } gAbil.push(t ? a / t : 0); gDays.push(s.day); gWin.push(Math.max(...s.glory)); }
     for (const w of s.winners) {
       for (const [k, v] of Object.entries(s.src[w])) {
         if (v <= 0) continue;
@@ -95,6 +105,15 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
         if (d.reap[p] < 0) lossN++;
       }
       if (!d.reap.some((x) => x > 0)) zero++;
+      alt += d.altarSize; fdn += d.facedown;
+      for (let p = 0; p < n; p++) {
+        if (d.reapOnly[p] < 0) rl++;
+        const k = d.tide === 0 ? -1 : d.leans[p] === d.tide ? 0 : d.leans[p] === -d.tide ? 1 : 2;
+        if (k >= 0) { sg[k] += d.reap[p]; sn[k]++; }
+        sg[3] += d.reap[p]; sn[3]++;
+        if (p === d.crown) { cn++; if (d.reapOnly[p] > 0) cg++; if (d.reapOnly[p] > 0 && d.leans.filter((l) => l === d.leans[p]).length >= 2) cp++; }
+        else { on++; if (d.reapOnly[p] > 0) og++; }
+      }
       if (d.margin <= 1) close++;
       if (d.tide === 0) neu++;
       if (d.lastFlip) lastF++;
@@ -111,6 +130,8 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
       const leaders = g.map((x, p) => (x === top ? p : -1)).filter((p) => p >= 0);
       if (leaders.length === 1) { l3n++; if (s.winners.includes(leaders[0])) l3 += share; }
     }
+    let prev = -1;
+    for (const d of s.logs) { if (d.leader >= 0 && prev >= 0 && d.leader !== prev) lc++; if (d.leader >= 0) prev = d.leader; }
     const fin = s.glory.slice().sort((a, b) => b - a);
     marg += fin[0] - fin[1];
     if (tested) { const t = tested.seat(gi); if (s.winners.includes(t)) testedWins += share; }
@@ -125,6 +146,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
     lastFlip: lastF / D, crowded: crowd / D, allSame: same / D, switches: sw / G, leaderD3: l3 / Math.max(1, l3n), margin: marg / G,
     winnerGlory: wg / G, seat: seat.map((x) => (x / G) * n), winRatio: tested ? (testedWins / G) * n : undefined,
     reapShare: reapG / tot, crossBets: cross / Math.max(1, offs), betShare: bet / tot, split: Object.fromEntries(Object.entries(split).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, +(v / D).toFixed(3)])), underdog: und / Math.max(1, undN), neutralChoir: neuC / (D * n),
+    altarSize: alt / D, facedownAtReveal: fdn / D, crownGain: cg / Math.max(1, cn), othersGain: og / Math.max(1, on), crownPartnered: cp / Math.max(1, cg), leadChanges: lc / G, lossDays: rl / (D * n), spread: Object.fromEntries(([['days', gDays], ['abil', gAbil], ['winGlory', gWin]] as [string, number[]][]).map(([k, a]) => { const b = a.slice().sort((x, y) => x - y); return [k, [+b[Math.floor(b.length * 0.1)].toFixed(2), +b[Math.floor(b.length * 0.9)].toFixed(2)]]; })), sideGain: sg.map((x, i) => +(x / Math.max(1, sn[i])).toFixed(2)),
     abilities: Object.fromEntries([...new Set([...Object.keys(abH), ...Object.keys(abG)])].sort().map((a) => [a, { wr: +(((abW[a] ?? 0) / Math.max(1, abH[a] ?? 0)) * n).toFixed(2), held: +((abH[a] ?? 0) / G).toFixed(2), glory: +((abG[a] ?? 0) / G).toFixed(2) }])),
   };
 }

@@ -160,3 +160,68 @@ Object.assign(VARIANTS, {
 Object.assign(VARIANTS, {
   final_tb: { ...K, choirStart: 2, deck: ENGINE_F, target: 12, target3: 12, target4: 12, tieBreak: 'yesterday' },
 } as Record<string, V>);
+
+// ---- Round 16: Robert's questions. Base = the recommended rules (final_tb); one change each.
+const FB: V = { ...K, choirStart: 2, deck: ENGINE_F, target: 12, target3: 12, target4: 12, tieBreak: 'yesterday' };
+Object.assign(VARIANTS, {
+  q_base: FB,
+  q_lose1: { ...FB, score: T([3, 2, 0], [-1]) },                       // every Choir against the Tide loses 1
+  q_heavy: { ...FB, score: T([3, 2, 0], [-1]), loseHeavy: 2 },         // only Choirs leaning by 2 or more lose 1
+  q_luke: { ...FB, score: T([3, 2, 0], [-1]), neutralLoss: 1 },        // against loses 1, and a Neutral Choir loses 1
+  q_lone: { ...FB, score: T([3, 2, 0], [-1, 0]) },                     // only a lone Choir against loses 1
+  q_heavyluke: { ...FB, score: T([3, 2, 0], [-1]), loseHeavy: 2, neutralLoss: 1 },
+  q_p1: { ...FB, score: T([3, 1, 0], [0]) },                           // a pair gains 1 each
+  q_p1_lose1: { ...FB, score: T([3, 1, 0], [-1]) },
+  q_p1_heavy: { ...FB, score: T([3, 1, 0], [-1]), loseHeavy: 2 },
+  q_nocrown: { ...FB, crown: 1 },
+  q_softcrown: { ...FB, crown: 1, crownTax: 1 },                       // the sole leader gains 1 less at the Reaping
+  q_noomen: { ...FB, omens: 0 },
+} as Record<string, V>);
+
+const LONE = T([3, 2, 0], [-1, 0]);
+Object.assign(VARIANTS, {
+  // ---- Round 17: stakes without herding, and a gentler Crown
+  q_betloss: { ...FB, betLoss: 1 },
+  q_lone_betloss: { ...FB, score: LONE, betLoss: 1 },
+  q_soft_lone: { ...FB, score: LONE, crown: 1, crownTax: 1 },
+  q_soft_lone_t13: { ...FB, score: LONE, crown: 1, crownTax: 1, target: 13, target3: 13, target4: 13 },
+  q_soft_lone_t14: { ...FB, score: LONE, crown: 1, crownTax: 1, target: 14, target3: 14, target4: 14 },
+  q_soft_lone_bl: { ...FB, score: LONE, crown: 1, crownTax: 1, betLoss: 1 },
+  q_p1_soft_lone: { ...FB, score: T([3, 1, 0], [-1, 0]), crown: 1, crownTax: 1 },
+  q_soft_lone_cu: { ...FB, score: LONE, crown: 1, crownTax: 1, order: 'catchup' },
+} as Record<string, V>);
+
+Object.assign(VARIANTS, {
+  // ---- Round 18
+  q_soft_bl: { ...FB, crown: 1, crownTax: 1, betLoss: 1 },
+  q_soft_bl_t13: { ...FB, crown: 1, crownTax: 1, betLoss: 1, target: 13, target3: 13, target4: 13 },
+  q_420_soft_bl: { ...FB, score: T([4, 2, 0], [0]), crown: 1, crownTax: 1, betLoss: 1, target: 13, target3: 13, target4: 13 },
+  q_p1_nocrown_bl: { ...FB, score: T([3, 1, 0], [0]), crown: 1, betLoss: 1 },
+  q_soft: { ...FB, crown: 1, crownTax: 1 },
+} as Record<string, V>);
+
+// ---- Round 19: Pantheons. Recommended rules: 3/2/0, wrong bets cost 1, soft Crown, the Omen, a tie keeps yesterday's Tide.
+const REC: V = { ...FB, crown: 1, crownTax: 1, betLoss: 1, target: 13, target3: 13, target4: 13 };
+const LIGHT_POOL = ['L1:treeOfLife', 'L1:uriel', 'L1:remnant2', 'L1:seraph', 'L1:martyr', 'L1:michael', 'L1:raphael', 'L1:store', 'L1:mercy2', 'L1:turncoat'];
+const DARK_POOL = ['D1:leviathan', 'D1:defiance', 'D1:uriel', 'D1:favor2', 'D1:hubris', 'D1:seraph', 'D1:snare', 'D1:envy', 'D1:anathema', 'D1:winnowing', 'D1:raphael', 'D1:abaddon', 'D1:scapegoat', 'D1:store', 'D1:bounty2'];
+const NEUTRAL_POOL = ['N:firmament', 'N:outcastOld', 'N:council', 'N:stillness2', 'N:apple', 'N:moderation2', 'N:prophecy', 'N:mirage', 'N:vessel', 'N:ordeal', 'N:acolyte'];
+const PLAIN = { L1: 10, D1: 10, L2: 1, D2: 1, N: 4 };
+Object.assign(VARIANTS, {
+  rec: { ...REC },
+  rec_pantheon: { ...REC, pantheon: { base: PLAIN, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [7, 7, 4] } },
+  rec_pantheon_s: { ...REC, pantheon: { base: { L1: 13, D1: 13, L2: 1, D2: 1, N: 4 }, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [4, 4, 4] } },
+  rec_all: { ...REC, pantheon: { base: { L2: 1, D2: 1 }, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [10, 15, 11] } },
+} as Record<string, V>);
+
+// ---- Round 20: race to 12 with Pantheons, and a fixed Starter Pantheon of mirrored pairs
+const STARTER = {
+  ...PLAIN,
+  'L1:treeOfLife': 1, 'L1:store': 1, 'L1:raphael': 1, 'L1:seraph': 1, 'L1:uriel': 1, 'L1:mercy2': 1, 'L1:turncoat': 1,
+  'D1:leviathan': 1, 'D1:store': 1, 'D1:raphael': 1, 'D1:seraph': 1, 'D1:uriel': 1, 'D1:defiance': 1, 'D1:scapegoat': 1,
+  'N:firmament': 1, 'N:council': 1, 'N:prophecy': 1, 'N:vessel': 1,
+};
+const REC12: V = { ...REC, target: 12, target3: 12, target4: 12 };
+Object.assign(VARIANTS, {
+  rec12_pantheon: { ...REC12, pantheon: { base: PLAIN, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [7, 7, 4] } },
+  rec12_starter: { ...REC12, deck: STARTER },
+} as Record<string, V>);

@@ -30,6 +30,10 @@ const RATE: Record<string, number> = {
   herald: 0.45, banner: 0.3, bond: 0.3, store: 0.5, trumpet: 0.25, voice: 0.2, seer: 0.15, outcast: 0.2, tithe: 0.3,
   zealot: 0.35, twilight: 0.35, sanctuary: 0.15, snare: 0.15, patron: 0.15, pilgrim: 0.2, martyr: 0.15, scribe: 0.25,
   stillness: 0.15, loud: 0, turncoat: 0.2, banner2: 0.5, hedge: 0.3, store3: 0.45, prophet: 0.35, horn: 0.3, zealot2: 0.3, zealot1: 0.4, traitor: 0.25, trumpet2: 0.4,
+  treeOfLife: 0.3, firmament: 0.2, leviathan: 0.2, defiance: 0.2, uriel: 0.5, remnant2: 0.2, outcastOld: 0.25, council: 0.35,
+  stillness2: 0.25, apple: 0.3, favor2: 0.3, hubris: 0.1, moderation2: 0.1, prophecy: 0.2, seraph: 0.2, mirage: 0.1, vessel: 0.4,
+  ordeal: 0.3, acolyte: 0, michael: 0.3, envy: 0.2, anathema: 0.3, winnowing: 0.2, raphael: 0.2, abaddon: 0.1, scapegoat: 0.2,
+  mercy2: 0.2, bounty2: 0.15,
 };
 const rate = (s: State, c: number) => RATE[ab(s, c) ?? ''] ?? 0;
 
@@ -72,7 +76,7 @@ function counts(s: State, p: number, myLean: Dir) {
 
 /** Expected Reaping for p with lean `myLean` when the Tide is Light with probability pl. */
 function reapExp(s: State, p: number, myLean: Dir, pl: number) {
-  if (myLean === 0) return 0;
+  if (myLean === 0) return -s.R.neutralLoss;
   const { L, D } = counts(s, p, myLean);
   const nSide = myLean > 0 ? L : D, nOpp = myLean > 0 ? D : L;
   return pl * payoff(s, myLean, 1, myLean > 0 ? nSide : nOpp, myLean > 0 ? nOpp : nSide) + (1 - pl) * payoff(s, myLean, -1, myLean < 0 ? nSide : nOpp, myLean < 0 ? nOpp : nSide);
@@ -80,7 +84,7 @@ function reapExp(s: State, p: number, myLean: Dir, pl: number) {
 
 /** Value of holding lean `l` on later Days, given the other Choirs' sides. */
 export function posVal(s: State, p: number, l: Dir) {
-  if (l === 0) return 0;
+  if (l === 0) return -s.R.neutralLoss;
   const { L, D } = counts(s, p, l);
   const pl = Math.max(0.2, Math.min(0.8, 0.5 + 0.08 * (L - D)));
   return pl * payoff(s, l, 1, l > 0 ? L : D, l > 0 ? D : L) + (1 - pl) * payoff(s, l, -1, l < 0 ? D : L, l < 0 ? L : D);
@@ -108,12 +112,13 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
     const sv = sgn(val(s, c));
     const pm = sv === 0 ? 0 : sv > 0 ? PHI(m / sd) : 1 - PHI(m / sd);
     if (s.R.offerReward === 'flat') return 1;
-    if (s.R.offerReward === 'match') return pm;
+    if (s.R.offerReward === 'match') return sv === 0 ? 0 : pm - s.R.betLoss * (1 - pm);
     if (s.R.offerReward === 'matchPlus') return 1 + pm;
     return 0;
   };
   for (const a of acts) {
     let sc = 0;
+    if (a.t === 'pass') { out.push(-5); continue; }
     if (a.t === 'offer') {
       const c = s.hand[p][a.i];
       let w = val(s, c);
@@ -207,7 +212,7 @@ function fixedAction(s: State, p: number, pol: Policy): Action {
     // Never change sides: only consider actions that keep the current lean.
     const cur = lean(s, p);
     const keep = (a: Action) => {
-      if (a.t === 'offer') return true;
+      if (a.t === 'offer' || a.t === 'pass') return true;
       const c = a.t === 'exalt' ? s.hand[p][a.i] : s.altar[a.k].c;
       const r = a.r >= 0 ? val(s, s.choir[p][a.r].c) : 0;
       return cur === 0 || sgn(leanSum(s, p) + val(s, c) - r) === cur;

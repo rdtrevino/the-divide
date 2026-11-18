@@ -49,6 +49,16 @@ export interface Rules {
   crown: number;
   /** A tied Altar: 'none' (Neutral Tide) or 'yesterday' (the Tide stays as it was). */
   tieBreak: 'none' | 'yesterday';
+  /** Against the Tide, a loss applies only to Choirs leaning by at least this much (0 = always). */
+  loseHeavy: number;
+  /** Glory a Neutral Choir loses when there is a Tide (the lukewarm rule). */
+  neutralLoss: number;
+  /** Soft Crown: the sole leader gains this much less at the Reaping (min 0). */
+  crownTax: number;
+  /** A bet that opposes the Tide costs this much (Neutral cards never bet). */
+  betLoss: number;
+  /** Pantheon: each game shuffles a random selection of the original cards (picks[i] from pools[i]) into a base deck. */
+  pantheon?: { base: DeckSpec; pools: string[][]; picks: number[] };
   /** Ties at the end: shared. */
   label?: string;
 }
@@ -74,7 +84,7 @@ export function rules(over: Partial<Rules> = {}): Rules {
     n: 4, hand: 3, choirStart: 2, choirMax: 4, turns: 1, target: 12, maxDays: 30,
     fruits: true, fruitsBet: false, omens: 0, anonymous: false, offerReward: 'flat',
     score: TABLES.current, leanStrength: false, order: 'rotate', gatherBlind: true,
-    deck: BASE_DECK, replaced: 'discard', crown: 1, tieBreak: 'none', ...over,
+    deck: BASE_DECK, replaced: 'discard', crown: 1, tieBreak: 'none', loseHeavy: 0, neutralLoss: 0, crownTax: 0, betLoss: 0, ...over,
   };
 }
 
@@ -83,7 +93,7 @@ export function rules(over: Partial<Rules> = {}): Rules {
 export interface AltarCard { c: number; up: boolean; by: number; kind: 0 | 1 | 2; seen: number } // kind 0 fruits, 1 offer, 2 omen; seen = bitmask of seats
 export interface ChoirCard { c: number; store: number; flip: boolean }
 
-export interface DayLog { day: number; tide: Dir; margin: number; leans: number[]; reap: number[]; lastFlip: boolean; light: number; dark: number }
+export interface DayLog { day: number; tide: Dir; margin: number; leans: number[]; reap: number[]; lastFlip: boolean; light: number; dark: number; reapOnly: number[]; crown: number; altarSize: number; facedown: number; leader: number }
 
 export interface State {
   R: Rules;
@@ -113,6 +123,7 @@ export interface State {
   gloryByDay: number[][];
   offerStats: number[]; // [Offers, Offers against own lean]
   calls: number[]; // Prophet: each player's named Tide this Day (0 = none)
+  prevLean: number[]; prevWith: boolean[]; dayStart: number[]; council: number[]; bounty: number[]; anathema: number; ordeal: boolean[];
 }
 
 // mulberry32
@@ -128,12 +139,25 @@ export function shuffle<T>(s: State, a: T[]) {
 }
 
 export function newGame(R: Rules, seed: number): State {
-  const cards = buildDeck(R.deck);
+  let spec = R.deck;
+  if (R.pantheon) {
+    // A separate generator so the Pantheon does not disturb the game's own shuffle.
+    let t0 = (seed ^ 0x5bd1e995) | 0;
+    const r = () => { let t = (t0 = (t0 + 0x6d2b79f5) | 0); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    spec = { ...R.pantheon.base };
+    R.pantheon.pools.forEach((pool, i) => {
+      const a = pool.slice();
+      for (let k = a.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [a[k], a[j]] = [a[j], a[k]]; }
+      for (const key of a.slice(0, R.pantheon!.picks[i])) spec[key] = (spec[key] ?? 0) + 1;
+    });
+  }
+  const cards = buildDeck(spec);
   const s: State = {
     R, cards, rng: seed | 0, day: 0, first: 0, glory: Array(R.n).fill(0), hand: [], choir: [], altar: [],
     deck: cards.map((c) => c.id), discard: [], tides: [], order: [], step: 0, phase: 'fruits', used: Array(R.n).fill(0),
     src: Array.from({ length: R.n }, () => ({})), logs: [], decisions: Array(R.n).fill(0), switches: Array(R.n).fill(0), winners: [],
     preLastNet: null, gloryByDay: [], offerStats: [0, 0], calls: Array(R.n).fill(0),
+    prevLean: Array(R.n).fill(0), prevWith: Array(R.n).fill(false), dayStart: Array(R.n).fill(0), council: Array(R.n).fill(-1), bounty: Array(R.n).fill(-1), anathema: -1, ordeal: Array(R.n).fill(false),
   };
   shuffle(s, s.deck);
   s.first = Math.floor(rnd(s) * R.n);
@@ -155,6 +179,7 @@ export function clone(s: State): State {
     order: s.order.slice(), used: s.used.slice(),
     // metrics are not cloned deeply: rollouts must not rely on them
     src: s.src.map(() => ({})), logs: [], decisions: s.decisions.slice(), switches: s.switches.slice(), winners: [], gloryByDay: [], offerStats: [0, 0], calls: s.calls.slice(),
+    prevLean: s.prevLean.slice(), prevWith: s.prevWith.slice(), dayStart: s.dayStart.slice(), council: s.council.slice(), bounty: s.bounty.slice(), ordeal: s.ordeal.slice(),
   };
 }
 
@@ -168,7 +193,7 @@ export function draw(s: State): number | undefined {
   return s.deck.pop();
 }
 
-export const val = (s: State, c: number) => s.cards[c].v;
+export const val = (s: State, c: number) => (s.cards[c].ab === 'acolyte' ? s.tides[s.tides.length - 1] ?? 0 : s.cards[c].v);
 export const ab = (s: State, c: number) => s.cards[c].ab;
 export const sgn = (x: number): Dir => (x > 0 ? 1 : x < 0 ? -1 : 0);
 
@@ -209,11 +234,46 @@ export function altarNet(s: State) {
 
 // ---------------------------------------------------------------- the Day
 
+/** What p can see of the Altar, plus the expected pushes still to come today. */
+export function quickEstimate(s: State, p: number) {
+  let m = 0;
+  for (const a of s.altar) {
+    if (a.up || a.by === p || (a.seen & (1 << p))) m += altarWeight(s, a);
+    else if (!s.R.anonymous && a.by >= 0) m += 0.5 * lean(s, a.by);
+  }
+  const total = s.R.n * s.R.turns;
+  for (let st = s.step + 1; st < total; st++) m += 0.45 * lean(s, s.order[st % s.R.n]);
+  return m;
+}
+function soleLeader(s: State, except = -1) {
+  const top = Math.max(...s.glory);
+  const ls = s.glory.map((g, p) => (g === top ? p : -1)).filter((p) => p >= 0);
+  return ls.length === 1 && ls[0] !== except && top > 0 ? ls[0] : -1;
+}
+
 export function startDay(s: State) {
   s.day++;
   s.altar = [];
   s.used = Array(s.R.n).fill(0);
   s.calls = Array(s.R.n).fill(0);
+  s.dayStart = s.glory.slice();
+  s.ordeal = Array(s.R.n).fill(false);
+  for (let p = 0; p < s.R.n; p++) {
+    // Council: name a player who leans your way (not the leader if you can help it).
+    s.council[p] = -1;
+    if (choirHas(s, p, 'council') && lean(s, p) !== 0) {
+      const lead = soleLeader(s);
+      const c = [...Array(s.R.n).keys()].filter((q) => q !== p && lean(s, q) === lean(s, p)).sort((a, b) => (a === lead ? 1 : 0) - (b === lead ? 1 : 0));
+      if (c.length) s.council[p] = c[0];
+    }
+    // Bounty: name the player most likely to gain nothing: someone alone on a side, else a rival on the other side.
+    s.bounty[p] = -1;
+    if (choirHas(s, p, 'bounty2')) {
+      const others = [...Array(s.R.n).keys()].filter((q) => q !== p && lean(s, q) !== 0);
+      const opp = others.filter((q) => lean(s, q) === -lean(s, p));
+      s.bounty[p] = opp[0] ?? -1;
+    }
+  }
   for (const ch of s.choir) for (const x of ch) x.flip = false;
   for (let k = 0; k < s.R.omens; k++) { const c = draw(s); if (c !== undefined) s.altar.push({ c, up: false, by: -1, kind: 2, seen: 0 }); }
   // Turn order
@@ -224,7 +284,7 @@ export function startDay(s: State) {
   s.phase = s.R.fruits ? 'fruits' : 'noon';
   s.preLastNet = null;
   // Prophet: name the Tide in the Morning, before First Fruits (+1 at the Evening if right).
-  for (let p = 0; p < s.R.n; p++) if (choirHas(s, p, 'prophet')) {
+  for (let p = 0; p < s.R.n; p++) if (choirHas(s, p, 'prophet') || choirHas(s, p, 'prophecy')) {
     let t = 0;
     for (let q = 0; q < s.R.n; q++) t += lean(s, q);
     for (const c of s.hand[p]) t += 0.5 * val(s, c);
@@ -247,7 +307,8 @@ export function applyFruits(s: State, picks: number[]) {
 export type Action =
   | { t: 'offer'; i: number }
   | { t: 'exalt'; i: number; r: number } // r = Choir index to replace, -1 if room
-  | { t: 'gather'; k: number; r: number };
+  | { t: 'gather'; k: number; r: number }
+  | { t: 'pass' };
 
 export const active = (s: State) => s.order[s.step % s.R.n];
 
@@ -255,14 +316,16 @@ export function legal(s: State, p: number): Action[] {
   const out: Action[] = [];
   const full = s.choir[p].length >= s.R.choirMax;
   const rs = full ? s.choir[p].map((_, j) => j) : [-1];
-  for (let i = 0; i < s.hand[p].length; i++) out.push({ t: 'offer', i });
+  if (!(s.anathema >= 0 && s.anathema !== p)) for (let i = 0; i < s.hand[p].length; i++) out.push({ t: 'offer', i });
   for (let i = 0; i < s.hand[p].length; i++) for (const r of rs) out.push({ t: 'exalt', i, r });
   for (let k = 0; k < s.altar.length; k++) {
     const a = s.altar[k];
     if (!a.up && !s.R.gatherBlind && a.by !== p) continue;
     if (a.by >= 0 && a.by !== p && (choirHas(s, a.by, 'sanctuary') || choirHas(s, a.by, 'trumpet2')) && a.kind === 1) continue;
+    if (a.by >= 0 && a.by !== p && choirHas(s, a.by, 'mirage')) continue;
     for (const r of rs) out.push({ t: 'gather', k, r });
   }
+  if (!out.length) out.push({ t: 'pass' });
   return out;
 }
 
@@ -294,8 +357,11 @@ export function act(s: State, a: Action) {
   const lastSeat = s.order[s.R.n - 1];
   if (p === lastSeat && s.step >= s.R.n * (s.R.turns - 1) && s.preLastNet === null) s.preLastNet = altarNet(s);
   const before = lean(s, p);
+  if (s.anathema === p) s.anathema = -1;
   s.decisions[p]++;
-  if (a.t === 'offer') {
+  if (a.t === 'pass') {
+    // nothing
+  } else if (a.t === 'offer') {
     const [c] = s.hand[p].splice(a.i, 1);
     s.offerStats[0]++;
     if (val(s, c) !== 0 && sgn(val(s, c)) === -lean(s, p)) s.offerStats[1]++;
@@ -303,11 +369,19 @@ export function act(s: State, a: Action) {
     s.altar.push({ c, up: hymn, by: p, kind: 1, seen: 1 << p });
     if (s.R.offerReward === 'flat' || s.R.offerReward === 'matchPlus') gain(s, p, 1, 'offer');
     if (choirHas(s, p, 'scribe')) { const d = draw(s); if (d !== undefined) s.hand[p].push(d); }
+    // Raphael / Azazel: when you Offer a card of this card's alignment, turn it face up to destroy a face-up card of the other.
+    for (const x of s.choir[p]) if (ab(s, x.c) === 'raphael' && sgn(val(s, c)) === sgn(val(s, x.c))) {
+      let best = -1;
+      for (let k = 0; k < s.altar.length; k++) { const al = s.altar[k]; if (al.up && al.by !== p && sgn(val(s, al.c)) === -sgn(val(s, c)) && (best < 0 || Math.abs(val(s, al.c)) > Math.abs(val(s, s.altar[best].c)))) best = k; }
+      if (best >= 0) { s.altar[s.altar.length - 1].up = true; const [d] = s.altar.splice(best, 1); s.discard.push(d.c); }
+      break;
+    }
   } else if (a.t === 'exalt') {
     const [c] = s.hand[p].splice(a.i, 1);
     replaceAt(s, p, a.r);
     enter(s, p, c);
     if (choirHas(s, p, 'patron') && val(s, c) !== 0) gain(s, p, 1, 'ab:patron');
+    for (const x of s.choir[p]) if (ab(s, x.c) === 'seraph' && x.c !== c && sgn(val(s, c)) !== 0 && sgn(val(s, c)) === sgn(val(s, x.c))) { gain(s, p, 1, 'ab:seraph'); break; }
   } else {
     const [x] = s.altar.splice(a.k, 1);
     replaceAt(s, p, a.r);
@@ -322,7 +396,50 @@ export function act(s: State, a: Action) {
 }
 
 /** Automatic "On your turn" abilities, decided by a simple fixed rule so they cost no decisions in the lab. */
+function spend(s: State, p: number, a: string) {
+  const j = s.choir[p].findIndex((x) => ab(s, x.c) === a);
+  if (j >= 0) { const [x] = s.choir[p].splice(j, 1); s.discard.push(x.c); }
+}
+
 function afterAction(s: State, p: number) {
+  const my = lean(s, p);
+  const est = quickEstimate(s, p);
+  // Michael: discard the sole leader's most valuable Choir card, then discard Michael.
+  if (choirHas(s, p, 'michael')) {
+    const q = soleLeader(s, p);
+    if (q >= 0 && s.choir[q].length) {
+      let j = 0, bv = -Infinity;
+      s.choir[q].forEach((x, k) => { const v = (ab(s, x.c) ? 1 : 0) + Math.abs(val(s, x.c)) * 0.5; if (v > bv) { bv = v; j = k; } });
+      const [x] = s.choir[q].splice(j, 1);
+      s.discard.push(x.c);
+      if (choirHas(s, q, 'martyr')) gain(s, q, 1, 'ab:martyr');
+      spend(s, p, 'michael');
+    }
+  }
+  // Envy: while the leader is 3 or more ahead, every leader loses 1.
+  if (choirHas(s, p, 'envy')) {
+    const top = Math.max(...s.glory);
+    if (top - s.glory[p] >= 3) for (let q = 0; q < s.R.n; q++) if (s.glory[q] === top) gain(s, q, -1, 'ab:envy-victim');
+  }
+  // Anathema: if the Altar is going my way, nobody else may Offer until my next turn.
+  if (choirHas(s, p, 'anathema') && my !== 0 && sgn(est) === my) s.anathema = p;
+  // Winnowing: discard up to 2 facedown cards Offered by players on the other side.
+  if (choirHas(s, p, 'winnowing') && my !== 0) {
+    let k = 0;
+    for (let i = s.altar.length - 1; i >= 0 && k < 2; i--) { const al = s.altar[i]; if (!al.up && al.by >= 0 && al.by !== p && lean(s, al.by) === -my && !choirHas(s, al.by, 'mirage')) { s.altar.splice(i, 1); s.discard.push(al.c); k++; if (choirHas(s, al.by, 'snare')) gain(s, al.by, 1, 'ab:snare'); } }
+  }
+  // Abaddon: if the Altar is going against me, replace every card with the top of the deck, then discard Abaddon.
+  if (choirHas(s, p, 'abaddon') && my !== 0 && sgn(est) === -my && s.altar.length >= 4) {
+    s.altar = s.altar.map((al) => { s.discard.push(al.c); const c = draw(s); return c === undefined ? al : { c, up: true, by: -1, kind: 2 as const, seen: 0 }; });
+    spend(s, p, 'abaddon');
+  }
+  // Ordeal: double this Reaping's gain, when the Altar looks safe late in the turn order.
+  if (choirHas(s, p, 'ordeal') && my !== 0 && sgn(est) === my && s.step >= s.R.n * s.R.turns - 2) s.ordeal[p] = true;
+  // Vessel: place a hand card of my side facedown as an extra bet (not an Offer).
+  if (choirHas(s, p, 'vessel') && my !== 0) {
+    const i = s.hand[p].findIndex((c) => sgn(val(s, c)) === my);
+    if (i >= 0) { const [c] = s.hand[p].splice(i, 1); s.altar.push({ c, up: false, by: p, kind: 3 as any, seen: 1 << p }); }
+  }
   // Prophet (end-of-turn version, 'prophetT'): name the Tide at the end of your turn.
   if (choirHas(s, p, 'prophetT') && !s.calls[p]) {
     let m = 0;
@@ -380,9 +497,13 @@ export function scoreTable(t: ScoreTable) {
     const wt = sideWeights(s);
     let w = 0, l = 0;
     for (let p = 0; p < n; p++) { if (leans[p] === tide) w += wt[p]; else if (leans[p] === -tide) l += wt[p]; }
+    const top = Math.max(...s.glory);
+    const leaders = s.glory.filter((g) => g === top).length;
     for (let p = 0; p < n; p++) {
       if (leans[p] === tide) out[p] = t.win[w] ?? 0;
-      else if (leans[p] === -tide) out[p] = t.lose[l] ?? t.lose[t.lose.length - 1];
+      else if (leans[p] === -tide) out[p] = s.R.loseHeavy && Math.abs(leanSum(s, p)) < s.R.loseHeavy ? 0 : t.lose[l] ?? t.lose[t.lose.length - 1];
+      else out[p] = -s.R.neutralLoss;
+      if (s.R.crownTax && out[p] > 0 && leaders === 1 && top > 0 && s.glory[p] === top) out[p] = Math.max(0, out[p] - s.R.crownTax);
     }
     return out;
   };
@@ -393,22 +514,38 @@ export function evening(s: State) {
   const net = altarNet(s);
   let tide = sgn(net);
   if (tide === 0 && s.R.tieBreak === 'yesterday' && s.altar.length) tide = s.tides[s.tides.length - 1] ?? 0;
+  const facedown = s.altar.filter((a) => !a.up).length;
   for (const a of s.altar) a.up = true;
   const leans = Array.from({ length: n }, (_, p) => lean(s, p));
+  const top0 = Math.max(...s.glory);
+  const lead0 = s.glory.filter((g) => g === top0).length === 1 && top0 > 0 ? s.glory.indexOf(top0) : -1;
   const f = typeof s.R.score === 'function' ? s.R.score : scoreTable(s.R.score);
   const reap = f(s, tide, Math.abs(net));
+  for (let p = 0; p < n; p++) if (s.ordeal[p] && reap[p] > 0) reap[p] *= 2;
+  for (let p = 0; p < n; p++) if (choirHas(s, p, 'scapegoat') && s.glory[p] >= 1) {
+    const q = soleLeader(s, p);
+    if (q >= 0 && reap[q] >= 2) { gain(s, p, -1, 'ab:scapegoat-cost'); reap[q] = 0; }
+  }
   const before = s.glory.slice();
   for (let p = 0; p < n; p++) gain(s, p, reap[p], 'reaping');
   // Offer bets
   if (s.R.offerReward === 'match' || s.R.offerReward === 'matchPlus') {
     for (const a of s.altar) if (a.by >= 0 && (a.kind === 1 || (a.kind === 0 && s.R.fruitsBet)) && tide !== 0 && sgn(val(s, a.c)) === tide) gain(s, a.by, 1, a.kind === 1 ? 'bet' : 'fruitbet');
+    for (const a of s.altar) if ((a.kind as number) === 3 && tide !== 0 && val(s, a.c) !== 0) gain(s, a.by, sgn(val(s, a.c)) === tide ? 1 : -1, 'ab:vessel');
+    if (s.R.betLoss) for (const a of s.altar) if (a.by >= 0 && a.kind === 1 && tide !== 0 && sgn(val(s, a.c)) === -tide) gain(s, a.by, -s.R.betLoss, 'betloss');
   }
-  for (let p = 0; p < n; p++) if (s.calls[p] && tide !== 0 && s.calls[p] === tide) gain(s, p, 1, 'ab:prophet');
-  endOfDayAbilities(s, tide, leans, reap);
+  for (let p = 0; p < n; p++) if (s.calls[p] && tide !== 0 && s.calls[p] === tide) gain(s, p, 1, choirHas(s, p, 'prophecy') ? 'ab:prophecy' : 'ab:prophet');
+  for (let p = 0; p < n; p++) if (s.calls[p] && choirHas(s, p, 'prophecy') && s.calls[p] !== tide) gain(s, p, -1, 'ab:prophecy');
+  endOfDayAbilities(s, tide, leans, reap, Math.abs(net));
+  for (let p = 0; p < n; p++) { const j = s.choir[p].findIndex((x) => x.store === -99); if (j >= 0) { const [x] = s.choir[p].splice(j, 1); s.discard.push(x.c); } }
+  s.prevLean = leans.slice();
+  s.prevWith = leans.map((l) => tide !== 0 && l === tide);
   const lastFlip = s.preLastNet !== null && sgn(s.preLastNet) !== tide;
   let light = 0, dark = 0;
   for (const a of s.altar) { const v = altarWeight(s, a); if (v > 0) light += v; else dark -= v; }
-  s.logs.push({ day: s.day, tide, margin: Math.abs(net), leans, reap: s.glory.map((g, p) => g - before[p]), lastFlip, light, dark });
+  const top1 = Math.max(...s.glory);
+  const lead1 = s.glory.filter((g) => g === top1).length === 1 ? s.glory.indexOf(top1) : -1;
+  s.logs.push({ day: s.day, tide, margin: Math.abs(net), leans, reap: s.glory.map((g, p) => g - before[p]), lastFlip, light, dark, reapOnly: reap, crown: lead0, altarSize: s.altar.length, facedown, leader: lead1 });
   s.tides.push(tide);
   s.gloryByDay.push(s.glory.slice());
   for (const a of s.altar) s.discard.push(a.c);
@@ -426,7 +563,7 @@ export function evening(s: State) {
   startDay(s);
 }
 
-function endOfDayAbilities(s: State, tide: Dir, leans: Dir[], reap: number[]) {
+function endOfDayAbilities(s: State, tide: Dir, leans: Dir[], reap: number[], margin = 0) {
   const n = s.R.n;
   const withTide = leans.filter((l) => tide !== 0 && l === tide).length;
   const minG = Math.min(...s.glory);
@@ -470,6 +607,31 @@ function endOfDayAbilities(s: State, tide: Dir, leans: Dir[], reap: number[]) {
           if (k) gain(s, p, Math.min(k, 1), 'ab:tithe');
           break;
         }
+        case 'treeOfLife': if (tide !== 0 && leans[p] === tide && s.prevWith[p]) gain(s, p, 1, 'ab:treeOfLife'); break;
+        case 'firmament': if (tide !== 0 && leans[p] === tide && margin === 1) gain(s, p, 1, 'ab:firmament'); break;
+        case 'leviathan': if (tide !== 0 && leans[p] === tide && margin >= 3) gain(s, p, 1, 'ab:leviathan'); break;
+        case 'defiance': if (tide !== 0 && leans[p] === tide && leans.filter((l) => l === -tide).length > withTide) gain(s, p, 1, 'ab:defiance'); break;
+        case 'uriel': { // when you gain at the Reaping, +2 if 3 or more other cards share this card's alignment
+          if (reap[p] <= 0) break;
+          const k = s.choir[p].filter((y) => y !== x && sgn(val(s, y.c)) === sgn(v)).length;
+          if (k >= 3) gain(s, p, 2, 'ab:uriel');
+          break;
+        }
+        case 'remnant2': if (reap[p] > 0 && s.R.choirMax - s.choir[p].length >= 2) gain(s, p, 1, 'ab:remnant2'); break;
+        case 'outcastOld': if (s.glory[p] === Math.min(...s.glory)) gain(s, p, 1, 'ab:outcastOld'); break;
+        case 'council': { const q = s.council[p]; if (q >= 0 && leans[p] !== 0 && leans[q] === leans[p]) { gain(s, p, 1, 'ab:council'); gain(s, q, 1, 'ab:council-partner'); } break; }
+        case 'stillness2': if (tide !== 0 && s.tides.length && s.tides[s.tides.length - 1] === tide) gain(s, p, 1, 'ab:stillness2'); break;
+        case 'apple': if (leans[p] !== 0 && s.prevLean[p] === -leans[p]) gain(s, p, 2, 'ab:apple'); break;
+        case 'favor2': if (reap.filter((r, q) => q !== p && r <= 0).length >= 2) gain(s, p, 1, 'ab:favor2'); break;
+        case 'hubris': {
+          const top = Math.max(...s.glory);
+          const q = s.glory.filter((g) => g === top).length === 1 ? s.glory.indexOf(top) : -1;
+          if (q >= 0 && q !== p && s.glory[q] - s.dayStart[q] >= 4) { gain(s, q, -1, 'ab:hubris-victim'); gain(s, p, 1, 'ab:hubris'); }
+          break;
+        }
+        case 'moderation2': if (leans[p] === 0 && tide !== 0) { for (const al of s.altar) if (al.by === p && al.kind === 1 && sgn(val(s, al.c)) === tide) gain(s, p, 1, 'ab:moderation2'); } break;
+        case 'mercy2': if (reap[p] <= 0) { gain(s, p, 1, 'ab:mercy2'); x.store = -99; } break;
+        case 'bounty2': { const q = s.bounty[p]; if (q >= 0) gain(s, p, reap[q] > 0 ? -1 : 1, 'ab:bounty2'); break; }
         case 'traitor': { // +1 if one of your Offers that opposed your own Choir's lean matches the Tide
           if (tide === 0) break;
           if (s.altar.some((al) => al.by === p && al.kind === 1 && sgn(val(s, al.c)) === tide && leans[p] === -tide)) gain(s, p, 1, 'ab:traitor');
