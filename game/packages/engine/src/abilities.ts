@@ -545,9 +545,10 @@ export const TURN: Record<string, TurnAbility> = {
   },
   [C.tempest]: {
     once: 'day',
-    can: (s, seat) => s.altar.some((a) => (a.sanctuary === undefined || a.sanctuary === seat) && !altarShielded(s, a, seat)),
+    // V44 test 'tempest-up': like every other destroy ability (Raphael, Azazel), only a face-up card can be destroyed.
+    can: (s, seat) => s.altar.some((a) => tempestOk(s, seat, a)),
     *run(s, seat) {
-      const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => (a.sanctuary === undefined || a.sanctuary === seat) && !altarShielded(s, a, seat));
+      const opts = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => tempestOk(s, seat, a));
       const pick = yield* chooseOne(s, seat, 'tempest', 'The Tempest: destroy one Host card on the Altar.', opts.map(({ a, i }) => ({ id: String(i), label: altarLabel(s, a, seat), card: a.facedown && a.offeredBy !== seat ? undefined : a.id })));
       if (pick === null) return;
       const [a] = s.altar.splice(Number(pick), 1);
@@ -566,6 +567,14 @@ export const TURN: Record<string, TurnAbility> = {
       const card = yield* chooseOne(s, seat, 'patron.card', `The Patron: choose a card to give to ${pname(s, o)}'s Choir.`, s.players[seat].hand.map((c) => cardOpt(c)));
       if (!card) return;
       const full = s.players[o].choir.length >= choirLimit(s);
+      if (variant(s, 'patron-target')) {
+        if (!(yield* payTribute(s, seat, o))) return;
+        if (!(yield* makeRoom(s, o, 'the Patron'))) return;
+        s.players[seat].hand.splice(s.players[seat].hand.indexOf(card), 1);
+        yield* enterChoir(s, o, card);
+        log(s, 'patron', `${pname(s, seat)} played ${cardName(card)} into ${pname(s, o)}'s Choir (the Patron).`);
+        return;
+      }
       if (full && !(yield* payTribute(s, seat, o))) return;
       s.players[seat].hand.splice(s.players[seat].hand.indexOf(card), 1);
       if (full) {
@@ -622,7 +631,15 @@ function parasiteTargets(s: GameState, seat: Seat): Seat[] {
     .map((p) => p.seat);
 }
 
+function tempestOk(s: GameState, seat: Seat, a: GameState['altar'][number]) {
+  // V44 test 'tempest-offer': only on a turn you Offered.
+  if (variant(s, 'tempest-offer') && !s.day_.actionsTaken.some((x) => x.seat === seat && x.action === 'offer')) return false;
+  return (a.sanctuary === undefined || a.sanctuary === seat) && !altarShielded(s, a, seat) && (!variant(s, 'tempest-up') || !a.facedown);
+}
+
 function patronTargets(s: GameState, seat: Seat): Seat[] {
+  // V44 test 'patron-target': playing a card into another player's Choir is always Targeting, as with Temptation.
+  if (variant(s, 'patron-target')) return others(s, seat).filter((p) => !protectedFrom(s, seat, p.seat, 'replace') && canAffordTribute(s, seat, p.seat) && (p.choir.length < choirLimit(s) || discardableForRoom(s, p).length > 0)).map((p) => p.seat);
   return others(s, seat)
     .filter((p) => p.choir.length < choirLimit(s) || (!protectedFrom(s, seat, p.seat, 'discard') && canAffordTribute(s, seat, p.seat)))
     .map((p) => p.seat);

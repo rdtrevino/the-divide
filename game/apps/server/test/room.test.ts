@@ -202,7 +202,7 @@ describe('a full game', () => {
 
 describe('the turn timer', () => {
   const started = () => {
-    const x = table(9);
+    const x = table(11); // a deal where no one has an In the Morning card, so First Fruits is the first decision (V44 numbering)
     x.core.init('ABCDE', 'client-a-xxxx');
     join(x, 'a', 'Robert');
     join(x, 'b', 'Ana');

@@ -1,5 +1,36 @@
 # Changelog
 
+## V44 cards and Rulebook v14: Celestials and Events for the current game; the deck numbered Light, Neutral, Dark (November 18, 2026)
+
+Not yet merged. Full review, every option measured, and the renumbering table: `design/v44-advanced.md`.
+
+**Celestials.** Every one now lands between 0.95 and 1.05 over 60,000 Advanced bot games (V43: 0.84 to 1.10), within 0.92 to 1.06 at each player count.
+
+| Celestial | Now | Win ratio |
+|---|---|---|
+| The Tempest | When you Offer, you may destroy a face-up card on the Altar | 1.10 → 0.99 |
+| The Oracle | In the Morning: look at the top 2 Events, play one, put the other on the bottom | 0.92 → 0.95 |
+| The Cantor | A second Offer must match the first's alignment (Light, Dark or Neutral); both go face up, each with its reward | 0.97 → 0.99 (1.13–1.18 when played fully) |
+| The Patron | Worded like Temptation, and Targeting like it | 1.00 → 0.95 |
+| The Dominion | A hand of 5 (was 4) | 0.99 → 1.00 |
+| The Arbiter | Takes 1 of any Reaping gain from a player against the Tide (else anyone); never gives its losses away | 0.84 → 1.01 |
+| The Eclipse, the Echo, the Whisper | Wording only: timing labels and current scoring words | 1.04, 1.05, 1.09 → 1.05, 1.01, 1.05 |
+
+**Events.**
+- **Divine Calling:** "When you Exalt this Day, gain 1 Glory." (Exalt is free since V42, so the old text did nothing.)
+- **Purgatory:** "No Choir loses Glory at the Reaping this Day. A Choir that leans neither way gains 1 Glory." (It used to ignore the Tide and cost the table about 3 Glory.)
+- **Tithe:** unchanged text; the engine no longer charges for Celestial powers, which are not Host abilities.
+- **Wording only:** The Fast (no one may Exalt, Turn, or spend Glory), Famine (no Choir counts as leaning with or against the Tide), Ascension and Fall From Grace (cards on the Altar, First Fruits included, count double).
+
+**Host card numbers.** 1–23 Light, 24–46 Neutral (with Acolyte and Nephilim), 47–69 Dark, each group in its old order; 46 cards changed number (Remnant 67 → 23, Jubilee 68 → 46, Vessel through Forger +1, Anathema through Abaddon +2). The face and plate images are renamed to match, and the Reprint List notes each new number. `apply_changes.py` does this with `"renumber": true`.
+
+**Code**
+- `V44_RULES` in `core.ts`; the rejected options remain as test switches.
+- Bots judge the Day's Event (for the Oracle, Tithe, Purgatory, Divine Calling) and make the Cantor's second Offer with Neutral cards too (`bot-v44`).
+- New sim tool `tools/sim/advanced.ts`: Celestial win ratios overall and by player count, and what each Event does to its Day.
+- Card data V44 (`cards/changes/V44.json`), Rulebook v14 (Celestials, Events, and rulings for the Tempest, Oracle, Cantor, Patron, Arbiter, Tithe, Purgatory and Divine Calling), the Stats page's bot column re-measured.
+- The renumbering changes the deck order a seed deals from, so games recorded on V43 show the site's "earlier version" notice on replay; one server test moved to a seed whose deal it expects.
+
 ## V43 cards and Rulebook v13: a deck built around engines, a race to 12 (November 18, 2026)
 
 Robert's decisions of November 18, card by card. Not yet merged.

@@ -98,7 +98,20 @@ export const V43_RULES: readonly string[] = [
   // Defiance takes the upset ability ('favor-upset' on Defiance), Favor takes Leviathan's old ability, and the Glory protection is dropped.
   'favor-upset', 'swap-defiance', 'favor-spared', 'no-shield',
 ];
-const V42_SET = new Set([...V42_RULES, ...V43_RULES]);
+/**
+ * V44 rules: the Advanced pass on the Celestials and Events, for V43's scoring (design/v44-advanced.md).
+ * Each was measured as a test switch first.
+ */
+export const V44_RULES: readonly string[] = [
+  // Celestials
+  'tempest-up', 'tempest-offer', 'oracle-two', 'cantor-chorus', 'cantor-chorus-n', 'patron-target', 'arbiter-judge', 'arbiter-any',
+  'dominion-5',
+  // Events
+  'calling-reward', 'purgatory-spare', 'tithe-host',
+  // Bots judge the Day's Event (the Oracle, Tithe, Purgatory, Divine Calling) and make the Cantor's second Offer.
+  'bot-v44',
+];
+const V42_SET = new Set([...V42_RULES, ...V43_RULES, ...V44_RULES]);
 /** A V42 rule, or a test switch named in the game's config. */
 export const variant = (s: GameState, v: string) => {
   const cv = s.config.variants;
@@ -140,11 +153,12 @@ export function markToday(s: GameState, seat: Seat, key: string) {
 }
 
 export function handLimit(s: GameState, seat: Seat): number {
-  let n = isCelestial(s, seat, C.dominion) ? 4 : 3;
+  let n = baseHandLimit(s, seat);
   if (eventOn(s, E.manna, seat)) n += s.day_.handLimitBonus;
   return n;
 }
-export const baseHandLimit = (s: GameState, seat: Seat) => (isCelestial(s, seat, C.dominion) ? 4 : 3);
+// Test 'dominion-5': the Dominion's hand limit is 5.
+export const baseHandLimit = (s: GameState, seat: Seat) => (isCelestial(s, seat, C.dominion) ? (variant(s, 'dominion-5') ? 5 : 4) : 3);
 
 export const previousTide = (s: GameState): Dir | null => {
   const prev = s.tides.find((t) => t.day === s.day - 1);
@@ -296,9 +310,12 @@ export function blockedByEvent(s: GameState, seat: Seat, id: string): boolean {
 /** Whether a player could pay to activate this ability right now. */
 export function canActivate(s: GameState, seat: Seat, id: string): boolean {
   if (blockedByEvent(s, seat, id)) return false;
-  if (eventOn(s, E.tithe, seat) && s.players[seat].glory < 1) return false;
+  if (tithed(s, seat, id) && s.players[seat].glory < 1) return false;
   return true;
 }
+
+/** Tithe charges for Host abilities. V44 'tithe-host': it no longer charges Celestial powers (the card says Host ability). */
+const tithed = (s: GameState, seat: Seat, id: string) => eventOn(s, E.tithe, seat) && (!variant(s, 'tithe-host') || id.startsWith('host-'));
 
 /**
  * Activate an ability: pay Tithe, open the Silence window, then run it.
@@ -306,7 +323,7 @@ export function canActivate(s: GameState, seat: Seat, id: string): boolean {
  */
 export function* activation(s: GameState, seat: Seat, source: string, run: () => Gen<void>): Gen<boolean> {
   if (blockedByEvent(s, seat, source)) return false;
-  if (eventOn(s, E.tithe, seat)) {
+  if (tithed(s, seat, source)) {
     if (s.players[seat].glory < 1) return false;
     yield* pay(s, seat, 1, E.tithe);
   }
@@ -370,8 +387,12 @@ function addRaw(s: GameState, seat: Seat, n: number, source: GlorySource) {
 export function* gain(s: GameState, seat: Seat, n: number, source: GlorySource): Gen<number> {
   if (n <= 0) return 0;
   // V38: the Arbiter takes from a player only when it gains 2 or more at once.
-  if (isCelestial(s, seat, C.arbiter) && source === 'reaping' && n >= 2) {
-    const rich = others(s, seat).filter((p) => p.glory > 0);
+  // V44 test 'arbiter-take': whenever it gains at the Reaping (a pair's 1 included).
+  if (isCelestial(s, seat, C.arbiter) && source === 'reaping' && n >= (variant(s, 'arbiter-take') || variant(s, 'arbiter-judge') ? 1 : 2)) {
+    // V44 test 'arbiter-judge': only from a player whose Choir leaned against the Tide (the losers pay the winner).
+    let rich = others(s, seat).filter((p) => p.glory > 0 && (!variant(s, 'arbiter-judge') || (s.day_ as any).against?.includes(p.seat)));
+    // Test 'arbiter-any': if no one who leaned against the Tide has Glory, take it from any player.
+    if (!rich.length && variant(s, 'arbiter-any')) rich = others(s, seat).filter((p) => p.glory > 0);
     if (rich.length) {
       const t = yield* chooseOne(s, seat, 'arbiter.take', `The Arbiter: you gain ${n} Glory at the Reaping. Choose a player to take 1 of it from.`, rich.map((p) => seatOpt(s, p.seat)));
       const from = seatFromOpt(t!);
@@ -401,7 +422,8 @@ export function* lose(s: GameState, seat: Seat, n: number, source: GlorySource):
   const amt = Math.min(n, s.players[seat].glory);
   if (amt <= 0) return 0;
   addRaw(s, seat, -amt, source);
-  if (isCelestial(s, seat, C.arbiter) && source === 'reaping') {
+  // V44 tests 'arbiter-nogive' / 'arbiter-take': the Arbiter no longer hands a lost Glory to the poorest player.
+  if (isCelestial(s, seat, C.arbiter) && source === 'reaping' && !variant(s, 'arbiter-nogive') && !variant(s, 'arbiter-take') && !variant(s, 'arbiter-judge')) {
     const t = yield* chooseOne(s, seat, 'arbiter.give', `The Arbiter: you lose ${amt} Glory at the Reaping. Give 1 of it to the player with the least Glory (choose among ties).`, leastGloryOthers(s, seat).map((p) => seatOpt(s, p.seat)));
     if (t) {
       const to = seatFromOpt(t);

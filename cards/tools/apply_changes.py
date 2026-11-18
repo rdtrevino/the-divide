@@ -16,6 +16,10 @@ and updates, in step:
 Every changed card is marked "Reprint: rules changed", unless its entry has "wording": true (a wording-only
 change). A Host entry may also carry (V42): "value" (Offering value) with "offering" (the workbook's Offering
 text), "rename" (a new card name), "openGame" (false retires the card) and "oncePerGame". Requires openpyxl.
+
+"renumber": true (V44) numbers the Host deck in order: Light, then Neutral (with Acolyte and Nephilim), then Dark,
+keeping each group's current order; retired cards follow. It updates the numbers in every file and sheet, renames
+the face and plate images in art/ to match, and lists each renumbered card on the Reprint List ("Number only").
 """
 import csv
 import json
@@ -40,6 +44,7 @@ def main(change_path: str) -> None:
     # 1. JSON card data
     data_path = ROOT / "cards/cards.json"
     data = json.loads(data_path.read_text())
+    renumbered = renumber(data) if spec.get("renumber") else {}
     old_text, number = {}, {}
     for deck, key in (("Host", "hosts"), ("Celestial", "celestials"), ("Event", "events")):
         for card in data[key]:
@@ -67,6 +72,8 @@ def main(change_path: str) -> None:
     old_xlsx = ROOT / f"cards/The_Divide_Cards_{prev}.xlsx"
     new_xlsx = ROOT / f"cards/The_Divide_Cards_{ver}.xlsx"
     wb = openpyxl.load_workbook(old_xlsx)
+    if renumbered:
+        renumber_sheets(wb, renumbered, data)
 
     main_ws = wb["Cards V33"]
     head = [c.value for c in main_ws[1]]
@@ -129,7 +136,16 @@ def main(change_path: str) -> None:
                 append_styled(rp_ws, ["Wording only", k[0], number[k], k[1], "Wording or format only", old_text[k], changes[k]["text"]])
             else:
                 append_styled(rp_ws, ["Rules changed", k[0], number[k], k[1], changes[k]["why"], old_text[k], changes[k]["text"]])
-    prio = {"New card": 0, "Rules changed": 1, "Wording only": 2}
+    for name, (was, now) in renumbered.items():
+        k = ("Host", name)
+        hit = next((r for r in rp_ws.iter_rows(min_row=2) if (r[1].value, r[3].value) == k), None)
+        note = f"Number {was} is now {now} (V44: Light, then Neutral, then Dark)"
+        if hit:
+            hit[4].value = f"{hit[4].value}; {note}" if hit[4].value else note
+        else:
+            text = next(c["text"] for c in data["hosts"] if c["name"] == name)
+            append_styled(rp_ws, ["Number only", "Host", now, name, note, text, text])
+    prio = {"New card": 0, "Rules changed": 1, "Wording only": 2, "Number only": 3}
     sort_rows(rp_ws, key=lambda r: (prio.get(r[0], 9), deck_order(r[1]), num_key(r[2])))
 
     renames = {k[1]: c["rename"] for k, c in changes.items() if "rename" in c}
@@ -149,6 +165,54 @@ def main(change_path: str) -> None:
         for r in wb2["Cards V33"].iter_rows(values_only=True):
             w.writerow(["" if v is None else v for v in r])
     print(f"{ver}: {len(changes)} cards updated; wrote {new_xlsx.name}, cards.csv, cards.json; archived {old_xlsx.name}")
+
+
+GROUP = {"light": 0, "neutral": 1, "variable": 1, "both": 1, "dark": 2}
+
+
+def renumber(data) -> dict:
+    """Number the Host deck Light, Neutral, Dark (retired cards last). Returns {name: (old, new)} for changed cards."""
+    hosts = sorted(data["hosts"], key=lambda h: (not h["openGame"], GROUP[h["alignment"]] if h["openGame"] else 0, h["number"]))
+    changed = {}
+    for i, h in enumerate(hosts, start=1):
+        if h["number"] == i:
+            continue
+        changed[h["name"]] = (h["number"], i)
+        for key, folder in (("face", "faces"), ("plate", "plates")):
+            if not h.get(key):
+                continue
+            old = ROOT / h[key]
+            slug = old.name.split("-", 1)[1]
+            new = old.with_name(f"{i:02d}-{slug}")
+            if old.exists():
+                old.rename(new.with_suffix(new.suffix + ".tmp"))
+            h[key] = str(new.relative_to(ROOT))
+        h["number"] = i
+    for key in ("face", "plate"):  # second pass, so a new name never lands on a file not yet moved
+        for h in hosts:
+            if h.get(key):
+                tmp = (ROOT / h[key]).with_suffix(Path(h[key]).suffix + ".tmp")
+                if tmp.exists():
+                    tmp.rename(ROOT / h[key])
+    data["hosts"] = hosts
+    return changed
+
+
+def renumber_sheets(wb, changed, data):
+    """Apply new Host numbers (and image paths) to every sheet, then re-sort each by deck and number."""
+    by_name = {h["name"]: h for h in data["hosts"]}
+    for ws in wb:
+        head = [c.value for c in ws[1]]
+        deck_col, no_col, name_col = head.index("Deck"), head.index("No."), head.index("Name")
+        for row in ws.iter_rows(min_row=2):
+            if row[deck_col].value == "Host" and row[name_col].value in changed:
+                row[no_col].value = changed[row[name_col].value][1]
+                for col, key in (("Card face image", "face"), ("Art plate image", "plate")):
+                    if col in head and row[head.index(col)].value:
+                        row[head.index(col)].value = by_name[row[name_col].value][key]
+        if ws.title == "Reprint List":
+            continue  # sorted by priority later
+        sort_rows(ws, key=lambda r: (deck_order(r[deck_col]), num_key(r[no_col])))
 
 
 def deck_order(d):
