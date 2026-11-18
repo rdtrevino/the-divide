@@ -131,6 +131,7 @@ function fateDay(s: State, p: number, cards: number[], pl: number) {
   const F = s.R.fate!;
   let nL = 0, nD = 0;
   for (const v of cards) { if (v > 0) nL++; else if (v < 0) nD++; }
+  if (F.mult) return F.perDay * (s.fate[p] === 1 ? pl * (1 + nL) : (1 - pl) * (1 + nD));
   return pl * (F.choirPay * nL + (s.fate[p] === 1 ? F.perDay : 0)) + (1 - pl) * (F.choirPay * nD + (s.fate[p] === -1 ? F.perDay : 0));
 }
 function fateLaterPl(s: State) {

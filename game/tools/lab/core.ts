@@ -69,7 +69,7 @@ export interface Rules {
   pax?: { margin: number; dom: number[]; indiv: number[]; tie: 'lowGlory' | 'lower' };
   /** Fates: each player secretly draws a Fate (1 Light, -1 Dark) from `pool`. Every Evening each Choir card matching the Tide earns
    *  `choirPay`; every Day the Tide matches your Fate is worth `perDay`, scored only at the end (after maxDays). */
-  fate?: { pool: number[]; perDay: number; choirPay: number };
+  fate?: { pool: number[]; perDay: number; choirPay: number; mult?: boolean };
   /** Pantheon: each game shuffles a random selection of the original cards (picks[i] from pools[i]) into a base deck. */
   pantheon?: { base: DeckSpec; pools: string[][]; picks: number[] };
   /** Ties at the end: shared. */
@@ -572,6 +572,11 @@ export function fateScore(s: State, tide: Dir): number[] {
     s.fateStats[1]++;
     if (lean(s, p) === s.fate[p]) s.fateStats[0]++;
     if (tide === 0) continue;
+    if (F.mult) {
+      // Multiplied: a Day the Tide matches your Fate scores 1 plus 1 per Choir card of your Fate's alignment (paid at the end).
+      if (s.fate[p] === tide) { let k = 1; for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) k++; } s.fateDays[p] += k; }
+      continue;
+    }
     for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) out[p] += F.choirPay; }
     if (s.fate[p] === tide) s.fateDays[p]++;
   }

@@ -281,3 +281,11 @@ Object.assign(VARIANTS, {
   c_plate1: PLATE(1),
   c_plate2_fate: PLATE(2, { target: 999, target3: 999, target4: 999, maxDays: 7, fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 2, choirPay: 1 } }),
 } as Record<string, V>);
+
+// ---- Round 25: Fates, multiplied (no hedging: your Choir pays only on your Fate's Days)
+Object.assign(VARIANTS, {
+  fm_1: FATE(1, 0, { fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 1, choirPay: 0, mult: true } }),
+  fm_1_bet: FATE(1, 0, { fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 1, choirPay: 0, mult: true }, offerReward: 'match' }),
+  fm_1_known: FATE(1, 0, { fate: { pool: [1, 1, -1, -1], perDay: 1, choirPay: 0, mult: true } }),
+  fm_1_c5: FATE(1, 0, { fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 1, choirPay: 0, mult: true }, choirMax: 5 }),
+} as Record<string, V>);
