@@ -1,13 +1,12 @@
-// V43 test switches: the engine reworks proposed in design/v43-proposal.md, measured before adoption.
+// The V43 engine reworks proposed in design/v43-proposal.md, each behind a switch so it could be measured
+// before adoption. Those adopted are on by default (V43_RULES in core.ts); the rest stay as test switches.
 import { H, cardName } from './data';
 import {
   activation, alignment, canActivate, canAffordTribute, cardOpt, choirLimit, chooseOne, colorsOf, discardableForRoom,
   drawHost, gain, hasActive, log, lose, makeRoom, others, payTribute, pname, protectedFrom, removeFromChoir, seatFromOpt,
   seatOpt, stat, variant,
 } from './core';
-import type { GameState, Gen, Seat } from './types';
-
-const day = (s: GameState) => s.day_ as any;
+import type { Dir, GameState, Gen, Seat } from './types';
 
 /** 'wisdom-peek': when you Offer or Exalt, look at the top 2 Host cards; put 1 into your hand and discard the other. */
 export function* wisdomPeek(s: GameState, seat: Seat): Gen<void> {
@@ -17,7 +16,7 @@ export function* wisdomPeek(s: GameState, seat: Seat): Gen<void> {
     if (!top.length) return;
     const keep = top.length === 1 ? top[0] : (yield* chooseOne(s, seat, 'wisdom.keep', 'Wisdom: put one of the top 2 Host cards into your hand; the other is discarded.', top.map((c) => cardOpt(c)), false, top))!;
     s.players[seat].hand.push(keep);
-    const rest = top.filter((c, i) => i !== top.indexOf(keep));
+    const rest = top.filter((_, i) => i !== top.indexOf(keep));
     s.discard.push(...rest);
     log(s, 'wisdom', `${pname(s, seat)} looked at the top 2 Host cards and kept one (Wisdom).`);
   });
@@ -25,7 +24,7 @@ export function* wisdomPeek(s: GameState, seat: Seat): Gen<void> {
 
 /** Record the cards each player Offers this Day (for Gabriel's prediction). */
 export function noteOffer(s: GameState, seat: Seat, cards: string[]) {
-  const o = (day(s).offered ??= {});
+  const o = (s.day_.offered ??= {});
   (o[seat] ??= []).push(...cards);
 }
 
@@ -51,7 +50,7 @@ export function* parasitePlant(s: GameState, seat: Seat): Gen<boolean> {
   const t = seatFromOpt(pick);
   if (!(yield* payTribute(s, seat, t))) return false;
   if (!(yield* makeRoom(s, t, 'Parasite'))) return false;
-  s.players[t].choir.push({ id: H.parasite, facedown: false, used: false, by: seat } as any);
+  s.players[t].choir.push({ id: H.parasite, facedown: false, used: false, by: seat });
   stat(s, { type: 'enter_choir', seat: t, card: H.parasite });
   log(s, 'parasite', `${pname(s, seat)} planted Parasite in ${pname(s, t)}'s Choir.`);
   return true;
@@ -66,8 +65,8 @@ export function* morningV43(s: GameState): Gen<void> {
       if (pick) {
         const t = seatFromOpt(pick);
         yield* activation(s, p.seat, H.gabriel, function* () {
-          const dir = yield* chooseOne(s, p.seat, 'seer.dir', `Gabriel: ${pname(s, t)} holds ${s.players[t].hand.map(cardName).join(', ')}. Name the alignment you think they will Offer.`, [{ id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }], false, s.players[t].hand);
-          (day(s).seer ??= {})[p.seat] = { t, dir };
+          const dir = (yield* chooseOne(s, p.seat, 'seer.dir', `Gabriel: ${pname(s, t)} holds ${s.players[t].hand.map(cardName).join(', ')}. Name the alignment you think they will Offer.`, [{ id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }], false, s.players[t].hand)) as Dir;
+          (s.day_.seer ??= {})[p.seat] = { t, dir };
           log(s, 'gabriel', `${p.name} looked at ${pname(s, t)}'s hand and named ${dir === 'light' ? 'Light' : 'Dark'} (Gabriel).`);
         });
       }
@@ -75,7 +74,7 @@ export function* morningV43(s: GameState): Gen<void> {
     if (variant(s, 'council-same') && hasActive(s, p.seat, H.council) && canActivate(s, p.seat, H.council)) {
       const pick = yield* chooseOne(s, p.seat, 'council.player', 'Council: name a player. If your Choirs lean the same way at the end of the Day, each of you gains 1 Glory.', others(s, p.seat).map((o) => seatOpt(s, o.seat)), true);
       if (pick) yield* activation(s, p.seat, H.council, function* () {
-        (day(s).council ??= {})[p.seat] = seatFromOpt(pick);
+        (s.day_.council ??= {})[p.seat] = seatFromOpt(pick);
         log(s, 'council', `${p.name} called a Council with ${pname(s, seatFromOpt(pick))}: if their Choirs lean the same way at the end of the Day, each gains 1 Glory.`);
       });
     }
@@ -87,10 +86,10 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
   for (const seat of order) {
     const p = s.players[seat];
     // Gabriel: +1 if the named player Offered a card of the named alignment.
-    const seer = day(s).seer?.[seat];
-    if (seer && hasActive(s, seat, H.gabriel) && (day(s).offered?.[seer.t] ?? []).some((c: string) => colorsOf(s, null, c)[seer.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.gabriel); log(s, 'gabriel', `${p.name} read ${pname(s, seer.t)} right: +1 Glory (Gabriel).`); }
+    const seer = s.day_.seer?.[seat];
+    if (seer && hasActive(s, seat, H.gabriel) && (s.day_.offered?.[seer.t] ?? []).some((c) => colorsOf(s, null, c)[seer.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.gabriel); log(s, 'gabriel', `${p.name} read ${pname(s, seer.t)} right: +1 Glory (Gabriel).`); }
     // Council: each gains 1 if your Choirs lean the same way.
-    const partner = day(s).council?.[seat];
+    const partner = s.day_.council?.[seat];
     if (partner !== undefined && hasActive(s, seat, H.council)) {
       const a = Math.sign(alignment(s, seat)), b = Math.sign(alignment(s, partner));
       if (a && a === b) { yield* gain(s, seat, 1, H.council); yield* gain(s, partner, 1, H.council); log(s, 'council', `${p.name} and ${pname(s, partner)} lean the same way: each gains 1 Glory (Council).`); }
@@ -102,15 +101,15 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
       else if (!variant(s, 'tree-tide') || withTide.has(seat)) tree.store = (tree.store ?? 0) + 1; // 'tree-tide': grows only on Days you lean with the Tide
     }
     // 'tree-momentum': Tree of Life takes Favor's momentum ability (with the Tide today and yesterday: 1 Glory).
-    if (variant(s, 'tree-momentum') && hasActive(s, seat, H.treeOfLife) && withTide.has(seat) && ((s as any).lastWithTide ?? []).includes(seat)) { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name} gained 1 Glory (Tree of Life).`); }
+    if (variant(s, 'tree-momentum') && hasActive(s, seat, H.treeOfLife) && withTide.has(seat) && (s.lastWithTide ?? []).includes(seat)) { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name} gained 1 Glory (Tree of Life).`); }
     // 'favor-fruits': 1 Glory if the card you gave as First Fruits matches the Tide.
     const tdir = (scored ?? s.tides[s.tides.length - 1])?.dir;
-    const fruit = day(s).fruits?.[seat];
+    const fruit = s.day_.fruits?.[seat];
     if ((variant(s, 'favor-fruits') || variant(s, 'favor-fruits-alone') || variant(s, 'favor-fruits-bet')) && hasActive(s, seat, H.favor) && fruit && tdir && tdir !== 'neutral') {
       const k = tdir as 'light' | 'dark';
       const match = colorsOf(s, null, fruit)[k];
       // 'favor-fruits-alone': only if no other player's First Fruits matched the Tide. 'favor-fruits-bet': -1 if it opposed the Tide.
-      const others2 = Object.entries(day(s).fruits ?? {}).filter(([o]) => Number(o) !== seat).some(([, c]) => colorsOf(s, null, c as string)[k]);
+      const others2 = Object.entries(s.day_.fruits ?? {}).filter(([o]) => Number(o) !== seat).some(([, c]) => colorsOf(s, null, c)[k]);
       if (match && (!variant(s, 'favor-fruits-alone') || !others2)) { yield* gain(s, seat, 1, H.favor); log(s, 'favor', `${p.name}'s First Fruits matched the Tide: +1 Glory (Favor).`); }
       else if (variant(s, 'favor-fruits-bet') && colorsOf(s, null, fruit)[k === 'light' ? 'dark' : 'light']) { yield* lose(s, seat, 1, H.favor); log(s, 'favor', `${p.name}'s First Fruits opposed the Tide: -1 Glory (Favor).`); }
     }
@@ -127,7 +126,7 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
       if (ok) { yield* gain(s, seat, 1, upsetCard); log(s, upsetCard === H.favor ? 'favor' : 'defiance', `${p.name} gained 1 Glory (${cardName(upsetCard)}).`); }
     }
     if (hasActive(s, seat, H.favor) && !['favor-fruits', 'favor-fruits-alone', 'favor-fruits-bet', 'favor-landslide', 'favor-pair', 'favor-upset', 'favor-narrow', 'favor-spared'].some((v) => variant(s, v))) {
-      const n = variant(s, 'favor-late') ? (s.day >= 7 ? 2 : s.day >= 4 ? 1 : 0) : variant(s, 'favor-momentum') && withTide.has(seat) && ((s as any).lastWithTide ?? []).includes(seat) ? 1 : 0;
+      const n = variant(s, 'favor-late') ? (s.day >= 7 ? 2 : s.day >= 4 ? 1 : 0) : variant(s, 'favor-momentum') && withTide.has(seat) && (s.lastWithTide ?? []).includes(seat) ? 1 : 0;
       if (n) { yield* gain(s, seat, n, H.favor); log(s, 'favor', `${p.name} gained ${n} Glory (Favor).`); }
     }
     // Remnant: 'remnant-asc2' (1 per empty place, up to 2) or 'remnant-asc1' (1 if any place is empty).
@@ -141,13 +140,13 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
   // Parasite ('parasite-feed'): its planter gains 1 when its holder lost Glory; it is discarded when its holder gained.
   if (variant(s, 'parasite-feed')) for (const p of s.players) {
     for (const c of [...p.choir]) {
-      const by = (c as any).by;
+      const by = c.by;
       if (c.id !== H.parasite || c.facedown || by === undefined) continue;
       if (lost[p.seat] > 0) { yield* gain(s, by, 1, H.parasite); log(s, 'parasite', `${pname(s, by)} fed on ${p.name}'s loss at the Reaping: +1 Glory (Parasite).`); }
       else if (gained[p.seat] > 0 && removeFromChoir(s, p.seat, H.parasite)) { s.discard.push(H.parasite); log(s, 'parasite', `${p.name} gained Glory at the Reaping, and the Parasite in their Choir is discarded.`); }
     }
   }
-  (s as any).lastWithTide = [...withTide];
+  s.lastWithTide = [...withTide];
 }
 
 /** 'eternity-relic': at the end of the Day, keep one card you Offered today on the Altar, face up, through the next Day. Returns the kept cards. */
@@ -155,7 +154,7 @@ export function* keepRelics(s: GameState, order: Seat[]): Gen<Set<object>> {
   const kept = new Set<object>();
   if (!variant(s, 'eternity-relic')) return kept;
   // 'eternity-forever': a kept card stays on the Altar until a player Gathers or removes it.
-  if (variant(s, 'eternity-forever')) for (const a of s.altar) if (a.kind === 'relic' && a.offeredBy !== null && hasActive(s, a.offeredBy, H.eternity)) { kept.add(a); ((s as any).relics ??= []).push({ id: a.id, by: a.offeredBy }); }
+  if (variant(s, 'eternity-forever')) for (const a of s.altar) if (a.kind === 'relic' && a.offeredBy !== null && hasActive(s, a.offeredBy, H.eternity)) { kept.add(a); (s.relics ??= []).push({ id: a.id, by: a.offeredBy }); }
   for (const seat of order) {
     if (!hasActive(s, seat, H.eternity) || !canActivate(s, seat, H.eternity)) continue;
     // 'eternity-any': keep any card on the Altar (Robert).
@@ -165,12 +164,12 @@ export function* keepRelics(s: GameState, order: Seat[]): Gen<Set<object>> {
     if (pick === null) continue;
     const a = s.altar[Number(pick)];
     kept.add(a);
-    ((s as any).relics ??= []).push({ id: a.id, by: variant(s, 'eternity-any') ? a.offeredBy : seat });
+    (s.relics ??= []).push({ id: a.id, by: variant(s, 'eternity-any') ? a.offeredBy : seat });
     log(s, 'eternity', `${pname(s, seat)} keeps ${cardName(a.id)} on the Altar for another Day (Eternity).`);
   }
   return kept;
 }
 export function placeRelics(s: GameState) {
-  for (const r of (s as any).relics ?? []) s.altar.push({ id: r.id, facedown: false, offeredBy: r.by, day: s.day, kind: 'relic' as any });
-  (s as any).relics = [];
+  for (const r of s.relics ?? []) s.altar.push({ id: r.id, facedown: false, offeredBy: r.by, day: s.day, kind: 'relic' });
+  s.relics = [];
 }

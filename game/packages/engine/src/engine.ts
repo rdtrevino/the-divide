@@ -2,24 +2,26 @@
 import { TURN, bountyPrompt, temptationSwap } from './abilities';
 import { endOfDayV43, keepRelics, morningV43, noteOffer, parasitePlant, placeRelics, tributeToll, wisdomPeek } from './v43';
 import {
-  activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
-  canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
-  eventOn, gain, handLimit, hasActive, isCelestial, log, lose, makeRoom, markToday, opposite, pay, pname, seatFromOpt,
-  seatOpt, stat, transfer, usedToday, yesNo, choirLimit, variant, leastGloryOthers, immune, glorySafe, handProtected, others, protectedFrom, canAffordTribute, payTribute, snareHit, altarShielded,
+  activation, activeCards, alignment, altarAvailable, altarLabel, altarShielded, ask, askAll, baseHandLimit, baseValue,
+  canActivate, canAffordTribute, canSpend, cardOpt, choirLimit, chooseOne, colorsOf, dirOf, discardFromChoir,
+  discardFromHand, discardableForRoom, drawHost, drawTo, enterChoir, eventOn, gain, glorySafe, handProtected, hasActive,
+  isCelestial, log, lose, makeRoom, markToday, opposite, others, pay, payTribute, pname, protectedFrom, seatFromOpt,
+  seatOpt, snareHit, stat, transfer, usedToday, variant, yesNo,
 } from './core';
-import { C, CELESTIALS, E, EVENTS, H, HOST, HOSTS, cardName } from './data';
+import { C, CELESTIALS, E, EVENTS, H, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
 import type { Dir, GameConfig, GameState, Gen, Seat, TideRecord } from './types';
 
-/** The game ends after the first Reaping at which any player has this much Glory (V41: 10). */
-export const GLORY_TARGET = 12; // V43: the race is to 12 (was 10)
+/** The game ends after the first Reaping at which any player has this much Glory (V43: 12, was 10). */
+export const GLORY_TARGET = 12;
 /** Engine safety cap only; the rules have no Day limit. */
 export const MAX_DAYS = 60;
-/** The Glory target: 10, or 'target-N' to test others. */
+/** The Glory target: GLORY_TARGET, or 'target-N' to test others. */
 export const gloryTarget = (s: GameState) => Number((s.config.variants ?? []).find((v) => v.startsWith('target-'))?.slice(7) ?? GLORY_TARGET);
 /** V42: one deck of 69 cards, all with art. Ithuriel, Urim and Asmadai (no art) are retired; their abilities moved to Revelation, Knowledge and Belial. */
-export const OPEN_SET_ASIDE_HOSTS = [H.ithuriel, H.urim, H.asmadai];
-export const OPEN_SET_ASIDE_EVENTS = [E.sabbath, E.equilibrium, E.armageddon];
+export const OPEN_SET_ASIDE_HOSTS: readonly string[] = [H.ithuriel, H.urim, H.asmadai];
+/** The 3 Events that move the Balance (Hidden Roles only). */
+export const OPEN_SET_ASIDE_EVENTS: readonly string[] = [E.sabbath, E.equilibrium, E.armageddon];
 
 function freshDay(): GameState['day_'] {
   return { usedToday: {}, ordeal: [], mercy: [], defiance: [], prophecy: {}, lots: {}, actionsTaken: [], eclipsed: {}, figLeaves: [], heresy: [], handLimitBonus: 0, bounty: {} };
@@ -33,11 +35,11 @@ export function createState(cfg: GameConfig): GameState {
   const s: GameState = {
     config: cfg, rng: cfg.seed | 0, day: 0, phase: 'setup', players: [], hostDeck: [], discard: [], altar: [],
     eventDeck: [], eventDiscard: [], currentEvent: null, firstPlayer: 0, active: null, tides: [], lastAlignColor: {},
-    carriedSeed: null, pacts: [], bonds: [], scapegoats: [], anathema: [], confession: [], morningStar: [], immune: [], silenced: [],
-    day_: freshDay(), turnUsed: [], log: [], stats: [], seq: 0, decisionSeq: 0, result: null, celestialPool: [],
+    pacts: [], bonds: [], anathema: [], confession: [], morningStar: [], silenced: [],
+    day_: freshDay(), turnUsed: [], log: [], stats: [], seq: 0, decisionSeq: 0, result: null,
   };
-  const hosts = HOSTS.filter((h) => !OPEN_SET_ASIDE_HOSTS.includes(h.id as any)).map((h) => h.id);
-  const events = EVENTS.filter((e) => !OPEN_SET_ASIDE_EVENTS.includes(e.id as any)).map((e) => e.id);
+  const hosts = HOSTS.filter((h) => !OPEN_SET_ASIDE_HOSTS.includes(h.id)).map((h) => h.id);
+  const events = EVENTS.filter((e) => !OPEN_SET_ASIDE_EVENTS.includes(e.id)).map((e) => e.id);
   s.hostDeck = shuffle(s, hosts);
   // The Base game has no Events and no Celestials; Advanced adds both (V41).
   const advanced = !!cfg.advanced;
@@ -53,7 +55,6 @@ export function createState(cfg: GameConfig): GameState {
     for (let i = 0; i < n; i++) p.hand.push(drawHost(s)!);
     for (let i = 0; i < choirCount(s); i++) p.choir.push({ id: drawHost(s)!, facedown: false, used: false });
   }
-  s.celestialPool = pool;
   s.firstPlayer = randInt(s, s.players.length);
   log(s, 'setup', `A ${s.players.length}-player ${advanced ? 'Advanced' : 'Base'} game begins. ${pname(s, s.firstPlayer)} is the first player.`);
   return s;
@@ -117,7 +118,7 @@ function* firstFruits(s: GameState): Gen<void> {
   ps.forEach((p, k) => {
     const [c] = p.hand.splice(Number(picks[k][0]), 1);
     s.altar.push({ id: c, facedown: dark, offeredBy: p.seat, day: s.day, kind: 'fruits' });
-    ((s.day_ as any).fruits ??= {})[p.seat] = c; // V43 test 'favor-fruits'
+    (s.day_.fruits ??= {})[p.seat] = c; // V43 test 'favor-fruits'
     stat(s, { type: 'action', seat: p.seat, card: c, source: 'fruits' });
   });
   // Then each player draws 1 card, so First Fruits never shrinks a hand.
@@ -125,7 +126,7 @@ function* firstFruits(s: GameState): Gen<void> {
   log(s, 'fruits', dark ? 'Every player placed First Fruits facedown.' : `First Fruits: ${ps.map((p) => `${p.name} ${cardName(s.altar.find((a) => a.kind === 'fruits' && a.offeredBy === p.seat && a.day === s.day)!.id)}`).join(', ')}.`);
 }
 
-// ---------------------------------------------------------------- Unveiling
+// ---------------------------------------------------------------- Morning
 
 export function* morning(s: GameState): Gen<void> {
   s.phase = 'morning';
@@ -149,7 +150,7 @@ export function* morning(s: GameState): Gen<void> {
           const two = s.eventDeck.slice(0, 2);
           const a = yield* ask(s, { seat: oracle.seat, tag: 'oracle.two', prompt: `The Oracle: the top Events are ${two.map(cardName).join(' and ')}. Choose the one to play; the other goes to the bottom of the deck.`, options: two.map((e, i) => ({ id: String(i), label: `Play ${cardName(e)}`, card: e })), min: 1, max: 1, reveal: two });
           const keep = two[Number(a[0])];
-          const other = two.find((e, i) => i !== Number(a[0]))!;
+          const other = two.find((_, i) => i !== Number(a[0]))!;
           s.eventDeck.splice(0, 2);
           s.eventDeck.unshift(keep);
           s.eventDeck.push(other);
@@ -229,11 +230,10 @@ export function* morning(s: GameState): Gen<void> {
 
   // Creation (Advanced Event): reveal 3 Host cards onto the Altar. There is no Seed (V41): First Fruits starts the Altar.
   if (s.currentEvent === E.creation) {
-    const facedown = false;
     for (let i = 0; i < 3; i++) {
       const c = drawHost(s);
       if (!c) break;
-      s.altar.push({ id: c, facedown, offeredBy: null, day: s.day, kind: 'seed' });
+      s.altar.push({ id: c, facedown: false, offeredBy: null, day: s.day, kind: 'seed' });
     }
     log(s, 'creation', `Creation reveals ${s.altar.filter((a) => a.kind === 'seed' && a.day === s.day).map((a) => cardName(a.id)).join(', ')} onto the Altar.`);
   }
@@ -247,7 +247,7 @@ function* eventOnReveal(s: GameState, ev: string): Gen<void> {
   if (ev === E.dispersion) {
     const hands = s.players.map((p) => p.hand);
     const n = s.players.length;
-    s.players.forEach((p, i) => (s.players[(i + 1) % n].hand = hands[i]));
+    s.players.forEach((_, i) => (s.players[(i + 1) % n].hand = hands[i]));
     log(s, 'dispersion', 'Every player passed their hand to the left.');
   }
   if (ev === E.plague) {
@@ -277,14 +277,14 @@ export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
   log(s, 'turn', `${p.name}'s turn.`);
 
   try {
-  yield* takeAction(s, seat, 0);
-  yield* activationPhase(s, seat);
-  // Free Will (V42): a second action, paid for during this turn's activations.
-  if (s.day_.extraAction === seat) {
-    s.day_.extraAction = undefined;
-    yield* takeAction(s, seat, 1);
+    yield* takeAction(s, seat, 0);
     yield* activationPhase(s, seat);
-  }
+    // Free Will (V42): a second action, paid for during this turn's activations.
+    if (s.day_.extraAction === seat) {
+      s.day_.extraAction = undefined;
+      yield* takeAction(s, seat, 1);
+      yield* activationPhase(s, seat);
+    }
   } finally {
     s.anathema = s.anathema.filter((a) => !(a.by === seat && a.armed));
   }
@@ -312,9 +312,11 @@ function canRoom(s: GameState, seat: Seat) {
   return p.choir.length < choirLimit(s) || discardableForRoom(s, p).length > 0;
 }
 
-export function legalActions(s: GameState, seat: Seat): ('offer' | 'gather' | 'exalt')[] {
+type Action = 'offer' | 'gather' | 'exalt';
+
+export function legalActions(s: GameState, seat: Seat): Action[] {
   const p = s.players[seat];
-  const out: ('offer' | 'gather' | 'exalt')[] = [];
+  const out: Action[] = [];
   if (p.hand.length && !s.anathema.some((a) => a.target === seat && (a.action ?? 'offer') === 'offer')) out.push('offer');
   if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && canRoom(s, seat) && (altarAvailable(s, seat).length || (!variant(s, 'gather-altar') && (s.hostDeck.length || s.discard.length)) || (!variant(s, 'forger-exalt') && hasActive(s, seat, H.forger) && s.discard.length))) out.push('gather');
   const forgeable = (variant(s, 'forger-exalt') || variant(s, 'forger-both')) && hasActive(s, seat, H.forger) && s.discard.some((x) => x.startsWith('host-'));
@@ -330,7 +332,7 @@ function* takeAction(s: GameState, seat: Seat, index: number): Gen<void> {
   }
   const labels: Record<string, string> = { offer: 'Offer: play a card to the Altar and gain 1 Glory', gather: variant(s, 'gather-altar') ? 'Gather: take a card from the Altar into your Choir' : 'Gather: take a card into your Choir', exalt: exaltCost(s, seat) ? `Exalt: pay ${exaltCost(s, seat)} Glory to play a card from your hand into your Choir` : 'Exalt: play a card from your hand into your Choir' };
   const a = (yield* chooseOne(s, seat, 'action', index ? 'Free Will: choose your second action.' : 'Choose your action.', legal.map((id) => ({ id, label: labels[id] }))))!;
-  s.day_.actionsTaken.push({ seat, action: a as any });
+  s.day_.actionsTaken.push({ seat, action: a as Action });
   for (const pact of s.pacts) if ((pact.a === seat || pact.b === seat) && pact.action === a && pact.day === s.day) pact.broken = true;
   if (a === 'offer') yield* doOffer(s, seat);
   if (a === 'gather') yield* doGather(s, seat);
@@ -448,8 +450,7 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
         const pick = (yield* chooseOne(s, seat, 'temptation', 'Temptation: choose which card goes to your Choir. The other goes to your hand.', top.map((c) => cardOpt(c)), false, top))!;
         card = pick;
         p.hand.push(top.find((c) => c !== pick) ?? top[1]);
-        const d = yield* chooseOne(s, seat, 'temptation.discard', 'Temptation: discard 1 card from your hand.', p.hand.map((c) => cardOpt(c)));
-        if (d) { p.hand.splice(p.hand.indexOf(d), 1); s.discard.push(d); }
+        yield* discardFromHand(s, seat, 'temptation.discard', 'Temptation: discard 1 card from your hand.');
       } else card = top[0] ?? null;
     } else card = drawHost(s);
   } else if (src.startsWith('discard:')) {
@@ -557,7 +558,7 @@ function* activationPhase(s: GameState, seat: Seat): Gen<void> {
     if (kind === 'restore') {
       yield* pay(s, seat, 1, H.michael);
       const c = p.choir.find((x) => x.id === id);
-      if (c) { c.facedown = false; delete (c as any).michael; }
+      if (c) { c.facedown = false; delete c.michael; }
       log(s, 'restore', `${p.name} paid 1 Glory to turn ${cardName(id)} face up.`);
       continue;
     }
@@ -602,9 +603,9 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
   // V35: the Altar is revealed first, so Evening abilities act with everything known.
   const mirageDraw = s.players.filter((p) => hasActive(s, p.seat, H.mirage) && s.altar.some((a) => a.facedown && a.offeredBy === p.seat && a.kind === 'offer')).map((p) => p.seat);
   // V38 Mirage: remember each holder's facedown Offerings; at the Reaping, 1 Glory if one is still there and matches the Tide.
-  (s.day_ as any).mirageCards = Object.fromEntries(mirageDraw.map((seat) => [seat, s.altar.filter((a) => a.facedown && a.offeredBy === seat && a.kind === 'offer').map((a) => a.id)]));
+  s.day_.mirageCards = Object.fromEntries(mirageDraw.map((seat) => [seat, s.altar.filter((a) => a.facedown && a.offeredBy === seat && a.kind === 'offer').map((a) => a.id)]));
   const hidden = s.altar.filter((a) => a.facedown);
-  (s.day_ as any).reveal = { down: hidden.length, up: s.altar.length - hidden.length };
+  s.day_.reveal = { down: hidden.length, up: s.altar.length - hidden.length };
   for (const a of s.altar) { a.facedown = false; a.seenBy = undefined; }
   if (hidden.length) log(s, 'reveal', `The Altar is revealed: ${hidden.map((a) => cardName(a.id)).join(', ')}.`);
 
@@ -670,8 +671,7 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
         p.hand.push(a.id);
         // 'remnant-own': no discard here; Upkeep (next) discards down to, or draws up to, the hand limit.
         if (variant(s, 'remnant-own')) { log(s, 'remnant', `${p.name} took back ${cardName(a.id)} from the Altar into their hand (Remnant).`); return; }
-        const d = yield* chooseOne(s, seat, 'remnant.discard', 'Remnant: discard 1 card from your hand.', p.hand.map((c) => cardOpt(c)));
-        if (d) { p.hand.splice(p.hand.indexOf(d), 1); s.discard.push(d); }
+        yield* discardFromHand(s, seat, 'remnant.discard', 'Remnant: discard 1 card from your hand.');
         log(s, 'remnant', `${p.name} took ${cardName(a.id)} from the Altar into their hand (Remnant).`);
       });
     }
@@ -680,13 +680,8 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
   if (variant(s, 'temptation-eod')) for (const seat of order) {
     if (hasActive(s, seat, H.temptation) && s.players[seat].hand.length && canActivate(s, seat, H.temptation)) yield* activation(s, seat, H.temptation, function* () { yield* temptationSwap(s, seat); });
   }
-  const keep = s.day_.eternityKeep;
   const relics = yield* keepRelics(s, order); // V43 test 'eternity-relic'
-  for (const a of s.altar) {
-    if (relics.has(a)) continue;
-    if (keep && a.id === keep.card) s.carriedSeed = a.id;
-    else s.discard.push(a.id);
-  }
+  for (const a of s.altar) if (!relics.has(a)) s.discard.push(a.id);
   s.altar = [];
 
   // 5. Upkeep.
@@ -699,13 +694,6 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
     });
   }
   for (const p of s.players) yield* drawTo(s, p.seat, Math.max(0, baseHandLimit(s, p.seat) - p.hand.length));
-}
-
-function removeChoirCard(s: GameState, seat: Seat, id: string) {
-  const p = s.players[seat];
-  const i = p.choir.findIndex((c) => c.id === id);
-  if (i < 0) return null;
-  return p.choir.splice(i, 1)[0];
 }
 
 export function setTide(s: GameState): TideRecord {
@@ -732,11 +720,11 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   for (const seat of order) {
     const p = s.players[seat];
     for (const c of p.choir) {
-      if (!c.facedown || !(c as any).michael || !canSpend(s, seat, 1)) continue;
+      if (!c.facedown || !c.michael || !canSpend(s, seat, 1)) continue;
       if (!(yield* yesNo(s, seat, 'michael.restore', `Michael: the Tide is ${tide.dir}. Pay 1 Glory to Flip ${cardName(c.id)} face up before the Reaping?`))) continue;
       yield* pay(s, seat, 1, H.michael);
       c.facedown = false;
-      delete (c as any).michael;
+      delete c.michael;
       log(s, 'restore', `${p.name} paid 1 Glory to turn ${cardName(c.id)} face up.`);
     }
   }
@@ -828,7 +816,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   for (const seat of spentMercy) yield* discardFromChoir(s, seat, H.mercy, 'Mercy');
   for (const p of s.players) s.lastAlignColor[p.seat] = dirOf(nets[p.seat]);
 
-  (s.day_ as any).against = against.map((a) => a.seat); // the Arbiter (V44 test 'arbiter-judge')
+  s.day_.against = against.map((a) => a.seat); // the Arbiter (V44 test 'arbiter-judge')
   const loss: Record<number, number> = {};
   for (const p of s.players) loss[p.seat] = delta[p.seat] < 0 && !(variant(s, 'purgatory-spare') && eventOn(s, E.purgatory, p.seat)) ? -delta[p.seat] : 0;
   // Mercy (V42): you never lose Glory at the Reaping.
@@ -869,7 +857,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
       else if (variant(s, 'bounty-bet') || gained[t] > 0) { yield* lose(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} ${gained[t] > 0 ? 'gained Glory at the Reaping' : 'did not lose at the Reaping'}: ${pname(s, seat)}'s Bounty costs them 1 Glory.`); }
       continue;
     }
-    const spent = (s.day_ as any).bountySpent?.[seat];
+    const spent = s.day_.bountySpent?.[seat];
     if ((hasActive(s, seat, H.bounty) || spent) && lost[t] > 0 && (!variant(s, 'bounty-with') || leansWithTide.has(seat)) && (!variant(s, 'bounty-nogain') || !(gained[seat] > 0))) { yield* gain(s, seat, spent ? (variant(s, 'bounty-spent3') ? 3 : 2) : 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory, so ${pname(s, seat)} collects the Bounty (1 Glory).`); }
   }
   // Raguel (V42): each Reaping your Bound player gains Glory, you gain 1.
@@ -901,12 +889,12 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   for (const seat of order) {
     const p = s.players[seat];
     // Tests 'veil-secret' and 'zealot-open': facedown and face-up counts at the reveal.
-    const rv = (s.day_ as any).reveal ?? { down: 0, up: 0 };
+    const rv = s.day_.reveal ?? { down: 0, up: 0 };
     if ((variant(s, 'veil-secret') || variant(s, 'veil-more') || variant(s, 'veil-4')) && hasActive(s, seat, H.veil) && (variant(s, 'veil-more') ? rv.down > rv.up : rv.down >= (variant(s, 'veil-4') ? 4 : 3))) { yield* gain(s, seat, 1, H.veil); log(s, 'veil', `${p.name} gained 1 Glory (Veil).`); }
     if (variant(s, 'zealot-open') && hasActive(s, seat, H.zealot) && rv.up > rv.down) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
     if (hasActive(s, seat, H.stillness) && tide.dir === 'neutral') { yield* gain(s, seat, 1, H.stillness); log(s, 'stillness', `${p.name} gained 1 Glory (Stillness).`); }
     if (hasActive(s, seat, H.firmament) && tide.dir !== 'neutral' && (variant(s, 'firm-landslide') ? tide.margin >= 3 : tide.margin === 1) && (!variant(s, 'firm-with') || leansWithTide.has(seat))) { yield* gain(s, seat, 1, H.firmament); log(s, 'firmament', `${p.name} gained 1 Glory (Firmament).`); }
-    const mc: string[] | undefined = (s.day_ as any).mirageCards?.[seat];
+    const mc = s.day_.mirageCards?.[seat];
     if (mc && !variant(s, 'mirage-protect') && tide.dir !== 'neutral' && (!variant(s, 'mirage-hedge') || (nets[seat] !== 0 && !leansWithTide.has(seat))) && mc.some((id) => s.altar.some((a) => a.id === id) && colorsOf(s, null, id)[tide.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.mirage); log(s, 'mirage', `${p.name} gained 1 Glory (Mirage).`); }
     // Vessel (V40): 1 Glory if the card it placed today is still on the Altar and matches the Tide.
     // Test 'vessel-noglory': no Glory; the card is pure influence.
@@ -996,9 +984,9 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
 
   s.morningStar = [];
   // V38 Michael: a card it Flipped turns face up again when the Reaping ends.
-  for (const p of s.players) for (const c of p.choir) if ((c as any).michael) {
+  for (const p of s.players) for (const c of p.choir) if (c.michael) {
     c.facedown = false;
-    delete (c as any).michael;
+    delete c.michael;
     log(s, 'restore', `${cardName(c.id)} in ${p.name}'s Choir turns face up again (Michael).`);
   }
 }
@@ -1015,7 +1003,4 @@ export function* endGame(s: GameState): Gen<void> {
   s.phase = 'ended';
   stat(s, { type: 'game_end', data: { winners: s.result.winners, standings } });
   log(s, 'end', top.length === 1 ? `${pname(s, top[0].seat)} wins with ${best} Glory.` : `${top.map((x) => pname(s, x.seat)).join(' and ')} share the win with ${best} Glory.`);
-  yield* [];
 }
-
-export { HOST };

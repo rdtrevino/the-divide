@@ -1,11 +1,12 @@
 // Abilities a player activates on their own turn, after their action:
 // "On your turn" Host abilities, once-per-game Host abilities, and Celestial turn powers.
-import { C, H, HOST, cardName } from './data';
+import { C, H, cardName } from './data';
 import {
-  alignment, activeCards, altarAvailable, altarLabel, ask, askAll, canAffordTribute, cardOpt, chooseOne, discardFromChoir,
-  drawHost, drawTo, enterChoir, gain, handLimit, hasActive, log, lose, markToday, others, payTribute, peekHost,
-  pname, protectedFrom, immune, glorySafe, handProtected, removeFromChoir, seatFromOpt, seatOpt, stat, targetableChoir, usedToday, yesNo, choirLimit,
-  colorsOf, activation, altarShielded, altarPeekable, canSpend, pay, variant, makeRoom, discardableForRoom, snareHit,
+  activation, activeCards, alignment, altarAvailable, altarLabel, altarPeekable, altarShielded, ask, askAll,
+  canAffordTribute, canSpend, cardOpt, choirLimit, chooseOne, colorsOf, discardFromChoir, discardFromHand,
+  discardableForRoom, drawHost, drawTo, enterChoir, gain, glorySafe, handLimit, handProtected, log, lose, makeRoom,
+  others, pay, payTribute, peekHost, pname, protectedFrom, removeFromChoir, seatFromOpt, seatOpt, snareHit,
+  targetableChoir, variant,
 } from './core';
 import { randInt } from './rng';
 import type { Gen, GameState, Seat } from './types';
@@ -23,13 +24,18 @@ const leaders = (s: GameState) => {
   return s.players.filter((p) => p.glory === max);
 };
 
-function flipTargets(s: GameState, seat: Seat) {
-  const out: { owner: Seat; id: string }[] = [];
-  for (const p of s.players) {
-    const cards = p.seat === seat ? hostCardsOf(s, seat) : targetableChoir(s, seat, p.seat, 'flip');
-    for (const c of cards) if (!c.facedown) out.push({ owner: p.seat, id: c.id });
-  }
-  return out;
+/** The Glory stored on a card in this player's Choir (Providence, and Mammon under 'mammon-store'). */
+const storeOf = (s: GameState, seat: Seat, id: string) => s.players[seat].choir.find((c) => c.id === id)?.store ?? 0;
+
+/** Take all the Glory stored on a card, then discard it. */
+function* cashStore(s: GameState, seat: Seat, id: string): Gen<void> {
+  const c = s.players[seat].choir.find((x) => x.id === id);
+  const n = c?.store ?? 0;
+  if (!c || !n) return;
+  c.store = 0;
+  yield* gain(s, seat, n, id);
+  yield* discardFromChoir(s, seat, id, cardName(id));
+  log(s, id === H.providence ? 'providence' : 'mammon', `${pname(s, seat)} took the ${n} Glory stored on ${cardName(id)} and discarded it.`);
 }
 
 /** Abilities that can be re-activated by Seraphim, Legion, and the Echo (repeatable turn abilities only). */
@@ -50,7 +56,7 @@ export const TURN: Record<string, TurnAbility> = {
       const owner = Number(o);
       if (!(yield* payTribute(s, seat, owner))) return;
       if (variant(s, 'michael-hand')) { if (removeFromChoir(s, owner, id)) s.players[owner].hand.push(id); }
-      else if (variant(s, 'michael-flip')) { const c = s.players[owner].choir.find((x) => x.id === id); if (c) { c.facedown = true; (c as any).michael = true; } }
+      else if (variant(s, 'michael-flip')) { const c = s.players[owner].choir.find((x) => x.id === id); if (c) { c.facedown = true; c.michael = true; } }
       else yield* discardFromChoir(s, owner, id, 'Michael');
       yield* discardFromChoir(s, seat, H.michael, 'Michael');
       log(s, 'michael', `${pname(s, seat)} cast ${cardName(id)} out of ${pname(s, owner)}'s Choir, and Michael is spent.`);
@@ -86,14 +92,14 @@ export const TURN: Record<string, TurnAbility> = {
         const k = lean > 0 ? 'light' : lean < 0 ? 'dark' : null;
         if (k && !theirs.some((c) => colorsOf(s, null, c)[k])) yield* gain(s, seat, 1, H.gabriel);
       }
-      yield* ask(s, { seat, tag: 'gabriel.seen', prompt: `Gabriel: ${pname(s, o)} holds ${theirs.map(cardName).join(', ') || 'no cards'}.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: theirs, confirm: true } as any);
+      yield* ask(s, { seat, tag: 'gabriel.seen', prompt: `Gabriel: ${pname(s, o)} holds ${theirs.map(cardName).join(', ') || 'no cards'}.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: theirs, confirm: true });
     },
   },
   [H.confession]: {
     can: () => true,
     *run(s, seat) {
       s.confession = s.confession.filter((c) => c.seat !== seat);
-      s.confession.push({ seat, endsAfterTurnOf: seat, turnsLeft: 2 });
+      s.confession.push({ seat, turnsLeft: 2 });
       log(s, 'confession', `${pname(s, seat)} revealed their hand: ${s.players[seat].hand.map(cardName).join(', ') || 'no cards'}.`);
       // V34: the Glory is earned only if the revealed hand holds no Dark card.
       if (s.players[seat].hand.some((c) => colorsOf(s, null, c).dark)) return;
@@ -107,16 +113,8 @@ export const TURN: Record<string, TurnAbility> = {
   })(),
   [H.mammon]: {
     // Test 'mammon-store': take the Glory stored on Mammon, then discard it.
-    can: (s, seat) => variant(s, 'mammon-store') && (s.players[seat].choir.find((c) => c.id === H.mammon)?.store ?? 0) > 0,
-    *run(s, seat) {
-      const c = s.players[seat].choir.find((x) => x.id === H.mammon);
-      const n = c?.store ?? 0;
-      if (!c || !n) return;
-      c.store = 0;
-      yield* gain(s, seat, n, H.mammon);
-      yield* discardFromChoir(s, seat, H.mammon, 'Mammon');
-      log(s, 'mammon', `${pname(s, seat)} took the ${n} Glory stored on Mammon and discarded it.`);
-    },
+    can: (s, seat) => variant(s, 'mammon-store') && storeOf(s, seat, H.mammon) > 0,
+    run: (s, seat) => cashStore(s, seat, H.mammon),
   },
   [H.sanctuary]: {
     can: (s) => s.altar.some((a) => a.sanctuary === undefined),
@@ -167,16 +165,8 @@ export const TURN: Record<string, TurnAbility> = {
   },
   [H.providence]: {
     // V42: a store. Glory piles up on it at Reapings your Choir leans with the Tide; take it all, then discard it.
-    can: (s, seat) => (s.players[seat].choir.find((c) => c.id === H.providence)?.store ?? 0) > 0,
-    *run(s, seat) {
-      const c = s.players[seat].choir.find((x) => x.id === H.providence);
-      const n = c?.store ?? 0;
-      if (!c || !n) return;
-      c.store = 0;
-      yield* gain(s, seat, n, H.providence);
-      yield* discardFromChoir(s, seat, H.providence, 'Providence');
-      log(s, 'providence', `${pname(s, seat)} took the ${n} Glory stored on Providence and discarded it.`);
-    },
+    can: (s, seat) => storeOf(s, seat, H.providence) > 0,
+    run: (s, seat) => cashStore(s, seat, H.providence),
   },
   [H.parasite]: {
     // V42: move this card into another player's Choir. Its holder cannot discard it.
@@ -196,7 +186,6 @@ export const TURN: Record<string, TurnAbility> = {
       log(s, 'parasite', `${pname(s, seat)} moved Parasite into ${pname(s, o)}'s Choir.`);
     },
   },
-  // V38: Morning Star now acts At the Reaping (see engine.ts reaping()).
   [H.vessel]: {
     // V40: place a card from your hand on the Altar facedown, then draw 1 card. It is not an Offer.
     // Its Glory, if the card matches the Tide, is paid At the Reaping (engine.ts reaping()).
@@ -256,9 +245,7 @@ export const TURN: Record<string, TurnAbility> = {
         const card = top[i];
         s.hostDeck.splice(i, 1);
         s.players[seat].hand.push(card);
-        const h = s.players[seat].hand;
-        const d = yield* chooseOne(s, seat, 'watchers.discard', 'Watchers: discard a card from your hand.', h.map((c) => cardOpt(c)));
-        if (d) { h.splice(h.indexOf(d), 1); s.discard.push(d); }
+        yield* discardFromHand(s, seat, 'watchers.discard', 'Watchers: discard a card from your hand.');
         top = s.hostDeck.slice(0, top.length - 1);
       }
       const n = top.length;
@@ -307,10 +294,7 @@ export const TURN: Record<string, TurnAbility> = {
       }
       yield* drawTo(s, seat, 2);
       const n = variant(s, 'temptation-d2') ? 2 : 1;
-      for (let k = 0; k < n; k++) {
-        const d = yield* chooseOne(s, seat, 'temptation.discard', 'Temptation: discard 1 card from your hand.', p.hand.map((c) => cardOpt(c)));
-        if (d) { p.hand.splice(p.hand.indexOf(d), 1); s.discard.push(d); }
-      }
+      for (let k = 0; k < n; k++) yield* discardFromHand(s, seat, 'temptation.discard', 'Temptation: discard 1 card from your hand.');
       log(s, 'temptation', `${pname(s, seat)} drew 2 cards and discarded ${n} (Temptation).`);
     },
   },
@@ -456,7 +440,7 @@ export const TURN: Record<string, TurnAbility> = {
       if (!t) return;
       s.day_.bounty[seat] = seatFromOpt(t);
       log(s, 'bounty', `${pname(s, seat)} put a Bounty on ${pname(s, seatFromOpt(t))}.`);
-      if (variant(s, 'bounty-spent2') || variant(s, 'bounty-spent3')) { (s.day_ as any).bountySpent = { ...((s.day_ as any).bountySpent ?? {}), [seat]: true }; yield* discardFromChoir(s, seat, H.bounty, 'Bounty'); }
+      if (variant(s, 'bounty-spent2') || variant(s, 'bounty-spent3')) { s.day_.bountySpent = { ...(s.day_.bountySpent ?? {}), [seat]: true }; yield* discardFromChoir(s, seat, H.bounty, 'Bounty'); }
     },
   },
   [H.flamingSword]: {
@@ -477,7 +461,7 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
 
-  // ----- Celestial turn powers (once per Day)
+  // ----- looking at the Altar
   [H.revelation]: {
     can: (s, seat) => altarPeekable(s, seat).length > 0,
     *run(s, seat) {
@@ -511,16 +495,14 @@ export const TURN: Record<string, TurnAbility> = {
     can: (s, seat) => altarPeekable(s, seat).some((a) => a.offeredBy !== seat),
     *run(s, seat) {
       const t = altarPeekable(s, seat).filter((a) => a.offeredBy !== seat);
-      {
-        const picks = yield* ask(s, { seat, tag: 'knowledge', prompt: 'Knowledge: secretly look at up to 3 facedown cards on the Altar.', options: t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), min: 1, max: Math.min(3, t.length) });
-        const seen = picks.map((i) => s.altar[Number(i)]);
-        // seenBy is kept for the computer players' memory; people see the cards once, here, and then must remember them.
-        for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
-        if (!variant(s, 'snare-nolook')) for (const a of seen) yield* snareHit(s, seat, a);
-        log(s, 'knowledge', `${pname(s, seat)} looked at ${seen.length} facedown card${seen.length === 1 ? '' : 's'} on the Altar (Knowledge).`);
-        // Ruling confirmed November 16, 2026: shown once, then hidden again.
-        yield* ask(s, { seat, tag: 'knowledge.seen', prompt: `Knowledge: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}. Remember them: they go back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: seen.map((a) => a.id), confirm: true });
-      }
+      const picks = yield* ask(s, { seat, tag: 'knowledge', prompt: 'Knowledge: secretly look at up to 3 facedown cards on the Altar.', options: t.map((a) => ({ id: String(s.altar.indexOf(a)), label: altarLabel(s, a, seat), seat: a.offeredBy ?? undefined })), min: 1, max: Math.min(3, t.length) });
+      const seen = picks.map((i) => s.altar[Number(i)]);
+      // seenBy is kept for the computer players' memory; people see the cards once, here, and then must remember them.
+      for (const a of seen) a.seenBy = [...(a.seenBy ?? []), seat];
+      if (!variant(s, 'snare-nolook')) for (const a of seen) yield* snareHit(s, seat, a);
+      log(s, 'knowledge', `${pname(s, seat)} looked at ${seen.length} facedown card${seen.length === 1 ? '' : 's'} on the Altar (Knowledge).`);
+      // Ruling confirmed November 16, 2026: shown once, then hidden again.
+      yield* ask(s, { seat, tag: 'knowledge.seen', prompt: `Knowledge: ${seen.map((a) => `${altarLabel(s, a, -1)} is ${cardName(a.id)}`).join('; ')}. Remember them: they go back facedown when you close this.`, options: [{ id: 'done', label: 'Done' }], min: 1, max: 1, reveal: seen.map((a) => a.id), confirm: true });
     },
   },
   [H.belial]: {
@@ -547,6 +529,7 @@ export const TURN: Record<string, TurnAbility> = {
       log(s, 'belial', `${pname(s, seat)} exchanged a facedown card on the Altar with one from their hand (Belial).`);
     },
   },
+  // ----- Celestial turn powers (once per Day)
   [C.tempest]: {
     once: 'day',
     // V44 test 'tempest-up': like every other destroy ability (Raphael, Azazel), only a face-up card can be destroyed.
@@ -618,11 +601,6 @@ function reactivator(color: 'light' | 'dark'): TurnAbility {
   };
 }
 
-/** Covenant: name another player who has not yet taken their turn this Day. */
-function covenantTargets(s: GameState, seat: Seat) {
-  const acted = new Set(s.day_.actionsTaken.map((a) => a.seat));
-  return others(s, seat).filter((p) => !immune(s, seat, p.seat) && !acted.has(p.seat));
-}
 function gabrielTargets(s: GameState, seat: Seat) {
   return others(s, seat).filter((p) => p.hand.length > 0 && !handProtected(s, seat, p.seat) && !protectedFrom(s, seat, p.seat, 'look'));
 }
@@ -631,7 +609,7 @@ function morningStarCards(s: GameState, seat: Seat) {
 }
 function parasiteTargets(s: GameState, seat: Seat): Seat[] {
   return others(s, seat)
-    .filter((p) => !immune(s, seat, p.seat) && (p.choir.length < choirLimit(s) || (!protectedFrom(s, seat, p.seat, 'discard') && canAffordTribute(s, seat, p.seat))))
+    .filter((p) => p.choir.length < choirLimit(s) || (!protectedFrom(s, seat, p.seat, 'discard') && canAffordTribute(s, seat, p.seat)))
     .map((p) => p.seat);
 }
 
@@ -668,15 +646,15 @@ function winnowingHand(s: GameState, seat: Seat) {
   return others(s, seat).some((p) => p.hand.length && !protectedFrom(s, seat, p.seat, 'discard') && !handProtected(s, seat, p.seat));
 }
 function* winnowingRun(s: GameState, seat: Seat): Gen<void> {
-      const t = yield* chooseOne(s, seat, 'winnowing', 'Winnowing: choose another player to discard a random card from their hand.', others(s, seat).filter((p) => p.hand.length && !protectedFrom(s, seat, p.seat, 'discard') && !handProtected(s, seat, p.seat)).map((p) => seatOpt(s, p.seat)));
-      if (!t) return;
-      const o = s.players[seatFromOpt(t)];
-      const [c] = o.hand.splice(randInt(s, o.hand.length), 1);
-      s.discard.push(c);
-      // Test 'winnowing-nodraw': no replacement; the hand refills at Upkeep.
-      if (variant(s, 'winnowing-nodraw')) { log(s, 'winnowing', `${o.name} discarded ${cardName(c)} at random (Winnowing).`); return; }
-      yield* drawTo(s, o.seat, 1);
-      log(s, 'winnowing', `${o.name} discarded ${cardName(c)} at random (Winnowing) and drew a replacement.`);
+  const t = yield* chooseOne(s, seat, 'winnowing', 'Winnowing: choose another player to discard a random card from their hand.', others(s, seat).filter((p) => p.hand.length && !protectedFrom(s, seat, p.seat, 'discard') && !handProtected(s, seat, p.seat)).map((p) => seatOpt(s, p.seat)));
+  if (!t) return;
+  const o = s.players[seatFromOpt(t)];
+  const [c] = o.hand.splice(randInt(s, o.hand.length), 1);
+  s.discard.push(c);
+  // Test 'winnowing-nodraw': no replacement; the hand refills at Upkeep.
+  if (variant(s, 'winnowing-nodraw')) { log(s, 'winnowing', `${o.name} discarded ${cardName(c)} at random (Winnowing).`); return; }
+  yield* drawTo(s, o.seat, 1);
+  log(s, 'winnowing', `${o.name} discarded ${cardName(c)} at random (Winnowing) and drew a replacement.`);
 }
 function deliverancePairs(s: GameState, seat: Seat) {
   const pool: { owner: Seat; id: string }[] = [];
@@ -696,11 +674,6 @@ function michaelTargets(s: GameState, seat: Seat) {
   }
   return out;
 }
-
-export function hostTurnAbilities(): string[] {
-  return Object.keys(TURN).filter((k) => k.startsWith('host-'));
-}
-export { HOST };
 
 /** Temptation (tests 'temptation-swap' / 'temptation-eod'): discard any number of cards from your hand, then draw that many. */
 export function* temptationSwap(s: GameState, seat: Seat): Gen<void> {
