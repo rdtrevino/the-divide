@@ -3,7 +3,7 @@
 *A game of divine ambition, open rivalry, and hidden loyalties.*
 
 **Created by:** Robert Treviño
-**Version:** Rulebook v13, for card data V43
+**Version:** Rulebook v14, for card data V44
 **Players:** 3 to 6 (the Open Game at 3 or 4, Hidden Roles at 5 or 6) | **Play Time:** 45 to 75 minutes
 **Mechanisms:** Engine Building, Negotiation, Shifting Alliances, Hidden Information; Hidden Allegiance and Tug-of-War in Hidden Roles
 
@@ -66,7 +66,7 @@ The Host deck is the game's one deck of playable cards. Every Host card shows:
 2. **Deal Host cards.** Each player takes a hidden hand of 3 Host cards. Then deal each player 2 more Host cards face up in a row in front of them: their starting Choir.
 3. **Finish.** Set all Glory to 0 and give a random player the starting player marker.
 
-**Advanced game:** also shuffle the Event deck, without The Sabbath, Equilibrium, and Armageddon (17 Events), and deal each player a Celestial, face up. The Dominion takes a hand of 4.
+**Advanced game:** also shuffle the Event deck, without The Sabbath, Equilibrium, and Armageddon (17 Events), and deal each player a Celestial, face up. The Dominion takes a hand of 5.
 
 ---
 
@@ -180,19 +180,19 @@ Then a new Day begins.
 
 ## **Advanced: The Nine Celestials**
 
-In the Advanced game, each player commands one Celestial, a public power. A Celestial power never uses your turn action. It works only in its listed timing window, and powers written as standing rules (such as the Dominion's hand limit) are always in effect.
+In the Advanced game, each player commands one Celestial, a public power. A Celestial power never uses your turn action. Its timing works like a Host card's (*In the Morning*, *On your turn*, *In the Evening*, or "When…"), each power is used at most once per Day, and powers written as standing rules (such as the Dominion's hand limit) are always in effect.
 
 | Celestial | Power |
 | ----- | ----- |
-| **I. The Tempest** | Once per Day, destroy one Host card from the Altar. |
-| **II. The Oracle** | In the Morning, look at the top Event card. Play it, or bury it at the bottom of the deck. |
-| **III. The Eclipse** | In the Evening, before the Altar is revealed, once per Day, treat one Host card in your Choir as Neutral for this Day's Reaping. |
-| **IV. The Cantor** | During your turn, you can Offer 2 cards to the Altar instead of 1, with a reward for each. |
-| **V. The Patron** | Once per Day, give a Host card from your hand to another player. If their Choir is full, they discard a card to make room. |
-| **VI. The Echo** | Once per Day, copy the ability of a Host currently in another player's Choir. |
-| **VII. The Dominion** | Your hand limit is 4 instead of 3. Begin the game with 4 cards in hand. |
-| **VIII. The Whisper** | In the Morning, publicly predict the direction of the Tide. At the Reaping, if correct, your Choir scores as if aligned with the Tide. |
-| **IX. The Arbiter** | At the Reaping, if you gain 2 or more Glory, take 1 of it from a player of your choice. If you lose Glory, give 1 of it to the player, other than you, with the least Glory. |
+| **I. The Tempest** | When you Offer, you may destroy a face-up card on the Altar. |
+| **II. The Oracle** | In the Morning: Look at the top 2 Event cards. Play one, and put the other on the bottom of the Event deck. |
+| **III. The Eclipse** | In the Evening: Choose a card in your Choir. It counts as Neutral at this Day's Reaping. |
+| **IV. The Cantor** | When you Offer, you may Offer a second card of the same alignment (Light, Dark, or Neutral). Both go face up, and each earns its reward. |
+| **V. The Patron** | On your turn: Play a card from your hand into another player's Choir. If it is full, they discard one of its cards first. |
+| **VI. The Echo** | On your turn: Use the On your turn ability of a card in another player's Choir, as if it were yours. Spent cards cannot be copied. |
+| **VII. The Dominion** | Your hand limit is 5 instead of 3. Begin the game with 5 cards in hand. |
+| **VIII. The Whisper** | In the Morning: Name Light or Dark aloud. At the Reaping, if the Tide matches, your Choir counts as leaning with it. |
+| **IX. The Arbiter** | When you gain Glory at the Reaping, take 1 of it from another player: one whose Choir leaned against the Tide, if any of them has Glory. |
 
 ---
 
@@ -200,30 +200,28 @@ In the Advanced game, each player commands one Celestial, a public power. A Cele
 
 In the Advanced game, one Event is revealed each Morning. It changes the rules for that whole Day and applies equally to all players. Unless an Event says otherwise, all normal rules remain in effect. Ignore any Event text that refers to the Balance marker; it is used only in Hidden Roles.
 
-*V42 note:* the Celestials and Events were written for the earlier scoring and are due their own review. Until then, Divine Calling has no effect (Exalt is already free).
-
 | Event | Effect | Advanced game |
 | ----- | ----- | ----- |
 | **Creation** | In the Morning, reveal 3 Host cards from the deck onto the Altar. | Yes |
 | **Manna** | Each player draws 1 card; hand limits increase by 1 this Day. Discard back to your limit in the Evening. | Yes |
-| **Ascension** | Light Offerings count double when Setting the Tide. | Yes |
+| **Ascension** | Light cards on the Altar count double when the Tide is set. | Yes |
 | **Let There Be Light** | The abilities of Dark Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still count toward Alignment. Neutral cards are unaffected. | Yes |
 | **The Sabbath** | The Balance marker does not move this Day. The Reaping still occurs. | No |
-| **Divine Calling** | Exalt costs 0 Glory this Day. | Yes |
+| **Divine Calling** | When you Exalt this Day, gain 1 Glory. | Yes |
 | **Dispersion** | Each player passes their entire hand to the player on their left. | Yes |
 | **Equilibrium** | In the Morning, move the Balance marker 1 space toward the center. No effect if it is already on the center space. | No |
-| **Purgatory** | This Day, ignore the Tide during the Reaping. Each net-Neutral Choir gains 1 Glory; each Aligned Choir loses 1 Glory. | Yes |
+| **Purgatory** | No Choir loses Glory at the Reaping this Day. A Choir that leans neither way gains 1 Glory. | Yes |
 | **Casting Lots** | Each player secretly predicts the Tide in the Morning: Light, Dark, or Neutral. At the Reaping, a correct call gains 1 Glory (2 for Neutral); a wrong call loses 1. | Yes |
 | **Pandemonium** | First Fruits are placed facedown, and no card on the Altar may be flipped or looked at before the Evening. | Yes |
 | **False Prophecy** | Set the Tide and move the Balance marker as normal. During the Reaping, score as if the Tide ran the opposite direction. | Yes |
-| **Famine** | The Reaping is skipped. No Glory is gained or lost from Choir Alignment. All other scoring is unaffected. | Yes |
+| **Famine** | No Choir gains or loses Glory at the Reaping this Day, and no Choir counts as leaning with or against the Tide. | Yes |
 | **Babel** | No table talk or deals this Day. | Yes |
-| **Fall From Grace** | Dark Offerings count double when Setting the Tide. | Yes |
+| **Fall From Grace** | Dark cards on the Altar count double when the Tide is set. | Yes |
 | **Armageddon** | The Balance marker may move up to 3 spaces this Day. | No |
 | **The Plague** | Each player discards 1 Host card from their Choir and replaces it from the top of the deck. | Yes |
 | **Tithe** | Pay 1 Glory for each Host ability you activate this Day. | Yes |
 | **The Flood** | The abilities of Light Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still count toward Alignment. Neutral cards are unaffected. | Yes |
-| **The Fast** | No Glory may be spent this Day. Exalt and Turn are unavailable. | Yes |
+| **The Fast** | No one may Exalt, Turn, or spend Glory this Day. | Yes |
 
 ---
 
@@ -243,7 +241,11 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Exalt and Absolution.** The card being Exalted is set aside first, so Absolution's hand discard cannot take it.
 
-**Tithe (Event).** Every Host ability you activate costs 1 Glory, whether in the Morning, on your turn, or at the end of the Day. Always-on abilities (such as Cherubim, Tribute, and Mirage) are never activated and cost nothing. If you cannot pay, you cannot activate.
+**Tithe (Event).** Every Host ability you activate costs 1 Glory, whether in the Morning, on your turn, or at the end of the Day. Always-on abilities (such as Cherubim, Tribute, and Mirage) are never activated and cost nothing, and neither do Celestial powers, which are not Host abilities. If you cannot pay, you cannot activate.
+
+**Purgatory (Event).** Choirs still lean with or against the Tide, for every card that asks (Tree of Life, Defiance, Providence); the ones against it just lose nothing. A Choir sitting out with Fig Leaves gains nothing.
+
+**Divine Calling (Event).** Pays for every Exalt into your own Choir, including one from the discard pile with Forger. Playing a card into another player's Choir (Temptation, the Patron, Parasite) is not an Exalt into your Choir and pays nothing.
 
 **The Flood and Let There Be Light.** Every ability of the named alignment is off for that Day: abilities a player would activate and abilities that work on their own (such as Hymn, Snare, or Cherubim's protection). The cards still count toward your lean. On a Let There Be Light Day, Parasite may be discarded like any other card.
 
@@ -255,7 +257,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 ### **The Altar and Facedown Cards**
 
-**Facedown Offerings.** Every Offer goes on the Altar facedown, including both of the Cantor's. Hymn and Lamentation are the exception: they always go face up when Offered. First Fruits and cards added by other abilities follow their own text.
+**Facedown Offerings.** Every Offer goes on the Altar facedown. Hymn and Lamentation are the exception: they always go face up when Offered. So does the Cantor's matching pair; a single card the Cantor Offers goes facedown as usual. First Fruits and cards added by other abilities follow their own text.
 
 **Revelation, Knowledge, Belial, and Winnowing.** Each acts on facedown Altar cards. Revelation flips one face up for everyone, then may flip a face-up card facedown. Knowledge looks privately at up to 3 facedown cards that you did not place; you may tell the table what you saw, truthfully or not. Belial looks at one facedown card and may swap it with a card from your hand: the swap changes the card but not its owner, so it stays facedown and still counts as Offered by the player who placed it. Winnowing discards up to 2 facedown cards without anyone looking at them. A card seen with Knowledge or Belial is seen once and then goes back facedown.
 
@@ -263,7 +265,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Mirage.** Protects every card you placed on the Altar (Offers, First Fruits, Vessel's card), face up or facedown, until the Evening: other players cannot Gather, flip, look at, exchange, or destroy it (Revelation, Knowledge, Belial, Winnowing, Abaddon, Raphael, Azazel, the Tempest).
 
-**Raphael and Azazel.** To destroy, you turn your own Offering face up; you still gain its 1 Glory. Only face-up cards can be destroyed, so a facedown card is safe from them.
+**Raphael and Azazel.** To destroy, you turn your own Offering face up; you still gain its 1 Glory. Only face-up cards can be destroyed, so a facedown card is safe from them (and from the Tempest).
 
 **Snare.** Pays for each card you placed on the Altar (an Offer, First Fruits, Vessel's card) that another player Gathers, flips (Revelation), or discards (Winnowing, Abaddon, Raphael, Azazel, the Tempest).
 
@@ -273,7 +275,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Eternity.** The kept card can be anyone's. It returns to the Altar, face up, next Morning, counts toward that Day's Tide, and can be Gathered or destroyed as usual; at the end of that Day it is cleared like any other card.
 
-**The Tempest.** Used on your own turn, after your action, like other turn abilities.
+**The Tempest.** Used on a turn you Offer, after the Offer and its reward, like Raphael and Azazel: only a face-up card can be destroyed, so a facedown card is safe from it.
 
 ### **Scoring and the Reaping**
 
@@ -311,7 +313,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **The Eclipse.** Chosen in the Evening, just before the Altar is revealed, so you choose without seeing the hidden Offerings. The chosen card is Neutral for that Day's Reaping only.
 
-**The Arbiter.** Applies only to the Glory gained or lost from your Choir at the Reaping. A gain of 1 comes entirely from the Pot. If no other player has Glory, the whole gain comes from the Pot.
+**The Arbiter.** Applies only to Glory gained from your Choir at the Reaping, 3 alone or 1 in a pair. You choose which player pays the 1 among those whose Choirs leaned against the Tide. If none of them has Glory, you choose any other player who has some; if no one does, the whole gain comes from the Pot. The Arbiter never gives Glory away.
 
 ### **Targeting and Protection**
 
@@ -323,13 +325,17 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Parasite.** It goes straight into another player's Choir when you Exalt or Gather it (Cherubim blocks this; Tribute must be paid). Its holder cannot discard it, not even to make room; other players' abilities can still remove it. Remember who placed it: that player gains when its holder loses.
 
-**The Patron.** Giving a card into a Choir with room is not Targeting. Giving it into a full Choir, which forces a discard, is Targeting: Cherubim blocks it and Tribute must be paid.
+**The Patron.** Works like Temptation: playing a card into another player's Choir is Targeting, so Cherubim blocks it and Tribute must be paid. If their Choir is full, they choose which of their cards to discard.
 
 **Martyr and Lilith.** Martyr pays for every other card discarded from your Choir, by you or anyone (Moloch, Michael, a full Choir, spent cards, store cash-ins). Lilith may take any card discarded from another player's Choir; if several players hold Lilith, the first in turn order chooses first.
 
 ### **Other Cards**
 
-**The Echo.** Copies only "On your turn" abilities, and not cards that discard themselves.
+**The Echo.** Copies only *On your turn* abilities, and not spent cards (those that discard themselves).
+
+**The Oracle.** The Event you put on the bottom is not seen by the other players. With only one Event card left in the deck, the Oracle does not look that Morning.
+
+**The Cantor.** The second card must share the first card's alignment: Light with Light, Dark with Dark, Neutral with Neutral. Nephilim counts as both Light and Dark, so it pairs with either.
 
 **Seraphim and Legion.** They pay when you Exalt a card of their alignment into your own Choir, not for the card itself.
 
@@ -470,7 +476,7 @@ A Fallen player might spend a Day Offering Light because their Choir leans Light
 
 **Glory.** The game's points and its currency. Earned through Offers, the Reaping and card abilities; spent on some abilities (and the Turn in Hidden Roles). Drawn from and paid into the Pot. Cannot drop below 0.
 
-**Hand limit.** The number of cards you draw up to at Upkeep. Normally 3; the Dominion's is 4.
+**Hand limit.** The number of cards you draw up to at Upkeep. Normally 3; the Dominion's is 5.
 
 **Heights.** *(Hidden Roles)* The four spaces at the light end of the Balance. If the marker finishes here, the Faithful control the world.
 

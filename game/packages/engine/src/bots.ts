@@ -2,7 +2,7 @@
 // play toward a Tide that pays them, and answer every kind of decision sensibly.
 import { alignment, baseValue, choirLimit, dirOf, hasActive, variant } from './core';
 import { exaltCost as exaltCostFor, gloryTarget } from './engine';
-import { H, cardName as cardNameOf } from './data';
+import { E, H, HOST, cardName as cardNameOf } from './data';
 import type { Answer, Decision, Dir, GameState, Option, Seat } from './types';
 
 /** Small deterministic PRNG per decision, so simulations are reproducible without touching game RNG. */
@@ -39,7 +39,7 @@ function reapValue(net: number, tide: number, weight = 0.7) {
   if (t === 'neutral' || net === 0) return 0;
   const same = OTHERS.filter((o) => o !== 0 && Math.sign(o) === Math.sign(net));
   // Test 'reap-mirror': two with the Tide gain 1 each; a lone Choir against it loses 3, otherwise 1.
-  if (dirOf(net) !== t) return -weight * (MIRROR && same.length === 0 ? 3 : 1);
+  if (dirOf(net) !== t) return SPARED ? 0 : -weight * (MIRROR && same.length === 0 ? 3 : 1);
   const v = same.length === 0 ? 3 : same.length === 1 ? (MIRROR && !PAIR21 ? 1 : Math.abs(net) > Math.abs(same[0]) ? 2 : 1) : CROWD1 ? 1 : 0;
   return v * weight;
 }
@@ -87,6 +87,8 @@ let OTHERS: number[] = [];
 let MIRROR = false;
 let PAIR21 = false;
 let CROWD1 = false;
+/** V44 'purgatory-spare': on a Purgatory Day no Choir loses at the Reaping. */
+let SPARED = false;
 /**
  * Bot option 'bot-engine': value a Choir card's ability by the Glory it earns per Day held
  * (measured with tools/sim/income.ts), times the Days likely left. Without it, bots build only for lean.
@@ -151,11 +153,48 @@ function bestCorrupt(s: GameState, seat: Seat, want: number, cards: string[]) {
   return best;
 }
 
+/**
+ * V44 'bot-v44': how much the Event would help `seat` against the table (positive: play it; negative: bury it).
+ * Rough judgments a player would make: the leader wants quiet Days, a trailer wants swings, and an Event that
+ * favors one side's cards or Choirs helps the players on it.
+ */
+function eventScore(s: GameState, seat: Seat, ev: string | undefined): number {
+  if (!ev) return 0;
+  const me = s.players[seat];
+  const lead = Math.max(...s.players.map((p) => p.glory));
+  const leading = me.glory === lead && s.players.filter((p) => p.glory === lead).length === 1;
+  const trailing = me.glory < lead - 2;
+  const myLean = Math.sign(alignment(s, seat));
+  const leans = s.players.filter((p) => p.seat !== seat).map((p) => Math.sign(alignment(s, p.seat)));
+  const mySide = leans.filter((x) => x !== 0 && x === myLean).length;
+  const otherSide = leans.filter((x) => x !== 0 && x === -myLean).length;
+  const colorCount = (p: { choir: { id: string; facedown: boolean }[] }, k: 1 | -1) => p.choir.filter((c) => !c.facedown && Math.sign(signed(s, c.id)) === k).length;
+  const avgOthers = (k: 1 | -1) => s.players.filter((p) => p.seat !== seat).reduce((t, p) => t + colorCount(p, k), 0) / Math.max(1, s.players.length - 1);
+  switch (ev) {
+    case E.famine: return leading ? 1 : trailing ? -1 : 0;
+    case E.ascension: return myLean > 0 ? 1 : myLean < 0 ? -1 : 0;
+    case E.fallFromGrace: return myLean < 0 ? 1 : myLean > 0 ? -1 : 0;
+    case E.flood: return avgOthers(1) - colorCount(me, 1);
+    case E.letThereBeLight: return avgOthers(-1) - colorCount(me, -1);
+    // False Prophecy reverses the scoring: good for the smaller side, which the Tide usually goes against.
+    case E.falseProphecy: return myLean === 0 ? 0 : mySide < otherSide ? 1 : mySide > otherSide ? -1 : 0;
+    case E.tithe: return -me.choir.filter((c) => !c.facedown && c.id.startsWith('host-') && /^On your turn/.test(HOSTTEXT(c.id))).length + 1;
+    case E.purgatory: return variant(s, 'purgatory-spare') ? (trailing ? 1 : 0.2) : myLean === 0 ? 1 : -1;
+    case E.castingLots: return trailing ? 0.5 : leading ? -0.5 : 0;
+    case E.divineCalling: return variant(s, 'calling-reward') ? 0.3 : 0;
+    default: return 0;
+  }
+}
+const HOSTTEXT = (id: string) => HOST[id]?.text ?? '';
+
 export function botAnswer(s: GameState, d: Decision): Answer {
   OTHERS = s.players.filter((p) => p.seat !== d.seat).map((p) => alignment(s, p.seat));
   MIRROR = variant(s, 'reap-mirror');
   PAIR21 = variant(s, 'pair-21');
   CROWD1 = variant(s, 'crowd-1');
+  SPARED = variant(s, 'purgatory-spare') && s.currentEvent === E.purgatory;
+  // V44 'bot-v44': bots weigh what the Day's Event does to their choices.
+  const evBots = variant(s, 'bot-v44');
   const r = rand(d.id * 7919 + d.seat * 104729 + (s.config.seed | 0));
   const seat = d.seat;
   const net = alignment(s, seat);
@@ -221,7 +260,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         const room = p.choir.length < choirLimit(s);
         const refund = (c: string) => (variant(s, 'seraph-refund') && ((hasActive(s, seat, H.seraphim) && signed(s, c) > 0) || (hasActive(s, seat, H.legion) && signed(s, c) < 0)) ? 1 : 0);
         const best = Math.max(...p.hand.filter((c) => p.glory >= exaltCostFor(s, seat, c)).map((c) => { const n1 = net + signed(s, c) - (room ? 0 : worst?.v ?? 0); return reapValue(n1, altar, w) + fut(n1) + engineVal(s, seat, c) - (room ? 0 : engineVal(s, seat, worst?.id)) - exaltCostFor(s, seat, c) + refund(c); }));
-        scores.exalt = Math.max(best, bestCorrupt(s, seat, want, p.hand).v) + 0.2;
+        scores.exalt = Math.max(best, bestCorrupt(s, seat, want, p.hand).v) + 0.2 + (variant(s, 'calling-reward') && s.currentEvent === E.divineCalling ? 1 : 0);
       }
       const ids = Object.keys(scores);
       const choice = pickBest(ids, (x) => scores[x] + r * 0.4);
@@ -297,7 +336,8 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       return one(o.id);
     }
     case 'offer.second': {
-      const o = byId((x) => x.card !== undefined && dirOf(signed(s, x.card)) === wantDir);
+      // V44 'bot-v44': the Cantor's second Offer earns its own reward, so a Neutral card is worth Offering too.
+      const o = byId((x) => x.card !== undefined && dirOf(signed(s, x.card)) === wantDir) ?? (evBots ? byId((x) => x.card !== undefined && signed(s, x.card) === 0) : undefined);
       return one(o ? o.id : 'none');
     }
     case 'gather.source': {
@@ -336,7 +376,10 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     }
     case 'activate': {
       const leaders = leaderSeats(s);
+      // Tithe: each Host ability costs 1 Glory today. Use only the ones that pay at least that back.
+      const tithe = evBots && s.currentEvent === E.tithe;
       const opts = d.options.filter((o) => o.id !== 'end').filter((o) => {
+        if (tithe && o.card?.startsWith('host-') && !(o.card === H.mammon || o.card === H.providence || o.card === H.confession || o.card === H.envy || o.card === H.moloch)) return false;
         if (o.card === H.envy && leaders.includes(seat)) return false;
         if (o.card === H.abaddon) return dirOf(altar) !== wantDir && altar !== 0;
         if (o.card === H.moloch) return s.players[seat].choir.some((c) => c.id !== H.moloch && (want >= 0 ? signed(s, c.id) < 0 : signed(s, c.id) > 0));
@@ -444,7 +487,10 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     case 'oracle.use':
       return one('yes');
     case 'oracle':
+      if (evBots) return one(eventScore(s, seat, d.reveal?.[0]) < 0 ? 'bury' : 'play');
       return one(r < 0.3 ? 'bury' : 'play');
+    case 'oracle.two':
+      return one(pickBest(d.options, (o) => eventScore(s, seat, o.card) + r * 0.01).id);
     case 'revelation': {
       // Reveal the hidden card most likely to work against us (an opponent's Offering).
       const o = pickBest(d.options, (o) => {

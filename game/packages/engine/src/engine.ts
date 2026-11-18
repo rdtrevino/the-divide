@@ -144,6 +144,18 @@ export function* morning(s: GameState): Gen<void> {
     if (use) {
       markToday(s, oracle.seat, C.oracle);
       yield* activation(s, oracle.seat, C.oracle, function* () {
+        // V44 test 'oracle-two': look at the top 2 Events, play one, and put the other on the bottom of the deck.
+        if (variant(s, 'oracle-two')) {
+          const two = s.eventDeck.slice(0, 2);
+          const a = yield* ask(s, { seat: oracle.seat, tag: 'oracle.two', prompt: `The Oracle: the top Events are ${two.map(cardName).join(' and ')}. Choose the one to play; the other goes to the bottom of the deck.`, options: two.map((e, i) => ({ id: String(i), label: `Play ${cardName(e)}`, card: e })), min: 1, max: 1, reveal: two });
+          const keep = two[Number(a[0])];
+          const other = two.find((e, i) => i !== Number(a[0]))!;
+          s.eventDeck.splice(0, 2);
+          s.eventDeck.unshift(keep);
+          s.eventDeck.push(other);
+          log(s, 'oracle', `${oracle.name} chose the Day's Event and buried the other (the Oracle).`);
+          return;
+        }
         const a = yield* ask(s, { seat: oracle.seat, tag: 'oracle', prompt: `The Oracle: the top Event is ${cardName(top)}. Play it or bury it at the bottom of the deck?`, options: [{ id: 'play', label: `Play ${cardName(top)}` }, { id: 'bury', label: 'Bury it' }], min: 1, max: 1, reveal: [top] });
         if (a[0] === 'bury') {
           s.eventDeck.push(s.eventDeck.shift()!);
@@ -334,7 +346,12 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const col = (id: string) => colorsOf(s, null, id);
   // V43 test 'mirage-double': with Mirage you may Offer a second card, also facedown (one reward).
   const mirPair = variant(s, 'mirage-double') && hasActive(s, seat, H.mirage) && canActivate(s, seat, H.mirage);
-  const second = p.hand.filter((c) => cantor || mirPair || (hymn && col(first).light && col(c).light) || (lam && col(first).dark && col(c).dark));
+  // V44 test 'cantor-chorus': the Cantor's second card must share the first's alignment (Light or Dark), and both go face up.
+  const chorus = cantor && variant(s, 'cantor-chorus');
+  // 'cantor-chorus-n': two Neutral cards also make a pair.
+  const neu = (c: string) => !col(c).light && !col(c).dark;
+  const sameSide = (c: string) => (col(first).light && col(c).light) || (col(first).dark && col(c).dark) || (variant(s, 'cantor-chorus-n') && neu(first) && neu(c));
+  const second = p.hand.filter((c) => (cantor && (!chorus || sameSide(c))) || mirPair || (hymn && col(first).light && col(c).light) || (lam && col(first).dark && col(c).dark));
   if (second.length) {
     const why = cantor ? 'the Cantor' : hymn && col(first).light ? 'Hymn: both go face up' : 'Lamentation: both go face up';
     const pick = yield* chooseOne(s, seat, 'offer.second', `Offer a second card (${why})?`, second.map((c) => cardOpt(c)), true);
@@ -344,8 +361,10 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
     }
   }
   // V35: Offers go facedown. Hymn and Lamentation pairs go face up (their color is shown).
-  const facedown = !(cards.length === 2 && !cantor && !mirPair);
-  for (const c of cards) s.altar.push({ id: c, facedown: facedown && !(loud && (c === H.hymn || c === H.lamentation)), offeredBy: seat, day: s.day, kind: 'offer' });
+  const facedown = !(cards.length === 2 && (!cantor || chorus) && !mirPair);
+  // V44 test 'cantor-up': the Cantor's second card goes face up.
+  const upSecond = cantor && !chorus && variant(s, 'cantor-up');
+  cards.forEach((c, i) => s.altar.push({ id: c, facedown: facedown && !(loud && (c === H.hymn || c === H.lamentation)) && !(upSecond && i === 1), offeredBy: seat, day: s.day, kind: 'offer' }));
   noteOffer(s, seat, cards);
   stat(s, { type: 'action', seat, source: 'offer', data: { cards } });
   for (const c of cards) stat(s, { type: 'action', seat, card: c, source: 'offer.card' });
@@ -502,6 +521,8 @@ function* doExalt(s: GameState, seat: Seat): Gen<void> {
   yield* enterChoir(s, seat, card);
   stat(s, { type: 'action', seat, card, source: 'exalt' });
   yield* tributeToll(s, seat); // V43 test
+  // V44 test 'calling-reward': on a Divine Calling Day, an Exalt earns 1 Glory, like an Offer.
+  if (variant(s, 'calling-reward') && eventOn(s, E.divineCalling, seat)) { yield* gain(s, seat, 1, E.divineCalling); log(s, 'calling', `${p.name} gained 1 Glory (Divine Calling).`); }
   yield* wisdomPeek(s, seat); // V43 test
   // Test 'seraph-refund': Seraphim (Legion) pays 1 Glory when you Exalt a Light (Dark) card.
   if (variant(s, 'seraph-refund')) {
@@ -732,7 +753,10 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     nets[seat] = net;
     delta[seat] = 0;
     if (eventOn(s, E.famine, seat)) continue;
-    if (eventOn(s, E.purgatory, seat)) { delta[seat] = net === 0 ? 1 : -1; continue; }
+    // V44 test 'purgatory-spare': no Choir loses at the Reaping, and a Choir that leans neither way gains 1 (one that sits out does not).
+    const spare = variant(s, 'purgatory-spare') && eventOn(s, E.purgatory, seat);
+    if (spare && net === 0 && !s.day_.figLeaves.includes(seat)) { delta[seat] = 1; continue; }
+    if (eventOn(s, E.purgatory, seat) && !spare) { delta[seat] = net === 0 ? 1 : -1; continue; }
     let dir = tide.dir;
     if (eventOn(s, E.falseProphecy, seat)) dir = opposite(dir);
     if (dir === 'neutral' || net === 0) continue;
@@ -801,8 +825,9 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   for (const seat of spentMercy) yield* discardFromChoir(s, seat, H.mercy, 'Mercy');
   for (const p of s.players) s.lastAlignColor[p.seat] = dirOf(nets[p.seat]);
 
+  (s.day_ as any).against = against.map((a) => a.seat); // the Arbiter (V44 test 'arbiter-judge')
   const loss: Record<number, number> = {};
-  for (const p of s.players) loss[p.seat] = delta[p.seat] < 0 ? -delta[p.seat] : 0;
+  for (const p of s.players) loss[p.seat] = delta[p.seat] < 0 && !(variant(s, 'purgatory-spare') && eventOn(s, E.purgatory, p.seat)) ? -delta[p.seat] : 0;
   // Mercy (V42): you never lose Glory at the Reaping.
   // Scapegoat (V42): if you would lose Glory at the Reaping, a player of your choice loses it instead.
   for (const seat of order) {

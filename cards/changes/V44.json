@@ -1,0 +1,78 @@
+{
+  "version": "V44",
+  "date": "2026-11-18",
+  "previous": "V43",
+  "renumber": true,
+  "changes": {},
+  "celestials": {
+    "The Tempest": {
+      "text": "When you Offer, you may destroy a face-up card on the Altar.",
+      "why": "Destroys like Raphael and Azazel: a face-up card, on a turn you Offer (V44). Was the strongest Celestial (1.12)"
+    },
+    "The Oracle": {
+      "text": "In the Morning: Look at the top 2 Event cards. Play one, and put the other on the bottom of the Event deck.",
+      "why": "A real choice of the Day's Event (V44). Was 0.92"
+    },
+    "The Eclipse": {
+      "text": "In the Evening: Choose a card in your Choir. It counts as Neutral at this Day's Reaping.",
+      "why": "Timing label (V44)",
+      "wording": true
+    },
+    "The Cantor": {
+      "text": "When you Offer, you may Offer a second card of the same alignment (Light, Dark, or Neutral). Both go face up, and each earns its reward.",
+      "why": "A chorus: a matching pair, sung aloud like Hymn (V44). With a second reward on every turn it measured 1.13 to 1.18"
+    },
+    "The Patron": {
+      "text": "On your turn: Play a card from your hand into another player's Choir. If it is full, they discard one of its cards first.",
+      "why": "Worded like Temptation, and Targeting like it (V44)"
+    },
+    "The Echo": {
+      "text": "On your turn: Use the On your turn ability of a card in another player's Choir, as if it were yours. Spent cards cannot be copied.",
+      "why": "Timing label; says what it can copy (V44)",
+      "wording": true
+    },
+    "The Dominion": {
+      "text": "Your hand limit is 5 instead of 3. Begin the game with 5 cards in hand.",
+      "why": "A hand of 5 (was 4): with every other Celestial working, 4 measured 0.88 to 0.94 (V44)"
+    },
+    "The Whisper": {
+      "text": "In the Morning: Name Light or Dark aloud. At the Reaping, if the Tide matches, your Choir counts as leaning with it.",
+      "why": "Timing label and the current scoring words (V44)",
+      "wording": true
+    },
+    "The Arbiter": {
+      "text": "When you gain Glory at the Reaping, take 1 of it from another player: one whose Choir leaned against the Tide, if any of them has Glory.",
+      "why": "The losers pay the winner; it no longer gives away its losses (V44). Was the weakest Celestial (0.84)"
+    }
+  },
+  "events": {
+    "Divine Calling": {
+      "text": "When you Exalt this Day, gain 1 Glory.",
+      "why": "Exalt has been free since V42, so the old text did nothing (V44)"
+    },
+    "Purgatory": {
+      "text": "No Choir loses Glory at the Reaping this Day. A Choir that leans neither way gains 1 Glory.",
+      "why": "A Day of reprieve instead of a tax on every Choir; the Tide still pays (V44)"
+    },
+    "The Fast": {
+      "text": "No one may Exalt, Turn, or spend Glory this Day.",
+      "why": "Exalt is free, so it is named on its own (V44)",
+      "wording": true
+    },
+    "Famine": {
+      "text": "No Choir gains or loses Glory at the Reaping this Day, and no Choir counts as leaning with or against the Tide.",
+      "why": "The current scoring words; says what cards that ask about the Tide see (V44)",
+      "wording": true
+    },
+    "Ascension": {
+      "text": "Light cards on the Altar count double when the Tide is set.",
+      "why": "Counts every card on the Altar, First Fruits included (V44)",
+      "wording": true
+    },
+    "Fall From Grace": {
+      "text": "Dark cards on the Altar count double when the Tide is set.",
+      "why": "Counts every card on the Altar, First Fruits included (V44)",
+      "wording": true
+    }
+  }
+}

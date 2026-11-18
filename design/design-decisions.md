@@ -106,13 +106,17 @@ Choir, Altar, Offering, Gather, Reaping, Exalt, **Morning, Noon, Evening**, **Ti
 | Prophecy | V38: a Neutral Tide counts as a miss (lose 1). |
 | Providence | V38: costs 1 Glory. |
 | Absolution | Once per Day, a discarded Choir card returns to hand; then discard 1 from hand. |
-| Divine Calling | Exalt costs 0 Glory this Day. |
+| Divine Calling | V44: an Exalt into your own Choir earns 1 Glory this Day (Exalt has been free since V42). Not Temptation, the Patron, or Parasite. |
 | Babel | V40 wording: "No table talk or deals this Day." (dropped "Glory transfers" when gifts were removed). |
 | Patron | Kept at full strength; watch in playtesting. |
-| The Tempest | Confirmed November 16: used on your own turn, after your action. |
+| Tithe | V44: charges Host abilities only; Celestial powers are free. |
+| Purgatory | V44: Choirs still lean with or against the Tide for cards that ask; those against it lose nothing. A Choir sitting out with Fig Leaves gains nothing. |
+| The Arbiter | V44: takes 1 of a Reaping gain from a player whose Choir leaned against the Tide (the holder chooses); if none has Glory, from any other player; else the Pot. Never gives Glory away. |
+| The Cantor | V44: the pair shares an alignment (Neutral pairs too; Nephilim pairs with either) and goes face up; a single Offer stays facedown. |
+| The Tempest | V44: on a turn you Offer, after the reward; a face-up card only, like Raphael and Azazel. |
 | The Echo | Confirmed November 16: copies only repeatable "On your turn" abilities, not once-per-game cards. |
 | Seraphim, Legion | Each re-activates only another card of its own color, so they never re-activate each other. |
-| The Patron (Targeting) | Confirmed November 16: a gift into a Choir with room is not Targeting; a gift into a full Choir (forcing a discard) is, so Cherubim blocks it and Tribute must be paid. |
+| The Patron (Targeting) | V44: always Targeting, as with Temptation: Cherubim blocks it and Tribute must be paid; a full Choir's holder chooses the discard. (Was: Targeting only into a full Choir.) |
 | Casting Lots | V39 wording: pays At the Reaping (was "In the Evening"; same rule). |
 | The Flood, Let There Be Light | V39, decided November 16: every ability of that color is off for the Day, automatic ones included (Hymn, Snare, Cherubim's protection); the cards still count toward Alignment. Parasite can be discarded on a Let There Be Light Day. Was: only abilities a player chooses to activate. |
 | Favor | Confirmed November 16: the player using Favor chooses "at random" or "they choose". |
@@ -263,7 +267,7 @@ Robert's decisions, after the studies in `design/actions-and-engine.md`, `design
 | No Seed | First Fruits starts the Altar. |
 | Race to 15 (since changed to 10, below) | Engines pay late, so the game needs room for them. |
 | No endgame bonus | It belonged to the fixed-length game. Most Glory wins; a tie is shared. Anything else left from the final Day was removed (the six-Day variants in the engine, the final-Day advice). |
-| Base and Advanced | Base: Host cards only. Advanced: adds Celestials and Events. Several Celestials still assume the old lean scoring (the Whisper, the Arbiter, the Eclipse) and need a pass. |
+| Base and Advanced | Base: Host cards only. Advanced: adds Celestials and Events. (V44 gave the Celestials and Events their pass for the current scoring: `design/v44-advanced.md`.) |
 | Four timing labels | In the Morning, On your turn, At the Reaping, none. |
 | Actions unchanged | Gather does not put a card back on the Altar (Offer should be the main way to move it). Exalt discards the replaced card, so cards keep rotating. |
 
@@ -273,3 +277,6 @@ Rejected the same day: shared spoils as a cap (stalls herding tables), the margi
 
 **Next:** the Host card rework (`design/card-assessment-v41.md`), then the Celestials. Bots cannot judge coalition play, so the real test is people on the site.
 
+## Celestials and Events for the current game; the deck numbered Light, Neutral, Dark (November 18, 2026, V44)
+
+Every Celestial and Event was read against the V43 rules. Changed: the Tempest (face-up, on Offer turns), the Oracle (top 2), the Cantor (a matching pair, face up), the Patron (Targeting like Temptation), the Dominion (hand of 5), the Arbiter (takes from the losers, never gives), Divine Calling (an Exalt pays 1), Purgatory (no losses; Neutral gains 1); Tithe no longer charges Celestials. Wording only: the Eclipse, the Echo, the Whisper, The Fast, Famine, Ascension, Fall From Grace. Every Celestial now measures 0.95 to 1.05 (was 0.84 to 1.10). The Host deck is numbered 1–23 Light, 24–46 Neutral, 47–69 Dark. Details and every measured option: `design/v44-advanced.md`. Not yet approved by Robert.

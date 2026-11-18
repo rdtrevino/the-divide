@@ -23,6 +23,7 @@ npm run deploy                             # publish (see SITE.md)
 cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements
 npm run sim -- --games 20000 --players 3,4 # balance report
 cd tools/sim && npx tsx ab.ts --games 20000 --variants my-variant  # A/B test a rule variant
+cd tools/sim && npx tsx advanced.ts 20000 0 out.json [switches]  # Advanced game: Celestial win ratios, what each Event does
 ```
 
 The engine supports experimental rule `variants` in the game config for A/B testing. The five balance changes tested on November 14 were adopted as permanent V34 card text (see `reports/balance-proposals-2026-11-14.md`).
