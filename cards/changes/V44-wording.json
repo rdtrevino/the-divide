@@ -1,0 +1,28 @@
+{
+  "version": "V44",
+  "date": "2026-11-18",
+  "previous": "V44",
+  "changes": {
+    "Favor": {
+      "text": "At the end of the Day: If 2 or more other players lost Glory at the Reaping, gain 1 Glory.",
+      "cadence": "At the end of the Day",
+      "why": "Says \"at the Reaping\", as the game counts it (V44 wording)",
+      "wording": true
+    },
+    "Raguel": {
+      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At the end of the Day, if they gained Glory at the Reaping, gain 1 Glory; if they lost Glory at the Reaping, lose 1 Glory.",
+      "why": "Says \"at the Reaping\", as the game counts it (V44 wording)",
+      "wording": true
+    },
+    "Bounty": {
+      "text": "In the Morning: You may name a player. At the end of the Day, if they lost Glory at the Reaping, gain 1 Glory; if they gained Glory at the Reaping, lose 1 Glory.",
+      "why": "Says \"at the Reaping\", as the game counts it (V44 wording)",
+      "wording": true
+    },
+    "Parasite": {
+      "text": "When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if they lost Glory at the Reaping, you gain 1 Glory; if they gained Glory at the Reaping, discard this card.",
+      "why": "Says \"at the Reaping\", as the game counts it (V44 wording)",
+      "wording": true
+    }
+  }
+}

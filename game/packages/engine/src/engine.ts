@@ -865,8 +865,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     const seat = Number(k);
     // Test 'bounty-bet' / 'bounty-bet-soft' (Robert): +1 if they lose; -1 if they do not lose (strict) or only if they gain (soft).
     if ((variant(s, 'bounty-bet') || variant(s, 'bounty-bet-soft')) && hasActive(s, seat, H.bounty)) {
-      if (lost[t] > 0) { yield* gain(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory: ${pname(s, seat)} collects the Bounty.`); }
-      else if (variant(s, 'bounty-bet') || gained[t] > 0) { yield* lose(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} ${gained[t] > 0 ? 'gained Glory' : 'did not lose'}: ${pname(s, seat)}'s Bounty costs them 1 Glory.`); }
+      if (lost[t] > 0) { yield* gain(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} lost Glory at the Reaping: ${pname(s, seat)} collects the Bounty.`); }
+      else if (variant(s, 'bounty-bet') || gained[t] > 0) { yield* lose(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} ${gained[t] > 0 ? 'gained Glory at the Reaping' : 'did not lose at the Reaping'}: ${pname(s, seat)}'s Bounty costs them 1 Glory.`); }
       continue;
     }
     const spent = (s.day_ as any).bountySpent?.[seat];
@@ -875,7 +875,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   // Raguel (V42): each Reaping your Bound player gains Glory, you gain 1.
   for (const b of s.bonds) {
     // Tests: 'raguel-fate' (also lose 1 when they lose), 'raguel-nogain' (only if you gained nothing yourself).
-    if (variant(s, 'raguel-fate') && hasActive(s, b.owner, H.raguel) && lost[b.bound] > 0) { yield* lose(s, b.owner, 1, H.raguel); log(s, 'raguel', `${pname(s, b.bound)} lost Glory, so ${pname(s, b.owner)} loses 1 (Raguel).`); continue; }
+    if (variant(s, 'raguel-fate') && hasActive(s, b.owner, H.raguel) && lost[b.bound] > 0) { yield* lose(s, b.owner, 1, H.raguel); log(s, 'raguel', `${pname(s, b.bound)} lost Glory at the Reaping, so ${pname(s, b.owner)} loses 1 (Raguel).`); continue; }
     if (!hasActive(s, b.owner, H.raguel) || !(gained[b.bound] > 0)) continue;
     if (variant(s, 'raguel-nogain') && gained[b.owner] > 0) continue;
     yield* gain(s, b.owner, 1, H.raguel);
@@ -967,7 +967,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     // V43 tests: 'lev-landslide' (Leviathan: the Tide won by 3+ and you lean with it); 'favor-spared' (Favor takes Leviathan's old ability).
     const twoLost = s.players.filter((o) => o.seat !== seat && lost[o.seat] > 0).length >= 2;
     if (variant(s, 'lev-landslide') && hasActive(s, seat, H.leviathan) && tide.dir !== 'neutral' && tide.margin >= (variant(s, 'lev-landslide4') ? 4 : 3) && leansWithTide.has(seat)) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} rode the landslide: +1 Glory (Leviathan).`); }
-    if (variant(s, 'favor-spared') && hasActive(s, seat, H.favor) && twoLost) { yield* gain(s, seat, 1, H.favor); log(s, 'favor', `${p.name} was spared while others fell: +1 Glory (Favor).`); }
+    if (variant(s, 'favor-spared') && hasActive(s, seat, H.favor) && twoLost) { yield* gain(s, seat, 1, H.favor); log(s, 'favor', `${p.name} gained 1 Glory: two or more other players lost Glory at the Reaping (Favor).`); }
     if (!variant(s, 'lev-landslide') && hasActive(s, seat, H.leviathan) && twoLost) { yield* gain(s, seat, 1, H.leviathan); log(s, 'leviathan', `${p.name} gained 1 Glory (Leviathan).`); }
     // Test 'hubris-day' (Robert): at the end of the Day, if the player with the most Glory gained 3 or more this Day (from anything), they give 1 to you.
     if ((variant(s, 'hubris-day') || variant(s, 'hubris-day4')) && hasActive(s, seat, H.hubris)) {

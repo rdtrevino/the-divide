@@ -280,3 +280,5 @@ Rejected the same day: shared spoils as a cap (stalls herding tables), the margi
 ## Celestials and Events for the current game; the deck numbered Light, Neutral, Dark (November 18, 2026, V44)
 
 Every Celestial and Event was read against the V43 rules. Changed: the Tempest (face-up, on Offer turns), the Oracle (top 2), the Cantor (a matching pair, face up), the Patron (Targeting like Temptation), the Dominion (hand of 5), the Arbiter (takes from the losers, never gives), Divine Calling (an Exalt pays 1), Purgatory (no losses; Neutral gains 1); Tithe no longer charges Celestials. Wording only: the Eclipse, the Echo, the Whisper, The Fast, Famine, Ascension, Fall From Grace. Every Celestial now measures 0.95 to 1.05 (was 0.84 to 1.10). The Host deck is numbered 1–23 Light, 24–46 Neutral, 47–69 Dark. Details and every measured option: `design/v44-advanced.md`. Not yet approved by Robert.
+
+**Wording, same day (still V44):** Favor, Raguel, Bounty and Parasite say "at the Reaping", matching what the engine always counted (Robert's call: the card text follows the game, not the other way around).

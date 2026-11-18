@@ -17,6 +17,9 @@ Every changed card is marked "Reprint: rules changed", unless its entry has "wor
 change). A Host entry may also carry (V42): "value" (Offering value) with "offering" (the workbook's Offering
 text), "rename" (a new card name), "openGame" (false retires the card) and "oncePerGame". Requires openpyxl.
 
+A change set whose "previous" equals its "version" is a wording pass within that version: the files are updated
+in place and nothing is archived (V44 wording: Favor, Raguel, Bounty and Parasite say "at the Reaping").
+
 "renumber": true (V44) numbers the Host deck in order: Light, then Neutral (with Acolyte and Nephilim), then Dark,
 keeping each group's current order; retired cards follow. It updates the numbers in every file and sheet, renames
 the face and plate images in art/ to match, and lists each renumbered card on the Reprint List ("Number only").
@@ -155,8 +158,10 @@ def main(change_path: str) -> None:
                 if isinstance(cell.value, str) and cell.value in renames:
                     cell.value = renames[cell.value]
     wb.save(new_xlsx)
-    archive = ROOT / "sources/card-data" / old_xlsx.name
-    shutil.move(str(old_xlsx), archive)
+    # A wording pass within a version ("previous" equal to "version") updates the workbook in place.
+    if new_xlsx != old_xlsx:
+        archive = ROOT / "sources/card-data" / old_xlsx.name
+        shutil.move(str(old_xlsx), archive)
 
     # 3. CSV from the main sheet
     wb2 = openpyxl.load_workbook(new_xlsx)
@@ -164,7 +169,7 @@ def main(change_path: str) -> None:
         w = csv.writer(f)
         for r in wb2["Cards V33"].iter_rows(values_only=True):
             w.writerow(["" if v is None else v for v in r])
-    print(f"{ver}: {len(changes)} cards updated; wrote {new_xlsx.name}, cards.csv, cards.json; archived {old_xlsx.name}")
+    print(f"{ver}: {len(changes)} cards updated; wrote {new_xlsx.name}, cards.csv, cards.json" + (f"; archived {old_xlsx.name}" if new_xlsx != old_xlsx else ""))
 
 
 GROUP = {"light": 0, "neutral": 1, "variable": 1, "both": 1, "dark": 2}

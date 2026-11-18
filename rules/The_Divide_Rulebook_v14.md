@@ -291,11 +291,11 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Scapegoat.** Used at the Reaping, after the scores are known and before anyone gains: pay 1 Glory and one player who would gain from the Tide gains nothing.
 
-**Raguel.** Looks at the Bound player's Reaping (see Gained or lost below): if they gained, you gain 1; if they lost, you lose 1.
+**Raguel.** If the Bound player neither gains nor loses at the Reaping, nothing happens. If Raguel leaves your Choir, the Bond ends.
 
-**Bounty and Prophecy.** Named or declared in the Morning, settled at the end of the Day. Bounty looks at the target's Reaping (see Gained or lost below); a target who neither gains nor loses there costs you nothing. A Neutral Tide is a miss for Prophecy: you lose 1.
+**Bounty and Prophecy.** Named or declared in the Morning, settled at the end of the Day. A Bounty target who neither gains nor loses at the Reaping costs you nothing. A Neutral Tide is a miss for Prophecy: you lose 1.
 
-**Gained or lost.** Bounty, Raguel, Favor and Parasite look only at the Reaping: a player gained if the Reaping raised their Glory, and lost if it lowered it. Glory from Offers or other cards does not count for them.
+**At the Reaping.** Bounty, Raguel, Favor and Parasite count only the Glory a player gains or loses at the Reaping (from the Tide, after Mercy, Scapegoat and the like). Glory from Offers or other cards' abilities does not count for them.
 
 **Hubris.** Counts all Glory the leader gained that Day, from any source. If several leaders are tied and qualify, you choose which one gives you 1.
 

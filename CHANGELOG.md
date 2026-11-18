@@ -24,12 +24,12 @@ No card text or balance changes. Found by playing full Base and Advanced games i
 **Rulebook v14** (wording only)
 - First Fruits is the third step of Morning in the glossary too.
 - The glossary no longer says Lilith protects your hand or Defiance your Glory; it names what does protect (Cherubim, Tribute, Mirage).
-- New ruling, **Gained or lost**: Bounty, Raguel, Favor and Parasite look only at the Reaping, which is what the game does (Raguel's and Favor's rulings said "the whole Day" and "any source").
+- New ruling, **At the Reaping**: Bounty, Raguel, Favor and Parasite count only Glory gained or lost at the Reaping, which is what the game does (Raguel's and Favor's rulings said "the whole Day" and "any source").
 - Vessel's ruling no longer contradicts Snare's; the Flood's example is Martyr (Hymn's ability is not in a Choir); "Build for later" lists Tree of Life instead of Favor; *In the Evening* is listed wherever activation timings are.
 
 **Docs:** the top-level README describes V44 (one deck of 69, free Exalt, mirrored scoring, race to 12, test counts); SITE.md and game/README no longer mention the 2 Seeds option or old test counts; the Cards page's checkbox reads "Current deck only".
 
-**Still to decide:** Favor's card says "lost Glory this Day" and Raguel's and Bounty's "at the end of the Day, if they gained/lost", while the game counts the Reaping only. The rulebook now says so; the card text could say "at the Reaping" at the next reprint.
+**Cards (wording, still V44).** Favor, Raguel, Bounty and Parasite now say "at the Reaping", which is what the game always counted: "If 2 or more other players lost Glory at the Reaping", "if they gained (lost) Glory at the Reaping". No rule changes, so the card version stays V44 and the stats carry on. `cards/changes/V44-wording.json`; `apply_changes.py` now accepts a wording pass within a version. The rulebook's rulings for them are shorter to match.
 
 ## V44 cards and Rulebook v14: Celestials and Events for the current game; the deck numbered Light, Neutral, Dark (November 18, 2026)
 

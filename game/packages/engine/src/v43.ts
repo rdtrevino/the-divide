@@ -143,8 +143,8 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
     for (const c of [...p.choir]) {
       const by = (c as any).by;
       if (c.id !== H.parasite || c.facedown || by === undefined) continue;
-      if (lost[p.seat] > 0) { yield* gain(s, by, 1, H.parasite); log(s, 'parasite', `${pname(s, by)} fed on ${p.name}'s loss: +1 Glory (Parasite).`); }
-      else if (gained[p.seat] > 0 && removeFromChoir(s, p.seat, H.parasite)) { s.discard.push(H.parasite); log(s, 'parasite', `${p.name} prospered, and the Parasite in their Choir is discarded.`); }
+      if (lost[p.seat] > 0) { yield* gain(s, by, 1, H.parasite); log(s, 'parasite', `${pname(s, by)} fed on ${p.name}'s loss at the Reaping: +1 Glory (Parasite).`); }
+      else if (gained[p.seat] > 0 && removeFromChoir(s, p.seat, H.parasite)) { s.discard.push(H.parasite); log(s, 'parasite', `${p.name} gained Glory at the Reaping, and the Parasite in their Choir is discarded.`); }
     }
   }
   (s as any).lastWithTide = [...withTide];
