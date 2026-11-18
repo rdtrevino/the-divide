@@ -23,6 +23,47 @@ The winner's Days (3 players): 22% gain nothing, 33% gain 1, 16% gain 2, 15% gai
 
 **Rules wording.** "At the Reaping" becomes **"At the end of the Day"** on every card. No card or rule says "color": cards say "alignment", "Light" or "Dark". Every Light or Dark card is worth +1.
 
+## Round 2 (November 18): engine building and mirrored scoring
+
+Testing showed engine building never paid back: turn actions were 85% Offer, 14% Gather and 1% Exalt, and an engine card earned about 0.2 Glory a Day against 2 Glory to Exalt it. Robert chose the "G1" direction plus mirrored scoring. **Where this section and the tables below disagree, this section wins.**
+
+### Rule changes
+
+| Rule | Before | Now |
+|---|---|---|
+| Exalt | Pay 1 Glory: play a card from your hand into your Choir | **Play a card from your hand into your Choir** (no cost) |
+| Gather | Take a card from the Altar or the top of the Host deck | **Take a card from the Altar** (blind deck draws were 2–3% of Gathers and lose to a free Exalt) |
+| Reaping | With the Tide: alone 3, two 2 and 1, three or more 0. Against it: lose 1 | **With the Tide: alone 3, two 1 each, three or more 0. Against it: alone lose 3, otherwise lose 1** |
+
+### Card changes
+
+| Card | Now |
+|---|---|
+| Seraphim | When you Exalt a Light card, gain 1 Glory. |
+| Legion | When you Exalt a Dark card, gain 1 Glory. (Seraphim's mirror; no longer re-uses abilities) |
+| Uriel, Beelzebub | At the end of the Day: If your Choir has 3 or more other Light (Dark) cards, gain 2 Glory. |
+| Providence | At the end of each Day your Choir leans with the Tide, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card. |
+| Mammon | The same as Providence (the Dark store). Its Offer clause is gone. |
+| Favor | At the end of each Day your Choir leans with the Tide, put 1 Glory on this card. When it holds 3, remove them and gain 2 Glory. |
+| Tree of Life | At the end of the Day: You may take a card from the Altar into your Choir. If your Choir is full, discard one of its cards first. (No cost) |
+| Zealot | At the end of the Day: If every other card in your Choir (at least 3) shares one alignment, gain 1 Glory. (The earlier version could never pay: Zealot itself is Neutral) |
+| Flaming Sword | On your turn: No other player may Exalt until the start of your next turn. (Anathema's mirror) |
+| Temptation | On your turn: Draw 2 cards, then discard 1 card from your hand. (It worked only on deck Gathers) |
+| Mercy | If yours is the only Choir against the Tide, lose 1 instead of 3, then discard this card. |
+| Outcast | When you have the least Glory (or are tied for it), gain 1 Glory at the end of the Day. (The Exalt clause is gone) |
+
+### Measured (bots that value card abilities; 20,000 games for balance, 1,000 per player count for shape)
+
+| | 3 players | 4 players |
+|---|---|---|
+| Days | 7.2 | 7.5 |
+| Winner's Glory per Day | 1.65 | 1.53 |
+| Turn actions: Offer / Gather / Exalt | 62% / 17% / 21% | 64% / 16% / 20% |
+| Glory from Offers / the Tide / cards | 44% / 29% / 27% | 49% / 22% / 29% |
+| A lone Choir against the Tide | 7% of Reaping results | 5% |
+
+Card balance, now counted over every card a player **held at the end of any Day** (fair to stores and spent cards): every card is between 0.82 (Fig Leaves) and 1.26 (Providence); spread 0.102.
+
 ## Light (23)
 
 | # | Card | Value | V41 (live) | V42 | Change | Win ratio |

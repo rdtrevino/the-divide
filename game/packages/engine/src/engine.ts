@@ -297,8 +297,8 @@ export function legalActions(s: GameState, seat: Seat): ('offer' | 'gather' | 'e
   const p = s.players[seat];
   const out: ('offer' | 'gather' | 'exalt')[] = [];
   if (p.hand.length && !s.anathema.some((a) => a.target === seat && (a.action ?? 'offer') === 'offer')) out.push('offer');
-  if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && canRoom(s, seat) && (altarAvailable(s, seat).length || s.hostDeck.length || s.discard.length)) out.push('gather');
-  if (canRoom(s, seat) && !eventOn(s, E.fast, seat) && p.hand.some((c) => p.glory >= exaltCost(s, seat, c))) out.push('exalt');
+  if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && canRoom(s, seat) && (altarAvailable(s, seat).length || (!variant(s, 'gather-altar') && (s.hostDeck.length || s.discard.length)) || (hasActive(s, seat, H.forger) && s.discard.length))) out.push('gather');
+  if (!s.anathema.some((a) => a.target === seat && a.action === 'exalt') && canRoom(s, seat) && !eventOn(s, E.fast, seat) && p.hand.some((c) => p.glory >= exaltCost(s, seat, c))) out.push('exalt');
   return out;
 }
 
@@ -392,7 +392,8 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
 function* doGather(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
   const opts = altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id }));
-  if (s.hostDeck.length || s.discard.length) opts.push({ id: 'deck', label: hasActive(s, seat, H.temptation) ? 'From the top of the Host deck (Temptation: look at 2)' : 'From the top of the Host deck', card: undefined });
+  // Test 'gather-altar': Gather takes a card from the Altar only (no blind draw from the deck).
+  if (!variant(s, 'gather-altar') && (s.hostDeck.length || s.discard.length)) opts.push({ id: 'deck', label: hasActive(s, seat, H.temptation) ? 'From the top of the Host deck (Temptation: look at 2)' : 'From the top of the Host deck', card: undefined });
   // V37: Forger may take any Host card from the discard pile (was the top card only).
   if (hasActive(s, seat, H.forger) && s.discard.length && canActivate(s, seat, H.forger)) for (const c of [...new Set(s.discard.filter((x) => x.startsWith('host-')))]) opts.push({ id: 'discard:' + c, label: `From the discard pile (Forger): ${cardName(c)}`, card: c });
   if (!variant(s, 'favor-ripen') && hasActive(s, seat, H.favor) && canActivate(s, seat, H.favor)) for (const o of s.players) if (o.seat !== seat && o.hand.length && !handProtected(s, seat, o.seat)) opts.push({ id: 'favor:' + o.seat, label: `From ${o.name}'s hand (Favor)`, card: undefined });
@@ -565,7 +566,10 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
     if (hasActive(s, seat, H.zealot) && !variant(s, 'zealot-open')) {
       const cards = activeCards(p);
       const all = (k: 'light' | 'dark') => cards.every((c) => colorsOf(s, seat, c.id)[k]);
-      if (cards.length >= 3 && (all('light') || all('dark'))) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
+      // Test 'zealot-others': every other card in your Choir (at least 3) shares one alignment.
+      const zo = cards.filter((c) => c.id !== H.zealot);
+      const allO = (k: 'light' | 'dark') => zo.every((c) => colorsOf(s, seat, c.id)[k]);
+      if (variant(s, 'zealot-others') ? zo.length >= 3 && (allO('light') || allO('dark')) : cards.length >= 3 && (all('light') || all('dark'))) { yield* gain(s, seat, 1, H.zealot); log(s, 'zealot', `${p.name} gained 1 Glory (Zealot).`); }
     }
     if (hasActive(s, seat, H.moderation) && net === 0) { yield* gain(s, seat, 1, H.moderation); log(s, 'moderation', `${p.name} gained 1 Glory (Moderation).`); }
   }
@@ -714,10 +718,17 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
   }
   // Mercy (V42, spent): if you share the Tide, score 3 as if you were alone, then discard Mercy.
   const spentMercy: Seat[] = [];
-  if (withTide.length >= 2) for (const w of withTide) {
+  if (withTide.length >= 2 && !variant(s, 'mercy-spare')) for (const w of withTide) {
     if (!hasActive(s, w.seat, H.mercy) || !canActivate(s, w.seat, H.mercy)) continue;
     if (!(yield* yesNo(s, w.seat, 'mercy', `Mercy: ${withTide.length} Choirs share the Tide. Score 3 as if you were alone, then discard Mercy?`))) continue;
     if (yield* activation(s, w.seat, H.mercy, function* () { log(s, 'mercy', `${pname(s, w.seat)} scores 3 as if alone, and Mercy is spent.`); })) { delta[w.seat] = 3 * w.dbl; spentMercy.push(w.seat); }
+  }
+  // Test 'mercy-spare': if yours is the only Choir against the Tide, lose 1 instead of 3, then discard Mercy.
+  if (variant(s, 'mercy-spare') && variant(s, 'reap-mirror') && against.length === 1) {
+    const a = against[0];
+    if (hasActive(s, a.seat, H.mercy) && canActivate(s, a.seat, H.mercy) && (yield* yesNo(s, a.seat, 'mercy', 'Mercy: yours is the only Choir against the Tide. Lose 1 instead of 3, then discard Mercy?'))) {
+      if (yield* activation(s, a.seat, H.mercy, function* () { log(s, 'mercy', `${pname(s, a.seat)} is spared: loses 1 instead of 3, and Mercy is spent.`); })) { delta[a.seat] = -1 * a.dbl; spentMercy.push(a.seat); }
+    }
   }
   log(s, 'share', withTide.length === 0 ? 'No Choir leans with the Tide.' : withTide.length >= 3 ? `${withTide.length} Choirs lean with the Tide, so none of them scores.` : withTide.length === 1 ? `${pname(s, withTide[0].seat)} leans with the Tide alone.` : `${withTide.map((w) => pname(s, w.seat)).join(' and ')} share the Tide.`);
   const prevLean = { ...s.lastAlignColor };
@@ -846,15 +857,15 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     }
     // Providence (V42): if your Choir leans with the Tide, put 1 Glory from the Pot on it.
     const prov = p.choir.find((c) => c.id === H.providence && !c.facedown);
-    if (prov && hasActive(s, seat, H.providence)) { prov.store = (prov.store ?? 0) + 1; log(s, 'providence', `1 Glory is stored on ${p.name}'s Providence (${prov.store} in all).`); }
+    if (prov && hasActive(s, seat, H.providence) && (!variant(s, 'store-tide') || leansWithTide.has(seat))) { prov.store = (prov.store ?? 0) + 1; log(s, 'providence', `1 Glory is stored on ${p.name}'s Providence (${prov.store} in all).`); }
     // Test 'mammon-store': Mammon is the Dark store, like Providence.
     const mam = p.choir.find((c) => c.id === H.mammon && !c.facedown);
-    if (variant(s, 'mammon-store') && mam && hasActive(s, seat, H.mammon)) { mam.store = (mam.store ?? 0) + 1; log(s, 'mammon', `1 Glory is stored on ${p.name}'s Mammon (${mam.store} in all).`); }
+    if (variant(s, 'mammon-store') && mam && hasActive(s, seat, H.mammon) && (!variant(s, 'store-tide') || leansWithTide.has(seat))) { mam.store = (mam.store ?? 0) + 1; log(s, 'mammon', `1 Glory is stored on ${p.name}'s Mammon (${mam.store} in all).`); }
     // Test 'favor-ripen': each Day your Choir leans with the Tide, 1 Glory ripens on Favor; at 3, take all 3.
     const fav = p.choir.find((c) => c.id === H.favor && !c.facedown);
     if (variant(s, 'favor-ripen') && fav && hasActive(s, seat, H.favor) && leansWithTide.has(seat)) {
       fav.store = (fav.store ?? 0) + 1;
-      if (fav.store >= 3) { fav.store = 0; yield* gain(s, seat, 3, H.favor); log(s, 'favor', `${p.name}'s Favor ripens: +3 Glory.`); }
+      if (fav.store >= 3) { fav.store = 0; yield* gain(s, seat, variant(s, 'favor-2') ? 2 : 3, H.favor); log(s, 'favor', `${p.name}'s Favor ripens: +3 Glory.`); }
       else log(s, 'favor', `1 Glory ripens on ${p.name}'s Favor (${fav.store} of 3).`);
     }
     // Leviathan (V42): 1 Glory if two or more other players lost Glory at this Reaping.

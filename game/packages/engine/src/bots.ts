@@ -96,7 +96,7 @@ const ENGINE_RATE: Record<string, number> = {
 };
 function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
   if (!id || !variant(s, 'bot-engine')) return 0;
-  if (id === H.mammon && variant(s, 'mammon-store')) return 0.9;
+  if ((id === H.mammon && variant(s, 'mammon-store')) || id === H.providence) return variant(s, 'store-tide') ? 0.4 : 0.9;
   if (id === H.favor && variant(s, 'favor-ripen')) return 0.35;
   if ((id === H.seraphim || id === H.legion) && (variant(s, 'seraph-refund') || (id === H.legion && variant(s, 'legion-free')) || id === H.seraphim)) return 0.25;
   if (id === H.uriel || id === H.beelzebub) {

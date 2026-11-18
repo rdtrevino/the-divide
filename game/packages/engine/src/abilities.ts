@@ -272,6 +272,17 @@ export const TURN: Record<string, TurnAbility> = {
       log(s, 'anathema', `No player may Offer until the end of ${pname(s, seat)}'s next turn (Anathema).`);
     },
   },
+  [H.temptation]: {
+    // Test 'temptation-draw': draw 2 cards, then discard 1 card from your hand.
+    can: (s) => variant(s, 'temptation-draw') && (s.hostDeck.length + s.discard.length) > 0,
+    *run(s, seat) {
+      yield* drawTo(s, seat, 2);
+      const p = s.players[seat];
+      const d = yield* chooseOne(s, seat, 'temptation.discard', 'Temptation: discard 1 card from your hand.', p.hand.map((c) => cardOpt(c)));
+      if (d) { p.hand.splice(p.hand.indexOf(d), 1); s.discard.push(d); }
+      log(s, 'temptation', `${pname(s, seat)} drew 2 cards and discarded 1 (Temptation).`);
+    },
+  },
   [H.serpent]: {
     can: (s, seat) => others(s, seat).some((p) => !protectedFrom(s, seat, p.seat, 'look') && !handProtected(s, seat, p.seat) && p.hand.length > 0),
     *run(s, seat) {
@@ -416,8 +427,14 @@ export const TURN: Record<string, TurnAbility> = {
   },
   [H.flamingSword]: {
     // V42: choose a player; they cannot Gather until your next turn (Anathema's counterpart for Gather).
-    can: (s, seat) => others(s, seat).length > 0,
+    // Test 'sword-exalt' (Robert): no other player may Exalt until the start of your next turn.
+    can: (s, seat) => variant(s, 'sword-exalt') ? !s.anathema.some((a) => a.by === seat && a.action === 'exalt') : others(s, seat).length > 0,
     *run(s, seat) {
+      if (variant(s, 'sword-exalt')) {
+        for (const p of others(s, seat)) s.anathema.push({ target: p.seat, by: seat, action: 'exalt' });
+        log(s, 'flamingSword', `No other player may Exalt until ${pname(s, seat)}'s next turn (Flaming Sword).`);
+        return;
+      }
       const t = yield* chooseOne(s, seat, 'flamingSword.player', 'Flaming Sword: choose a player who cannot Gather until the start of your next turn.', others(s, seat).map((p) => seatOpt(s, p.seat)));
       if (!t) return;
       s.anathema.push({ target: seatFromOpt(t), by: seat, action: 'gather' });

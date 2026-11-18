@@ -180,7 +180,7 @@ export interface GameState {
   bonds: { owner: Seat; bound: Seat }[];
   scapegoats: { from: Seat; to: Seat }[];
   /** Anathema blocks Offer; Flaming Sword (V42) blocks Gather. */
-  anathema: { target: Seat; by: Seat; action?: 'offer' | 'gather'; endAfter?: boolean; armed?: boolean }[];
+  anathema: { target: Seat; by: Seat; action?: 'offer' | 'gather' | 'exalt'; endAfter?: boolean; armed?: boolean }[];
   /** Silence (V42): a player whose Choir abilities do not work until the silencer's next turn. */
   silenced: { target: Seat; by: Seat }[];
   confession: { seat: Seat; endsAfterTurnOf: Seat; turnsLeft: number }[];
