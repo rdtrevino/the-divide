@@ -324,7 +324,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
       if (!hasActive(s, seat, hid) || !offered.some((c) => col(c)[mine]) || !canActivate(s, seat, hid)) continue;
       const targets = s.altar.map((a, i) => ({ a, i })).filter(({ a }) => !a.facedown && col(a.id)[theirs] && sanctuaryAllows(a, seat) && !altarShielded(s, a, seat));
       if (!targets.length) continue;
-      const pick = yield* chooseOne(s, seat, hid === H.raphael ? 'raphael' : 'azazel', `${cardName(hid)}: turn your Offering face up and forgo its reward to destroy a face-up ${theirs === 'dark' ? 'Dark' : 'Light'} card on the Altar?`, targets.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
+      const pick = yield* chooseOne(s, seat, hid === H.raphael ? 'raphael' : 'azazel', `${cardName(hid)}: turn your Offering face up to destroy a face-up ${theirs === 'dark' ? 'Dark' : 'Light'} card on the Altar? You keep its reward.`, targets.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
       if (pick === null) continue;
       const target = s.altar[Number(pick)];
       const mineOffered = s.altar.find((a) => a.offeredBy === seat && a.kind === 'offer' && a.day === s.day && offered.includes(a.id) && col(a.id)[mine]);
