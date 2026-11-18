@@ -2,7 +2,7 @@
 // (samples the hidden cards, plays the rest of the Day for every option, keeps the best on average).
 import {
   type Action, type Dir, type State, type ScoreTable, TABLES, act, active, altarWeight, applyFruits, choirHas, clone,
-  evening, lean, leanSum, legal, rnd, sgn, shuffle, val, ab, sideWeights,
+  evening, lean, leanSum, legal, rnd, sgn, shuffle, val, ab, sideWeights, syncOaths,
 } from './core';
 
 export type Policy = 'random' | 'heur' | 'mc' | 'offer' | 'build' | 'loyal' | 'follow';
@@ -336,7 +336,8 @@ function determinize(s: State, p: number, salt: number): State {
     pool.splice(i, 1);
   }
   for (let q = 0; q < d.R.n; q++) if (q !== p) { const n = d.hand[q].length; d.hand[q] = pool.splice(0, n); }
-  if (d.R.fate) {
+  if (d.R.fate?.oath) syncOaths(d);
+  else if (d.R.fate) {
     // Other players' Fates are secret: re-draw them from the bag (minus my own), leaning slightly toward their public Choir.
     const bag = d.R.fate.pool.slice();
     bag.splice(bag.indexOf(d.fate[p]), 1);
@@ -354,7 +355,20 @@ function determinize(s: State, p: number, salt: number): State {
   return d;
 }
 
+/** The Miser's Rule: the risk of ending with the fewest Offers, larger as the end nears. */
+function miserRisk(s: State, q: number) {
+  if (!s.R.miser) return 0;
+  let lo = Infinity;
+  for (let k = 0; k < s.R.n; k++) if (k !== q) lo = Math.min(lo, s.offersBy[k]);
+  const gap = s.offersBy[q] - lo; // below 0: I am the miser
+  const dl = daysLeft(s);
+  return gap < 0 ? (3 + 1.5 * -gap) * (2 / (dl + 1)) : gap === 0 ? 1.5 * (2 / (dl + 1)) : 0;
+}
 function value(s: State, q: number) {
+  if (s.R.miser) return valueBase(s, q) - miserRisk(s, q);
+  return valueBase(s, q);
+}
+function valueBase(s: State, q: number) {
   const dl = daysLeft(s);
   const H = Math.min(dl - 1, 2.5) * 0.5;
   if (s.R.fate) return s.glory[q] + s.R.fate.perDay * s.fateDays[q] + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;

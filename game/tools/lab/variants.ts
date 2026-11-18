@@ -309,3 +309,18 @@ Object.assign(VARIANTS, {
   fmF2_n8: MF([1, 1, -1, -1, 0, 0], { deck: N8 }),
   fmF_n4: MF([1, 1, 1, -1, -1, -1, 0]),
 } as Record<string, V>);
+
+// ---- Round 27: the Miser's Rule (the player who Offered fewest cannot win), on multiplied Fates
+Object.assign(VARIANTS, {
+  fm_miser: MF([1, 1, 1, -1, -1, -1], { miser: true }),
+  fmF_n8_miser: MF([1, 1, 1, -1, -1, -1, 0], { deck: N8, miser: true }),
+} as Record<string, V>);
+
+// ---- Round 28: Oaths that pass through the Altar (allegiance is an Oath card: +2 when Offered, can be Gathered, returns home if not)
+const OATH_DECK = { L1: 18, D1: 18, L2: 2, D2: 2, N: 4, 'L2:oath': 3, 'D2:oath': 3 };
+const OATH = (extra: V = {}): V => FATE(1, 0, { deck: OATH_DECK, fate: { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true }, ...extra });
+Object.assign(VARIANTS, {
+  oath: OATH(),
+  oath_miser: OATH({ miser: true }),
+  oath_n8: OATH({ deck: { ...OATH_DECK, L1: 16, D1: 16, N: 8 } }),
+} as Record<string, V>);
