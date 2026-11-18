@@ -237,3 +237,20 @@ Object.assign(VARIANTS, {
   r21_senior31_bare: { ...REC12, deck: STARTER, pairSplit: [3, 1], crownTax: 0, omens: 0 },
   r21_senior21_bare: { ...REC12, deck: STARTER, score: T([3, 2, 0], [0]), pairSplit: [2, 1], crownTax: 0, omens: 0 },
 } as Record<string, V>);
+
+// ---- Round 22: the dominance core, from the ground up (plain deck; no Crown, no Omen, no crowding rule)
+const PLAIN44 = { L1: 18, D1: 18, L2: 2, D2: 2, N: 4 };
+const DOM = (margin: number, dom: number[], indiv: number[], extra: V = {}): V => ({
+  n: 4, hand: 3, choirStart: 2, choirMax: 4, fruits: true, omens: 0, crown: 1, deck: PLAIN44,
+  offerReward: 'none', tieBreak: 'none', pax: { margin, dom, indiv, tie: 'lowGlory' }, ...extra,
+});
+Object.assign(VARIANTS, {
+  d_m2_31_2: DOM(2, [3, 1], [2]),
+  d_m2_42_2: DOM(2, [4, 2], [2]),
+  d_m2_42_21: DOM(2, [4, 2], [2, 1]),
+  d_m3_42_2: DOM(3, [4, 2], [2]),
+  d_m1_31_2: DOM(1, [3, 1], [2]),
+  d_m2_321_1: DOM(2, [3, 2, 1], [1]),
+  d_m2_31_1: DOM(2, [3, 1], [1]),
+  d_m2_42_2_bet: DOM(2, [4, 2], [2], { offerReward: 'match' }),
+} as Record<string, V>);

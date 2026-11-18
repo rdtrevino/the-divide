@@ -90,6 +90,49 @@ export function posVal(s: State, p: number, l: Dir) {
   return pl * payoff(s, l, 1, l > 0 ? L : D, l > 0 ? D : L) + (1 - pl) * payoff(s, l, -1, l < 0 ? D : L, l < 0 ? L : D);
 }
 
+/** Dominance scoring: p's prize if the listed side dominates (or, side 0, if nobody does), with p's lean sum `mine`. */
+function paxPrize(s: State, p: number, mine: number, side: number) {
+  const P = s.R.pax!;
+  const st = (q: number) => (q === p ? Math.abs(mine) : Math.abs(leanSum(s, q)));
+  const ln = (q: number) => (q === p ? sgn(mine) : lean(s, q));
+  if (mine === 0) return 0;
+  if (side !== 0 && sgn(mine) !== side) return 0;
+  const group = [...Array(s.R.n).keys()].filter((q) => ln(q) !== 0 && (side === 0 || ln(q) === side));
+  // my rank: players strictly stronger, or equal with less Glory (when ties go to the poorer player), are ahead of me
+  let ahead = 0, tied = 0;
+  for (const q of group) {
+    if (q === p) continue;
+    if (st(q) > st(p)) ahead++;
+    else if (st(q) === st(p)) {
+      if (P.tie === 'lowGlory' && s.glory[q] < s.glory[p]) ahead++;
+      else if (P.tie === 'lower' || s.glory[q] === s.glory[p]) tied++;
+    }
+  }
+  const prizes = side === 0 ? P.indiv : P.dom;
+  return prizes[ahead + tied] ?? 0;
+}
+/** Expected dominance prize today, given the Altar estimate (mean m, sd). */
+function paxExp(s: State, p: number, mine: number, m: number, sd: number) {
+  const D = s.R.pax!.margin;
+  const pL = 1 - PHI((D - 0.5 - m) / sd);
+  const pD = PHI((-D + 0.5 - m) / sd);
+  const pN = Math.max(0, 1 - pL - pD);
+  return pL * paxPrize(s, p, mine, 1) + pD * paxPrize(s, p, mine, -1) + pN * paxPrize(s, p, mine, 0);
+}
+/** Expected value of the position on later Days: who leans which way decides which side is likely to dominate. */
+function paxLater(s: State, p: number, mine: number) {
+  let m = 0;
+  for (let q = 0; q < s.R.n; q++) m += 0.9 * (q === p ? sgn(mine) : lean(s, q));
+  return paxExp(s, p, mine, m, 2.4);
+}
+/** Today's expected Reaping and the value of the position later, for either scoring system. */
+function expNow(s: State, p: number, mine: number, m: number, sd: number) {
+  return s.R.pax ? paxExp(s, p, mine, m, sd) : reapExp(s, p, sgn(mine), PHI(m / sd));
+}
+function expLater(s: State, p: number, mine: number) {
+  return s.R.pax ? paxLater(s, p, mine) : posVal(s, p, sgn(mine));
+}
+
 function choirIncome(s: State, p: number, cards: number[]) {
   let t = 0;
   for (const c of cards) t += rate(s, c);
@@ -125,7 +168,7 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
       if (w !== 0 && choirHas(s, p, 'trumpet') && sgn(w) === curLean) w += sgn(w);
       if (w !== 0 && (choirHas(s, p, 'horn') || choirHas(s, p, 'trumpet2'))) w += sgn(w);
       const m = e.m + w;
-      sc = reapExp(s, p, curLean, PHI(m / sd)) + reward(c, m) - 0.25 * rate(s, c) * dl + (choirHas(s, p, 'tithe') ? 0.5 * reward(c, m) : 0) + (choirHas(s, p, 'traitor') && sgn(val(s, c)) === -curLean ? 0.8 * reward(c, m) : 0);
+      sc = expNow(s, p, leanSum(s, p), m, sd) + reward(c, m) - 0.25 * rate(s, c) * dl + (choirHas(s, p, 'tithe') ? 0.5 * reward(c, m) : 0) + (choirHas(s, p, 'traitor') && sgn(val(s, c)) === -curLean ? 0.8 * reward(c, m) : 0);
     } else {
       let added: number, removedAltar = 0;
       if (a.t === 'exalt') added = s.hand[p][a.i];
@@ -137,10 +180,10 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
       const knownAdded = a.t === 'exalt' || knows(s, p, a.k);
       const addVal = knownAdded ? val(s, added) : removedAltar;
       const removed = a.r >= 0 ? s.choir[p][a.r].c : -1;
-      const nl = sgn(leanSum(s, p) + addVal - (removed >= 0 ? val(s, removed) : 0));
+      const ns = leanSum(s, p) + addVal - (removed >= 0 ? val(s, removed) : 0);
       const m = e.m - removedAltar;
       const inc = baseIncome + (knownAdded ? rate(s, added) : 0.12) - (removed >= 0 ? rate(s, removed) : 0);
-      sc = reapExp(s, p, nl, PHI(m / sd)) + H * posVal(s, p, nl) + inc * dl * 0.8 - (a.t === 'exalt' ? 0 : 0) - H * posVal(s, p, curLean) - baseIncome * dl * 0.8;
+      sc = expNow(s, p, ns, m, sd) + H * expLater(s, p, ns) + inc * dl * 0.8 - H * expLater(s, p, leanSum(s, p)) - baseIncome * dl * 0.8;
       if (a.t === 'gather' && s.altar[a.k].by >= 0 && s.altar[a.k].by !== p && choirHas(s, s.altar[a.k].by, 'snare')) sc -= 0.5;
       if (a.t === 'gather' && choirHas(s, p, 'pilgrim')) sc += 1;
       if (a.t === 'exalt' && choirHas(s, p, 'patron') && val(s, added) !== 0) sc += 1;
@@ -185,12 +228,10 @@ export function heurFlip(s: State, p: number): number {
   const j = s.choir[p].findIndex((x) => ab(s, x.c) === 'turncoat');
   if (j < 0) return -1;
   const e = estimate(s, p);
-  const pl = PHI(e.m / Math.sqrt(e.v));
-  const cur = lean(s, p);
-  let best = -1, bv = reapExp(s, p, cur, pl) + 0.15;
+  const sd = Math.sqrt(e.v);
+  let best = -1, bv = expNow(s, p, leanSum(s, p), e.m, sd) + 0.15;
   for (let k = 0; k < s.choir[p].length; k++) {
-    const nl = sgn(leanSum(s, p) - 2 * val(s, s.choir[p][k].c));
-    const v = reapExp(s, p, nl, pl);
+    const v = expNow(s, p, leanSum(s, p) - 2 * val(s, s.choir[p][k].c), e.m, sd);
     if (v > bv) { bv = v; best = k; }
   }
   return best;
@@ -262,7 +303,7 @@ function determinize(s: State, p: number, salt: number): State {
 function value(s: State, q: number) {
   const dl = daysLeft(s);
   const H = Math.min(dl - 1, 2.5) * 0.5;
-  return s.glory[q] + H * posVal(s, q, lean(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
+  return s.glory[q] + H * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
 }
 function utility(s: State, p: number) {
   if (s.phase === 'over') {

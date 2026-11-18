@@ -55,7 +55,11 @@ export interface Metrics {
   leadChanges: number; // times per game the sole leader changes
   lossDays: number; // share of player-Days with a Reaping loss (Reaping only)
   sideGain: number[];
-  spread: Record<string, number[]>; // 10th and 90th percentile across games: days, winner's ability share, winner's Glory // mean Evening Glory change for Choirs [with the Tide, against it, Neutral], and the table mean // win ratio and play rate of each ability in final Choirs; Glory it produced per game
+  spread: Record<string, number[]>;
+  dominance: number; // share of Days with a dominant Tide (dominance scoring)
+  freeRide: number[]; // Offers per dominant Day by the top-ranked and the second-ranked member of the dominant side
+  gathers: number[]; // share of Gathers that took a card of your own side (selfish), of the other side (altruistic), Neutral
+  offerRate: number; // share of Noon actions that are Offers // 10th and 90th percentile across games: days, winner's ability share, winner's Glory // mean Evening Glory change for Choirs [with the Tide, against it, Neutral], and the table mean // win ratio and play rate of each ability in final Choirs; Glory it produced per game
 }
 
 const TIDE_KEYS = new Set(['reaping', 'bet', 'fruitbet', 'ab:herald', 'ab:banner', 'ab:bond', 'ab:store', 'ab:tithe', 'ab:stillness', 'ab:banner2', 'ab:hedge', 'ab:store3', 'ab:prophet', 'ab:zealot2', 'ab:zealot1', 'ab:traitor']);
@@ -66,6 +70,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
     lastF = 0, crowd = 0, same = 0, sw = 0, l3 = 0, l3n = 0, marg = 0, wg = 0, testedWins = 0, reapG = 0, cross = 0, offs = 0, bet = 0, und = 0, undN = 0, neuC = 0;
   const split: Record<string, number> = {};
   const sg = [0, 0, 0, 0], sn = [0, 0, 0, 0];
+  const px = [0, 0, 0, 0, 0, 0], gt = [0, 0, 0]; let acts = 0;
   const gDays: number[] = [], gAbil: number[] = [], gWin: number[] = [];
   let alt = 0, fdn = 0, cg = 0, cn = 0, og = 0, on = 0, cp = 0, lc = 0, rl = 0;
   const abH: Record<string, number> = {}, abW: Record<string, number> = {}, abG: Record<string, number> = {};
@@ -75,6 +80,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
     dec += s.decisions.reduce((a, b) => a + b, 0) / n;
     sw += s.switches.reduce((a, b) => a + b, 0) / n;
     cross += s.offerStats[1]; offs += s.offerStats[0];
+    s.paxStats.forEach((x, i) => (px[i] += x)); s.gatherStats.forEach((x, i) => (gt[i] += x)); acts += s.decisions.reduce((a, b) => a + b, 0) - s.day * n;
     for (let p = 0; p < n; p++) {
       const seen = new Set<string>();
       for (const x of s.choir[p]) { const a = s.cards[x.c].ab; if (a && !seen.has(a)) { seen.add(a); abH[a] = (abH[a] ?? 0) + 1; if (s.winners.includes(p)) abW[a] = (abW[a] ?? 0) + 1 / s.winners.length; } }
@@ -146,7 +152,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
     lastFlip: lastF / D, crowded: crowd / D, allSame: same / D, switches: sw / G, leaderD3: l3 / Math.max(1, l3n), margin: marg / G,
     winnerGlory: wg / G, seat: seat.map((x) => (x / G) * n), winRatio: tested ? (testedWins / G) * n : undefined,
     reapShare: reapG / tot, crossBets: cross / Math.max(1, offs), betShare: bet / tot, split: Object.fromEntries(Object.entries(split).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, +(v / D).toFixed(3)])), underdog: und / Math.max(1, undN), neutralChoir: neuC / (D * n),
-    altarSize: alt / D, facedownAtReveal: fdn / D, crownGain: cg / Math.max(1, cn), othersGain: og / Math.max(1, on), crownPartnered: cp / Math.max(1, cg), leadChanges: lc / G, lossDays: rl / (D * n), spread: Object.fromEntries(([['days', gDays], ['abil', gAbil], ['winGlory', gWin]] as [string, number[]][]).map(([k, a]) => { const b = a.slice().sort((x, y) => x - y); return [k, [+b[Math.floor(b.length * 0.1)].toFixed(2), +b[Math.floor(b.length * 0.9)].toFixed(2)]]; })), sideGain: sg.map((x, i) => +(x / Math.max(1, sn[i])).toFixed(2)),
+    altarSize: alt / D, facedownAtReveal: fdn / D, crownGain: cg / Math.max(1, cn), othersGain: og / Math.max(1, on), crownPartnered: cp / Math.max(1, cg), leadChanges: lc / G, lossDays: rl / (D * n), dominance: px[0] / Math.max(1, px[0] + px[1]), freeRide: [+(px[2] / Math.max(1, px[4])).toFixed(2), +(px[3] / Math.max(1, px[4])).toFixed(2)], gathers: gt.map((x) => +(x / Math.max(1, gt[0] + gt[1] + gt[2])).toFixed(2)), offerRate: offs / Math.max(1, acts), spread: Object.fromEntries(([['days', gDays], ['abil', gAbil], ['winGlory', gWin]] as [string, number[]][]).map(([k, a]) => { const b = a.slice().sort((x, y) => x - y); return [k, [+b[Math.floor(b.length * 0.1)].toFixed(2), +b[Math.floor(b.length * 0.9)].toFixed(2)]]; })), sideGain: sg.map((x, i) => +(x / Math.max(1, sn[i])).toFixed(2)),
     abilities: Object.fromEntries([...new Set([...Object.keys(abH), ...Object.keys(abG)])].sort().map((a) => [a, { wr: +(((abW[a] ?? 0) / Math.max(1, abH[a] ?? 0)) * n).toFixed(2), held: +((abH[a] ?? 0) / G).toFixed(2), glory: +((abG[a] ?? 0) / G).toFixed(2) }])),
   };
 }

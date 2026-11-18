@@ -270,5 +270,37 @@
  "ef_220": {
   "target3": 14,
   "target4": 11
+ },
+ "d_m3_42_2": {
+  "target3": 9,
+  "target4": 8
+ },
+ "d_m2_31_2": {
+  "target3": 10,
+  "target4": 8
+ },
+ "d_m2_42_21": {
+  "target3": 12,
+  "target4": 10
+ },
+ "d_m2_42_2": {
+  "target3": 12,
+  "target4": 9
+ },
+ "d_m1_31_2": {
+  "target3": 11,
+  "target4": 9
+ },
+ "d_m2_321_1": {
+  "target3": 8,
+  "target4": 7
+ },
+ "d_m2_31_1": {
+  "target3": 8,
+  "target4": 7
+ },
+ "d_m2_42_2_bet": {
+  "target3": 15,
+  "target4": 14
  }
 }

@@ -59,6 +59,10 @@ export interface Rules {
   betLoss: number;
   /** Senior partner: when exactly two Choirs share the Tide and one leans more strongly, it gains [hi] and the other [lo]. */
   pairSplit?: number[];
+  /** Dominance scoring (Pax Pamir style). A Tide won by `margin` or more is dominant: that side's Choirs are ranked by strength
+   *  (the size of their lean) and paid `dom[rank]`. Otherwise every Choir is ranked by strength, whatever its side, and paid `indiv[rank]`.
+   *  Ties in strength go to the player with less Glory ('lowGlory'), or all tied players take the lower prize ('lower'). */
+  pax?: { margin: number; dom: number[]; indiv: number[]; tie: 'lowGlory' | 'lower' };
   /** Pantheon: each game shuffles a random selection of the original cards (picks[i] from pools[i]) into a base deck. */
   pantheon?: { base: DeckSpec; pools: string[][]; picks: number[] };
   /** Ties at the end: shared. */
@@ -125,6 +129,7 @@ export interface State {
   gloryByDay: number[][];
   offerStats: number[]; // [Offers, Offers against own lean]
   calls: number[]; // Prophet: each player's named Tide this Day (0 = none)
+  dayOffers: number[]; paxStats: number[]; gatherStats: number[];
   prevLean: number[]; prevWith: boolean[]; dayStart: number[]; council: number[]; bounty: number[]; anathema: number; ordeal: boolean[];
 }
 
@@ -159,6 +164,7 @@ export function newGame(R: Rules, seed: number): State {
     deck: cards.map((c) => c.id), discard: [], tides: [], order: [], step: 0, phase: 'fruits', used: Array(R.n).fill(0),
     src: Array.from({ length: R.n }, () => ({})), logs: [], decisions: Array(R.n).fill(0), switches: Array(R.n).fill(0), winners: [],
     preLastNet: null, gloryByDay: [], offerStats: [0, 0], calls: Array(R.n).fill(0),
+    dayOffers: Array(R.n).fill(0), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0],
     prevLean: Array(R.n).fill(0), prevWith: Array(R.n).fill(false), dayStart: Array(R.n).fill(0), council: Array(R.n).fill(-1), bounty: Array(R.n).fill(-1), anathema: -1, ordeal: Array(R.n).fill(false),
   };
   shuffle(s, s.deck);
@@ -181,6 +187,7 @@ export function clone(s: State): State {
     order: s.order.slice(), used: s.used.slice(),
     // metrics are not cloned deeply: rollouts must not rely on them
     src: s.src.map(() => ({})), logs: [], decisions: s.decisions.slice(), switches: s.switches.slice(), winners: [], gloryByDay: [], offerStats: [0, 0], calls: s.calls.slice(),
+    dayOffers: s.dayOffers.slice(), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0],
     prevLean: s.prevLean.slice(), prevWith: s.prevWith.slice(), dayStart: s.dayStart.slice(), council: s.council.slice(), bounty: s.bounty.slice(), ordeal: s.ordeal.slice(),
   };
 }
@@ -259,6 +266,7 @@ export function startDay(s: State) {
   s.used = Array(s.R.n).fill(0);
   s.calls = Array(s.R.n).fill(0);
   s.dayStart = s.glory.slice();
+  s.dayOffers = Array(s.R.n).fill(0);
   s.ordeal = Array(s.R.n).fill(false);
   for (let p = 0; p < s.R.n; p++) {
     // Council: name a player who leans your way (not the leader if you can help it).
@@ -366,6 +374,7 @@ export function act(s: State, a: Action) {
   } else if (a.t === 'offer') {
     const [c] = s.hand[p].splice(a.i, 1);
     s.offerStats[0]++;
+    s.dayOffers[p]++;
     if (val(s, c) !== 0 && sgn(val(s, c)) === -lean(s, p)) s.offerStats[1]++;
     const hymn = Math.abs(val(s, c)) >= 2 && s.cards[c].ab === 'loud';
     s.altar.push({ c, up: hymn, by: p, kind: 1, seen: 1 << p });
@@ -386,6 +395,7 @@ export function act(s: State, a: Action) {
     for (const x of s.choir[p]) if (ab(s, x.c) === 'seraph' && x.c !== c && sgn(val(s, c)) !== 0 && sgn(val(s, c)) === sgn(val(s, x.c))) { gain(s, p, 1, 'ab:seraph'); break; }
   } else {
     const [x] = s.altar.splice(a.k, 1);
+    { const gv = sgn(val(s, x.c)), l0 = lean(s, p); s.gatherStats[gv === 0 || l0 === 0 ? 2 : gv === l0 ? 0 : 1]++; }
     replaceAt(s, p, a.r);
     enter(s, p, x.c);
     if (x.by >= 0 && x.by !== p && choirHas(s, x.by, 'snare')) gain(s, x.by, 1, 'ab:snare');
@@ -490,6 +500,46 @@ export function sideWeights(s: State): number[] {
   return out;
 }
 
+/** Rank players by strength (descending); returns each listed player's prize. */
+export function rankPay(s: State, players: number[], prizes: number[]): Map<number, number> {
+  const st = (p: number) => Math.abs(leanSum(s, p));
+  const tie = s.R.pax?.tie ?? 'lowGlory';
+  const sorted = players.slice().sort((a, b) => st(b) - st(a) || (tie === 'lowGlory' ? s.glory[a] - s.glory[b] : 0));
+  const out = new Map<number, number>();
+  for (let i = 0; i < sorted.length; ) {
+    let j = i;
+    const same = (a: number, b: number) => st(a) === st(b) && (tie === 'lower' || s.glory[a] === s.glory[b]);
+    while (j + 1 < sorted.length && same(sorted[j + 1], sorted[i])) j++;
+    const prize = prizes[j] ?? 0; // tied players all take the lowest prize of the places they share
+    for (let k = i; k <= j; k++) out.set(sorted[k], prize);
+    i = j + 1;
+  }
+  return out;
+}
+
+export function paxScore(s: State, net: number): number[] {
+  const P = s.R.pax!;
+  const n = s.R.n;
+  const out = Array(n).fill(0);
+  const side = sgn(net);
+  if (side !== 0 && Math.abs(net) >= P.margin) {
+    const team = [...Array(n).keys()].filter((p) => lean(s, p) === side);
+    for (const [p, v] of rankPay(s, team, P.dom)) out[p] = v;
+    s.paxStats[0]++;
+    // free-riding: Offers made today by the top-ranked and second-ranked member of the dominant side
+    if (team.length >= 2) {
+      const st = (p: number) => Math.abs(leanSum(s, p));
+      const t = team.slice().sort((a, b) => st(b) - st(a) || s.glory[a] - s.glory[b]);
+      s.paxStats[2] += s.dayOffers[t[0]]; s.paxStats[3] += s.dayOffers[t[1]]; s.paxStats[4]++;
+    }
+  } else {
+    const all = [...Array(n).keys()].filter((p) => lean(s, p) !== 0);
+    for (const [p, v] of rankPay(s, all, P.indiv)) out[p] = v;
+    s.paxStats[1]++;
+  }
+  return out;
+}
+
 export function scoreTable(t: ScoreTable) {
   return (s: State, tide: Dir): number[] => {
     const n = s.R.n;
@@ -527,7 +577,7 @@ export function evening(s: State) {
   const top0 = Math.max(...s.glory);
   const lead0 = s.glory.filter((g) => g === top0).length === 1 && top0 > 0 ? s.glory.indexOf(top0) : -1;
   const f = typeof s.R.score === 'function' ? s.R.score : scoreTable(s.R.score);
-  const reap = f(s, tide, Math.abs(net));
+  const reap = s.R.pax ? paxScore(s, net) : f(s, tide, Math.abs(net));
   for (let p = 0; p < n; p++) if (s.ordeal[p] && reap[p] > 0) reap[p] *= 2;
   for (let p = 0; p < n; p++) if (choirHas(s, p, 'scapegoat') && s.glory[p] >= 1) {
     const q = soleLeader(s, p);
