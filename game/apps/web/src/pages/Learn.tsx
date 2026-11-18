@@ -269,11 +269,11 @@ const STEPS: Step[] = [
     ),
   },
   {
-    title: 'The goal: 10 Glory',
+    title: 'The goal: 12 Glory',
     body: (
       <>
         <p><b>Glory</b> is your score. You gain it from cards you Offer, from the Tide each Evening, and from your Choir's abilities.</p>
-        <p>The first Evening anyone finishes with <b>10 or more Glory</b>, the game ends and <b>the most Glory wins</b>.</p>
+        <p>The first Evening anyone finishes with <b>12 or more Glory</b>, the game ends and <b>the most Glory wins</b>.</p>
       </>
     ),
     side: (
@@ -281,7 +281,7 @@ const STEPS: Step[] = [
         {[['Ada', 10, 'var(--seat-0)'], ['Ben', 8, 'var(--seat-1)'], ['Cy', 5, 'var(--seat-2)']].map(([n, g, c]) => (
           <div class="lt-row"><span>{n}</span><div class="lt-bar"><i style={{ width: `${(Number(g) / 12) * 100}%`, background: c as string }} /><em style={{ left: `${(10 / 12) * 100}%` }} /></div><b class="num">{g}</b></div>
         ))}
-        <p class="muted small">Ada reached 10, so the game is over. Ada wins.</p>
+        <p class="muted small">Ada reached 12, so the game is over. Ada wins.</p>
       </div>
     ),
   },
@@ -411,14 +411,14 @@ const STEPS: Step[] = [
     title: 'How it ends',
     body: (
       <>
-        <p>After any Reaping where someone has <b>10 or more</b>, the game ends. <b>Most Glory wins</b>; a tie is shared.</p>
+        <p>After any Reaping where someone has <b>12 or more</b>, the game ends. <b>Most Glory wins</b>; a tie is shared.</p>
       </>
     ),
     side: (
       <Callout>
         <div class="eyebrow">Example</div>
-        <p>After the Reaping, Ada has 10 Glory, Ben 11 and Cy 7.</p>
-        <p>Ada reached 10, so the game ends, but <b>Ben has the most. Ben wins.</b></p>
+        <p>After the Reaping, Ada has 12 Glory, Ben 13 and Cy 9.</p>
+        <p>Ada reached 12, so the game ends, but <b>Ben has the most. Ben wins.</b></p>
       </Callout>
     ),
   },

@@ -76,7 +76,7 @@ export function PlayerPanel(p: { view: GameView; seat: number; waiting?: Waiting
       <div class="pp-info">
         <div class="pp-name-row"><span class="pp-dot" /><span class="pp-name">{pl.name}</span></div>
         <div class="pp-status"><Status isBot={pl.isBot} connected={p.connected} away={p.away} first={p.view.firstPlayer === p.seat && p.view.phase !== 'ended'} waiting={p.waiting} skew={p.skew} /></div>
-        <div class="pp-glory" data-tip={`${pl.name} has ${pl.glory} Glory. The first to 10 ends the game`}><b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small></div>
+        <div class="pp-glory" data-tip={`${pl.name} has ${pl.glory} Glory. The first to 12 ends the game`}><b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small></div>
         <div class="pp-tags">
           <span class={`align ${alignTone(pl.alignment)}`} data-tip={alignTip(pl.alignment, `${pl.name}'s`)}>{alignText(pl.alignment)}</span>
           <span class="pp-handcount" id={`hand-${p.seat}`} data-tip={`${pl.name} holds ${pl.handCount} card${pl.handCount === 1 ? '' : 's'} in hand`}><i />{pl.handCount}</span>
@@ -107,7 +107,7 @@ export function MyArea(p: { view: GameView; seat: number }) {
     <div class={`mine${active ? ' active' : ''}`} style={{ '--seat': seatColor(p.seat) } as any}>
       <div class="mine-me">
         <div class="mine-name"><span class="pp-dot" />{pl.name}{p.view.firstPlayer === p.seat && p.view.phase !== 'ended' && <span class="pp-first" data-tip="You are the first player this Day">1st</span>}</div>
-        <div class="mine-glory" data-tip="Your Glory. The first to 10 ends the game">
+        <div class="mine-glory" data-tip="Your Glory. The first to 12 ends the game">
           <b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small>
         </div>
         <div class="mine-notes">
