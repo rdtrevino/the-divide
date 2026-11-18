@@ -333,3 +333,11 @@ Object.assign(VARIANTS, {
   fm_tax3: MF([1, 1, 1, -1, -1, -1], { miserTax: 3 }),
   fmF2_tax3: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3 }),
 } as Record<string, V>);
+
+// ---- Round 31: how obvious is your side? Anonymous reveal, shuffled Oath return
+Object.assign(VARIANTS, {
+  oath3_anon: OATH2({ miserTax: 3, anonReveal: true, fate: { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true, oathHand: true, oathReturn: 'shuffle' } }),
+  oath3_shuffle: OATH2({ miserTax: 3, fate: { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true, oathHand: true, oathReturn: 'shuffle' } }),
+  oath2_anon: OATH2({ miserTax: 3, anonReveal: true }),
+  fmF2_anon: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true }),
+} as Record<string, V>);

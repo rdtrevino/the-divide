@@ -69,7 +69,9 @@ export interface Rules {
   pax?: { margin: number; dom: number[]; indiv: number[]; tie: 'lowGlory' | 'lower' };
   /** Fates: each player secretly draws a Fate (1 Light, -1 Dark) from `pool`. Every Evening each Choir card matching the Tide earns
    *  `choirPay`; every Day the Tide matches your Fate is worth `perDay`, scored only at the end (after maxDays). */
-  fate?: { pool: number[]; perDay: number; choirPay: number; mult?: boolean; oath?: boolean; oathHand?: boolean };
+  fate?: { pool: number[]; perDay: number; choirPay: number; mult?: boolean; oath?: boolean; oathHand?: boolean; oathReturn?: 'owner' | 'shuffle' };
+  /** Anonymous reveal: facedown Offers are shuffled together before they are turned face up, so nobody learns whose card was whose. */
+  anonReveal?: boolean;
   /** Soft Miser's Rule: at the end, the player(s) who Offered the fewest cards lose this much Glory (unless everyone is tied). */
   miserTax?: number;
   /** The Miser's Rule: at the end, the player(s) who Offered the fewest cards cannot win (unless everyone is tied). */
@@ -142,6 +144,8 @@ export interface State {
   calls: number[]; // Prophet: each player's named Tide this Day (0 = none)
   dayOffers: number[]; paxStats: number[]; gatherStats: number[];
   fate: number[]; fateDays: number[]; fateStats: number[]; offersBy: number[]; oathStats: number[];
+  oathPool: number[]; // Oaths set aside, facedown
+  pub: number[][]; pubDay: number[][]; readerRows: number[][]; // what the table can see of each player (for the reader), and its log
   prevLean: number[]; prevWith: boolean[]; dayStart: number[]; council: number[]; bounty: number[]; anathema: number; ordeal: boolean[];
 }
 
@@ -178,6 +182,7 @@ export function newGame(R: Rules, seed: number): State {
     preLastNet: null, gloryByDay: [], offerStats: [0, 0], calls: Array(R.n).fill(0),
     dayOffers: Array(R.n).fill(0), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0],
     fate: Array(R.n).fill(0), fateDays: Array(R.n).fill(0), fateStats: [0, 0, 0, 0, 0, 0, 0], offersBy: Array(R.n).fill(0), oathStats: [0, 0, 0, 0],
+    oathPool: [], pub: Array.from({ length: R.n }, () => Array(PUB).fill(0)), pubDay: Array.from({ length: R.n }, () => Array(PUB).fill(0)), readerRows: [],
     prevLean: Array(R.n).fill(0), prevWith: Array(R.n).fill(false), dayStart: Array(R.n).fill(0), council: Array(R.n).fill(-1), bounty: Array(R.n).fill(-1), anathema: -1, ordeal: Array(R.n).fill(false),
   };
   shuffle(s, s.deck);
@@ -209,6 +214,7 @@ export function newGame(R: Rules, seed: number): State {
     }
     shuffle(s, oaths);
     for (let p = 0; p < R.n; p++) s.hand[p].push(oaths[p]);
+    s.oathPool = oaths.slice(R.n);
     syncOaths(s);
   }
   startDay(s);
@@ -225,6 +231,7 @@ export function clone(s: State): State {
     src: s.src.map(() => ({})), logs: [], decisions: s.decisions.slice(), switches: s.switches.slice(), winners: [], gloryByDay: [], offerStats: [0, 0], calls: s.calls.slice(),
     dayOffers: s.dayOffers.slice(), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0],
     fate: s.fate.slice(), fateDays: s.fateDays.slice(), fateStats: [0, 0, 0, 0, 0, 0, 0], offersBy: s.offersBy.slice(), oathStats: [0, 0, 0, 0],
+    oathPool: s.oathPool.slice(), pub: s.pub.map(() => Array(PUB).fill(0)), pubDay: s.pubDay.map(() => Array(PUB).fill(0)), readerRows: [],
     prevLean: s.prevLean.slice(), prevWith: s.prevWith.slice(), dayStart: s.dayStart.slice(), council: s.council.slice(), bounty: s.bounty.slice(), ordeal: s.ordeal.slice(),
   };
 }
@@ -346,6 +353,8 @@ export function applyFruits(s: State, picks: number[]) {
     const [c] = s.hand[p].splice(picks[p], 1);
     s.altar.push({ c, up: true, by: p, kind: 0, seen: 0 });
     s.decisions[p]++;
+    see(s, p, sgn(val(s, c)) > 0 ? P.ffL : sgn(val(s, c)) < 0 ? P.ffD : -1);
+    if (s.cards[c].ab === 'oath') see(s, p, sgn(val(s, c)) > 0 ? P.oathL : P.oathD);
   }
   for (let p = 0; p < s.R.n; p++) { const c = draw(s); if (c !== undefined) s.hand[p].push(c); }
   syncOaths(s);
@@ -415,6 +424,7 @@ export function act(s: State, a: Action) {
     s.offerStats[0]++;
     s.dayOffers[p]++;
     s.offersBy[p]++;
+    see(s, p, P.offN);
     if (s.cards[c].ab === 'oath') s.oathStats[0]++;
     if (s.R.fate) {
       const cv = sgn(val(s, c)), f = s.fate[p], l = lean(s, p);
@@ -438,6 +448,7 @@ export function act(s: State, a: Action) {
   } else if (a.t === 'exalt') {
     const [c] = s.hand[p].splice(a.i, 1);
     if (s.cards[c].ab === 'oath') s.oathStats[2]++;
+    see(s, p, sgn(val(s, c)) > 0 ? P.exL : sgn(val(s, c)) < 0 ? P.exD : -1);
     replaceAt(s, p, a.r);
     enter(s, p, c);
     if (choirHas(s, p, 'patron') && val(s, c) !== 0) gain(s, p, 1, 'ab:patron');
@@ -447,7 +458,11 @@ export function act(s: State, a: Action) {
     if (s.cards[x.c].ab === 'oath') s.oathStats[x.by >= 0 && x.by !== p ? 1 : 3]++;
     if (s.R.fate?.oathHand && s.cards[x.c].ab === 'oath') {
       s.hand[p].push(x.c);
+      see(s, p, P.toHand); // the table sees a card go to hand: it was an Oath
+      if (x.up) see(s, p, sgn(val(s, x.c)) > 0 ? P.tookL : P.tookD);
+      if (x.by >= 0 && x.by !== p) see(s, x.by, P.lostOath);
     } else {
+    see(s, p, sgn(val(s, x.c)) > 0 ? P.gathL : sgn(val(s, x.c)) < 0 ? P.gathD : -1);
     { const gv = sgn(val(s, x.c)), l0 = lean(s, p); s.gatherStats[gv === 0 || l0 === 0 ? 2 : gv === l0 ? 0 : 1]++; }
     replaceAt(s, p, a.r);
     enter(s, p, x.c);
@@ -596,6 +611,15 @@ export function paxScore(s: State, net: number): number[] {
 }
 
 /** Fates: each Choir card matching the Tide earns choirPay; the Day is recorded for the matching Fates (scored at the end). */
+/** Public observations of each player, for the reader. */
+export const P = { ffL: 0, ffD: 1, offL: 2, offD: 3, oathL: 4, oathD: 5, gathL: 6, gathD: 7, exL: 8, exD: 9, toHand: 10, lostOath: 11, offN: 12, tookL: 13, tookD: 14, drew: 15 };
+export const PUB = 16;
+function see(s: State, p: number, k: number) {
+  if (k < 0) return;
+  s.pub[p][k]++;
+  s.pubDay[p][k]++;
+}
+
 /** Oaths: a player's allegiance is the side of the Oath cards they hold (hand and Choir); none, or both equally, is Forsaken (0). */
 export function syncOaths(s: State) {
   if (!s.R.fate?.oath) return;
@@ -670,6 +694,12 @@ export function evening(s: State) {
   let tide = sgn(net);
   if (tide === 0 && s.R.tieBreak === 'yesterday' && s.altar.length) tide = s.tides[s.tides.length - 1] ?? 0;
   const facedown = s.altar.filter((a) => !a.up).length;
+  // The reveal: unless it is anonymous, everyone learns whose facedown Offer was which.
+  if (!s.R.anonReveal) for (const a of s.altar) if (!a.up && a.by >= 0 && (a.kind === 1 || (a.kind as number) === 3)) {
+    const v = sgn(val(s, a.c));
+    if (s.cards[a.c].ab === 'oath') see(s, a.by, v > 0 ? P.oathL : P.oathD);
+    else see(s, a.by, v > 0 ? P.offL : v < 0 ? P.offD : -1);
+  }
   for (const a of s.altar) a.up = true;
   const leans = Array.from({ length: n }, (_, p) => lean(s, p));
   const top0 = Math.max(...s.glory);
@@ -707,9 +737,26 @@ export function evening(s: State) {
   const top1 = Math.max(...s.glory);
   const lead1 = s.glory.filter((g) => g === top1).length === 1 ? s.glory.indexOf(top1) : -1;
   s.logs.push({ day: s.day, tide, margin: Math.abs(net), leans, reap: s.glory.map((g, p) => g - before[p]), lastFlip, light, dark, reapOnly: reap, crown: lead0, altarSize: s.altar.length, facedown, leader: lead1 });
+  // The reader's row for each player: what the table has seen of them, and their true allegiance tonight.
+  if (s.R.fate) for (let p = 0; p < n; p++) {
+    const cv = s.choir[p].map((x) => sgn(x.flip ? -val(s, x.c) : val(s, x.c)));
+    s.readerRows.push([s.day, p, cv.filter((v) => v > 0).length, cv.filter((v) => v < 0).length, ...s.pub[p], ...s.pubDay[p], s.fate[p]]);
+  }
+  s.pubDay = s.pubDay.map(() => Array(PUB).fill(0));
   s.tides.push(tide);
   s.gloryByDay.push(s.glory.slice());
-  for (const a of s.altar) { if (s.R.fate?.oath && s.cards[a.c].ab === 'oath' && a.by >= 0) s.hand[a.by].push(a.c); else s.discard.push(a.c); }
+  for (const a of s.altar) {
+    if (s.R.fate?.oath && s.cards[a.c].ab === 'oath') {
+      if (s.R.fate.oathReturn === 'shuffle' || a.by < 0) s.oathPool.push(a.c); // set aside facedown with the others
+      else s.hand[a.by].push(a.c);
+    } else s.discard.push(a.c);
+  }
+  if (s.R.fate?.oath && s.R.fate.oathReturn === 'shuffle') {
+    // Anyone left without an Oath draws one at random from the set-aside Oaths: a new allegiance nobody else can see.
+    shuffle(s, s.oathPool);
+    for (let p = 0; p < n; p++) if (!s.hand[p].some((c) => s.cards[c].ab === 'oath') && s.oathPool.length) { s.hand[p].push(s.oathPool.pop()!); see(s, p, P.drew); }
+    syncOaths(s);
+  }
   s.altar = [];
   if (s.R.fate && s.day >= s.R.maxDays) for (let p = 0; p < n; p++) gain(s, p, s.R.fate.perDay * s.fateDays[p], 'fate');
   if (s.glory.some((g) => g >= s.R.target) || s.day >= s.R.maxDays) {

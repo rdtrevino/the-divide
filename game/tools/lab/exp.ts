@@ -3,10 +3,10 @@
 // modes: mc4, mc3 (all Monte Carlo), h4, h3 (all heuristic), skill4 (one MC among heuristics),
 //        dumb4:<policy> (one fixed-strategy player among MC players), calib (target for 6.5 Days at 4p)
 import { type Rules, rules } from './core';
-import { runSet } from './lab';
+import { play, runSet } from './lab';
 import type { Policy } from './bots';
 import { VARIANTS } from './variants';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const [name, mode, nStr, seedStr] = process.argv.slice(2);
 const N = Number(nStr ?? 200);
@@ -44,6 +44,13 @@ else if (mode === 'calib') {
     res[`target${n}`] = best;
   }
   out = res;
+} else if (mode === 'rows3' || mode === 'rows4') {
+  // Reader data: every player's public record and true allegiance at each Evening, from all-Monte-Carlo games.
+  const n = mode === 'rows3' ? 3 : 4;
+  const rows: number[][] = [];
+  for (let i = 0; i < N; i++) { const st = play(R(n), Array(n).fill('mc'), seed + i * 7919); for (const r of st.readerRows) rows.push([i, ...r]); }
+  writeFileSync(`results/rows-${name}-${n}p.json`, JSON.stringify(rows));
+  out = { rows: rows.length };
 } else if (mode === 'calibmc') {
   // Find the target for which all-Monte-Carlo games last closest to 7 Days at 4 players and 8 at 3.
   const res: Record<string, any> = {};
