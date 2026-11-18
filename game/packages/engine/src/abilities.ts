@@ -273,14 +273,19 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.temptation]: {
-    // Test 'temptation-draw': draw 2 cards, then discard 1 card from your hand.
-    can: (s) => variant(s, 'temptation-draw') && (s.hostDeck.length + s.discard.length) > 0,
+    // Tests: 'temptation-draw' (draw 2, discard 1), 'temptation-d2' (draw 2, discard 2),
+    // 'temptation-swap' (discard any number, draw that many), all on your turn. 'temptation-eod' is in engine.ts.
+    can: (s, seat) => (variant(s, 'temptation-draw') || variant(s, 'temptation-d2')) ? (s.hostDeck.length + s.discard.length) > 0 : variant(s, 'temptation-swap') && s.players[seat].hand.length > 0,
     *run(s, seat) {
-      yield* drawTo(s, seat, 2);
       const p = s.players[seat];
-      const d = yield* chooseOne(s, seat, 'temptation.discard', 'Temptation: discard 1 card from your hand.', p.hand.map((c) => cardOpt(c)));
-      if (d) { p.hand.splice(p.hand.indexOf(d), 1); s.discard.push(d); }
-      log(s, 'temptation', `${pname(s, seat)} drew 2 cards and discarded 1 (Temptation).`);
+      if (variant(s, 'temptation-swap')) { yield* temptationSwap(s, seat); return; }
+      yield* drawTo(s, seat, 2);
+      const n = variant(s, 'temptation-d2') ? 2 : 1;
+      for (let k = 0; k < n; k++) {
+        const d = yield* chooseOne(s, seat, 'temptation.discard', 'Temptation: discard 1 card from your hand.', p.hand.map((c) => cardOpt(c)));
+        if (d) { p.hand.splice(p.hand.indexOf(d), 1); s.discard.push(d); }
+      }
+      log(s, 'temptation', `${pname(s, seat)} drew 2 cards and discarded ${n} (Temptation).`);
     },
   },
   [H.serpent]: {
@@ -639,3 +644,13 @@ export function hostTurnAbilities(): string[] {
   return Object.keys(TURN).filter((k) => k.startsWith('host-'));
 }
 export { HOST };
+
+/** Temptation (tests 'temptation-swap' / 'temptation-eod'): discard any number of cards from your hand, then draw that many. */
+export function* temptationSwap(s: GameState, seat: Seat): Gen<void> {
+  const p = s.players[seat];
+  const picks = yield* ask(s, { seat, tag: 'temptation.swap', prompt: 'Temptation: discard any number of cards from your hand, then draw that many.', options: p.hand.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: 0, max: p.hand.length });
+  const idx = picks.map(Number).sort((a, b) => b - a);
+  for (const i of idx) s.discard.push(...p.hand.splice(i, 1));
+  yield* drawTo(s, seat, idx.length);
+  log(s, 'temptation', `${p.name} discarded ${idx.length} card(s) and drew ${idx.length} (Temptation).`);
+}

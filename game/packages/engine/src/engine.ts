@@ -1,5 +1,5 @@
 // The game loop: setup, then each Day's Morning, Noon (turns) and Evening, then the endgame.
-import { TURN } from './abilities';
+import { TURN, temptationSwap } from './abilities';
 import {
   activation, activeCards, alignment, altarAvailable, altarLabel, ask, askAll, baseHandLimit, baseValue, canActivate,
   canSpend, cardOpt, chooseOne, colorsOf, dirOf, discardFromChoir, discardableForRoom, drawHost, drawTo, enterChoir,
@@ -595,6 +595,10 @@ export function* evening(s: GameState, finalDay: boolean | (() => boolean)): Gen
         log(s, 'remnant', `${p.name} took ${cardName(a.id)} from the Altar into their hand (Remnant).`);
       });
     }
+  }
+  // Test 'temptation-eod': at the end of the Day, discard any number of cards from your hand, then draw that many.
+  if (variant(s, 'temptation-eod')) for (const seat of order) {
+    if (hasActive(s, seat, H.temptation) && s.players[seat].hand.length && canActivate(s, seat, H.temptation)) yield* activation(s, seat, H.temptation, function* () { yield* temptationSwap(s, seat); });
   }
   const keep = s.day_.eternityKeep;
   for (const a of s.altar) {

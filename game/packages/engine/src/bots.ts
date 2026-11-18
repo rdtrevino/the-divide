@@ -141,7 +141,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const pick = sum(L, 1) > sum(D, -1) || (sum(L, 1) === sum(D, -1) && r < 0.5) ? L : D;
       return pick.map((o) => o.id);
     }
-    if (d.tag === 'jubilee') {
+    if (d.tag === 'jubilee' || d.tag === 'temptation.swap') {
       return d.options.filter((o) => (want >= 0 ? signed(s, o.card) < 0 : signed(s, o.card) > 0)).map((o) => o.id).slice(0, d.max);
     }
     const k = d.min + Math.floor(r * (d.max - d.min + 1));
