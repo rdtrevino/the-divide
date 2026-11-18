@@ -1,0 +1,8 @@
+{
+  "name": "@divide/lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "smoke": "tsx smoke.ts 40" },
+  "devDependencies": { "tsx": "^4.19.0" }
+}

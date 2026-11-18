@@ -1,0 +1,10 @@
+{"name":"s220L_match","mode":"calib","N":0,"target3":13,"target4":9}
+{"name":"s320L_match","mode":"calib","N":0,"target3":13,"target4":10}
+{"name":"s320_match","mode":"calib","N":0,"target3":14,"target4":10}
+{"name":"s220_match","mode":"calib","N":0,"target3":14,"target4":10}
+{"name":"s310L_match","mode":"calib","N":0,"target3":11,"target4":7}
+{"name":"s321_match","mode":"calib","N":0,"target3":14,"target4":9}
+{"name":"s330_match","mode":"calib","N":0,"target3":18,"target4":12}
+{"name":"s420L_match","mode":"calib","N":0,"target3":14,"target4":10}
+{"name":"s220_none","mode":"calib","N":0,"target3":12,"target4":5}
+{"name":"s220_flat","mode":"calib","N":0,"target3":16,"target4":12}

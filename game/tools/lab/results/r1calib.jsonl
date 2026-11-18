@@ -1,0 +1,12 @@
+{"name":"v44_match","mode":"calib","N":0,"target3":9,"target4":7}
+{"name":"v44","mode":"calib","N":0,"target3":11,"target4":9}
+{"name":"spoils_flat","mode":"calib","N":0,"target3":16,"target4":12}
+{"name":"spoils_match","mode":"calib","N":0,"target3":14,"target4":9}
+{"name":"spoils_none","mode":"calib","N":0,"target3":10,"target4":6}
+{"name":"spoilsLone_match","mode":"calib","N":0,"target3":12,"target4":9}
+{"name":"spoils42_match","mode":"calib","N":0,"target3":14,"target4":10}
+{"name":"spoils421L_match","mode":"calib","N":0,"target3":13,"target4":10}
+{"name":"mirror1_match","mode":"calib","N":0,"target3":11,"target4":7}
+{"name":"pair_match","mode":"calib","N":0,"target3":14,"target4":10}
+{"name":"flat2_match","mode":"calib","N":0,"target3":13,"target4":9}
+{"name":"sym_match","mode":"calib","N":0,"target3":9,"target4":7}
