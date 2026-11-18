@@ -341,3 +341,11 @@ Object.assign(VARIANTS, {
   oath2_anon: OATH2({ miserTax: 3, anonReveal: true }),
   fmF2_anon: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true }),
 } as Record<string, V>);
+
+// ---- Round 32: veiled Exalt (hidden Choir cards), alone and with the anonymous reveal and shuffled Oath return
+const OATH_ANON_SHUF = { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true, oathHand: true, oathReturn: 'shuffle' as const };
+Object.assign(VARIANTS, {
+  oath3_veil: OATH2({ miserTax: 3, veiledExalt: true, anonReveal: true, fate: OATH_ANON_SHUF }),
+  oath2_veil: OATH2({ miserTax: 3, veiledExalt: true }),
+  fmF2_veil: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, veiledExalt: true }),
+} as Record<string, V>);

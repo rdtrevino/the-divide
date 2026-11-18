@@ -18,7 +18,7 @@ from sklearn.model_selection import GroupKFold
 
 def load(path):
     a = np.array(json.load(open(path)), dtype=float)
-    games, day, X, y = a[:, 0], a[:, 1], a[:, 3:-1], a[:, -1]
+    games, day, X, y = a[:, 0], a[:, 1], a[:, 3:-1], a[:, -1]  # X: Choir Light, Choir Dark, cumulative observations, today's
     X = np.column_stack([day, X])
     return games, day, X, y
 

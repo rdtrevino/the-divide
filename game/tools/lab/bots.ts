@@ -227,6 +227,7 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
       if (a.t === 'gather' && s.altar[a.k].by >= 0 && s.altar[a.k].by !== p && choirHas(s, s.altar[a.k].by, 'snare')) sc -= 0.5;
       if (a.t === 'gather' && choirHas(s, p, 'pilgrim')) sc += 1;
       if (a.t === 'exalt' && choirHas(s, p, 'patron') && val(s, added) !== 0) sc += 1;
+      if (a.t === 'exalt' && a.h) sc += 0.05; // a person would rather not show their side
       if (removed >= 0 && choirHas(s, p, 'martyr')) sc += 1;
     }
     out.push(sc + (noise ? rnd(s) * noise : 0));
@@ -323,6 +324,7 @@ function determinize(s: State, p: number, salt: number): State {
   for (let q = 0; q < d.R.n; q++) if (q !== p) pool.push(...d.hand[q]);
   const hidden: number[] = [];
   for (let k = 0; k < d.altar.length; k++) if (!knows(d, p, k)) { pool.push(d.altar[k].c); hidden.push(k); }
+  for (let q = 0; q < d.R.n; q++) if (q !== p) for (const x of d.choir[q]) if (x.hid) pool.push(x.c); // other players' veiled Choir cards
   shuffle(d, pool);
   for (const k of hidden) {
     const a = d.altar[k];
@@ -336,6 +338,7 @@ function determinize(s: State, p: number, salt: number): State {
     pool.splice(i, 1);
   }
   for (let q = 0; q < d.R.n; q++) if (q !== p) { const n = d.hand[q].length; d.hand[q] = pool.splice(0, n); }
+  for (let q = 0; q < d.R.n; q++) if (q !== p) for (const x of d.choir[q]) if (x.hid && pool.length) x.c = pool.shift()!;
   if (d.R.fate?.oath) syncOaths(d);
   else if (d.R.fate) {
     // Other players' Fates are secret: re-draw them from the bag (minus my own), leaning slightly toward their public Choir.

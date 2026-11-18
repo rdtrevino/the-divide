@@ -72,6 +72,8 @@ export interface Rules {
   fate?: { pool: number[]; perDay: number; choirPay: number; mult?: boolean; oath?: boolean; oathHand?: boolean; oathReturn?: 'owner' | 'shuffle' };
   /** Anonymous reveal: facedown Offers are shuffled together before they are turned face up, so nobody learns whose card was whose. */
   anonReveal?: boolean;
+  /** Veiled Exalt: you may Exalt a card facedown. It counts for you as usual; the table sees only a hidden card. */
+  veiledExalt?: boolean;
   /** Soft Miser's Rule: at the end, the player(s) who Offered the fewest cards lose this much Glory (unless everyone is tied). */
   miserTax?: number;
   /** The Miser's Rule: at the end, the player(s) who Offered the fewest cards cannot win (unless everyone is tied). */
@@ -110,7 +112,7 @@ export function rules(over: Partial<Rules> = {}): Rules {
 // ---------------------------------------------------------------- state
 
 export interface AltarCard { c: number; up: boolean; by: number; kind: 0 | 1 | 2; seen: number } // kind 0 fruits, 1 offer, 2 omen; seen = bitmask of seats
-export interface ChoirCard { c: number; store: number; flip: boolean }
+export interface ChoirCard { c: number; store: number; flip: boolean; hid?: boolean }
 
 export interface DayLog { day: number; tide: Dir; margin: number; leans: number[]; reap: number[]; lastFlip: boolean; light: number; dark: number; reapOnly: number[]; crown: number; altarSize: number; facedown: number; leader: number }
 
@@ -363,7 +365,7 @@ export function applyFruits(s: State, picks: number[]) {
 
 export type Action =
   | { t: 'offer'; i: number }
-  | { t: 'exalt'; i: number; r: number } // r = Choir index to replace, -1 if room
+  | { t: 'exalt'; i: number; r: number; h?: boolean } // r = Choir index to replace, -1 if room; h = Exalted facedown (veiled)
   | { t: 'gather'; k: number; r: number }
   | { t: 'pass' };
 
@@ -374,7 +376,7 @@ export function legal(s: State, p: number): Action[] {
   const full = s.choir[p].length >= s.R.choirMax;
   const rs = full ? s.choir[p].map((_, j) => j) : [-1];
   if (!(s.anathema >= 0 && s.anathema !== p)) for (let i = 0; i < s.hand[p].length; i++) out.push({ t: 'offer', i });
-  for (let i = 0; i < s.hand[p].length; i++) { if (s.R.fate?.oathHand && s.cards[s.hand[p][i]].ab === 'oath') continue; for (const r of rs) out.push({ t: 'exalt', i, r }); }
+  for (let i = 0; i < s.hand[p].length; i++) { if (s.R.fate?.oathHand && s.cards[s.hand[p][i]].ab === 'oath') continue; for (const r of rs) { out.push({ t: 'exalt', i, r }); if (s.R.veiledExalt) out.push({ t: 'exalt', i, r, h: true }); } }
   for (let k = 0; k < s.altar.length; k++) {
     const a = s.altar[k];
     if (!a.up && !s.R.gatherBlind && a.by !== p) continue;
@@ -448,9 +450,11 @@ export function act(s: State, a: Action) {
   } else if (a.t === 'exalt') {
     const [c] = s.hand[p].splice(a.i, 1);
     if (s.cards[c].ab === 'oath') s.oathStats[2]++;
-    see(s, p, sgn(val(s, c)) > 0 ? P.exL : sgn(val(s, c)) < 0 ? P.exD : -1);
+    if (a.h) see(s, p, P.exHid);
+    else see(s, p, sgn(val(s, c)) > 0 ? P.exL : sgn(val(s, c)) < 0 ? P.exD : -1);
     replaceAt(s, p, a.r);
     enter(s, p, c);
+    if (a.h) s.choir[p][s.choir[p].length - 1].hid = true;
     if (choirHas(s, p, 'patron') && val(s, c) !== 0) gain(s, p, 1, 'ab:patron');
     for (const x of s.choir[p]) if (ab(s, x.c) === 'seraph' && x.c !== c && sgn(val(s, c)) !== 0 && sgn(val(s, c)) === sgn(val(s, x.c))) { gain(s, p, 1, 'ab:seraph'); break; }
   } else {
@@ -612,8 +616,8 @@ export function paxScore(s: State, net: number): number[] {
 
 /** Fates: each Choir card matching the Tide earns choirPay; the Day is recorded for the matching Fates (scored at the end). */
 /** Public observations of each player, for the reader. */
-export const P = { ffL: 0, ffD: 1, offL: 2, offD: 3, oathL: 4, oathD: 5, gathL: 6, gathD: 7, exL: 8, exD: 9, toHand: 10, lostOath: 11, offN: 12, tookL: 13, tookD: 14, drew: 15 };
-export const PUB = 16;
+export const P = { ffL: 0, ffD: 1, offL: 2, offD: 3, oathL: 4, oathD: 5, gathL: 6, gathD: 7, exL: 8, exD: 9, toHand: 10, lostOath: 11, offN: 12, tookL: 13, tookD: 14, drew: 15, exHid: 16 };
+export const PUB = 17;
 function see(s: State, p: number, k: number) {
   if (k < 0) return;
   s.pub[p][k]++;
@@ -739,7 +743,7 @@ export function evening(s: State) {
   s.logs.push({ day: s.day, tide, margin: Math.abs(net), leans, reap: s.glory.map((g, p) => g - before[p]), lastFlip, light, dark, reapOnly: reap, crown: lead0, altarSize: s.altar.length, facedown, leader: lead1 });
   // The reader's row for each player: what the table has seen of them, and their true allegiance tonight.
   if (s.R.fate) for (let p = 0; p < n; p++) {
-    const cv = s.choir[p].map((x) => sgn(x.flip ? -val(s, x.c) : val(s, x.c)));
+    const cv = s.choir[p].filter((x) => !x.hid).map((x) => sgn(x.flip ? -val(s, x.c) : val(s, x.c)));
     s.readerRows.push([s.day, p, cv.filter((v) => v > 0).length, cv.filter((v) => v < 0).length, ...s.pub[p], ...s.pubDay[p], s.fate[p]]);
   }
   s.pubDay = s.pubDay.map(() => Array(PUB).fill(0));
