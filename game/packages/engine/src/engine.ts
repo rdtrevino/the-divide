@@ -361,7 +361,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
       if (!targets.length) continue;
       const pick = yield* chooseOne(s, seat, hid === H.raphael ? 'raphael' : 'azazel', `${cardName(hid)}: turn your Offering face up and forgo its reward to destroy a face-up ${theirs === 'dark' ? 'Dark' : 'Light'} card on the Altar?`, targets.map(({ a, i }) => ({ id: String(i), label: cardName(a.id), card: a.id })), true);
       if (pick === null) continue;
-      forgone = true;
+      forgone = !variant(s, 'raph-free'); // V43 test 'raph-free': keep the Offer's reward; the Offer still goes face up
       const target = s.altar[Number(pick)];
       const mineOffered = s.altar.find((a) => a.offeredBy === seat && a.kind === 'offer' && a.day === s.day && offered.includes(a.id) && col(a.id)[mine]);
       if (mineOffered) mineOffered.facedown = false;
@@ -881,7 +881,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     // Apple (V42): 1 Glory if your Choir leans the other way from yesterday (it rewards switching sides).
     if (hasActive(s, seat, H.apple)) {
       const was = prevLean[seat];
-      if (was && was !== 'neutral' && nets[seat] !== 0 && dirOf(nets[seat]) === opposite(was)) { yield* gain(s, seat, 1, H.apple); log(s, 'apple', `${p.name} switched sides and gains 1 Glory (Apple).`); }
+      if (was && was !== 'neutral' && nets[seat] !== 0 && dirOf(nets[seat]) === opposite(was)) { yield* gain(s, seat, variant(s, 'apple-2') ? 2 : 1, H.apple); log(s, 'apple', `${p.name} switched sides and gains 1 Glory (Apple).`); }
     }
     // Uriel and Beelzebub (V42): 1 Glory if your Choir holds 3 or more cards of their color.
     for (const [id, k] of [[H.uriel, 'light'], [H.beelzebub, 'dark']] as const) {

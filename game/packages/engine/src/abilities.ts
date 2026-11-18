@@ -141,6 +141,7 @@ export const TURN: Record<string, TurnAbility> = {
     can: (s, seat) => !s.day_.figLeaves.includes(seat),
     *run(s, seat) {
       s.day_.figLeaves.push(seat);
+      if (variant(s, 'fig-plus1')) yield* gain(s, seat, 1, H.figLeaves); // V43 test: and gain 1 Glory
       log(s, 'figLeaves', `${pname(s, seat)}'s Choir sits out this Day (Fig Leaves).`);
     },
   },
@@ -474,6 +475,7 @@ export const TURN: Record<string, TurnAbility> = {
       a.facedown = false;
       a.seenBy = undefined;
       yield* snareHit(s, seat, a);
+      if (variant(s, 'rev-draw')) yield* drawTo(s, seat, 1); // V43 test: then draw 1 card
       log(s, 'revelation', `${pname(s, seat)} revealed ${cardName(a.id)} on the Altar (Revelation).`);
       // Test 'rev-swap' (Robert): then flip a face-up Altar card facedown.
       if (variant(s, 'rev-swap')) {

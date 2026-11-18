@@ -443,7 +443,7 @@ export const immune = (_s: GameState, _actor: Seat, _owner: Seat) => false;
 /** Defiance (V42): other players' abilities cannot make you lose or give up Glory. */
 export const glorySafe = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && hasActive(s, owner, H.defiance);
 /** Lilith (V42): other players' abilities cannot look at, take, or discard cards in your hand. */
-export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && (immune(s, actor, owner) || (!variant(s, 'lilith-scavenge') && hasActive(s, owner, H.lilith)));
+export const handProtected = (s: GameState, actor: Seat, owner: Seat) => actor !== owner && (immune(s, actor, owner) || (!variant(s, 'lilith-scavenge') && hasActive(s, owner, H.lilith)) || (variant(s, 'cherub-hand') && hasActive(s, owner, H.cherubim)));
 
 /** Tribute: pay 1 Glory to the owner before Targeting a card in their Choir. Returns false if it cannot be paid. */
 export function canAffordTribute(s: GameState, actor: Seat, owner: Seat): boolean {

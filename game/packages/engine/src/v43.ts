@@ -95,8 +95,8 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
     // Tree of Life ('tree-mature'): 1 Glory a Day once it holds 3.
     const tree = p.choir.find((c) => c.id === H.treeOfLife && !c.facedown);
     if (variant(s, 'tree-mature') && tree && hasActive(s, seat, H.treeOfLife)) {
-      if ((tree.store ?? 0) >= (variant(s, 'tree-mature4') ? 4 : 3)) { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name}'s Tree of Life bears fruit: +1 Glory.`); }
-      else tree.store = (tree.store ?? 0) + 1;
+      if ((tree.store ?? 0) >= (variant(s, 'tree-mature5') ? 5 : variant(s, 'tree-mature4') ? 4 : 3)) { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name}'s Tree of Life bears fruit: +1 Glory.`); }
+      else if (!variant(s, 'tree-tide') || withTide.has(seat)) tree.store = (tree.store ?? 0) + 1; // 'tree-tide': grows only on Days you lean with the Tide
     }
     // Favor: 'favor-late' (Day 4+: 1, Day 7+: 2) or 'favor-momentum' (with the Tide today and yesterday: 1).
     if (hasActive(s, seat, H.favor)) {
@@ -127,6 +127,8 @@ export function* endOfDayV43(s: GameState, order: Seat[], gained: Record<number,
 export function* keepRelics(s: GameState, order: Seat[]): Gen<Set<object>> {
   const kept = new Set<object>();
   if (!variant(s, 'eternity-relic')) return kept;
+  // 'eternity-forever': a kept card stays on the Altar until a player Gathers or removes it.
+  if (variant(s, 'eternity-forever')) for (const a of s.altar) if (a.kind === 'relic' && a.offeredBy !== null && hasActive(s, a.offeredBy, H.eternity)) { kept.add(a); ((s as any).relics ??= []).push({ id: a.id, by: a.offeredBy }); }
   for (const seat of order) {
     if (!hasActive(s, seat, H.eternity) || !canActivate(s, seat, H.eternity)) continue;
     const opts = s.altar.filter((a) => a.offeredBy === seat && a.kind === 'offer' && a.day === s.day && !kept.has(a));

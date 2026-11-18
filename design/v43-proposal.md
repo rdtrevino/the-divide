@@ -156,6 +156,56 @@ Alignment and value are unchanged except **Hymn (Light +2)** and **Lamentation (
 | Twilight | +2 with three cards (with Nephilim) |
 | Parasite | Needs a way to remember who planted it (turning it toward you) |
 
+## Round 2: tested and tuned (November 18)
+
+Robert's changes after the first read, then measured with bots that value card abilities (20,000 games per version; card balance over every card held at the end of any Day; target 0.8–1.2).
+
+### Card texts as tested
+
+| Card | Text | Win ratio (race to 12) |
+|---|---|---|
+| Wisdom | When you Offer or Exalt, look at the top 2 Host cards. Put 1 into your hand and discard the other. | 0.95 |
+| Gabriel | In the Morning: Look at another player's hand, then name Light or Dark. If they Offer a card of that alignment this Day, gain 1 Glory. | 1.01 |
+| Tree of Life | At the end of each Day: If this card holds 4 Glory, gain 1 Glory. Otherwise, if your Choir leans with the Tide, put 1 Glory from the Pot on it. | 0.95 |
+| Hymn / Lamentation | Light (Dark) +2. When you Offer this card, it goes face up. | 0.8 / 0.95 |
+| Martyr | When another card is discarded from your Choir, gain 1 Glory. | 1.1 |
+| Tribute | Other players must pay you 1 Glory before they may Target any card in your Choir. | 0.91 |
+| Remnant | At the end of the Day: If 2 or more places in your Choir are empty, gain 1 Glory. | 0.92 |
+| Favor | At the end of the Day: If your Choir leaned with the Tide today and yesterday, gain 1 Glory. | 1.11 |
+| Lilith | When a card is discarded from another player's Choir, you may put it into your hand. | 0.97 |
+| Parasite | When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if they lost Glory, you gain 1 Glory; if they gained Glory, discard this card. | 1.02 |
+| Defiance | Unchanged: Other players' abilities cannot make you lose or give up Glory. | 0.88 |
+| Snare | When another player Gathers, looks at, flips, or discards a card you placed on the Altar, gain 1 Glory. | 1.04 |
+| Eternity | At the end of the Day: You may keep one card you Offered today on the Altar, face up, through the next Day. | 0.85 |
+| Ordeal | Unchanged. | 0.92 |
+| Twilight | At the end of the Day: If the other cards in your Choir hold as many Light cards as Dark cards (at least 1 each), gain 2 Glory. | 0.98 |
+| Council | In the Morning: You may name another player. At the end of the Day, if your Choirs lean the same way, each of you gains 1 Glory. | 1.03 |
+| Forger | When you Gather or Exalt, you may take the card from the discard pile instead. | 0.83 |
+
+### Fixes for the cards that fell below 0.8
+
+| Card | Fix | Before → after (race to 12) |
+|---|---|---|
+| Mirage | Protection, plus: at the end of the Day, if a card you Offered facedown is still on the Altar and matches the Tide, gain 1 Glory | 0.82 → 0.96 (at race 10: 0.75 → 0.97) |
+| Revelation | …then draw 1 card | 0.83 → 0.88 (0.77 at race 10) |
+| Apple | Gain 2 Glory instead of 1 | 0.81 → 0.85 |
+| Fig Leaves | …sits out this Day, and you gain 1 Glory | 0.79 → 1.09 |
+| Raphael / Azazel | Keep the Offer's reward; the Offer still goes face up | 0.78 → 0.85 / 0.9 |
+| Cherubim | Also protects your hand (Lilith's old protection) | 0.80 → 0.81 |
+
+### Race to 12
+
+| | Race to 10 | **Race to 12** |
+|---|---|---|
+| Days (3 / 4 players) | 6.7 / 7.1 | **8.3 / 8.5** |
+| Winner's Glory per Day | 1.77 / 1.64 | **1.68 / 1.60** |
+| Turns: Offer / Gather / Exalt | 50 / 18 / 31 | 49 / 19 / 32 |
+| Glory from Offers / the Tide / cards | 35–39 / 20–28 / 37–41 | 34–38 / 19–27 / 39–43 |
+| Cards outside 0.8–1.2 | Apple 0.75, Flaming Sword 0.79, Providence 1.22 | **Raguel 0.79 only** |
+| Spread | 0.114 | **0.109** (V42: 0.115) |
+
+Engines need Days to pay off, so the longer race suits them: every card except Raguel (0.79) is within 0.8–1.2, and the spread is the lowest yet.
+
 ## Next
 
 Build all 18 as test switches, teach the bots to use them, measure each card's balance and the game's shape (Days, Glory per Day, the action mix), then go card by card as before.
