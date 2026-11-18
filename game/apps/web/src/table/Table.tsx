@@ -1,6 +1,6 @@
 // The game table. Everything shown here comes from the view the server sends for your seat;
 // the browser never sees another player's hand or a facedown card it should not.
-import { GLORY_TARGET, type LogEntry } from '@divide/engine';
+import { GLORY_TARGET } from '@divide/engine';
 import type { ClientMsg } from '@divide/protocol';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useFit } from '../lib/fit';
@@ -30,9 +30,8 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
-  const opponentsCount = me === null ? n : n - 1;
   // Fit first, then animate moves, so animations measure the final sizes.
-  useFit({ stage: stageRef, wrap: wrapRef, board: boardRef }, opponentsCount);
+  useFit({ stage: stageRef, wrap: wrapRef, board: boardRef });
   useFlip(root);
   useEffect(() => {
     const el = root.current;

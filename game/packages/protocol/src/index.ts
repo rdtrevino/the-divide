@@ -14,7 +14,6 @@ export interface SeatPublic {
 }
 
 export interface RoomOptions {
-  /** Optional rule: 2 Seeds each Day (suggested for 3 players). */
   /** Advanced game: Celestials and Events. */
   advanced: boolean;
   /** Seconds a player has for each decision before a bot makes it. */
@@ -23,6 +22,9 @@ export interface RoomOptions {
 
 export const TIMER_CHOICES = [60, 90, 120, 300] as const;
 export const DEFAULT_TIMER = 90;
+
+/** A player code shown in groups of 4, as XXXX-XXXX-XXXX. */
+export const formatCode = (code: string) => code.replace(/(.{4})(?=.)/g, '$1-');
 
 export interface RoomPublic {
   code: string;
@@ -64,7 +66,7 @@ export interface StateMsg {
   t: 'state';
   room: RoomPublic;
   you: { seat: number | null; isHost: boolean; name: string };
-  /** Your view of the game. `view.log` holds only entries after `logFrom` unless `logReset`. */
+  /** Your view of the game. `view.log` holds only the entries not sent before, unless `logReset`. */
   view: GameView | null;
   logReset: boolean;
   /** Seats the game is waiting on, with the server time (ms) their time runs out. */

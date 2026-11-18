@@ -7,7 +7,6 @@ import { saveGame } from './stats';
 import type { Env } from './index';
 
 export class Room extends DurableObject<Env> {
-  private core: RoomCore | null = null;
   private loading: Promise<RoomCore> | null = null;
   private sockets = new Map<string, WebSocket>();
 
@@ -52,7 +51,6 @@ export class Room extends DurableObject<Env> {
         conns.push(conn);
       }
       core.restore(conns);
-      this.core = core;
       return core;
     })());
   }

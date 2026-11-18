@@ -30,5 +30,4 @@ export const celestialColors: Record<string, { field: string; frame: string; tit
 };
 
 export const OPEN_HOSTS = HOSTS.filter((h) => h.openGame);
-export const OPEN_EVENTS = EVENTS.filter((e) => e.openGame);
 export { CELESTIAL, CELESTIALS, EVENT, EVENTS, HOST, HOSTS };

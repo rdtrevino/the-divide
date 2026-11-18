@@ -50,7 +50,7 @@ function need(el: Element | null, skip?: (c: HTMLElement) => boolean): number {
   return sum + Math.max(0, kids.length - 1) * gap + pad;
 }
 
-export function useFit(refs: FitRefs, opponents: number) {
+export function useFit(refs: FitRefs) {
   const [tick, setTick] = useState(0);
   const last = useRef<Fit | null>(null);
 

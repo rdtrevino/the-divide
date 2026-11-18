@@ -36,7 +36,6 @@ export function getName(): string {
 /** The name typed last, whether or not it was confirmed (to prefill forms). */
 export const lastTypedName = (): string => (read(NAME) ?? memory.get(NAME) ?? '').trim();
 export const codeFor = (name: string): string | null => codes()[nameKey(name)]?.code ?? null;
-export const formatCode = (code: string) => code.replace(/(.{4})(?=.)/g, '$1-');
 
 function remember(name: string, code: string) {
   const all = codes();

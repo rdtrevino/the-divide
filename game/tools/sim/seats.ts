@@ -10,7 +10,7 @@ for (const cfg of configs) {
   const row: any = { config: cfg };
   for (const n of [3, 4]) {
     let days = 0;
-    const win = Array(n).fill(0), glory = Array(n).fill(0), pos = Array(n).fill(0), last6 = Array(n).fill(0);
+    const win = Array(n).fill(0), glory = Array(n).fill(0), pos = Array(n).fill(0);
     for (let i = 0; i < N; i++) {
       const g = new Game({ seed: 300000 + i, mode: 'open', variants, players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) });
       const firsts: number[] = [];

@@ -4,7 +4,7 @@ The Divide's printed cards are drawn in the Claude Design session. These scripts
 
 ## Workflow
 
-1. Make card text or art changes in the Claude Design session. Use the **Reprint List** tab in `cards/The_Divide_Cards_V33.xlsx` to see which cards need it.
+1. Make card text or art changes in the Claude Design session. Use the **Reprint List** tab in the card spreadsheet in `cards/` (`The_Divide_Cards_V<version>.xlsx`) to see which cards need it.
 2. Export the changed deck sheet as standalone HTML (Export button, upper right).
 3. Give the HTML file to Claude and ask for a print rebuild. The pipeline:
    - renders the sheet in headless Chromium (the cards are drawn by JavaScript, so the raw HTML alone is not enough),

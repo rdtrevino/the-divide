@@ -71,7 +71,8 @@ export function buildRows(f: FinishedGame, cardVersion = CARD_VERSION): GameRows
       variants: (f.config.variants ?? []).join(','), engine_version: f.engineVersion, card_version: cardVersion,
       final_tide: res.finalTide, started_at: iso(f.startedAt), ended_at: iso(f.endedAt),
       inputs_json: JSON.stringify(f.inputs), config_json: JSON.stringify(f.config), days: s.tides.length,
-      two_seeds: 0, // legacy column (the two-Seeds option ended in V41) timer_seconds: f.timer, auto_inputs: JSON.stringify(f.auto),
+      two_seeds: 0, // legacy column: the 2 Seeds option ended in V41
+      timer_seconds: f.timer, auto_inputs: JSON.stringify(f.auto),
     },
     players: s.players.flatMap((p) => (f.playerKeys[p.seat] ? [{ id: f.playerKeys[p.seat]!, name: p.name }] : [])),
     seats: s.players.map((p) => {
