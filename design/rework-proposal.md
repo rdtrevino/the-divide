@@ -200,6 +200,47 @@ The bots do not talk. Everything social needs people:
 3. Then try a random Pantheon, and change one thing at a time.
 4. **Online:** a new card version with these rules, the Pantheon setup in the lobby, and the lab's Monte Carlo player (`game/tools/lab/bots.ts`) in place of the current bots.
 
+## Revision 3 candidate: the lean core (Round 21)
+
+Robert's rule: the most strategy and nuance for the least complexity, with real game theory and negotiation tension meeting engine building. Revision 2 had picked up three rules that patch symptoms (the Crown, the Omen, the held Tide), and the Choir's strength never mattered, so building did not touch the alliances. Round 21 tested removing the patches and adding one rule that links them: **the senior partner.**
+
+| Starter Pantheon, race to 12 | Skill | Day-3 leader wins 4p / 3p | Crowded Days 4p / 3p | Outnumbered side wins 4p | Days nobody gains 4p |
+|---|---|---|---|---|---|
+| Revision 2 (soft Crown, Omen, held Tide) | 1.59 | 40% / 45% | 22% / 12% | 26% | 3% |
+| No Crown | 1.47 | 38% / 51% | 21% / 12% | 26% | 3% |
+| No Crown, no Omen | 1.83 | 39% / 51% | 27% / 19% | 19% | 4% |
+| No Crown, no Omen, no held Tide | 1.67 | 41% / 44% | 24% / 19% | 17% | 10% |
+| **Senior partner, no Crown, no Omen** | **2.08** | **37%** / 50% | 23% / 16% | 20% | 4% |
+| Senior partner with Crown and Omen | 1.79 | 39% / 46% | 19% / 9% | 34% | 3% |
+
+**The senior partner:** when exactly two Choirs share the Tide, the one leaning more strongly gains 3 and the other gains 1 (equal strength: 2 each). Alone still gains 3; three or more gain nothing.
+
+It does three things at once:
+
+- **It links the engine to the alliance.** Choir strength now decides who leads a partnership.
+- **It answers "no punishment for leaning heavily"** from the reward side: heavy leaning pays.
+- **It makes every ally a rival**, the coopetition at the heart of games like Cosmic Encounter.
+
+The Crown and the Omen matter only at 3 players (about 5 points of early-leader advantage), so the lean core drops them. The held Tide stays: without it, Days with no gain double.
+
+**The lean core, complete:**
+
+1. Three actions: Offer (a facedown wager), Gather, Exalt.
+2. Wagers: +1 if the card matches the Tide, −1 if it opposes it.
+3. The Reaping: alone 3; a pair, stronger 3 and weaker 1 (equal 2 each); three or more nothing.
+4. A tied Altar keeps yesterday's Tide.
+5. First to 12 after a Reaping; most Glory wins.
+6. A Pantheon of 12–18 of the 69 cards with the plain cards.
+
+The Crown and the Omen remain optional modules (the Crown for 3 players).
+
+**Still open, and only people can answer it:**
+
+- **Negotiation has nothing to trade.** Promises are unenforceable and nothing changes hands. Suggested playtest A/B: *players may trade cards from hand by mutual agreement at any time.* It turns votes into currency ("my Lamentation if you stay Dark") and makes broken deals possible (the card you sold me might come back as a wager against me).
+- **3 players stays the weak count:** it is always two against one, and early leaders win 44–51% (chance 33%). The game is at its best at 4.
+- **About 13 decisions per player per game**, which is inherent to a 30-minute game in turns. Each now carries more weight (side, strength, wager).
+- **Caveat:** part of the senior partner's skill edge may come from the heuristic bots not valuing lean strength. Monte Carlo players among themselves measured fine on balance (seats, crowding, length), but its real value is how pairs feel to people.
+
 ## 7. Reproducing
 
 ```bash
@@ -209,4 +250,4 @@ cd game/tools/lab
 python3 show.py results/r20.jsonl
 ```
 
-`game/tools/lab/README.md` explains every mode and column. Rounds 1–15 (revision 1: the curated 44-card deck and the hard Crown) are in `results/r1.jsonl` to `r15.jsonl`; this revision is Rounds 16–20.
+`game/tools/lab/README.md` explains every mode and column. Rounds 1–15 (revision 1: the curated 44-card deck and the hard Crown) are in `results/r1.jsonl` to `r15.jsonl`; revision 2 is Rounds 16–20; the lean core is Round 21 (`results/r21.jsonl`, variants `r21_*`).

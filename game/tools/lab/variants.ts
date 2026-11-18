@@ -225,3 +225,15 @@ Object.assign(VARIANTS, {
   rec12_pantheon: { ...REC12, pantheon: { base: PLAIN, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [7, 7, 4] } },
   rec12_starter: { ...REC12, deck: STARTER },
 } as Record<string, V>);
+
+// ---- Round 21: can the patches go, and can Choir strength link the engine to the alliances?
+Object.assign(VARIANTS, {
+  r21_starter: { ...REC12, deck: STARTER },
+  r21_nocrown: { ...REC12, deck: STARTER, crownTax: 0 },
+  r21_noomen: { ...REC12, deck: STARTER, omens: 0 },
+  r21_bare: { ...REC12, deck: STARTER, crownTax: 0, omens: 0 },
+  r21_bare_notie: { ...REC12, deck: STARTER, crownTax: 0, omens: 0, tieBreak: 'none' },
+  r21_senior31: { ...REC12, deck: STARTER, pairSplit: [3, 1] },          // alone 3; pair: stronger 3, weaker 1, equal 2 each
+  r21_senior31_bare: { ...REC12, deck: STARTER, pairSplit: [3, 1], crownTax: 0, omens: 0 },
+  r21_senior21_bare: { ...REC12, deck: STARTER, score: T([3, 2, 0], [0]), pairSplit: [2, 1], crownTax: 0, omens: 0 },
+} as Record<string, V>);

@@ -57,6 +57,8 @@ export interface Rules {
   crownTax: number;
   /** A bet that opposes the Tide costs this much (Neutral cards never bet). */
   betLoss: number;
+  /** Senior partner: when exactly two Choirs share the Tide and one leans more strongly, it gains [hi] and the other [lo]. */
+  pairSplit?: number[];
   /** Pantheon: each game shuffles a random selection of the original cards (picks[i] from pools[i]) into a base deck. */
   pantheon?: { base: DeckSpec; pools: string[][]; picks: number[] };
   /** Ties at the end: shared. */
@@ -503,6 +505,11 @@ export function scoreTable(t: ScoreTable) {
       if (leans[p] === tide) out[p] = t.win[w] ?? 0;
       else if (leans[p] === -tide) out[p] = s.R.loseHeavy && Math.abs(leanSum(s, p)) < s.R.loseHeavy ? 0 : t.lose[l] ?? t.lose[t.lose.length - 1];
       else out[p] = -s.R.neutralLoss;
+      if (s.R.pairSplit && leans[p] === tide && w === 2) {
+        const q = [...Array(n).keys()].find((k) => k !== p && leans[k] === tide)!;
+        const a = Math.abs(leanSum(s, p)), b = Math.abs(leanSum(s, q));
+        if (a !== b) out[p] = a > b ? s.R.pairSplit[0] : s.R.pairSplit[1];
+      }
       if (s.R.crownTax && out[p] > 0 && leaders === 1 && top > 0 && s.glory[p] === top) out[p] = Math.max(0, out[p] - s.R.crownTax);
     }
     return out;
