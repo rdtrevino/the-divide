@@ -62,7 +62,7 @@ Each with variants: the Forsaken in the bag; the Miser's Rule (hard: the fewest 
    - **Oaths left on the Altar go back to whoever placed them.**
    - Clear the Altar; draw to 3.
 
-**End.** After 7 Days (about 30 minutes at 4 players). The player who Offered the fewest cards loses 3 Glory (the soft Miser's Rule). Most Glory wins.
+**End.** After 7 Days (about 30 minutes at 4 players). *(Four hiding rules below, in "Keeping your side hidden at 3 players", are part of the proposal.)* The player who Offered the fewest cards loses 3 Glory (the soft Miser's Rule). Most Glory wins.
 
 **Why it is the vision:**
 - The shared middle literally holds people's loyalties.
@@ -90,6 +90,41 @@ One player with a fixed plan among Monte Carlo players (win ratio; 1.00 is a fai
 | Random | 0.12 | — | — | — |
 
 With the soft Miser's Rule, neither giving everything nor keeping everything works: the decision is how much to give, and when. Without it, free-riding is the best simple plan (0.59); with the hard version, contributing is (0.91).
+
+## Keeping your side hidden at 3 players (Rounds 31–34)
+
+Robert's worry: at 3 players, won't everyone's side be obvious from what they put on the Altar and in their Choir? Measured with a **reader**: a model trained on thousands of games that sees only what a player at the table sees (Choirs, First Fruits, revealed Offers and whose they were, Gathers, Exalts, Oaths seen or taken) and names every player's side each Evening. It is a card-counter's upper bound; people count worse but also read faces and talk. Tools: `game/tools/lab/reader.py` and `ablate.py`.
+
+**Target** (from the vision's "the table knows a little more, but never enough"): a perfect card-counter right about 60–75% of the time, confident and right under half the time, with reads building during the game rather than complete from Day 1. (At 3 players, guessing the commonest side scores 35–38%.)
+
+| 3 players | Strong reader | Confident and right | Day 1 → 4 → 7 |
+|---|---|---|---|
+| Oaths as proposed above | 98% | 97% | 98 → 99 → 96% |
+| + Oaths left on the Altar are shuffled away (not returned) | 97% | 95% | 98 → 98 → 92% |
+| + anonymous reveal | 91% | 86% | 96 → 98 → 76% |
+| + hidden Choir cards (veiled Exalt) | 92% | 86% | 82 → 96 → 95% |
+| + anonymous reveal + shuffled Oaths + hidden Choir cards | 80% | 64% | 87 → 85 → 67% |
+| **+ anonymous First Fruits too (all four)** | **67%** | **36%** | **66 → 73 → 53%** |
+| Any-colour Choir multiplier instead of hidden cards | 57% | 18% | 56 → 60 → 57% |
+
+Why no single rule was enough: with every source of evidence the reader had, removing any one of them (First Fruits, revealed Offers, Gathers, Exalts, the Choir) cost it at most 15 points, because every action a player takes leans toward their side when the scoring rewards pushing your own color. Hiding has to cover who did what, not just what was done.
+
+**The any-colour multiplier is rejected on principle:** it hides more, but it makes Gathering the enemy's card good for you as well as your side, which removes the Gather dilemma (vision principle 1), and it brings reads close to guessing (principle 4: reads, not luck).
+
+**What is still readable with all four rules:** mostly the face-up cards in your Choir (removing them drops the reader from 67% to 60%) and what you Gather, which are public choices a player can use to bluff.
+
+**The four hiding rules:**
+
+1. **Anonymous First Fruits.** Everyone puts their card facedown; the cards are shuffled together and turned face up onto the Altar. The table sees the colors, not whose.
+2. **Anonymous reveal.** In the Evening, the facedown Offers are shuffled together before they are turned face up. You know that someone Offered, never what.
+3. **Hidden Choir cards (veiled Exalt).** You may Exalt a card facedown. It counts for you as usual; the table sees only a hidden card until the end (or until it leaves your Choir).
+4. **Shuffled Oaths.** An Oath left on the Altar is not returned to its owner (that would announce what it was); it is set aside facedown with the unused Oaths, and anyone without an Oath at Upkeep draws one at random, a new side nobody else can see.
+
+**Gameplay with all four** (Round 34): skill 2.23 (3 players) and 2.61 (4 players), up from 2.12–2.29; 7 Days, about 27 and 32 minutes; Offers 52–55% of actions; Light and Dark win ratios 0.99–1.02; seats 0.95–1.06 (3 players) and 0.83–1.14 (4 players); Oaths Offered 2.2–3.0 times a game. One-track strategies all lose: always Offer 0.35, never Offer 0.17, never change sides 0.44. At 4 players the reader scores 68% (confident and right 37%), the same shape. A player who ends the game holding no Oath does poorly (0.38–0.74): a fair cost of losing your Oath, to watch with people.
+
+**Against the vision's test:** principle 2 (uncertain allegiance) now passes at 3 players by measurement, not by hope; principles 1, 3 and 4 hold (Offering and Gathering keep their dilemmas, the Altar holds loyalties, reads build and decay instead of being total or absent); principle 5 is unchanged (hidden scoring still needs the ledger or the online table).
+
+**For people to judge:** whether shuffling cards before revealing feels natural or fiddly at the table; whether players bluff with face-up Choir cards and Gathers; whether three rounds of "who was that?" make the talk richer, as intended.
 
 ## What the simulations cannot show
 
