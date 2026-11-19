@@ -1,0 +1,1 @@
+rows-o33_veil_ff-3p.json {"all evidence": 0.67, "without First Fruits": 0.67, "without revealed Offers": 0.67, "without Gathers": 0.64, "without Exalts": 0.66, "without Choir": 0.6, "without Offer count": 0.65}
