@@ -99,6 +99,9 @@ export interface Rules {
     collectBonus?: number;
     asCards?: boolean; // tokens are Host cards in the deck: drawn, held in hand, Offered like cards, Gathered to hand, never Exalted
   };
+  /** Judgment Day: on the last Day every player chooses their action in secret, then all are carried out in turn order
+   *  (a card chosen for Gathering that is already gone is not replaced). */
+  secretLast?: boolean;
   /** The Miser's Rule: at the end, the player(s) who Offered the fewest cards cannot win (unless everyone is tied). */
   miser?: boolean;
   /** Pantheon: each game shuffles a random selection of the original cards (picks[i] from pools[i]) into a base deck. */

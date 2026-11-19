@@ -456,3 +456,8 @@ const FEW_N = { L1: 33, D1: 33, L2: 1, D2: 1, N: 1 };
 Object.assign(VARIANTS, {
   HF3: DY({ reap: 2 }, { maxDays: 6, deck: FEW_N }), HF4: DY({ reap: 2 }, { maxDays: 8, deck: FEW_N }),
 } as Record<string, V>);
+
+// ---- Round 43: 7 Days at every player count (Robert), with and without Judgment Day (a secret, simultaneous last Day).
+const COLORED = { L1: 33, D1: 33, L2: 1, D2: 1, N: 1 };
+const S7 = (extra: Partial<V> = {}) => DY({ reap: 2 }, { maxDays: 7, deck: COLORED, ...extra });
+Object.assign(VARIANTS, { d7: S7(), d7j: S7({ secretLast: true } as Partial<V>), d6j3: DY({ reap: 2 }, { maxDays: 6, deck: COLORED, secretLast: true } as Partial<V>) } as Record<string, V>);

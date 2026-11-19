@@ -1,5 +1,5 @@
 // Play lab games and measure them.
-import { type Rules, type State, applyFruits, act, active, evening, newGame, rnd, tokCounts } from './core';
+import { type Action, type Rules, type State, applyFruits, act, active, clone, evening, newGame, rnd, tokCounts } from './core';
 import { type Policy, chooseAction, chooseFlip, chooseFruit } from './bots';
 
 export function play(R: Rules, pols: Policy[], seed: number): State {
@@ -9,6 +9,12 @@ export function play(R: Rules, pols: Policy[], seed: number): State {
     if (s.phase === 'fruits') {
       const picks = pols.map((pol, p) => chooseFruit(s, p, pol));
       applyFruits(s, picks);
+    } else if (s.phase === 'noon' && R.secretLast && s.day >= R.maxDays && s.step === 0) {
+      // Judgment Day: everyone chooses from the same view of the Altar, then the choices are carried out in order.
+      const plan = s.order.map((p, k) => { const c = clone(s); c.step = k; const a = chooseAction(c, p, pols[p]); return a.t === 'gather' ? { a, card: s.altar[a.k]?.c } : { a, card: -1 }; });
+      for (const { a, card } of plan) {
+        if (a.t === 'gather') { const k = s.altar.findIndex((x) => x.c === card); act(s, k >= 0 ? { ...a, k } : { t: 'pass' } as Action); } else act(s, a);
+      }
     } else if (s.phase === 'noon') {
       const p = active(s);
       act(s, chooseAction(s, p, pols[p]));

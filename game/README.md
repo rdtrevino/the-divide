@@ -4,7 +4,7 @@ The online version of The Divide. Everything here is TypeScript.
 
 | Folder | What it is |
 |---|---|
-| `packages/engine` | The rules engine. Deterministic: a game is its config (with a seed) plus the ordered list of player inputs, so any game can be replayed exactly. Every Host, Celestial, and Event ability is implemented here. |
+| `packages/engine` | The rules engine. Two kinds of computer player: the fast heuristic (`bots.ts`) and the strong Monte Carlo bot (`mc.ts`), which replays the game, reshuffles what it cannot see, and plays each option forward, as the design lab's bots do. Deterministic: a game is its config (with a seed) plus the ordered list of player inputs, so any game can be replayed exactly. Every Host, Celestial, and Event ability is implemented here. |
 | `tools/sim` | The balance simulator. Plays thousands of all-bot games and reports win rates by Celestial and card. |
 | `packages/protocol` | The messages between the browser and a game table, and the shapes of the stats API. |
 | `apps/server` | The Cloudflare Worker: live game tables (one Durable Object each), bots and the turn timer, and the stats database (D1 `divide-stats`, schema in `migrations/`). |
@@ -16,7 +16,7 @@ The online version of The Divide. Everything here is TypeScript.
 
 ```
 npm install
-npm test                                   # engine tests (99, including about 600 bot games) and server tests (11)
+npm test                                   # engine tests (100, including about 600 bot games) and server tests (11)
 npm run dev                                # the whole site locally at http://127.0.0.1:8787
 npm run deploy                             # publish (see SITE.md)
 npm run sim -- --games 20000 --players 3,4 # balance report: every Celestial and Host card
@@ -25,6 +25,8 @@ cd tools/sim && npx tsx advanced.ts 20000 0 out.json      # Advanced game: Celes
 cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements
 cd tools/sim && npx tsx baseline.ts 20000  # the bot column on the Stats page (after a rules change)
 cd tools/sim && npx tsx exp45.ts 16000     # V45 check: Days nobody wins, Offers, card groups, cards and Celestials out of range
+cd tools/sim && npx tsx skill45.ts 200 4   # one strong (Monte Carlo) bot among heuristic bots: its win ratio
+cd tools/sim && npx tsx card-value.ts 2500 0 1 out.json  # what each card is worth in hand, against a plain card of its color (STRONG=1: a strong player)
 ```
 
 ## Testing a rule change

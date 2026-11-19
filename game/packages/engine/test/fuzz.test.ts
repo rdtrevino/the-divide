@@ -37,6 +37,17 @@ describe('bot games run to completion', () => {
   }
 });
 
+describe('strong bots (Monte Carlo)', () => {
+  it('play legal, complete games, and are deterministic', () => {
+    for (const seed of [3, 4]) {
+      const a = playBotGame({ ...cfg(seed, 3), advanced: true }, 20000, [0]);
+      const b = playBotGame({ ...cfg(seed, 3), advanced: true }, 20000, [0]);
+      expect(a.state.result).not.toBeNull();
+      expect(b.state.result).toEqual(a.state.result);
+    }
+  });
+});
+
 describe('replay is deterministic', () => {
   it('replaying inputs reproduces the game exactly', () => {
     for (let seed = 1; seed <= 25; seed++) {
