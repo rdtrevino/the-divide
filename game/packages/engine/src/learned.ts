@@ -7,7 +7,7 @@ import { botAnswer } from './bots';
 import { CHOIR_LIMIT, baseValue } from './core';
 import { CELESTIALS, EVENTS, HOSTS } from './data';
 import { TOKEN_WEIGHT, daysWon } from './engine';
-import { isSearched } from './mc';
+import { type Strength, isSearched } from './mc';
 import type { Answer, Decision, GameState, Option } from './types';
 import { type GameView, viewFor } from './view';
 import WEIGHTS from './learned.weights.json';
@@ -248,6 +248,13 @@ export function warmLearnedBot(times = 30, net: Weights = NET): void {
   for (let k = 0; k < times; k++) forward(ready, dec, [opt, opt, opt, opt]);
 }
 
+/** A decision's options, best first by the network (for a search that tries only the most promising few). */
+export function learnedRanking(s: GameState, d: Decision, net: Weights = NET): string[] {
+  if (!fits(net)) return d.options.map((o) => o.id);
+  const sc = learnedScores(s, d, botAnswer(s, d)[0], net);
+  return d.options.map((o, i) => ({ id: o.id, v: sc[i] })).sort((a, b) => b.v - a.v).map((x) => x.id);
+}
+
 /** The learned bot's answer: the best-scored option on searched decisions, the heuristic's elsewhere. */
 export function learnedAnswer(s: GameState, d: Decision, net: Weights = NET): Answer {
   const quick = botAnswer(s, d);
@@ -257,3 +264,10 @@ export function learnedAnswer(s: GameState, d: Decision, net: Weights = NET): An
   for (let i = 1; i < sc.length; i++) if (sc[i] > sc[b]) b = i;
   return [d.options[b].id];
 }
+
+/**
+ * The hybrid strong bot (design/bots.md): the strong bot's search, but only over the network's top 2 options, each
+ * played out 4 times by the learned bot. It beats the plain strong bot head-to-head (1.12 to 0.88) at about the same
+ * cost; use it in simulations that want strong play. Like the learned bot, it has the current rules built in.
+ */
+export const HYBRID: Strength = { rollouts: 4, maxOptions: 2, policy: (s, d) => learnedAnswer(s, d), rank: (s, d) => learnedRanking(s, d) };

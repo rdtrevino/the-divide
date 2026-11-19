@@ -2,6 +2,14 @@
 
 Older entries name files that have since been removed (design write-ups, simulator reports, archived spreadsheets and rulebook drafts, the V28 print kit); every one of them is in the git history before November 18, 2026.
 
+## The learned bot (November 19, 2026)
+
+Layer 2 of the bot plan (`design/bots.md`).
+- **Learned bot** (`learned.ts`): a small network trained on the strong bot, reading only its seat's view. 1.62× a fair share among heuristic bots, 0.81 against the strong bot, a median 0.15 ms a decision.
+- **The site's bots** now use it (`roomCore.ts`), warmed at Worker startup; the heuristic still answers minor decisions. Not yet deployed.
+- **Hybrid strong bot** (`HYBRID`): searches only the network's top 2 options, with learned playouts. Beats the strong bot 1.12 to 0.88 at the same cost.
+- **Tools:** `game/tools/distill` (data, training in numpy, play tests). Removed four redundant sim scripts; `exp45.ts` now reports seats and runs on every core. **`DECISIONS.md`** indexes every decision.
+
 ## Faster bots (November 19, 2026)
 
 Layer 1 of the bot plan (`design/bots.md`): the same bots, about 3× faster, with every move unchanged (checked by fingerprint).

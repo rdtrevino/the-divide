@@ -6,7 +6,7 @@ export { viewFor } from './view';
 export type { GameView, PlayerView } from './view';
 export { botAnswer } from './bots';
 export { strongAnswer, searchScores, isSearched, STRONG, type Strength } from './mc';
-export { learnedAnswer, learnedScores, encode, hasLearnedWeights, warmLearnedBot, DECISION_FEATURES, OPTION_FEATURES, type Weights } from './learned';
+export { HYBRID, learnedAnswer, learnedScores, learnedRanking, encode, hasLearnedWeights, warmLearnedBot, DECISION_FEATURES, OPTION_FEATURES, type Weights } from './learned';
 export { CHOIR_PAY, DAYS, STARTING_CHOIR, TOKENS_EACH, TOKEN_WEIGHT, OPEN_SET_ASIDE_HOSTS, OPEN_SET_ASIDE_EVENTS, daysWon, legalActions, setTide } from './engine';
 export { baseValue, choirColors, CHOIR_LIMIT } from './core';
 export { playBotGame } from './autoplay';

@@ -3,16 +3,17 @@
 //   skill4, skill3: one learned seat among heuristic bots (the same seeds as tools/sim/skill45.ts). 1.00 is a fair share.
 //   vs4, vs3:       the learned bot against the strong (Monte Carlo) bot: half the seats each, alternating by game.
 //   (The strong bot's own skill on the same seeds: tools/sim/skill45.ts.)
-//   mclskill4:      the strong bot with the learned bot playing its playouts (expert iteration), among heuristic bots.
-//   mclvs4:         that bot against the plain strong bot, two seats each.
+//   hyskill4, hyvs4: the hybrid (engine HYBRID): search only the network's top HY_OPTS options (default 2) with HY_ROLL
+//                   learned playouts each (default 4); among heuristic bots, or against the plain strong bot.
 import { readFileSync } from 'node:fs';
-import { Game, STRONG, botAnswer, learnedAnswer, strongAnswer, type Decision, type GameState } from '@divide/engine';
+import { Game, botAnswer, learnedAnswer, learnedRanking, strongAnswer, type Decision, type GameState } from '@divide/engine';
 import { pmap } from '../par';
 
 const [file, gStr, mode = 'skill4'] = process.argv.slice(2);
 const net = file === 'builtin' ? undefined : JSON.parse(readFileSync(file, 'utf8'));
 const G = Number(gStr ?? 200), n = Number(mode.slice(-1));
-const LEARNED_PLAYOUTS = { ...STRONG, policy: (s: GameState, d: Decision) => learnedAnswer(s, d, net) };
+// The engine's HYBRID, with this file's weights and adjustable size.
+const HYBRID = { rollouts: Number(process.env.HY_ROLL ?? 4), maxOptions: Number(process.env.HY_OPTS ?? 2), policy: (s: GameState, d: Decision) => learnedAnswer(s, d, net), rank: (s: GameState, d: Decision) => learnedRanking(s, d, net) };
 
 const t0 = performance.now();
 const res = await pmap(G, (i) => {
@@ -20,14 +21,14 @@ const res = await pmap(G, (i) => {
   // Which bot plays each seat; `tested` are the seats measured.
   const kind = Array.from({ length: n }, (_, k) => {
     if (mode.startsWith('skill')) return k === i % n ? 'learned' : 'heur';
-    if (mode.startsWith('mclskill')) return k === i % n ? 'learned' : 'heur';
-    if (mode.startsWith('mclvs')) return (k + i) % 2 === 0 ? 'learned' : 'mc';
+    if (mode.startsWith('hyskill')) return k === i % n ? 'learned' : 'heur';
+    if (mode.startsWith('hyvs')) return (k + i) % 2 === 0 ? 'learned' : 'mc';
     return (k + i) % 2 === 0 ? 'learned' : 'mc';
   });
   let ms = 0, calls = 0, acts = 0, offers = 0;
   const answer = (d: Decision) => {
     const k = kind[d.seat];
-    if (k === 'learned') { const t = performance.now(); const a = mode.startsWith('mcl') ? strongAnswer(g, d, LEARNED_PLAYOUTS) : learnedAnswer(g.state, d, net); ms += performance.now() - t; calls++; return a; }
+    if (k === 'learned') { const t = performance.now(); const a = mode.startsWith('hy') ? strongAnswer(g, d, HYBRID) : learnedAnswer(g.state, d, net); ms += performance.now() - t; calls++; return a; }
     if (k === 'mc') return strongAnswer(g, d);
     return botAnswer(g.state, d);
   };

@@ -9,13 +9,13 @@ It has the current rules built in. After a rule or card change, regenerate the d
 tested with the search bots, not this one.
 
 ```bash
-npx tsx gen.ts 1000 data/r2a 200000         # games, out dir, first seed (about 5 minutes on 4 cores)
-npx tsx gen.ts 1000 data/r2b 201000         # write in chunks: a run saves only when it ends, and train.py joins folders
-python3 train.py data/r2a data/r2b --hidden 128,64 --epochs 15 --temp 0.5 --wd 1e-4 --out w.json   # numpy only, ~2 min
+npx tsx gen.ts 1000 data/r5a 500000         # games, out dir, first seed (about 5 minutes on 4 cores)
+npx tsx gen.ts 1000 data/r5b 501000         # write in chunks: a run saves only when it ends, and train.py joins folders
+python3 train.py data/r5a data/r5b --hidden 128,64 --epochs 15 --temp 0.5 --wd 1e-4 --out w.json   # numpy only, ~2 min
 npx tsx eval.ts w.json 400 skill4           # one learned seat among heuristic bots (1.00 is a fair share)
 npx tsx eval.ts w.json 400 vs4              # learned against strong, two seats each
 cp w.json ../../packages/engine/src/learned.weights.json   # adopt it (packed: base64 float32)
-npx tsx gen.ts 1000 data/r4a 400000 data --playouts w.json # a stronger teacher: playouts by the learned bot (~3x slower)
+npx tsx eval.ts w.json 400 hyvs4            # the hybrid (engine HYBRID) with these weights, against the strong bot
 ```
 
 - **gen.ts** plays games with the teacher in every seat (in every fourth game, half the seats are heuristic bots), and

@@ -1,6 +1,6 @@
 # Bots: strong, fast and human-like
 
-November 19, 2026. Robert asked whether testing and play bots could be both strong and fast, instead of choosing one. The answer is three layers. Layer 1 is done; layers 2 and 3 are the plan.
+November 19, 2026. Robert asked whether testing and play bots could be both strong and fast, instead of choosing one. The answer is three layers. Layers 1 and 2 are done; layer 3 is the plan.
 
 ## Where the bots stood
 
@@ -32,12 +32,41 @@ What limits it:
 - **Making the engine skip its log in copies saved only 5%,** so it was not kept: not worth a special case in the rules code.
 - **Duplicate deals don't reduce the noise of a skill test.** Each deal played from every seat gave ±0.09 at 400 games, the same as independent deals: what happens during a game outweighs the deal. Paired games still help when two variants are compared on the same seeds, as `card-value.ts` does. `skill45.ts` now prints a standard error (`se`); ±2 se is the noise band.
 
-## Layer 2: search offline, play from what it learned (next)
+## Layer 2: a learned bot, and a hybrid (done)
 
-The approach behind strong poker and Go programs. The Monte Carlo bot plays thousands of games. A small model learns to predict its choices, and how good a position is, from what a seat can see: the Tide track, the Choirs, its hand and tokens, the Day, and its guesses about rival tokens.
-- The model chooses in microseconds: fast enough for the site's free plan, and near Monte Carlo strength.
-- It also replaces the heuristic inside the search, which makes the search stronger with fewer rollouts. Repeat 2–3 times.
-- **Caveat:** a learned bot has today's rules built in. It is right for card balance and live play under V45, but biased on a new rule until retrained. New rules keep going through the search (layer 1).
+**The learned bot** (`game/packages/engine/src/learned.ts`) is a small neural network (243 inputs, 128 and 64 hidden units) that scores the options of the six decisions the strong bot searches. Minor decisions go to the heuristic, as in the strong bot.
+- **What it reads:** only what its seat may see, read from `viewFor`, the same view the site sends a player. A test re-deals everything hidden (other hands and token colors, facedown Altar cards, the deck) and checks the inputs do not change; it was shown to catch a planted leak.
+- **Its inputs:**
+  - the table: the Day, the Tide track, Glory, Choirs, token counts, the Altar as read, the hand;
+  - each option's card and kind;
+  - the arithmetic a careful player does: the chance each side wins today before and after the option, what it is worth tonight, what lasts.
+- **Its teacher:** the strong bot's estimate of every option it tried, over 5,000 games (`game/tools/distill`).
+- **Its training:** a ranking loss, so each decision counts the same whatever its scale. With squared error, Judgment Day's 100-point swings drowned the rest, and the bot reached only 1.09×.
+- **The site's bots now use it** (`roomCore.ts`), with a warm-up when the Worker starts. Not yet deployed.
+
+**The hybrid** (`HYBRID` in `learned.ts`) is the strong bot's search, but only over the network's top 2 options, each played out 4 times by the learned bot.
+
+| Bot | Among 3 heuristic bots (600–800 games) | Against the strong bot, 2 seats each (400–600 games) | ms a decision, averaged over all decisions |
+|---|---|---|---|
+| Heuristic | 1.00 | — | 0.03 |
+| **Learned** | **1.62 ± 0.07** | **0.81 vs 1.19** | **0.15–0.2** |
+| Hybrid, top 2 × 2 playouts | 1.69 ± 0.08 | 1.07 vs 0.93 | 3.9 |
+| **Hybrid, top 2 × 4 (`HYBRID`)** | **1.76 ± 0.08** | **1.12 vs 0.88** | **6.9** |
+| Strong (Monte Carlo) | 1.98 ± 0.09 | 1.00 | 6.7 (33 on the decisions it searches) |
+
+- **The learned bot** keeps over half the strong bot's edge over the heuristic, at about 1/35 of its cost. It is the bot for the site: after warm-up, a decision takes a median 0.15 ms and at most about 3.7 ms (the first few). The free plan allows 10 ms a request. The weights are 206 KB, packed as base64 float32. The website bundle does not include them.
+- **The hybrid** beats the strong bot head-to-head at the same cost. Use it where simulations want strong players.
+  - It scores less against heuristic bots because the plain strong bot simulates its opponents as exactly those bots: an advantage only in that test.
+  - Like the learned bot, it has the current rules built in, so new rule ideas still go to the plain strong bot and the lab.
+
+**What did not help**, each measured in play:
+- **More data and DAgger** (training on positions the learned bot itself reaches): 1.56–1.62, no gain.
+- **A stronger teacher:** the strong bot with learned playouts beats the plain one 1.13 to 0.87, but a student trained on it was no better (0.79–0.80 against the strong bot).
+- **The smaller network** (64 and 32 hidden units): 1.56 against 1.62, at 0.15 ms against 0.22.
+
+The single-glance network looks like it has reached its ceiling. More strength comes from adding search (the hybrid), not from more imitation.
+
+**Retraining** after a rule or card change takes about 15 minutes (`game/tools/distill/README.md`): generate data, train, test, copy the weights.
 
 ## Layer 3: human-like play (after)
 

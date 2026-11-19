@@ -12,8 +12,11 @@ import type { Answer, Decision, GameState, Seat, Side } from './types';
 /** Decisions worth searching; everything else is answered by the heuristic. */
 const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment']);
 
-/** `policy` plays everyone's choices inside the playouts (default: the heuristic bot). */
-export interface Strength { rollouts: number; maxOptions: number; policy?: (s: GameState, d: Decision) => Answer }
+/**
+ * `policy` plays everyone's choices inside the playouts (default: the heuristic bot). `rank` orders the options to
+ * try, best first (default: the heuristic's choice, then the options in order); the first `maxOptions` are searched.
+ */
+export interface Strength { rollouts: number; maxOptions: number; policy?: (s: GameState, d: Decision) => Answer; rank?: (s: GameState, d: Decision) => string[] }
 export const STRONG: Strength = { rollouts: 8, maxOptions: 6 };
 
 let seq = 1;
@@ -97,7 +100,8 @@ export const isSearched = (d: Decision) => SEARCHED.has(d.tag) && d.max === 1 &&
  * on the same reshuffled worlds (common random numbers), so the comparison is fair.
  */
 export function searchScores(g: Game, d: Decision, k: Strength = STRONG, quick = botAnswer(g.state, d)): { ids: string[]; scores: number[] } {
-  const ids = [quick[0], ...d.options.map((o) => o.id).filter((id) => id !== quick[0])].slice(0, k.maxOptions);
+  const ids = (k.rank ? k.rank(g.state, d) : [quick[0], ...d.options.map((o) => o.id).filter((id) => id !== quick[0])]).slice(0, k.maxOptions);
+  if (ids.length === 1) return { ids, scores: [0] };
   const base = (g.state.config.seed ^ (d.id * 2654435761)) | 0;
   const scores = ids.map((id) => {
     let total = 0;
