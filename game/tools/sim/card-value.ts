@@ -6,7 +6,7 @@
 // STRONG=1: the tested player is the Monte Carlo bot (mc.ts); the rest of the table plays the heuristic.
 // Usage: [STRONG=1] npx tsx card-value.ts <pairs per card> <worker> <workers> <out.json>
 import { writeFileSync } from 'node:fs';
-import { Game, HOST, HOSTS, OPEN_SET_ASIDE_HOSTS, botAnswer, strongAnswer } from '@divide/engine';
+import { Game, HOST, HOSTS, OPEN_SET_ASIDE_HOSTS, STRONG as MC, botAnswer, strongAnswer } from '@divide/engine';
 import type { GameState, HostDef } from '@divide/engine';
 
 const PAIRS = Number(process.argv[2] ?? 400);
@@ -14,6 +14,7 @@ const WORKER = Number(process.argv[3] ?? 0);
 const WORKERS = Number(process.argv[4] ?? 1);
 const OUT = process.argv[5] ?? `card-value-${WORKER}.json`;
 const STRONG = !!process.env.STRONG;
+if (process.env.ROLLOUTS) MC.rollouts = Number(process.env.ROLLOUTS);
 
 // Plain cards: a color and a value, no ability.
 const plain = (h: HostDef) => {
