@@ -167,3 +167,20 @@ Coloring them serves principle 5 (synergy by alignment: every card is a side) an
 **Hidden Roles is retired.** The tokens do what it was for. At 5 and 6 players the token core still hides sides (a reader 53–57%), but a fair turn order needs a multiple of the player count in Days (5 or 10 at 5 players, 6 at 6), and seats measured 0.59 to 1.43 (lab Round 41, `results/r41.jsonl`). The game is for 3 and 4.
 
 **What the engine bots cannot show** is the same as before: talk, bluffs, and how the reveal feels. The engine bots are also weaker than the lab's (they Offer about 33% of the time against the lab bots' 50%), so treat their card numbers as a floor check.
+
+## Seven Days at every table? (Round 43, a proposal)
+
+Robert asked whether every player count could play the same number of Days, 7, so there is one number to learn, including at 5 and 6 players. The difficulty is not the number. A fixed 7 gives some seats the last turn on the last Day, and that seat sees the most and decides the most. The fix tested is in the structure, not a catch-up: **Judgment Day**. On the last Day, everyone chooses their action in secret, and the choices are carried out together in turn order. A card chosen for Gathering that is already gone is simply not taken.
+
+Strong lab bots, the current V45 rules with every card Light or Dark (600 games at 3 players, 500 at 4, 300 at 5, 250 at 6). Win rate by seat, 1.00 is fair:
+
+| Players | 7 Days | 7 Days + Judgment Day | Length (time model) |
+|---|---|---|---|
+| 3 | 0.77–1.17 | **0.92–1.12** | 27 min |
+| 4 | 0.84–1.24 | **0.89–1.16** | 32 min |
+| 5 | 0.78–1.23 | **0.91–1.24** | 37 min |
+| 6 | 0.63–1.29 | **0.85–1.13** | 43 min |
+
+Token mixes stay fair throughout (0.89 to 1.09). For comparison, the current rule (6 Days at 3 players, 8 at 4) measured 0.95–1.03 and 0.92–1.06. With 300 games at 5 players, about ±0.12 is noise.
+
+**What it means.** With Judgment Day, 7 Days works at every count from 3 to 6. It is a touch less even than 6 or 8 Days at 3 and 4 players, but it gives one number to teach, a climax that is itself a bluff (everyone commits blind), and a path back to 5 and 6 players. The cost is one rule. It passes the vision's test on the first and third questions: on the last Day, help-yourself and help-your-side are chosen blind, and the Altar becomes a contest nobody can watch. **It is Robert's call.** Not yet in the rules or the engine.

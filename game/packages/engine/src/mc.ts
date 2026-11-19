@@ -78,7 +78,7 @@ function utility(s: GameState, q: Seat): number {
 
 /** Replay to this decision, reshuffle the unseen, answer it with `choice`, and play out the rest of the Day. */
 function rollout(g: Game, d: Decision, choice: Answer): number {
-  const r = Game.replay(g.config, g.inputs);
+  const r = Game.replay(g.config, g.inputs, g.opts);
   determinize(r.state, d.seat);
   const day = r.state.day;
   const open = () => r.pending.filter((p) => r.waitingOn(p.seat).includes(p));

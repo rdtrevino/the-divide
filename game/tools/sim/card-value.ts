@@ -1,6 +1,7 @@
-// What a Host card is worth, wherever it ends up. Paired games on the same seeds: in one, a player is dealt the card
-// in their opening hand; in the other, a plain card of the same color and value with no ability. The difference in
-// that player's win rate is the card's value, however it is used: Offered, Exalted, planted, spent or kept.
+// What a Host card's ability is worth. Paired games on the same seeds: in one, a player starts with the card in their
+// Choir (in hand for Hymn, Lamentation and Parasite, which work from the hand); in the other, a plain card of the same
+// color and value with no ability. The difference in that player's win rate is the card's value, however it is used:
+// kept and activated, spent, discarded, stolen or planted.
 // Also records how the card was used, so each card can be judged by its role.
 // STRONG=1: the tested player is the Monte Carlo bot (mc.ts); the rest of the table plays the heuristic.
 // Usage: [STRONG=1] npx tsx card-value.ts <pairs per card> <worker> <workers> <out.json>
@@ -23,18 +24,20 @@ const plain = (h: HostDef) => {
   return id;
 };
 
-/** Swap card X with the first card of `seat`'s hand, wherever X is; optionally replace X by another card. */
+/** Cards that do their work from the hand (Offered, or planted when Exalted); every other ability works from the Choir. */
+const FROM_HAND = new Set(['host-hymn', 'host-lamentation', 'host-parasite']);
+
+/** Give `seat` card X at the start (in their starting Choir, or in hand for FROM_HAND), swapping it with whatever was
+ *  there so the deck is otherwise the same; then put `give` in X's place (X itself, or a plain card). */
 function deal(s: GameState, seat: number, x: string, give: string) {
-  const hand = s.players[seat].hand;
-  const h0 = hand[0];
-  if (h0 !== x) {
-    const where: string[][] = [s.hostDeck, ...s.players.map((p) => p.hand)];
+  const slot = FROM_HAND.has(x) ? { get: () => s.players[seat].hand[0], set: (c: string) => (s.players[seat].hand[0] = c) } : { get: () => s.players[seat].choir[0].id, set: (c: string) => (s.players[seat].choir[0].id = c) };
+  const mine = slot.get();
+  if (mine !== x) {
     let done = false;
-    for (const zone of where) { const i = zone.indexOf(x); if (i >= 0) { zone[i] = h0; done = true; break; } }
-    if (!done) for (const p of s.players) { const c = p.choir.find((c) => c.id === x); if (c) { c.id = h0; done = true; break; } }
-    hand[0] = x;
+    for (const zone of [s.hostDeck, ...s.players.map((p) => p.hand)]) { const i = zone.indexOf(x); if (i >= 0) { zone[i] = mine; done = true; break; } }
+    if (!done) for (const p of s.players) { const c = p.choir.find((c) => c.id === x); if (c) { c.id = mine; done = true; break; } }
   }
-  hand[0] = give;
+  slot.set(give);
 }
 
 function play(seed: number, n: number, seat: number, x: string, give: string) {

@@ -13,15 +13,16 @@ export class Game {
   private answers = new Map<number, Answer>();
   private gen: Gen<void>;
 
-  constructor(readonly config: GameConfig, opts: { setup?: (s: GameState) => void } = {}) {
+  /** `setup` changes the dealt state before play (tests, simulations); replays repeat it. */
+  constructor(readonly config: GameConfig, readonly opts: { setup?: (s: GameState) => void } = {}) {
     this.state = createState(config);
     opts.setup?.(this.state);
     this.gen = runGame(this.state);
     this.advance([]);
   }
 
-  static replay(config: GameConfig, inputs: Input[]): Game {
-    const g = new Game(config);
+  static replay(config: GameConfig, inputs: Input[], opts: Game['opts'] = {}): Game {
+    const g = new Game(config, opts);
     for (const i of inputs) g.apply(i);
     return g;
   }
