@@ -100,6 +100,7 @@ export interface Rules {
     onAltar?: 'lost' | 'fewest' | 'refund' | 'refundFewest' | 'victors' | 'losers';
     tokFruits?: 'also' | 'only'; // a token may be given as First Fruits (face up, anonymous; no draw); 'only': not at Noon
     tokFree?: boolean; // once a Day, a token may be added facedown alongside any action (free)
+    tokHidden?: boolean; // tokens look like cards: no one sees that an Offer was a token
     collectBonus?: number;
     asCards?: boolean; // tokens are Host cards in the deck: drawn, held in hand, Offered like cards, Gathered to hand, never Exalted
   };
@@ -497,7 +498,7 @@ export function act(s: State, a: Action) {
     const [c] = s.tok[p].splice(j, 1);
     s.altar.push({ c, up: false, by: p, kind: 1, seen: 1 << p });
     s.offerStats[0]++; s.dayOffers[p]++; s.offersBy[p]++; s.stakeStats[0]++; s.tokBy[p]++;
-    see(s, p, P.offN); see(s, p, P.tokOff);
+    see(s, p, P.offN); if (!s.R.stake?.tokHidden) see(s, p, P.tokOff);
   } else if (a.t === 'offer') {
     const [c] = s.hand[p].splice(a.i, 1);
     s.offerStats[0]++;

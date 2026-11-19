@@ -478,3 +478,9 @@ Object.assign(VARIANTS, {
   // where leftover tokens go
   Jlost: J({ onAltar: 'lost' }), Jref: J({ onAltar: 'refund' }), Jreff: J({ onAltar: 'refundFewest' }), Jvic: J({ onAltar: 'victors' }), Jlos: J({ onAltar: 'losers' }),
 } as Record<string, V>);
+// Round 45: "no offering, no harvest" with the token ideas.
+Object.assign(VARIANTS, {
+  K1: J({}, { miserTax: 0, miserDay: 'zero' }), K2: J({ tokHidden: true }, { miserTax: 0, miserDay: 'zero' }),
+  K3: J({ tokFruits: 'also' }, { miserTax: 0, miserDay: 'zero' }), K4: J({ tokFree: true }, { miserTax: 0, miserDay: 'zero' }),
+  K5: J({ onAltar: 'refundFewest' }, { miserTax: 0, miserDay: 'zero' }),
+} as Record<string, V>);
