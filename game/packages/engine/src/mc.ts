@@ -12,7 +12,8 @@ import type { Answer, Decision, GameState, Seat, Side } from './types';
 /** Decisions worth searching; everything else is answered by the heuristic. */
 const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment']);
 
-export interface Strength { rollouts: number; maxOptions: number }
+/** `policy` plays everyone's choices inside the playouts (default: the heuristic bot). */
+export interface Strength { rollouts: number; maxOptions: number; policy?: (s: GameState, d: Decision) => Answer }
 export const STRONG: Strength = { rollouts: 8, maxOptions: 6 };
 
 let seq = 1;
@@ -73,15 +74,15 @@ function utility(s: GameState, q: Seat): number {
 }
 
 /** Copy the game at this decision, reshuffle the unseen, answer it with `choice`, and play out the rest of the Day. */
-function rollout(g: Game, d: Decision, choice: Answer): number {
+function rollout(g: Game, d: Decision, choice: Answer, policy: (s: GameState, d: Decision) => Answer = botAnswer): number {
   const r = g.fork();
   determinize(r.state, d.seat);
   const day = r.state.day;
   const open = () => r.pending.filter((p) => r.waitingOn(p.seat).includes(p));
-  for (const p of open()) r.answer(p.seat, p.id, p.id === d.id ? choice : botAnswer(r.state, p));
+  for (const p of open()) r.answer(p.seat, p.id, p.id === d.id ? choice : policy(r.state, p));
   let guard = 0;
   while (!r.over && r.state.day === day && r.pending.length) {
-    for (const p of open()) if (r.pending.includes(p)) r.answer(p.seat, p.id, botAnswer(r.state, p));
+    for (const p of open()) if (r.pending.includes(p)) r.answer(p.seat, p.id, policy(r.state, p));
     if (++guard > 4000) break;
   }
   return utility(r.state, d.seat);
@@ -100,7 +101,7 @@ export function searchScores(g: Game, d: Decision, k: Strength = STRONG, quick =
   const base = (g.state.config.seed ^ (d.id * 2654435761)) | 0;
   const scores = ids.map((id) => {
     let total = 0;
-    for (let i = 0; i < k.rollouts; i++) { seq = base + i * 7919; total += rollout(g, d, [id]); }
+    for (let i = 0; i < k.rollouts; i++) { seq = base + i * 7919; total += rollout(g, d, [id], k.policy); }
     return total / k.rollouts;
   });
   return { ids, scores };
