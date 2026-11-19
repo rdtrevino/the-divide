@@ -157,6 +157,15 @@ export function stakeWeights(s: State, p: number): number[] {
   }
   const [tL, tD] = tokCounts(s, p);
   const norm = S.asCards ? 1 : (S.perPlayer ?? 2) / 2;
+  if (S.score === 'days') return [tL * (S.tokVal ?? 1), tD * (S.tokVal ?? 1)];
+  if (S.score === 'world') {
+    // the value of winning one more Day: how much it moves the chance that this color wins more Days
+    const lw = s.tides.filter((t) => t > 0).length, dw = s.tides.filter((t) => t < 0).length;
+    const dl = Math.max(1, s.R.maxDays - s.day + 1), sd = Math.sqrt(dl);
+    const dens = Math.exp(-((lw - dw) ** 2) / (2 * sd * sd)) / (sd * 2.5066);
+    const k = Math.max(0.02, 2 * dens);
+    return [(S.tokVal ?? 1) * tL * k, (S.tokVal ?? 1) * tD * k];
+  }
   if (S.score === 'winner') {
     const lw = s.tides.filter((t) => t > 0).length, dw = s.tides.filter((t) => t < 0).length;
     const pL = Math.max(0.15, Math.min(0.85, 0.5 + 0.15 * (lw - dw)));
@@ -165,14 +174,35 @@ export function stakeWeights(s: State, p: number): number[] {
   if (S.score === 'concentrate') return [(tL * tL) / (norm * norm * 2), (tD * tD) / (norm * norm * 2)];
   return [tL / norm, tD / norm];
 }
+export const isTrack = (s: State) => s.R.stake?.score === 'days' || s.R.stake?.score === 'world';
 function stakeDay(s: State, p: number, cards: number[], pl: number) {
   const [wL, wD] = stakeWeights(s, p);
   let nL = 0, nD = 0;
   for (const v of cards) { if (v > 0) nL++; else if (v < 0) nD++; }
+  if (isTrack(s) && s.R.stake!.shares) { const tv = s.R.stake!.tokVal ?? 1; return tv * (pl * (wL / tv + nL) + (1 - pl) * (wD / tv + nD)); }
+  if (isTrack(s)) { const k = s.R.stake!.reap ?? 1; return pl * (wL + k * nL) + (1 - pl) * (wD + k * nD); }
   return pl * wL * (1 + nL) + (1 - pl) * wD * (1 + nD);
 }
 let HYP: number[] | null = null; // hypothetical Choir values for the option being scored (Fates)
 const choirVals = (s: State, p: number) => s.choir[p].map((x) => (x.flip ? -val(s, x.c) : val(s, x.c)));
+
+/** Tide-track scoring: what holding one token of color c is worth by the end. */
+function tokUnit(s: State, p: number, c: number, dl: number) {
+  const S = s.R.stake!, tv = S.tokVal ?? 1;
+  const lw = s.tides.filter((t) => t > 0).length, dw = s.tides.filter((t) => t < 0).length;
+  const plF = fateLaterPl(s), pc = c > 0 ? plF : 1 - plF;
+  if (S.score === 'days') return tv * ((c > 0 ? lw : dw) + dl * 0.8 * pc + 0.2 * pc);
+  const P = worldP(s, 0); return tv * (c > 0 ? P : 1 - P);
+}
+/** World scoring: the chance Light ends with more Days (a tie counts half), from the Days so far and those left. */
+export function worldP(s: State, extra: number) {
+  const lw = s.tides.filter((t) => t > 0).length, dw = s.tides.filter((t) => t < 0).length;
+  const dl = Math.max(0, s.R.maxDays - s.tides.length);
+  const d = lw - dw + extra, pl = fateLaterPl(s);
+  if (dl === 0) return d > 0 ? 1 : d < 0 ? 0 : 0.5;
+  const mu = d + dl * (2 * pl - 1), sd = Math.sqrt(dl * 4 * pl * (1 - pl)) + 0.3;
+  return PHI(mu / sd);
+}
 
 /** Today's expected Reaping and the value of the position later, for any scoring system. */
 function expNow(s: State, p: number, mine: number, m: number, sd: number) {
@@ -237,7 +267,7 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
       const plF = fateLaterPl(s);
       const nC = choirVals(s, p).filter((v) => sgn(v) === a.col).length;
       const future = (dl - 1) * 0.8 * (a.col > 0 ? plF : 1 - plF) * (1 + nC);
-      sc = expNow(s, p, leanSum(s, p), m, sd) - share * (bank + future + 1);
+      sc = isTrack(s) ? expNow(s, p, leanSum(s, p), m, sd) - tokUnit(s, p, a.col, dl) : expNow(s, p, leanSum(s, p), m, sd) - share * (bank + future + 1);
       out.push(sc + (noise ? rnd(s) * noise : 0));
       continue;
     }
@@ -250,7 +280,8 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
       const plF = fateLaterPl(s);
       // a token you take raises your stake in its color (unknown color: half each)
       const per = (c: number) => { const held = c > 0 ? tL : tD; const bank = s.banks[p][c > 0 ? 0 : 1]; const nC = choirVals(s, p).filter((v) => sgn(v) === c).length; const unit = held > 0 ? w[c > 0 ? 0 : 1] / held : 1 / ((s.R.stake?.perPlayer ?? 2) / 2); return unit * (bank + (dl - 1) * 0.8 * (c > 0 ? plF : 1 - plF) * (1 + nC)); };
-      sc = expNow(s, p, leanSum(s, p), e.m - removed, sd) + (col === 0 ? 0.5 * (per(1) + per(-1)) : per(col));
+      const per2 = isTrack(s) ? (c: number) => tokUnit(s, p, c, dl) : per;
+      sc = expNow(s, p, leanSum(s, p), e.m - removed, sd) + (col === 0 ? 0.5 * (per2(1) + per2(-1)) : per2(col));
       out.push(sc + (noise ? rnd(s) * noise : 0));
       continue;
     }
@@ -462,6 +493,12 @@ function value(s: State, q: number) {
 function valueBase(s: State, q: number) {
   const dl = daysLeft(s);
   const H = Math.min(dl - 1, 2.5) * 0.5;
+  if (s.R.stake?.score === 'world') {
+    const [tL, tD] = tokCounts(s, q), P = worldP(s, 0), tv = s.R.stake.tokVal ?? 1, k = s.R.stake.reap ?? 1;
+    const cv = choirVals(s, q), pl = fateLaterPl(s);
+    const days = dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0);
+    return s.glory[q] + tv * (P * tL + (1 - P) * tD) + days * 0.8 * k * (pl * cv.filter((v) => v > 0).length + (1 - pl) * cv.filter((v) => v < 0).length);
+  }
   if (s.R.stake) return s.glory[q] + stakeScore(s, q) + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q));
   if (s.R.fate) return s.glory[q] + s.R.fate.perDay * s.fateDays[q] + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
   return s.glory[q] + H * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;

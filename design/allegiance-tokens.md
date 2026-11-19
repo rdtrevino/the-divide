@@ -1,6 +1,6 @@
 # Allegiance: Robert's two ideas, tested
 
-November 19, 2026. A proposal, not adopted. Robert's ideas from November 19, measured in `game/tools/lab` (Rounds 35–37, files in `results/`). Every test keeps **Choirs face up** (Robert's decision: the engine is public) and two of the hiding rules from `ground-up.md`: **anonymous First Fruits** and **anonymous reveal**. Games last 7 Days (about 27 minutes at 3 players, 32 at 4).
+November 19, 2026. A proposal, not adopted. **Superseded in scoring by `tide-track.md`** (same tokens, much simpler scoring). Robert's ideas from November 19, measured in `game/tools/lab` (Rounds 35–37, files in `results/`). Every test keeps **Choirs face up** (Robert's decision: the engine is public) and two of the hiding rules from `ground-up.md`: **anonymous First Fruits** and **anonymous reveal**. Games last 7 Days (about 27 minutes at 3 players, 32 at 4).
 
 ## The problem these ideas solve
 

@@ -90,7 +90,11 @@ export interface Rules {
     mix?: 'even' | 'random';
     poolL?: number; poolD?: number;
     mobile?: boolean; // tokens can be Offered (Light/Dark +2) and Gathered; a token left on the Altar is lost
-    score?: 'weighted' | 'winner' | 'collect' | 'concentrate'; // concentrate: tokens count squared (rewards committing to one color)
+    score?: 'weighted' | 'winner' | 'collect' | 'concentrate' | 'days' | 'world'; // concentrate: tokens count squared (rewards committing to one color)
+    // 'days' (the Tide track): no banks. Each token scores tokVal for every Day its color won; the Choir pays reap per matching card each Evening.
+    // 'world': no banks. Tokens of the color that won more Days score tokVal each (a tie: half each); the Choir pays as in 'days'.
+    tokVal?: number; reap?: number;
+    shares?: boolean; // 'days' only: your Choir cards also score at the end like tokens of their color (public shares beside your hidden ones)
     onAltar?: 'lost' | 'fewest'; // a token left on the Altar is lost, or set aside for the players with the fewest tokens to draw
     collectBonus?: number;
     asCards?: boolean; // tokens are Host cards in the deck: drawn, held in hand, Offered like cards, Gathered to hand, never Exalted
@@ -701,6 +705,17 @@ export function stakeScore(s: State, p: number): number {
   }
   const [tL, tD] = tokCounts(s, p);
   const norm = S.asCards ? 1 : (S.perPlayer ?? 2) / 2;
+  if (S.score === 'days' || S.score === 'world') {
+    const lw = s.tides.filter((t) => t > 0).length, dw = s.tides.filter((t) => t < 0).length;
+    const tv = S.tokVal ?? 1;
+    if (S.score === 'days') {
+      if (!S.shares) return tv * (tL * lw + tD * dw);
+      let cL = 0, cD = 0;
+      for (const x of s.choir[p]) { const v = sgn(x.flip ? -val(s, x.c) : val(s, x.c)); if (v > 0) cL++; else if (v < 0) cD++; }
+      return tv * ((tL + cL) * lw + (tD + cD) * dw);
+    }
+    return lw > dw ? tv * tL : dw > lw ? tv * tD : (tv * (tL + tD)) / 2;
+  }
   if (S.score === 'winner') {
     const lw = s.tides.filter((t) => t > 0).length, dw = s.tides.filter((t) => t < 0).length;
     if (lw > dw) return (Lb * tL) / norm;
@@ -781,6 +796,12 @@ export function fateScore(s: State, tide: Dir, net = 0): number[] {
   return out;
 }
 
+export function cardPayN(s: State, tide: Dir, k: number): number[] {
+  const out = Array(s.R.n).fill(0);
+  if (tide === 0) return out;
+  for (let p = 0; p < s.R.n; p++) for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) out[p] += k; }
+  return out;
+}
 export function cardPay(s: State, tide: Dir): number[] {
   const out = Array(s.R.n).fill(0);
   if (tide === 0) return out;
@@ -836,7 +857,7 @@ export function evening(s: State) {
     for (const x of s.choir[p]) if (sgn(x.flip ? -val(s, x.c) : val(s, x.c)) === tide) k++;
     s.banks[p][tide > 0 ? 0 : 1] += k;
   }
-  const reap = s.R.stake ? Array(n).fill(0) : s.R.choirCardPay ? cardPay(s, tide) : s.R.fate ? fateScore(s, tide, net) : s.R.pax ? paxScore(s, net) : f(s, tide, Math.abs(net));
+  const reap = s.R.stake ? (s.R.stake.score === 'days' || s.R.stake.score === 'world' ? cardPayN(s, tide, s.R.stake.reap ?? 1) : Array(n).fill(0)) : s.R.choirCardPay ? cardPay(s, tide) : s.R.fate ? fateScore(s, tide, net) : s.R.pax ? paxScore(s, net) : f(s, tide, Math.abs(net));
   for (let p = 0; p < n; p++) if (s.ordeal[p] && reap[p] > 0) reap[p] *= 2;
   for (let p = 0; p < n; p++) if (choirHas(s, p, 'scapegoat') && s.glory[p] >= 1) {
     const q = soleLeader(s, p);

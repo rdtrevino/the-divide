@@ -397,3 +397,26 @@ Object.assign(VARIANTS, {
   tk_conc_fewest: TK({ score: 'concentrate', onAltar: 'fewest' }),
   tk_4: TK({ perPlayer: 4 }),
 } as Record<string, V>);
+
+// ---- Round 38: simpler scoring for the allegiance tokens (Robert, November 19: "the multiplication feels like a lot").
+// No banks. One shared Tide track counts the Days each color won.
+//   days:  each token scores 1 for every Day its color won; your Choir scores 1 per card of the Tide's color each Evening.
+//   world: tokens of the color that won more Days score tokVal each.
+const DY = (extra: Record<string, unknown> = {}, top: Partial<V> = {}): V => ({ ...SB, ...top, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, onAltar: 'fewest', score: 'days', tokVal: 1, reap: 1, ...extra } as any });
+Object.assign(VARIANTS, {
+  dy6: DY(),
+  dy6_nomiser: DY({}, { miserTax: 0 }),
+  dy6_fixed: DY({ mobile: false }),
+  dy4: DY({ perPlayer: 4 }),
+  dy6_r0: DY({ reap: 0 }),
+  dy6_r2: DY({ reap: 2 }),
+  wd6: DY({ score: 'world', tokVal: 4 }),
+  wd4: DY({ score: 'world', perPlayer: 4, tokVal: 5 }),
+  sh6: DY({ reap: 0, shares: true }),
+  sh4: DY({ reap: 0, shares: true, perPlayer: 4 }),
+  // every seat first equally often: 6 Days at 3 players, 8 at 4
+  dy6_d6: DY({}, { maxDays: 6 }),
+  dy6_d8: DY({}, { maxDays: 8 }),
+  dy4_d6: DY({ perPlayer: 4 }, { maxDays: 6 }),
+  dy4_d8: DY({ perPlayer: 4 }, { maxDays: 8 }),
+} as Record<string, V>);
