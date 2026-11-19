@@ -1,8 +1,10 @@
 """Train the learned bot (engine learned.ts) on the strong bot's estimates written by gen.ts.
 
 A small network (inputs, two hidden layers with ReLU, one output) scores each option. Only the order of a decision's
-options matters, so the loss compares scores within a decision: (score - the decision's mean score) against
-(teacher's estimate - its mean), squared. Games whose number ends in 0 are held out for validation.
+options matters, so the loss compares scores within a decision. The default (rank) is a listwise cross-entropy: the
+network's softmax over a decision's options should match the teacher's preferences, softmax(estimate / temp). Every
+decision then weighs about the same, whatever its scale (Judgment Day estimates swing by 100 where others swing by 1).
+--loss mse compares centered scores with centered estimates instead. Games whose number ends in 0 are held out.
 
 Usage: python3 train.py <data dir> [<data dir> ...] [--out weights.json] [--hidden 128,64] [--epochs 40] [--seed 1]
 Prints, on held-out games: how often each player picks the teacher's best option, and the mean regret (the teacher's
@@ -20,6 +22,9 @@ ap.add_argument('--lr', type=float, default=1e-3)
 ap.add_argument('--batch', type=int, default=256)
 ap.add_argument('--wd', type=float, default=1e-5)
 ap.add_argument('--seed', type=int, default=1)
+ap.add_argument('--loss', default='rank', choices=['rank', 'mse'])
+ap.add_argument('--temp', type=float, default=1.0, help='rank loss: the teacher\'s preferences are softmax(estimate / temp)')
+ap.add_argument('--every', type=int, default=1)
 a = ap.parse_args()
 rng = np.random.default_rng(a.seed)
 
@@ -73,6 +78,12 @@ B = [np.zeros(sizes[k + 1]) for k in range(len(sizes) - 1)]
 mW = [np.zeros_like(w) for w in W]; vW = [np.zeros_like(w) for w in W]
 mB = [np.zeros_like(b) for b in B]; vB = [np.zeros_like(b) for b in B]
 
+def softmax_g(z, g):
+    """Softmax of z within each group g."""
+    m = np.full(g.max() + 1, -np.inf); np.maximum.at(m, g, z)
+    e = np.exp(z - m[g])
+    return e / np.bincount(g, weights=e)[g]
+
 def forward(X):
     hs = [X]
     h = X
@@ -119,8 +130,11 @@ for ep in range(a.epochs):
         X = (X_of(rows) - mu) * sc
         hs = forward(X)
         p = hs[-1][:, 0]
-        r = p - np.bincount(g, weights=p)[g] / counts[decs][g] - t[rows]
-        grad = (2.0 / len(rows)) * r[:, None]
+        if a.loss == 'mse':
+            r = p - np.bincount(g, weights=p)[g] / counts[decs][g] - t[rows]
+            grad = (2.0 / len(rows)) * r[:, None]
+        else:
+            grad = ((softmax_g(p, g) - softmax_g(t[rows] / a.temp, g)) / len(decs))[:, None]
         step += 1
         for k in range(len(W) - 1, -1, -1):
             gW = grad.T @ hs[k] + a.wd * W[k]; gB = grad.sum(0)
@@ -129,7 +143,7 @@ for ep in range(a.epochs):
             for P, G, M, V in ((W, gW, mW, vW), (B, gB, mB, vB)):
                 M[k] = 0.9 * M[k] + 0.1 * G; V[k] = 0.999 * V[k] + 0.001 * G * G
                 P[k] = P[k] - lr * (M[k] / (1 - 0.9 ** step)) / (np.sqrt(V[k] / (1 - 0.999 ** step)) + 1e-8)
-    if ep % 5 == 4 or ep == a.epochs - 1:
+    if ep % a.every == a.every - 1 or ep == a.epochs - 1:
         ev = evaluate(val_dec)
         print(f"epoch {ep + 1}: val loss {ev['loss']:.3f}  learned agree {ev['learned']['agree']:.3f} regret {ev['learned']['regret']:.3f}  ({time.time() - t0:.0f} s)", file=sys.stderr)
         if ev['learned']['regret'] < best_val:

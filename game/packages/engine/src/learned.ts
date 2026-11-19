@@ -20,8 +20,8 @@ const KINDS = ['offerCard', 'offerToken', 'gatherCard', 'gatherHidden', 'gatherT
 type Kind = (typeof KINDS)[number];
 
 /** Sizes of the two parts of the input: the decision (shared by its options) and each option. */
-export const DECISION_FEATURES = 30 + TAGS.length + HOSTS.length + EVENTS.length + 1 + CELESTIALS.length + 1;
-export const OPTION_FEATURES = KINDS.length + 10 + HOSTS.length + 1;
+export const DECISION_FEATURES = 34 + TAGS.length + HOSTS.length + EVENTS.length + 1 + CELESTIALS.length + 1;
+export const OPTION_FEATURES = KINDS.length + 15 + HOSTS.length + 1;
 
 const sgn = (x: number) => (x > 0 ? 1 : x < 0 ? -1 : 0);
 const signedValue = (v: GameView, id: string | null | undefined) => { if (!id) return 0; const b = baseValue({ day: v.day, tides: v.tides }, id); return b.light - b.dark; };
@@ -44,7 +44,7 @@ function altarRead(v: GameView) {
 }
 
 /** What the decision looks like to its seat. */
-function decisionFeatures(v: GameView, d: Decision): number[] {
+function decisionFeatures(v: GameView, d: Decision, t: Table): number[] {
   const me = v.players[v.you!], n = v.players.length, others = v.players.filter((p) => p.seat !== me.seat);
   const won = daysWon(v), pos = (me.seat - v.firstPlayer + n) % n;
   const myL = me.tokens!.filter((t) => t === 'light').length, myD = me.tokens!.length - myL;
@@ -61,6 +61,7 @@ function decisionFeatures(v: GameView, d: Decision): number[] {
     Math.max(...leans) / 4, Math.min(...leans) / 4, leans.reduce((a, b) => a + b, 0) / 8,
     me.offeredToday ? 1 : 0, others.filter((p) => p.offeredToday).length / (n - 1),
     alt.known / 5, alt.guess / 5, alt.hidden / 4, hv.reduce((a, b) => a + b, 0) / 4,
+    pLight(t, t.est), (2 * t.cL * t.h + t.tL - 2 * t.cD * t.h - t.tD) / 10, t.worthL / 7, t.worthD / 7,
   ];
   oneHot(f, TAGS.length, TAGS.indexOf(d.tag));
   const choir = new Set(me.choir.map((c) => c.id && HOST_IDX.get(c.id)));
@@ -70,8 +71,10 @@ function decisionFeatures(v: GameView, d: Decision): number[] {
   return f;
 }
 
-/** What an option is: its kind, the card or token it moves, and what that does to the Altar. */
-function optionFeatures(v: GameView, d: Decision, o: Option, heuristicPick: string): number[] {
+/** An option, reduced to what it moves. */
+interface Move { kind: Kind; card?: string; value: number; push: number; tokenSide: number; mine: number }
+
+function describe(v: GameView, d: Decision, o: Option): Move {
   const me = v.players[v.you!];
   let id = o.id, tag = d.tag;
   if (tag === 'judgment') {
@@ -101,25 +104,89 @@ function optionFeatures(v: GameView, d: Decision, o: Option, heuristicPick: stri
     }
     push = -value;
   }
-  const myL = me.tokens!.filter((t) => t === 'light').length, myD = me.tokens!.length - myL;
+  return { kind, card, value, push, tokenSide, mine };
+}
+
+/**
+ * Rough worth of a move, the arithmetic a careful player (and the heuristic bot) does: the chance each side wins today
+ * from the Altar as read, what today's win is worth to me (Choir cards if I have Offered, plus my tokens), and what
+ * lasts (a Choir card scores on about half the Days left; a token is worth the Days its side has won and half of those
+ * to come).
+ */
+function table(v: GameView) {
+  const me = v.players[v.you!], n = v.players.length;
+  const later = n - 1 - ((me.seat - v.firstPlayer + n) % n);
+  const w = later === 0 ? 1 : later === 1 ? 0.75 : 0.55;
+  const alt = altarRead(v), won = daysWon(v), after = v.days - v.day;
+  const tL = me.tokens!.filter((t) => t === 'light').length, tD = me.tokens!.length - tL;
+  return { w, est: alt.known + alt.guess, tL, tD, cL: me.colors.light, cD: me.colors.dark, h: me.offeredToday ? 1 : 0, worthL: won.light + 0.5 * after, worthD: won.dark + 0.5 * after, after };
+}
+type Table = ReturnType<typeof table>;
+const pLight = (t: Table, est: number) => 1 / (1 + Math.exp(-1.2 * est * t.w));
+const today = (t: Table, est: number, cL: number, cD: number, tL: number, tD: number, h: number) => { const p = pLight(t, est); return p * (2 * cL * h + tL) + (1 - p) * (2 * cD * h + tD); };
+
+function worth(t: Table, m: Move): { day: number; lasting: number; p: number } {
+  const base = today(t, t.est, t.cL, t.cD, t.tL, t.tD, t.h);
+  const colored = (x: number) => (x > 0 ? [1, 0] : x < 0 ? [0, 1] : [0, 0]);
+  const cardLasting = (x: number) => (x !== 0 ? 2 * 0.5 * t.after : 0);
+  let est = t.est, cL = t.cL, cD = t.cD, tL = t.tL, tD = t.tD, h = t.h, lasting = 0;
+  switch (m.kind) {
+    case 'offerCard': est += m.value; h = 1; lasting = -0.15 * cardLasting(m.value); break;
+    case 'fruitsCard': est += m.value; lasting = -0.15 * cardLasting(m.value); break;
+    case 'offerToken': est += m.value; h = 1; if (m.tokenSide > 0) { tL--; lasting = -t.worthL; } else { tD--; lasting = -t.worthD; } break;
+    case 'exaltCard': case 'gatherDiscard': case 'gatherCard': case 'gatherHidden': {
+      if (m.kind === 'gatherCard' || m.kind === 'gatherHidden') est -= m.value;
+      const [l, d] = m.kind === 'gatherHidden' ? [0, 0] : colored(m.value);
+      cL += l; cD += d; lasting = m.kind === 'gatherHidden' ? 2 * 0.4 * t.after : cardLasting(m.value);
+      break;
+    }
+    case 'gatherToken': est -= m.value; if (m.tokenSide > 0) { tL++; lasting = t.worthL; } else if (m.tokenSide < 0) { tD++; lasting = t.worthD; } else lasting = 0.5 * (t.worthL + t.worthD); break;
+    default: break;
+  }
+  return { day: today(t, est, cL, cD, tL, tD, h) - base, lasting, p: pLight(t, est) };
+}
+
+/** The moves an action could lead to, as this seat sees them (for valuing a bare Offer, Gather or Exalt). */
+function movesOf(v: GameView, d: Decision, action: Kind): Move[] {
+  const me = v.players[v.you!], hand = me.hand ?? [];
+  const sub = (tag: string, o: Option) => describe(v, { ...d, tag }, o);
+  if (action === 'actOffer') return [...hand.map((c) => sub('offer.card', { id: c, label: '', card: c })), ...(['light', 'dark'] as const).filter((k) => me.tokens!.includes(k)).map((k) => sub('offer.card', { id: 'token:' + k, label: '' }))];
+  if (action === 'actExalt') return hand.map((c) => sub('exalt.card', { id: c, label: '', card: c }));
+  return [...v.altar.map((a, i) => sub('gather.source', { id: 'altar:' + i, label: '', card: a.id ?? undefined })), ...v.altarTokens.map((_, i) => sub('gather.source', { id: 'token:' + i, label: '' }))];
+}
+
+/** What an option is: its kind, the card or token it moves, what that does to the Altar, and what it is roughly worth. */
+function optionFeatures(v: GameView, d: Decision, o: Option, heuristicPick: string, t: Table): number[] {
+  const me = v.players[v.you!];
+  const m = describe(v, d, o);
+  const { kind, card, value, push, tokenSide, mine } = m;
+  let est = worth(t, m);
+  if (kind === 'actOffer' || kind === 'actGather' || kind === 'actExalt') {
+    const all = movesOf(v, d, kind).map((x) => worth(t, x));
+    est = all.length ? all.reduce((b, x) => (x.day + x.lasting > b.day + b.lasting ? x : b)) : { day: 0, lasting: 0, p: pLight(t, t.est) };
+  }
+  const myL = t.tL, myD = t.tD;
   const alt = altarRead(v), after = alt.known + alt.guess + push;
   const f: number[] = [];
   oneHot(f, KINDS.length, KINDS.indexOf(kind));
   f.push(value / 2, Math.abs(value) / 2, push / 2, Math.tanh(after / 2), sgn(value) * sgn(myL - myD), sgn(value) * sgn(me.colors.light - me.colors.dark), tokenSide, mine, o.id === heuristicPick ? 1 : 0, card ? 1 : 0);
+  f.push(est.day / 5, est.lasting / 5, (est.day + est.lasting) / 5, est.p, (kind === 'offerCard' || kind === 'offerToken' || kind === 'actOffer') && !me.offeredToday ? 1 : 0);
   oneHot(f, HOSTS.length + 1, card ? HOST_IDX.get(card) ?? HOSTS.length : HOSTS.length);
   return f;
 }
 
 /** The inputs for one decision: shared decision features, and one row per option. */
 export function encode(s: GameState, d: Decision, heuristicPick = botAnswer(s, d)[0]) {
-  const v = viewFor(s, d.seat);
-  return { decision: decisionFeatures(v, d), options: d.options.map((o) => optionFeatures(v, d, o, heuristicPick)) };
+  const v = viewFor(s, d.seat), t = table(v);
+  return { decision: decisionFeatures(v, d, t), options: d.options.map((o) => optionFeatures(v, d, o, heuristicPick, t)) };
 }
 
 interface Layer { W: number[][]; b: number[] }
 interface Weights { mean: number[]; scale: number[]; layers: Layer[] }
 const NET = WEIGHTS as unknown as Partial<Weights>;
-export const hasLearnedWeights = () => !!NET.layers?.length;
+/** Weights fit this encoder only if their input size matches (they must be retrained when the inputs change). */
+const fits = (net: Partial<Weights>) => !!net.layers?.length && net.layers[0].W[0]?.length === DECISION_FEATURES + OPTION_FEATURES;
+export const hasLearnedWeights = () => fits(NET);
 
 /** The network, prepared for speed: flat rows, the input scaling folded into the first layer. */
 interface Ready { first: Float64Array[]; firstBias: Float64Array; rest: { W: Float64Array[]; b: Float64Array }[] }
@@ -158,7 +225,7 @@ export function learnedScores(s: GameState, d: Decision, heuristicPick = botAnsw
 /** The learned bot's answer: the best-scored option on searched decisions, the heuristic's elsewhere. */
 export function learnedAnswer(s: GameState, d: Decision, net: Partial<Weights> = NET): Answer {
   const quick = botAnswer(s, d);
-  if (!isSearched(d) || !net.layers?.length) return quick;
+  if (!isSearched(d) || !fits(net)) return quick;
   const sc = learnedScores(s, d, quick[0], net);
   let b = 0;
   for (let i = 1; i < sc.length; i++) if (sc[i] > sc[b]) b = i;
