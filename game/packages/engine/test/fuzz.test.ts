@@ -22,7 +22,8 @@ describe('bot games run to completion', () => {
         expect(new Set(zones).size).toBe(zones.length);
         expect(zones.length).toBe(69);
         // V45: a fixed number of Days; every token is still held by someone; each scores the Days its color won.
-        expect(s.day).toBe(DAYS[n]);
+        expect(s.day).toBe(DAYS);
+        expect(s.log.some((l) => l.kind === 'judgment')).toBe(true);
         expect(s.players.reduce((t, p) => t + p.tokens.length, 0) + s.altarTokens.length).toBe(TOKENS_EACH * n);
         const won = daysWon(s);
         for (const x of s.result!.standings) {

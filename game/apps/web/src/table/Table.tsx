@@ -106,7 +106,7 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
           <Link href="/" class="wordmark t-mark" title="Leave the table">The Divide</Link>
           <div class="t-day">
             <b>Day {view.day || 1} of {view.days}</b>
-            <span>{PHASE[view.phase]}</span>
+            <span>{view.day === view.days && view.phase !== 'ended' ? `Judgment Day · ${PHASE[view.phase]}` : PHASE[view.phase]}</span>
           </div>
           <TideTrack view={view} />
           <button class={`t-room${copied ? ' copied' : ''}`} data-tip="Click to copy the invite link for this table" onClick={copyLink}>

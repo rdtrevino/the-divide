@@ -48,7 +48,7 @@ function dayValue(st: Stake, est: number, w = 0.7) {
   return pl * st.light + (1 - pl) * st.dark;
 }
 /** Days still to come after today. */
-export const daysAfter = (s: GameState) => Math.max(0, DAYS[s.players.length] - s.day);
+export const daysAfter = (s: GameState) => Math.max(0, DAYS - s.day);
 /** A colored card in the Choir scores on about half the Days left. */
 export const choirCardValue = (s: GameState, id: string | undefined) => {
   if (!id) return 0;
@@ -191,6 +191,17 @@ export function botAnswer(s: GameState, d: Decision): Answer {
   }
 
   switch (d.tag) {
+    case 'judgment': {
+      // Judgment Day: choose the action as on any turn, then what it takes, without seeing anyone else's choice.
+      const acts = [...new Set(d.options.map((o) => o.id.split('|')[0]))].filter((x) => x !== 'pass');
+      if (!acts.length) return one(d.options[0].id);
+      const [a] = botAnswer(s, { ...d, tag: 'action', options: acts.map((id) => ({ id, label: id })) });
+      const toSub = (id: string) => (id.startsWith('card:') ? 'altar:' + s.altar.findIndex((x) => x.id === id.slice(5)) : id);
+      const subs = d.options.filter((o) => o.id.startsWith(a + '|')).map((o) => ({ ...o, id: toSub(o.id.slice(a.length + 1)), from: o.id }));
+      const tag = a === 'offer' ? 'offer.card' : a === 'exalt' ? 'exalt.card' : 'gather.source';
+      const [sub] = botAnswer(s, { ...d, tag, options: subs });
+      return one(subs.find((o) => o.id === sub)?.from ?? subs[0].from);
+    }
     case 'action': {
       const p = s.players[seat];
       const scores: Record<string, number> = {};

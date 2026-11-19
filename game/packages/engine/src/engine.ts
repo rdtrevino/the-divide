@@ -11,10 +11,10 @@ import {
 import { C, CELESTIALS, E, EVENTS, H, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
 import type { TideHistory } from './core';
-import type { Dir, GameConfig, GameState, Gen, Seat, Side, Standing, TideRecord } from './types';
+import type { Dir, GameConfig, GameState, Gen, Option, Plan, Seat, Side, Standing, TideRecord } from './types';
 
-/** V45: a fixed number of Days, so every seat goes first equally often: 6 at 3 players, 8 at 4. */
-export const DAYS: Readonly<Record<number, number>> = { 3: 6, 4: 8 };
+/** V45: every game lasts 7 Days; the last is Judgment Day, when everyone chooses their action in secret. */
+export const DAYS = 7;
 /** Allegiance tokens dealt to each player from a shuffled, even pool (V45). */
 export const TOKENS_EACH = 6;
 /** Each Choir card of the winning color scores this much at the Reaping (V45). */
@@ -41,7 +41,7 @@ export function daysWon(s: Pick<GameState, 'tides'>): { light: number; dark: num
 // ---------------------------------------------------------------- setup
 
 export function createState(cfg: GameConfig): GameState {
-  if (!DAYS[cfg.players.length]) throw new Error('The Divide is for 3 or 4 players.');
+  if (cfg.players.length < 3 || cfg.players.length > 4) throw new Error('The Divide is for 3 or 4 players.');
   const s: GameState = {
     config: cfg, rng: cfg.seed | 0, day: 0, phase: 'setup', players: [], hostDeck: [], discard: [], altar: [], altarTokens: [],
     eventDeck: [], eventDiscard: [], currentEvent: null, firstPlayer: 0, active: null, tides: [],
@@ -83,7 +83,7 @@ export function* runGame(s: GameState): Gen<void> {
     p.choir = p.choir.filter((c) => c.id !== H.raguel);
     yield* enterChoir(s, p.seat, H.raguel);
   }
-  const last = DAYS[s.players.length];
+  const last = DAYS;
   for (let d = 1; d <= last; d++) {
     s.day = d;
     s.day_ = freshDay();
@@ -91,6 +91,7 @@ export function* runGame(s: GameState): Gen<void> {
     yield* morning(s);
     yield* firstFruits(s);
     s.phase = 'noon';
+    if (d === last) yield* judgmentDay(s);
     const n = s.players.length;
     for (let i = 0; i < n; i++) yield* takeTurn(s, (s.firstPlayer + i) % n);
     s.active = null;
@@ -300,17 +301,71 @@ export function legalActions(s: GameState, seat: Seat): Action[] {
 
 function* takeAction(s: GameState, seat: Seat, index: number): Gen<void> {
   const legal = legalActions(s, seat);
+  // Judgment Day: the action was chosen in secret this Morning. If it can no longer be done, nothing happens.
+  const plan = index === 0 ? s.day_.plan?.[seat] : undefined;
+  if (s.day_.plan) delete s.day_.plan[seat];
+  if (plan && !legal.includes(plan.action)) { log(s, 'judgment', `${pname(s, seat)}'s chosen action can no longer be done: they do nothing.`); return; }
   if (!legal.length) {
     log(s, 'pass', `${pname(s, seat)} has no legal action and passes.`);
     return;
   }
   const labels: Record<string, string> = { offer: 'Offer: play a card or an allegiance token facedown onto the Altar', gather: 'Gather: take a card from the Altar into your Choir', exalt: 'Exalt: play a card from your hand into your Choir' };
-  const a = (yield* chooseOne(s, seat, 'action', index ? 'Free Will: choose your second action.' : 'Choose your action.', legal.map((id) => ({ id, label: labels[id] }))))!;
+  preset = plan ?? null;
+  const a = plan ? plan.action : (yield* chooseOne(s, seat, 'action', index ? 'Free Will: choose your second action.' : 'Choose your action.', legal.map((id) => ({ id, label: labels[id] }))))!;
   s.day_.actionsTaken.push({ seat, action: a as Action });
   for (const pact of s.pacts) if ((pact.a === seat || pact.b === seat) && pact.action === a && pact.day === s.day) pact.broken = true;
   if (a === 'offer') yield* doOffer(s, seat);
   if (a === 'gather') yield* doGather(s, seat);
   if (a === 'exalt') yield* doExalt(s, seat);
+  preset = null;
+}
+
+/** The Judgment Day choice being carried out, if any (set by takeAction, read once by the action). */
+let preset: Plan | null = null;
+
+/** Choose an option: from the Judgment Day plan if there is one (null if it is no longer available), else by asking. */
+function* pick(s: GameState, seat: Seat, tag: string, prompt: string, opts: Option[]): Gen<string | null> {
+  if (!preset) return yield* chooseOne(s, seat, tag, prompt, opts);
+  const p = preset;
+  preset = null;
+  const id = p.key.startsWith('card:') ? 'altar:' + s.altar.findIndex((a) => a.id === p.key.slice(5)) : p.token ? 'token:' + s.altarTokens.indexOf(p.token) : p.key;
+  if (opts.some((o) => o.id === id)) return id;
+  log(s, 'judgment', `${pname(s, seat)}'s chosen ${p.action === 'gather' ? 'card is gone' : 'card is no longer theirs'}: they do nothing.`);
+  return null;
+}
+
+// ---------------------------------------------------------------- Judgment Day
+
+/** Every option of every action, for the secret choice: ids are `<action>|<option>`. */
+function planOptions(s: GameState, seat: Seat): Option[] {
+  const out: Option[] = [];
+  const legal = legalActions(s, seat);
+  if (legal.includes('offer')) for (const o of offerOptions(s, seat)) out.push({ ...o, id: 'offer|' + o.id, label: `Offer ${o.label}` });
+  if (legal.includes('exalt')) for (const o of exaltOptions(s, seat)) out.push({ ...o, id: 'exalt|' + o.id, label: `Exalt ${o.label}` });
+  if (legal.includes('gather')) for (const o of gatherOptions(s, seat)) {
+    const key = o.id.startsWith('altar:') ? 'card:' + s.altar[Number(o.id.slice(6))].id : o.id;
+    out.push({ ...o, id: 'gather|' + key, label: `Gather ${o.label}` });
+  }
+  return out.length ? out : [{ id: 'pass', label: 'No action is possible: pass' }];
+}
+
+/**
+ * Judgment Day (V45): on the last Day, after First Fruits, every player chooses their whole action in secret.
+ * Then the turns are played in order as usual, each carrying out its chosen action; one that can no longer be done
+ * (a card already Gathered, an Offer blocked) does nothing. Abilities are used on your turn as usual.
+ */
+export function* judgmentDay(s: GameState): Gen<void> {
+  const n = s.players.length;
+  const order = Array.from({ length: n }, (_, i) => (s.firstPlayer + i) % n);
+  log(s, 'judgment', 'Judgment Day: everyone chooses their action in secret, then the actions are carried out in turn order.');
+  const answers = yield* askAll(s, order.map((seat) => ({ seat, tag: 'judgment', prompt: 'Judgment Day: choose your action in secret. Everyone has chosen before anyone acts; actions are carried out in turn order, and one that can no longer be done does nothing.', options: planOptions(s, seat), min: 1, max: 1 })));
+  s.day_.plan = {};
+  order.forEach((seat, k) => {
+    const id = answers[k][0];
+    if (!id || id === 'pass') return;
+    const [action, key] = [id.slice(0, id.indexOf('|')), id.slice(id.indexOf('|') + 1)] as [Plan['action'], string];
+    s.day_.plan![seat] = { action, key, ...(key.startsWith('token:') && action === 'gather' ? { token: s.altarTokens[Number(key.slice(6))] } : {}) };
+  });
 }
 
 const tokenName = (side: Side) => (side === 'light' ? 'Light' : 'Dark');
@@ -321,13 +376,18 @@ function* cantorDraw(s: GameState, seat: Seat): Gen<void> {
   yield* activation(s, seat, C.cantor, function* () { yield* drawTo(s, seat, 1); log(s, 'cantor', `${pname(s, seat)} drew a card (the Cantor).`); });
 }
 
+/** V45: an allegiance token may be Offered instead of a card. It counts 2 for its color, and it is gone. */
+function offerOptions(s: GameState, seat: Seat): Option[] {
+  const p = s.players[seat];
+  const sides = (['light', 'dark'] as const).filter((k) => p.tokens.includes(k));
+  return [...p.hand.map((c) => cardOpt(c)), ...sides.map((k) => ({ id: 'token:' + k, label: `a ${tokenName(k)} token (counts ${TOKEN_WEIGHT})` }))];
+}
+
 function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
+  const first = yield* pick(s, seat, 'offer.card', 'Offer: choose a card or a token to place facedown on the Altar.', offerOptions(s, seat));
+  if (!first) return;
   p.offers++;
-  // V45: an allegiance token may be Offered instead of a card. It counts 2 for its color, and it is gone.
-  const sides = (['light', 'dark'] as const).filter((k) => p.tokens.includes(k));
-  const tokenOpts = sides.map((k) => ({ id: 'token:' + k, label: `A ${tokenName(k)} token (counts ${TOKEN_WEIGHT})` }));
-  const first = (yield* chooseOne(s, seat, 'offer.card', 'Offer: choose a card or a token to place facedown on the Altar.', [...p.hand.map((c) => cardOpt(c)), ...tokenOpts]))!;
   if (first.startsWith('token:')) {
     const side = first.slice(6) as Side;
     p.tokens.splice(p.tokens.indexOf(side), 1);
@@ -375,15 +435,20 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   yield* wisdomPeek(s, seat);
 }
 
-function* doGather(s: GameState, seat: Seat): Gen<void> {
-  const p = s.players[seat];
+function gatherOptions(s: GameState, seat: Seat): Option[] {
   const room = canRoom(s, seat);
-  const opts = room ? altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id })) : [];
+  const opts: Option[] = room ? altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id })) : [];
   // V45: an allegiance token on the Altar can always be taken; it joins your hidden tokens.
-  s.altarTokens.forEach((t, i) => opts.push({ id: 'token:' + i, label: t.by === seat ? `Your ${tokenName(t.side)} token` : `An allegiance token (Offered by ${pname(s, t.by)})`, card: undefined }));
+  s.altarTokens.forEach((t, i) => opts.push({ id: 'token:' + i, label: t.by === seat ? `Your ${tokenName(t.side)} token` : `An allegiance token (Offered by ${pname(s, t.by)})` }));
   // Forger (V37): may take any Host card from the discard pile.
   if (room && hasActive(s, seat, H.forger) && s.discard.length && canActivate(s, seat, H.forger)) for (const c of [...new Set(s.discard.filter((x) => x.startsWith('host-')))]) opts.push({ id: 'discard:' + c, label: `From the discard pile (Forger): ${cardName(c)}`, card: c });
-  const src = (yield* chooseOne(s, seat, 'gather.source', 'Gather: choose a card or a token to take.', opts))!;
+  return opts;
+}
+
+function* doGather(s: GameState, seat: Seat): Gen<void> {
+  const p = s.players[seat];
+  const src = yield* pick(s, seat, 'gather.source', 'Gather: choose a card or a token to take.', gatherOptions(s, seat));
+  if (!src) return;
   if (src.startsWith('token:')) {
     const [t] = s.altarTokens.splice(Number(src.slice(6)), 1);
     p.tokens.push(t.side);
@@ -414,11 +479,16 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
   log(s, 'gather', `${p.name} Gathered ${cardName(card)}${src.startsWith('altar') ? ' from the Altar' : ''}.`);
 }
 
-function* doExalt(s: GameState, seat: Seat): Gen<void> {
-  const p = s.players[seat];
+function exaltOptions(s: GameState, seat: Seat): Option[] {
   // Forger (V43): you may Exalt a card from the discard pile instead.
   const forge = hasActive(s, seat, H.forger) && canActivate(s, seat, H.forger) ? [...new Set(s.discard.filter((x) => x.startsWith('host-')))] : [];
-  let card = (yield* chooseOne(s, seat, 'exalt.card', 'Exalt: choose a card from your hand to play into your Choir.', [...p.hand.map((c) => cardOpt(c)), ...forge.map((c) => cardOpt(c, 'discard:'))]))!;
+  return [...s.players[seat].hand.map((c) => cardOpt(c)), ...forge.map((c) => cardOpt(c, 'discard:'))];
+}
+
+function* doExalt(s: GameState, seat: Seat): Gen<void> {
+  const p = s.players[seat];
+  let card = yield* pick(s, seat, 'exalt.card', 'Exalt: choose a card from your hand to play into your Choir.', exaltOptions(s, seat));
+  if (!card) return;
   let fromDiscard = false;
   if (card.startsWith('discard:')) { card = card.slice(8); fromDiscard = true; }
   // Set the chosen card aside first, so Absolution's hand discard cannot take it.

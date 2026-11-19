@@ -8,7 +8,7 @@ A card game of divine ambition for 3 or 4 players by Robert Treviño. Players fe
 
 | Folder | Contents |
 |---|---|
-| `rules/` | `The_Divide_Rulebook_v15.md`: the complete rules, organized for new players: the game in one minute, a Day at a glance (Morning, Noon, Evening), the actions and scoring as tables, then Celestials, Events, rulings by topic, and the glossary. The site's Rules page shows it with a search. |
+| `rules/` | `The_Divide_Quick_Guide.md`: the game on two pages, and what changed from V44. `The_Divide_Rulebook_v15.md`: the complete rules, organized for new players: the game in one minute, a Day at a glance (Morning, Noon, Evening), the actions and scoring as tables, then Celestials, Events, rulings by topic, and the glossary. The site's Rules page shows it with a search. |
 | `cards/` | `The_Divide_Cards_V45.xlsx` (tabs: all cards, Open Game deck, changes since V32, reprint list), `cards.csv` (same data, one row per card), and `cards.json` (structured for the web build). To change card text, write a change set in `cards/changes/` and run `python3 cards/tools/apply_changes.py cards/changes/<VERSION>.json`; it updates all of these and the engine's copy together. |
 | `design/` | **`vision.md`: the heart of the game, the principles every rule is measured against.** **`the-game-now.md`: the current design on one page, how it got here, and its validation.** `design-decisions.md`: the principles behind the rules, open questions, parked ideas, and the playtest watch list. `balance.md`: the measured win ratio of every Host card, Celestial and Event under the current rules. |
 | `art/faces/` | Every card face as last printed (Host, Celestial, Event, Fate and Turn), about 370 DPI. |
@@ -32,7 +32,7 @@ Earlier card spreadsheets, rulebook drafts, print sheets, design write-ups and s
 - **Modes:** the Base game (Host cards and tokens) and the Advanced game (adds Celestials and Events), both for 3 or 4 players. Hidden Roles was retired in V45.
 - **Setup:** a hand of 3 (the Dominion 5) and a Choir of 2 random face-up cards, with room for 4.
 - **The Day:** Morning (Event in Advanced, predictions, First Fruits: everyone gives one card, shuffled so no one knows whose), Noon (one turn each: Offer a card or a token facedown, Gather a card or token from the Altar, or Exalt a card from your hand), Evening (the anonymous reveal; the heavier side wins the Day; the Reaping).
-- **Scoring:** each Choir card of the winning color scores 2 Glory each Evening. After 6 Days (3 players) or 8 (4 players), each token scores 1 for every Day its color won, and whoever Offered the fewest times loses 3. The most Glory wins.
+- **Scoring:** each Choir card of the winning color scores 2 Glory each Evening. After 7 Days (the last is Judgment Day: everyone chooses their action in secret), each token scores 1 for every Day its color won, and whoever Offered the fewest times loses 3. The most Glory wins.
 - **Setup:** 6 secret allegiance tokens each, dealt from an even, shuffled pool.
 
 ## Online game

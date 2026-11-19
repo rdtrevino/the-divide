@@ -2,6 +2,15 @@
 
 Older entries name files that have since been removed (design write-ups, simulator reports, archived spreadsheets and rulebook drafts, the V28 print kit); every one of them is in the git history before November 18, 2026.
 
+## V45: 7 Days and Judgment Day (November 19, 2026)
+
+Robert's call, after lab Round 43 (`design/the-game-now.md`, "Seven Days at every table?").
+- **Every game lasts 7 Days** (it was 6 at 3 players and 8 at 4): one number to learn.
+- **Judgment Day.** On Day 7, after First Fruits, every player chooses their whole action in secret (which action and which card or token), then the turns carry them out in order. An action that can no longer be done does nothing. Measured with strong bots, seats are 0.92–1.12 at 3 players and 0.89–1.16 at 4 (7 Days without it: up to 1.24), and the rule holds at 5 and 6 players (0.85–1.24) if the game ever grows.
+- **Engine and site:** the secret choice is a Judgment Day prompt listing every action you could take; the table shows "Judgment Day" on Day 7; both bots play it. 101 engine tests.
+- **Strong computer players** (`game/packages/engine/src/mc.ts`): Monte Carlo search like the lab's, with reads (token guesses lean toward each player's Choir). One wins 2.4 times its share among the fast bots. The site still uses the fast bots.
+- **Card measurement** (`game/tools/sim/card-value.ts`): what a card's ability is worth, from paired games against a plain card of its color, with each card's role (kept, activated, Glory made).
+
 ## V45: the Tide track, allegiance tokens, and every card Light or Dark (November 19, 2026)
 
 Robert adopted the Tide-track core (`design/the-game-now.md`, measured in the lab over Rounds 35 to 42). Card data V45, rulebook v15.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { baseValue, choirColors } from '../src/core';
 import { C, E, H } from '../src/data';
-import { activationPhase, endGame, evening, legalActions, reaping, setTide, takeTurn, morning } from '../src/engine';
+import { activationPhase, endGame, evening, judgmentDay, legalActions, reaping, setTide, takeTurn, morning } from '../src/engine';
 import { Game, RuleError } from '../src/game';
 import { viewFor } from '../src/view';
 import { botAnswer } from '../src/bots';
@@ -465,17 +465,33 @@ describe('V35: First Fruits and facedown Offers', () => {
 
 describe('V45: allegiance tokens and the Tide track', () => {
   const four = () => new Game({ seed: 11, mode: 'open', players: ['A', 'B', 'C', 'D'].map((name) => ({ name, isBot: true })) }).state;
-  it('6 Days at 3 players and 8 at 4; each player is dealt 6 tokens from an even pool', () => {
+  it('7 Days at 3 and 4 players; each player is dealt 6 tokens from an even pool', () => {
     for (const n of [3, 4]) {
       const g = new Game({ seed: 9, mode: 'open', players: ['A', 'B', 'C', 'D'].slice(0, n).map((name) => ({ name, isBot: true })) });
       const all = g.state.players.flatMap((p) => p.tokens);
       expect(g.state.players.every((p) => p.tokens.length === 6)).toBe(true);
       expect(all.filter((t) => t === 'light')).toHaveLength(3 * n);
       while (g.pending.length) for (const d of g.pending) g.answer(d.seat, d.id, botAnswer(g.state, d));
-      expect(g.state.day).toBe(n === 3 ? 6 : 8);
-      expect(g.state.tides).toHaveLength(g.state.day);
+      expect(g.state.day).toBe(7);
+      expect(g.state.tides).toHaveLength(7);
     }
     expect(four().players).toHaveLength(4);
+  });
+  it('Judgment Day: on Day 7 everyone chooses in secret; actions are carried out in turn order, and one that can no longer be done does nothing', () => {
+    const s = blank();
+    s.day = 7;
+    hand(s, 0, H.wisdom);
+    hand(s, 1, H.gabriel);
+    hand(s, 2, H.moloch);
+    altar(s, H.envy);
+    const asked: string[] = [];
+    // Everyone wants to Gather Envy; the first player in turn order gets it, the others do nothing.
+    drive(s, (function* () { yield* judgmentDay(s); for (const seat of [0, 1, 2]) yield* takeTurn(s, seat); })(), {
+      judgment: (d) => { asked.push(String(d.seat)); return [d.options.find((o) => o.id === 'gather|card:' + H.envy)!.id]; },
+    });
+    expect(asked.sort()).toEqual(['0', '1', '2']);
+    expect(s.players.map((p) => p.choir.map((c) => c.id))).toEqual([[H.envy], [], []]);
+    expect(s.log.filter((l) => l.kind === 'judgment' && /do nothing/.test(l.text))).toHaveLength(2);
   });
   it('a token is Offered facedown, counts 2 for its color, and only its owner sees which', () => {
     const s = blank();

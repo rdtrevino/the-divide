@@ -61,12 +61,12 @@ function ChoirBuilder() {
 function TokenCalc() {
   const [mine, setMine] = useState(4);
   const [lw, setLw] = useState(4);
-  const days = 6;
+  const days = 7;
   const dw = days - lw;
   const score = mine * lw + (6 - mine) * dw;
   return (
     <div class="learn-try">
-      <div class="eyebrow">Try it: a 3-player game lasts 6 Days</div>
+      <div class="eyebrow">Try it: every game lasts 7 Days</div>
       <div class="learn-row">
         <span class="learn-label">Your 6 tokens</span>
         {[6, 5, 4, 3, 2, 1, 0].map((k) => <button class={`chip${mine === k ? ' on' : ''}`} onClick={() => setMine(k)}>{k} Light · {6 - k} Dark</button>)}
@@ -204,7 +204,7 @@ const TIMINGS: Record<TimingKey, { title: string; when: string; cards: string[];
     title: 'At the end of the Day', when: 'After the Choirs are scored',
     cards: ['host-twilight', 'host-uriel'],
     how: 'Works in the Evening, after every Choir is scored. Most pay Glory on a condition; some store it on the card for later.',
-    tip: 'These pay every Evening, on top of your Choir\'s scoring. Over 6 or 8 Days they add up.',
+    tip: 'These pay every Evening, on top of your Choir\'s scoring. Over 7 Days they add up.',
   },
   always: {
     title: 'Always on', when: 'No label, or “When…”',
@@ -267,7 +267,7 @@ const STEPS: Step[] = [
     body: (
       <>
         <p><b>Glory</b> is your score. Your <b>Choir</b> earns it every Evening, and your secret <b>tokens</b> earn it all at once at the end.</p>
-        <p>The game lasts <b>6 Days with 3 players, 8 with 4</b>. Then the tokens are revealed, and <b>the most Glory wins</b>.</p>
+        <p>Every game lasts <b>7 Days</b>. On the seventh, <b>Judgment Day</b>, everyone chooses their action in secret before anyone acts. Then the tokens are revealed, and <b>the most Glory wins</b>.</p>
       </>
     ),
     side: (

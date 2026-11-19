@@ -4,7 +4,7 @@
 
 **Created by:** Robert Treviño
 **Version:** Rulebook v15, for card data V45
-**Players:** 3 or 4 | **Play Time:** 25 to 40 minutes
+**Players:** 3 or 4 | **Play Time:** 25 to 35 minutes
 **Mechanisms:** Hidden Allegiance, Public Goods, Engine Building, Negotiation, Bluffing
 
 ---
@@ -18,7 +18,7 @@ Before the first dawn, the unfinished world rests on the Divide, the narrow span
 * **Your tokens pay at the end.** Every token is worth 1 Glory for each Day its side won.
 * **Your Choir pays every Day.** Your Choir is a row of up to four face-up cards. Each Evening, every card in it of the winning color scores 2 Glory.
 * **Help yourself or help your side.** Offering a card to the Altar pushes a side, but the card is gone from your hand. Building your Choir pays only you. You can even Offer one of your tokens: it is the strongest push there is, and it costs you your share in that side.
-* **A fixed number of Days.** 6 Days with 3 players, 8 with 4. Then the tokens are revealed, and the most Glory wins.
+* **Seven Days, and a Judgment Day.** Every game lasts 7 Days. On the last, everyone chooses their action in secret before anyone acts. Then the tokens are revealed, and the most Glory wins.
 
 ---
 
@@ -37,7 +37,7 @@ Both use the same deck of 69 Host cards. *(Hidden Roles, the old mode for 5 and 
 
 * **69 Host cards:** 34 Light, 34 Dark, and Acolyte, whose color changes. Every card is Light or Dark.
 * **24 allegiance tokens:** 12 Light and 12 Dark (use 9 of each with 3 players).
-* **The Tide track:** one space per Day, and Day markers that are Light on one side and Dark on the other.
+* **The Tide track:** 7 spaces, one per Day, and Day markers that are Light on one side and Dark on the other.
 * **9 Celestial cards** and **17 Event cards** *(Advanced)*.
 * **Glory markers** and **1 first player marker.**
 
@@ -74,7 +74,7 @@ Every Host card shows:
 
 ## **A Day at a Glance**
 
-The game lasts **6 Days with 3 players and 8 with 4**, so everyone is first player equally often.
+Every game lasts **7 Days**. The seventh is **Judgment Day**: at Noon, everyone chooses their action in secret (see below).
 
 | Phase | Step | What happens |
 | ----- | ----- | ----- |
@@ -82,6 +82,7 @@ The game lasts **6 Days with 3 players and 8 with 4**, so everyone is first play
 | | 2. Predictions | Abilities marked *In the Morning* are used now. |
 | | 3. First Fruits | Everyone puts 1 card from hand facedown in the middle; shuffle them and turn them face up onto the Altar, then everyone draws 1. |
 | **Noon** | Turns | Each player, clockwise from the first player: one action, then activate your Choir. |
+| | Judgment Day *(Day 7 only)* | Everyone first chooses their action in secret; the turns then carry them out in order. |
 | **Evening** | 1. Reveal the Altar | Abilities marked *In the Evening*, then shuffle the facedown Offers together and turn them face up. |
 | | 2. The Day is won | The heavier side wins the Day: mark it on the Tide track. |
 | | 3. The Reaping | Every Choir card of the winning color scores 2 Glory. Then *At the end of the Day* abilities. |
@@ -116,6 +117,14 @@ Starting with the first player and moving clockwise, each player takes exactly o
 
 **Then activate.** After your action, you may activate each card in your Choir whose ability works *On your turn*, each at most once.
 
+### **Judgment Day (Day 7)**
+
+On the last Day, after First Fruits, **every player chooses their whole action in secret**: which action, and exactly which card or token (Offer *this* card, Exalt *that* one, Gather *that* card or token from the Altar). Write it down, or set the card facedown in front of you with a pointer.
+
+Then play the turns in order as usual, starting with the first player. On your turn, carry out the action you chose, then use your *On your turn* abilities as normal. **If your chosen action can no longer be done** (the card you meant to Gather was taken first, an Offer is now blocked by Anathema, the card left your hand), **you do nothing** for your action.
+
+No one acts last with the most knowledge on the Day that decides the game: everyone commits blind.
+
 ---
 
 ## **Evening**
@@ -132,7 +141,7 @@ Starting with the first player and moving clockwise, each player takes exactly o
 
 ## **Ending the Game**
 
-After the last Day's Evening (Day 6 with 3 players, Day 8 with 4), everyone reveals their tokens.
+After the Evening of Day 7, everyone reveals their tokens.
 
 1. **Tokens score.** Each token scores **1 Glory for every Day its color won** on the Tide track.
 2. **The Miser's Rule.** The player who Offered the **fewest times** loses 3 Glory (all of them, if tied). If everyone Offered equally often, nobody does.
@@ -231,6 +240,8 @@ These settle questions the card text leaves open. The card text is always the st
 **Silence.** The chosen player's Choir abilities stop working, always-on ones included, until the start of your next turn.
 
 **Anathema and Flaming Sword.** From the end of your turn until the start of your next turn, no other player may Offer, cards or tokens (Anathema), or Exalt (Flaming Sword).
+
+**Judgment Day and Free Will.** Free Will's second action is chosen on your turn as usual; only your first action was chosen in secret. A secret action that does nothing (it could no longer be done) is not an Offer.
 
 **The Miser's Rule.** Every Offer action counts once, a card or a token. Fig Leaves taking a card back does not undo the Offer. First Fruits and Vessel's card are not Offers.
 
@@ -332,7 +343,9 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Choir.** Your row of up to 4 face-up Host cards; you start with 2. Each card of the winning color scores 2 Glory at the Reaping.
 
-**Day.** A round of play: Morning, Noon, and Evening. 6 Days with 3 players, 8 with 4.
+**Day.** A round of play: Morning, Noon, and Evening. Every game lasts 7 Days.
+
+**Judgment Day.** Day 7: every player chooses their action in secret before anyone acts; the actions are carried out in turn order, and one that can no longer be done does nothing.
 
 **Exalt.** An action: play a card from your hand into your Choir.
 

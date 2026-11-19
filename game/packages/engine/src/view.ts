@@ -82,7 +82,7 @@ export function viewFor(s: GameState, seat: Seat | null, pending: Decision[] = [
     // Who placed a card is hidden once the anonymous reveal has shuffled it (except from its owner).
     altar: s.altar.map((a) => ({ id: !a.facedown || a.offeredBy === seat || ended ? a.id : null, facedown: a.facedown, offeredBy: a.anon && a.offeredBy !== seat ? null : a.offeredBy, kind: a.kind, sanctuary: a.sanctuary })),
     altarTokens: s.altarTokens.map((t) => ({ side: t.by === seat || ended ? t.side : null, by: t.by })),
-    days: DAYS[s.players.length],
+    days: DAYS,
     deckCount: s.hostDeck.length,
     discard: [...s.discard],
     eventDeckCount: s.eventDeck.length,

@@ -11,7 +11,7 @@ import { Game } from './game';
 import type { Answer, Decision, GameState, Seat, Side } from './types';
 
 /** Decisions worth searching; everything else is answered by the heuristic. */
-const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits']);
+const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment']);
 
 export interface Strength { rollouts: number; maxOptions: number }
 export const STRONG: Strength = { rollouts: 8, maxOptions: 6 };

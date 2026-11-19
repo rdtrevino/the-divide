@@ -17,7 +17,7 @@ Three or four players share one Altar. Every Day, each of you either **Offers** 
 **Setup**
 1. Shuffle the tokens facedown and deal **6 to each player**. Look at yours and keep them hidden. Mixes are uneven (4 and 2, 5 and 1, 3 and 3…), and nobody knows anyone else's.
 2. Deal each player a hand of 3 and a starting **Choir of 2 face-up cards** (room for 4).
-3. Choose a first player. The game lasts **6 Days at 3 players and 8 at 4**, so everyone goes first equally often.
+3. Choose a first player. The game lasts **7 Days**; the seventh is **Judgment Day**, when everyone chooses their action in secret before anyone acts (adopted after Round 43, below).
 
 **Each Day**
 
@@ -54,7 +54,7 @@ Three or four players share one Altar. Every Day, each of you either **Offers** 
 |---|---|---|---|
 | Your side | Your Choir's lean, in public | **A secret mix of allegiance tokens** that can change hands | 2. Uncertain allegiance: lost when the 3-player variant became the core game in V33 |
 | Scoring each Evening | The Reaping by lean: alone 3, a pair 1 each, three or more nothing; against the Tide −3 or −1 | **2 Glory per Choir card of the winning color**, no losses | 1. Self vs side; and Robert's "rewarding, not punishing" |
-| End of the game | Race to 12 | **Fixed Days** (6 at 3p, 8 at 4p), then the token reveal | Every seat gets the same turns; a reveal at the end of every game |
+| End of the game | Race to 12 | **7 Days**, the last a secret-choice **Judgment Day**, then the token reveal | One number to learn; nobody acts last with the most knowledge on the deciding Day; a reveal at the end of every game |
 | Offer | Facedown, +1 Glory now | Facedown, **no Glory**: the Offer is a pure public good | 1. The public-goods dilemma (paying for Offers made them private goods) |
 | Who Offered what | Revealed card by card | **Shuffled before the reveal**; First Fruits shuffled too | 2. Reads, not certainties |
 | Free-riding | Nothing stopped it | **The Miser's Rule**: fewest Offers lose 3 | 1. Without it, Offers halve |
@@ -183,4 +183,4 @@ Strong lab bots, the current V45 rules with every card Light or Dark (600 games 
 
 Token mixes stay fair throughout (0.89 to 1.09). For comparison, the current rule (6 Days at 3 players, 8 at 4) measured 0.95–1.03 and 0.92–1.06. With 300 games at 5 players, about ±0.12 is noise.
 
-**What it means.** With Judgment Day, 7 Days works at every count from 3 to 6. It is a touch less even than 6 or 8 Days at 3 and 4 players, but it gives one number to teach, a climax that is itself a bluff (everyone commits blind), and a path back to 5 and 6 players. The cost is one rule. It passes the vision's test on the first and third questions: on the last Day, help-yourself and help-your-side are chosen blind, and the Altar becomes a contest nobody can watch. **It is Robert's call.** Not yet in the rules or the engine.
+**What it means.** With Judgment Day, 7 Days works at every count from 3 to 6. It is a touch less even than 6 or 8 Days at 3 and 4 players, but it gives one number to teach, a climax that is itself a bluff (everyone commits blind), and a path back to 5 and 6 players. The cost is one rule. It passes the vision's test on the first and third questions: on the last Day, help-yourself and help-your-side are chosen blind, and the Altar becomes a contest nobody can watch. **Adopted by Robert (November 19):** in rulebook v15, the engine and the site. The game stays for 3 and 4 players for now; 5 and 6 are possible later on the same rule.

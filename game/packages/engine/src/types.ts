@@ -165,6 +165,15 @@ export interface GameResult {
   standings: Standing[];
 }
 
+/** A secret Judgment Day choice: the action, and what it takes (a card id, a token, or a discard-pile card). */
+export interface Plan {
+  action: 'offer' | 'gather' | 'exalt';
+  /** The option chosen: a card id, 'token:light' / 'token:dark', 'discard:<id>', or 'card:<id>' for a card on the Altar. */
+  key: string;
+  /** For a token Gathered from the Altar: which one. */
+  token?: AltarToken;
+}
+
 export interface DayFlags {
   /** `${seat}:${key}` -> true for once-per-Day usage this Day. */
   usedToday: Record<string, true>;
@@ -189,6 +198,8 @@ export interface DayFlags {
   council?: Record<number, Seat>;
   /** Facedown and face-up Altar counts when it was revealed (Veil). */
   reveal?: { down: number; up: number };
+  /** Judgment Day (V45): each player's secret action for the last Day, carried out in turn order. */
+  plan?: Record<number, Plan>;
   /** What each Choir scores at this Reaping, before anyone gains (the Arbiter). */
   reaped?: Record<number, number>;
 }
