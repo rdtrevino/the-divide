@@ -87,19 +87,31 @@ function rollout(g: Game, d: Decision, choice: Answer): number {
   return utility(r.state, d.seat);
 }
 
+/** Whether the strong bot searches this decision (the others are answered by the heuristic). */
+export const isSearched = (d: Decision) => SEARCHED.has(d.tag) && d.max === 1 && d.options.length >= 2;
+
+/**
+ * The search's estimate of each option it tries: the mean utility over `k.rollouts` reshuffled worlds. The heuristic's
+ * choice is always among the candidates; the rest are the first options, up to `k.maxOptions`. Every option is tried
+ * on the same reshuffled worlds (common random numbers), so the comparison is fair.
+ */
+export function searchScores(g: Game, d: Decision, k: Strength = STRONG, quick = botAnswer(g.state, d)): { ids: string[]; scores: number[] } {
+  const ids = [quick[0], ...d.options.map((o) => o.id).filter((id) => id !== quick[0])].slice(0, k.maxOptions);
+  const base = (g.state.config.seed ^ (d.id * 2654435761)) | 0;
+  const scores = ids.map((id) => {
+    let total = 0;
+    for (let i = 0; i < k.rollouts; i++) { seq = base + i * 7919; total += rollout(g, d, [id]); }
+    return total / k.rollouts;
+  });
+  return { ids, scores };
+}
+
 /** A strong answer to a decision in a live game. Falls back to the heuristic for minor decisions. */
 export function strongAnswer(g: Game, d: Decision, k: Strength = STRONG): Answer {
   const quick = botAnswer(g.state, d);
-  if (!SEARCHED.has(d.tag) || d.max !== 1 || d.options.length < 2) return quick;
-  // The heuristic's choice is always among the candidates; the rest are the first options, up to the limit.
-  const ids = [quick[0], ...d.options.map((o) => o.id).filter((id) => id !== quick[0])].slice(0, k.maxOptions);
-  // Every option is tried on the same reshuffled worlds (common random numbers), so the comparison is fair.
-  const base = (g.state.config.seed ^ (d.id * 2654435761)) | 0;
-  let best = quick, bestScore = -Infinity;
-  for (const id of ids) {
-    let total = 0;
-    for (let i = 0; i < k.rollouts; i++) { seq = base + i * 7919; total += rollout(g, d, [id]); }
-    if (total > bestScore) { bestScore = total; best = [id]; }
-  }
-  return best;
+  if (!isSearched(d)) return quick;
+  const { ids, scores } = searchScores(g, d, k, quick);
+  let b = 0;
+  for (let i = 1; i < ids.length; i++) if (scores[i] > scores[b]) b = i;
+  return [ids[b]];
 }
