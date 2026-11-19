@@ -90,6 +90,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
   const abH: Record<string, number> = {}, abW: Record<string, number> = {}, abG: Record<string, number> = {};
   const seat = Array(n).fill(0);
   let revF = 0, revN = 0;
+  let tokPG = 0, tokZero = 0, tokMax = 0;
   let tokPts = 0, allPts = 0, winTok = 0, winPts = 0; const alC: Record<string, number> = {}, alW: Record<string, number> = {};
   states.forEach((s, gi) => {
     days += s.day;
@@ -97,6 +98,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
     sw += s.switches.reduce((a, b) => a + b, 0) / n;
     cross += s.offerStats[1]; offs += s.offerStats[0];
     s.fateStats.forEach((x, i) => (fs[i] += x));
+    if (s.R.stake) { for (const t of s.tokBy) { tokPG += t; if (!t) tokZero++; } tokMax += Math.max(...s.tokBy); }
     if (s.preReveal) { revN++; const top = Math.max(...s.preReveal); if (!s.winners.some((w) => s.preReveal![w] === top)) revF++; }
     if (s.R.stake && (s.R.stake.score === 'days' || s.R.stake.score === 'world')) {
       // Tide track: how much of a final score the tokens are, and whether holding the side that won more Days decides games
@@ -192,6 +194,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
     fate: states[0].R.fate ? { share: fateG / Math.max(1, fateTot), leanShowsFate: fs[0] / Math.max(1, fs[1]), offersForFate: fs[3] / Math.max(1, fs[2]), offersForChoir: fs[4] / Math.max(1, fs[2]), whenSplit: [fs[5], fs[6]], fateSideWins: fateTeamWin / G, winRatioByFate: Object.fromEntries(Object.keys(fCount).map((k) => [k === '1' ? 'Light' : k === '-1' ? 'Dark' : 'Forsaken', +(((fWin[k] ?? 0) / fCount[k]) * n).toFixed(2)])) } : undefined,
     miserBlocked: states[0].R.miser ? miserB / G : undefined,
     revealFlip: revN ? +(revF / revN).toFixed(2) : undefined,
+    tokenPlay: states[0].R.stake ? { perPlayer: +(tokPG / (G * n)).toFixed(2), neverShare: +(tokZero / (G * n)).toFixed(2), topPlayer: +(tokMax / G).toFixed(2) } : undefined,
     stake: states[0].R.stake ? { winRatioByType: Object.fromEntries(Object.keys(stC).sort().map((k) => [k, +(((stW[k] ?? 0) / stC[k]) * n).toFixed(2)])), tokens: sk.map((x) => +(x / G).toFixed(2)),
       ...(allPts ? { tokShare: +(tokPts / allPts).toFixed(2), winnerTokShare: +(winTok / winPts).toFixed(2), bySideOfWorld: Object.fromEntries(Object.keys(alC).sort().map((k) => [k, +(((alW[k] ?? 0) / alC[k]) * n).toFixed(2)])), sideShare: Object.fromEntries(Object.keys(alC).sort().map((k) => [k, +(alC[k] / (G * n)).toFixed(2)])) } : {}) } : undefined,
     oath: states[0].R.fate?.oath ? os.slice(0, 3).map((x) => +(x / G).toFixed(2)) : undefined, spread: Object.fromEntries(([['days', gDays], ['abil', gAbil], ['winGlory', gWin]] as [string, number[]][]).map(([k, a]) => { const b = a.slice().sort((x, y) => x - y); return [k, [+b[Math.floor(b.length * 0.1)].toFixed(2), +b[Math.floor(b.length * 0.9)].toFixed(2)]]; })), sideGain: sg.map((x, i) => +(x / Math.max(1, sn[i])).toFixed(2)),

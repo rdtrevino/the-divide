@@ -461,3 +461,20 @@ Object.assign(VARIANTS, {
 const COLORED = { L1: 33, D1: 33, L2: 1, D2: 1, N: 1 };
 const S7 = (extra: Partial<V> = {}) => DY({ reap: 2 }, { maxDays: 7, deck: COLORED, ...extra });
 Object.assign(VARIANTS, { d7: S7(), d7j: S7({ secretLast: true } as Partial<V>), d6j3: DY({ reap: 2 }, { maxDays: 6, deck: COLORED, secretLast: true } as Partial<V>) } as Record<string, V>);
+
+// ---- Round 44 (Robert): how tokens are played, where leftovers go, and the Miser's Rule without tracking.
+// Base: 7 Days with Judgment Day, every card Light or Dark, Choir pays 2, tokens Offered as an action, leftovers to the fewest,
+// fewest Offers lose 3.
+const J = (stake: Record<string, unknown> = {}, top: Record<string, unknown> = {}): V =>
+  ({ ...SB, deck: COLORED, maxDays: 7, secretLast: true, ...top, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, onAltar: 'fewest', score: 'days', tokVal: 1, reap: 2, ...stake } }) as V;
+Object.assign(VARIANTS, {
+  J0: J(),
+  // the Miser's Rule
+  Jnm: J({}, { miserTax: 0 }), Jzero: J({}, { miserTax: 0, miserDay: 'zero' }), Jhalf: J({}, { miserTax: 0, miserDay: 'half' }),
+  Jround: J({}, { miserTax: 0, offerRound: true, turns: 2 }),
+  // how tokens are played
+  Jff: J({ tokFruits: 'also' }), Jffo: J({ tokFruits: 'only' }), Jfree: J({ tokFree: true }),
+  J2: J({}, { turns: 2 }), J2d5: J({}, { turns: 2, maxDays: 5 }),
+  // where leftover tokens go
+  Jlost: J({ onAltar: 'lost' }), Jref: J({ onAltar: 'refund' }), Jreff: J({ onAltar: 'refundFewest' }), Jvic: J({ onAltar: 'victors' }), Jlos: J({ onAltar: 'losers' }),
+} as Record<string, V>);

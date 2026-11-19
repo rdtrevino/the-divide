@@ -95,10 +95,18 @@ export interface Rules {
     // 'world': no banks. Tokens of the color that won more Days score tokVal each (a tie: half each); the Choir pays as in 'days'.
     tokVal?: number; reap?: number;
     neutralPay?: number; shares?: boolean; choirShare?: number; // 'days' only: your Choir cards also score at the end like tokens of their color (public shares beside your hidden ones)
-    onAltar?: 'lost' | 'fewest'; // a token left on the Altar is lost, or set aside for the players with the fewest tokens to draw
+    // a token left on the Altar: lost; to the fewest; back to its owner if its color won the Day (refund), else lost or to the fewest;
+    // or drafted, one at a time, by that Evening's top Choir scorers (victors) or lowest (losers)
+    onAltar?: 'lost' | 'fewest' | 'refund' | 'refundFewest' | 'victors' | 'losers';
+    tokFruits?: 'also' | 'only'; // a token may be given as First Fruits (face up, anonymous; no draw); 'only': not at Noon
+    tokFree?: boolean; // once a Day, a token may be added facedown alongside any action (free)
     collectBonus?: number;
     asCards?: boolean; // tokens are Host cards in the deck: drawn, held in hand, Offered like cards, Gathered to hand, never Exalted
   };
+  /** 'No offering, no harvest': a player who did not Offer this Day scores nothing ('zero') or half ('half') at the Reaping. */
+  miserDay?: 'zero' | 'half';
+  /** Every Noon starts with a round in which each player must Offer (a card or a token); then a round of any action. */
+  offerRound?: boolean;
   /** Judgment Day: on the last Day every player chooses their action in secret, then all are carried out in turn order
    *  (a card chosen for Gathering that is already gone is not replaced). */
   secretLast?: boolean;
@@ -170,7 +178,7 @@ export interface State {
   gloryByDay: number[][];
   offerStats: number[]; // [Offers, Offers against own lean]
   calls: number[]; // Prophet: each player's named Tide this Day (0 = none)
-  dayOffers: number[]; paxStats: number[]; gatherStats: number[];
+  dayOffers: number[]; paxStats: number[]; gatherStats: number[]; tokDay: number[]; tokBy: number[];
   fate: number[]; fateDays: number[]; fateStats: number[]; offersBy: number[]; oathStats: number[];
   oathPool: number[]; // Oaths set aside, facedown
   preReveal?: number[]; // Glory just before the end-of-game reveal (Fates, Oaths, stakes)
@@ -210,7 +218,7 @@ export function newGame(R: Rules, seed: number): State {
     deck: cards.map((c) => c.id), discard: [], tides: [], order: [], step: 0, phase: 'fruits', used: Array(R.n).fill(0),
     src: Array.from({ length: R.n }, () => ({})), logs: [], decisions: Array(R.n).fill(0), switches: Array(R.n).fill(0), winners: [],
     preLastNet: null, gloryByDay: [], offerStats: [0, 0], calls: Array(R.n).fill(0),
-    dayOffers: Array(R.n).fill(0), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0],
+    dayOffers: Array(R.n).fill(0), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0], tokDay: Array(R.n).fill(0), tokBy: Array(R.n).fill(0),
     fate: Array(R.n).fill(0), fateDays: Array(R.n).fill(0), fateStats: [0, 0, 0, 0, 0, 0, 0], offersBy: Array(R.n).fill(0), oathStats: [0, 0, 0, 0],
     oathPool: [], banks: Array.from({ length: R.n }, () => [0, 0]), creed: Array(R.n).fill(''), tok: Array.from({ length: R.n }, () => []), stakeType: Array(R.n).fill(''), stakeStats: [0, 0, 0],
     pub: Array.from({ length: R.n }, () => Array(PUB).fill(0)), pubDay: Array.from({ length: R.n }, () => Array(PUB).fill(0)), readerRows: [],
@@ -261,7 +269,7 @@ export function clone(s: State): State {
     order: s.order.slice(), used: s.used.slice(),
     // metrics are not cloned deeply: rollouts must not rely on them
     src: s.src.map(() => ({})), logs: [], decisions: s.decisions.slice(), switches: s.switches.slice(), winners: [], gloryByDay: [], offerStats: [0, 0], calls: s.calls.slice(),
-    dayOffers: s.dayOffers.slice(), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0],
+    dayOffers: s.dayOffers.slice(), paxStats: [0, 0, 0, 0, 0, 0], gatherStats: [0, 0, 0], tokDay: s.tokDay.slice(), tokBy: s.tokBy.slice(),
     fate: s.fate.slice(), fateDays: s.fateDays.slice(), fateStats: [0, 0, 0, 0, 0, 0, 0], offersBy: s.offersBy.slice(), oathStats: [0, 0, 0, 0],
     oathPool: s.oathPool.slice(), banks: s.banks.map((b) => b.slice()), creed: s.creed.slice(), tok: s.tok.map((t) => t.slice()), stakeType: s.stakeType, stakeStats: [0, 0, 0],
     pub: s.pub.map(() => Array(PUB).fill(0)), pubDay: s.pubDay.map(() => Array(PUB).fill(0)), readerRows: [],
@@ -344,6 +352,7 @@ export function startDay(s: State) {
   s.calls = Array(s.R.n).fill(0);
   s.dayStart = s.glory.slice();
   s.dayOffers = Array(s.R.n).fill(0);
+  s.tokDay = Array(s.R.n).fill(0);
   s.ordeal = Array(s.R.n).fill(false);
   for (let p = 0; p < s.R.n; p++) {
     // Council: name a player who leans your way (not the leader if you can help it).
@@ -383,6 +392,16 @@ export function startDay(s: State) {
 export function applyFruits(s: State, picks: number[]) {
   for (let p = 0; p < s.R.n; p++) {
     if (!s.hand[p].length) continue;
+    if (picks[p] >= s.hand[p].length) {
+      // a token given as First Fruits: face up, anonymous; the hand is untouched, so no draw
+      const col = picks[p] === s.hand[p].length ? 1 : -1;
+      const j = s.tok[p].findIndex((c) => sgn(s.cards[c].v) === col);
+      const [c] = s.tok[p].splice(j, 1);
+      s.altar.push({ c, up: true, by: p, kind: 0, seen: 0 });
+      s.stakeStats[0]++; s.tokBy[p]++;
+      s.decisions[p]++;
+      continue;
+    }
     const [c] = s.hand[p].splice(picks[p], 1);
     s.altar.push({ c, up: true, by: p, kind: 0, seen: 0 });
     s.decisions[p]++;
@@ -391,15 +410,15 @@ export function applyFruits(s: State, picks: number[]) {
       if (s.cards[c].ab === 'oath') see(s, p, sgn(val(s, c)) > 0 ? P.oathL : P.oathD);
     }
   }
-  for (let p = 0; p < s.R.n; p++) { const c = draw(s); if (c !== undefined) s.hand[p].push(c); }
+  for (let p = 0; p < s.R.n; p++) if (picks[p] < s.hand[p].length + 1 || !s.R.stake?.tokFruits) { const c = draw(s); if (c !== undefined && s.hand[p].length < s.R.hand) s.hand[p].push(c); }
   syncOaths(s);
   s.phase = 'noon';
 }
 
 export type Action =
-  | { t: 'offer'; i: number }
-  | { t: 'exalt'; i: number; r: number; h?: boolean } // r = Choir index to replace, -1 if room; h = Exalted facedown (veiled)
-  | { t: 'gather'; k: number; r: number }
+  | { t: 'offer'; i: number; tk?: number }
+  | { t: 'exalt'; i: number; r: number; h?: boolean; tk?: number } // r = Choir index to replace, -1 if room; h = Exalted facedown (veiled)
+  | { t: 'gather'; k: number; r: number; tk?: number }
   | { t: 'tok'; col: number } // Offer one of your allegiance tokens of that color, facedown
   | { t: 'pass' };
 
@@ -407,6 +426,7 @@ export const active = (s: State) => s.order[s.step % s.R.n];
 
 export function legal(s: State, p: number): Action[] {
   const out: Action[] = [];
+  const offerRound = s.R.offerRound && s.step < s.R.n;
   const full = s.choir[p].length >= s.R.choirMax;
   const rs = full ? s.choir[p].map((_, j) => j) : [-1];
   if (!(s.anathema >= 0 && s.anathema !== p)) for (let i = 0; i < s.hand[p].length; i++) out.push({ t: 'offer', i });
@@ -419,12 +439,18 @@ export function legal(s: State, p: number): Action[] {
     if ((s.R.fate?.oathHand && s.cards[a.c].ab === 'oath') || isTok(s, a.c)) { out.push({ t: 'gather', k, r: -1 }); continue; }
     for (const r of rs) out.push({ t: 'gather', k, r });
   }
-  if (s.R.stake?.mobile && !s.R.stake.asCards && !(s.anathema >= 0 && s.anathema !== p)) {
+  if (s.R.stake?.mobile && !s.R.stake.asCards && s.R.stake.tokFruits !== 'only' && !s.R.stake.tokFree && !(s.anathema >= 0 && s.anathema !== p)) {
     if (s.tok[p].some((c) => s.cards[c].v > 0)) out.push({ t: 'tok', col: 1 });
     if (s.tok[p].some((c) => s.cards[c].v < 0)) out.push({ t: 'tok', col: -1 });
   }
-  if (!out.length) out.push({ t: 'pass' });
-  return out;
+  let res = offerRound ? out.filter((a) => a.t === 'offer' || a.t === 'tok') : out;
+  // A free pledge: once a Day, any action may carry a token of either color.
+  if (s.R.stake?.tokFree && !s.tokDay[p]) {
+    const cols = [1, -1].filter((col) => s.tok[p].some((c) => sgn(s.cards[c].v) === col));
+    res = [...res, ...res.flatMap((a) => (a.t === 'offer' || a.t === 'exalt' || a.t === 'gather' ? cols.map((tk) => ({ ...a, tk }) as Action) : []))];
+  }
+  if (!res.length) res.push({ t: 'pass' });
+  return res;
 }
 
 function credit(s: State, p: number, key: string, n: number) {
@@ -457,13 +483,20 @@ export function act(s: State, a: Action) {
   const before = lean(s, p);
   if (s.anathema === p) s.anathema = -1;
   s.decisions[p]++;
+  const tk = (a as { tk?: number }).tk;
+  if (tk) {
+    const j = s.tok[p].findIndex((c) => sgn(s.cards[c].v) === tk);
+    const [c] = s.tok[p].splice(j, 1);
+    s.altar.push({ c, up: false, by: p, kind: 1, seen: 1 << p });
+    s.tokDay[p] = 1; s.stakeStats[0]++; s.tokBy[p]++;
+  }
   if (a.t === 'pass') {
     // nothing
   } else if (a.t === 'tok') {
     const j = s.tok[p].findIndex((c) => sgn(s.cards[c].v) === a.col);
     const [c] = s.tok[p].splice(j, 1);
     s.altar.push({ c, up: false, by: p, kind: 1, seen: 1 << p });
-    s.offerStats[0]++; s.dayOffers[p]++; s.offersBy[p]++; s.stakeStats[0]++;
+    s.offerStats[0]++; s.dayOffers[p]++; s.offersBy[p]++; s.stakeStats[0]++; s.tokBy[p]++;
     see(s, p, P.offN); see(s, p, P.tokOff);
   } else if (a.t === 'offer') {
     const [c] = s.hand[p].splice(a.i, 1);
@@ -805,6 +838,8 @@ export function cardPayN(s: State, tide: Dir, k: number): number[] {
   if (tide === 0) return out;
   const np = s.R.stake?.neutralPay ?? 0;
   for (let p = 0; p < s.R.n; p++) for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) out[p] += k; else if (v === 0) out[p] += np; }
+  // No offering, no harvest.
+  if (s.R.miserDay) for (let p = 0; p < s.R.n; p++) if (!s.dayOffers[p]) out[p] = s.R.miserDay === 'zero' ? 0 : Math.floor(out[p] / 2);
   return out;
 }
 export function cardPay(s: State, tide: Dir): number[] {
@@ -905,13 +940,36 @@ export function evening(s: State) {
   s.tides.push(tide);
   s.gloryByDay.push(s.glory.slice());
   for (const a of s.altar) {
-    if (isTok(s, a.c)) { s.stakeStats[2]++; if (s.R.stake?.asCards) s.discard.push(a.c); else if (s.R.stake?.onAltar === 'fewest') s.oathPool.push(a.c); continue; }
+    if (isTok(s, a.c)) {
+      s.stakeStats[2]++;
+      const how = s.R.stake?.onAltar;
+      const won = tide !== 0 && sgn(val(s, a.c)) === tide;
+      if (s.R.stake?.asCards) s.discard.push(a.c);
+      else if (how === 'fewest' || how === 'victors' || how === 'losers' || (how === 'refundFewest' && !won)) s.oathPool.push(a.c);
+      else if ((how === 'refund' || how === 'refundFewest') && won && a.by >= 0) s.tok[a.by].push(a.c);
+      continue;
+    }
     if (s.R.fate?.oath && s.cards[a.c].ab === 'oath') {
       if (s.R.fate.oathReturn === 'shuffle' || a.by < 0) s.oathPool.push(a.c); // set aside facedown with the others
       else s.hand[a.by].push(a.c);
     } else s.discard.push(a.c);
   }
-  if (s.R.stake?.onAltar === 'fewest' && s.oathPool.length) {
+  if ((s.R.stake?.onAltar === 'victors' || s.R.stake?.onAltar === 'losers') && s.oathPool.length) {
+    // The spoils: drafted one at a time by this Evening's top Choir scorers (or lowest), each taking the color that has
+    // won more Days (ties: the color they hold more of).
+    const order = [...Array(n).keys()].sort((a, b) => (s.R.stake!.onAltar === 'victors' ? reap[b] - reap[a] : reap[a] - reap[b]));
+    const lw = s.tides.filter((t) => t > 0).length, dw = s.tides.filter((t) => t < 0).length;
+    for (let k = 0; s.oathPool.length; k++) {
+      const p = order[k % n];
+      const [mL, mD] = tokCounts(s, p);
+      const want = lw !== dw ? sgn(lw - dw) : mL >= mD ? 1 : -1;
+      let j = s.oathPool.findIndex((c) => sgn(s.cards[c].v) === want);
+      if (j < 0) j = 0;
+      s.tok[p].push(s.oathPool.splice(j, 1)[0]);
+      see(s, p, sgn(s.cards[s.tok[p][s.tok[p].length - 1]].v) > 0 ? P.tookL : P.tookD);
+    }
+  }
+  if ((s.R.stake?.onAltar === 'fewest' || s.R.stake?.onAltar === 'refundFewest') && s.oathPool.length) {
     // Tokens left on the Altar are set aside facedown; the players with the fewest tokens draw them, one each, in turn.
     shuffle(s, s.oathPool);
     while (s.oathPool.length) {

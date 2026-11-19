@@ -534,6 +534,7 @@ function prune(s: State, p: number, acts: Action[], max: number) {
   const keep = new Set(idx.slice(0, max - 2));
   // make sure each action type is represented by its best option
   for (const t of ['offer', 'exalt', 'gather', 'tok']) { const i = idx.find((j) => acts[j].t === t); if (i !== undefined) keep.add(i); }
+  for (const tk of [1, -1]) { const i = idx.find((j) => (acts[j] as { tk?: number }).tk === tk); if (i !== undefined) keep.add(i); }
   return [...keep].map((i) => acts[i]);
 }
 
@@ -559,23 +560,26 @@ export function mcAction(s: State, p: number, o: MCOpts = MC_DEFAULT): Action {
 
 export function mcFruit(s: State, p: number, o: MCOpts = MC_DEFAULT): number {
   const h = s.hand[p];
-  if (h.length <= 1) return 0;
-  const tot = h.map(() => 0);
+  // Options: each card in hand, and (tokFruits) a token of each color held, as indices hand.length (Light) and +1 (Dark).
+  const opts = h.map((_, i) => i);
+  if (s.R.stake?.tokFruits) for (const [k, col] of [[0, 1], [1, -1]]) if (s.tok[p].some((c) => sgn(s.cards[c].v) === col)) opts.push(h.length + k);
+  if (opts.length <= 1) return opts[0] ?? 0;
+  const tot = new Map(opts.map((i) => [i, 0]));
   for (let k = 0; k < o.samples; k++) {
     const d = determinize(s, p, k * 31 + p + 7);
     const others = Array.from({ length: d.R.n }, (_, q) => (q === p ? 0 : heurFruit(d, q)));
-    for (let i = 0; i < h.length; i++) {
+    for (const i of opts) {
       const c = clone(d);
       c.rng = (d.rng + k * 7919) | 0;
       const picks = others.slice();
       picks[p] = i;
       applyFruits(c, picks);
       rollDay(c);
-      tot[i] += utility(c, p);
+      tot.set(i, tot.get(i)! + utility(c, p));
     }
   }
-  let b = 0;
-  for (let i = 1; i < h.length; i++) if (tot[i] > tot[b]) b = i;
+  let b = opts[0];
+  for (const i of opts) if (tot.get(i)! > tot.get(b)!) b = i;
   return b;
 }
 
