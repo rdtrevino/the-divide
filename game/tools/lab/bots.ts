@@ -179,7 +179,7 @@ function stakeDay(s: State, p: number, cards: number[], pl: number) {
   const [wL, wD] = stakeWeights(s, p);
   let nL = 0, nD = 0;
   for (const v of cards) { if (v > 0) nL++; else if (v < 0) nD++; }
-  if (isTrack(s) && s.R.stake!.shares) { const tv = s.R.stake!.tokVal ?? 1; return tv * (pl * (wL / tv + nL) + (1 - pl) * (wD / tv + nD)); }
+  if (isTrack(s) && s.R.stake!.shares) { const tv = s.R.stake!.tokVal ?? 1, cs = s.R.stake!.choirShare ?? 1; return tv * (pl * (wL / tv + cs * nL) + (1 - pl) * (wD / tv + cs * nD)); }
   if (isTrack(s)) { const k = s.R.stake!.reap ?? 1; return pl * (wL + k * nL) + (1 - pl) * (wD + k * nD); }
   return pl * wL * (1 + nL) + (1 - pl) * wD * (1 + nD);
 }

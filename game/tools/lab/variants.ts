@@ -420,3 +420,15 @@ Object.assign(VARIANTS, {
   dy4_d6: DY({ perPlayer: 4 }, { maxDays: 6 }),
   dy4_d8: DY({ perPlayer: 4 }, { maxDays: 8 }),
 } as Record<string, V>);
+
+// ---- Round 39: comparing the three finalists (Robert): A Tide track, B Choir as public shares, H Choir pays 2. 6 Days at 3 players, 8 at 4.
+const D3 = { maxDays: 6 }, D4 = { maxDays: 8 };
+Object.assign(VARIANTS, {
+  A3: DY({}, D3), A4: DY({}, D4),
+  B3: DY({ reap: 0, shares: true }, D3), B4: DY({ reap: 0, shares: true }, D4),
+  H3: DY({ reap: 2 }, D3), H4: DY({ reap: 2 }, D4),
+  // in between: the Choir weighs 1.5 times a token-Day
+  M3: DY({ reap: 3, tokVal: 2 }, D3), M4: DY({ reap: 3, tokVal: 2 }, D4),
+  // B with Choir cards worth two shares each (B's version of H)
+  B2_3: DY({ reap: 0, shares: true, choirShare: 2 }, D3), B2_4: DY({ reap: 0, shares: true, choirShare: 2 }, D4),
+} as Record<string, V>);

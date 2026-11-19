@@ -94,7 +94,7 @@ export interface Rules {
     // 'days' (the Tide track): no banks. Each token scores tokVal for every Day its color won; the Choir pays reap per matching card each Evening.
     // 'world': no banks. Tokens of the color that won more Days score tokVal each (a tie: half each); the Choir pays as in 'days'.
     tokVal?: number; reap?: number;
-    shares?: boolean; // 'days' only: your Choir cards also score at the end like tokens of their color (public shares beside your hidden ones)
+    shares?: boolean; choirShare?: number; // 'days' only: your Choir cards also score at the end like tokens of their color (public shares beside your hidden ones)
     onAltar?: 'lost' | 'fewest'; // a token left on the Altar is lost, or set aside for the players with the fewest tokens to draw
     collectBonus?: number;
     asCards?: boolean; // tokens are Host cards in the deck: drawn, held in hand, Offered like cards, Gathered to hand, never Exalted
@@ -712,7 +712,7 @@ export function stakeScore(s: State, p: number): number {
       if (!S.shares) return tv * (tL * lw + tD * dw);
       let cL = 0, cD = 0;
       for (const x of s.choir[p]) { const v = sgn(x.flip ? -val(s, x.c) : val(s, x.c)); if (v > 0) cL++; else if (v < 0) cD++; }
-      return tv * ((tL + cL) * lw + (tD + cD) * dw);
+      const cs = S.choirShare ?? 1; return tv * ((tL + cs * cL) * lw + (tD + cs * cD) * dw);
     }
     return lw > dw ? tv * tL : dw > lw ? tv * tD : (tv * (tL + tD)) / 2;
   }
