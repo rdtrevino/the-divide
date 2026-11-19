@@ -1,6 +1,7 @@
 // Play lab games and measure them.
 import { type Action, type Rules, type State, applyFruits, act, active, clone, evening, newGame, rnd, tokCounts } from './core';
 import { type Policy, chooseAction, chooseFlip, chooseFruit } from './bots';
+import { pmap } from '../par';
 
 export function play(R: Rules, pols: Policy[], seed: number): State {
   const s = newGame(R, seed);
@@ -205,6 +206,12 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
 export function runSet(R: Rules, pols: (i: number) => Policy[], N: number, seed0: number, tested?: (i: number) => number) {
   const out: State[] = [];
   for (let i = 0; i < N; i++) out.push(play(R, pols(i), seed0 + i * 7919));
+  return measure(out, tested ? { seat: tested } : undefined);
+}
+
+/** `runSet` on every core (../par.ts): the same games and the same result. Once per script run. */
+export async function runSetPar(R: Rules, pols: (i: number) => Policy[], N: number, seed0: number, tested?: (i: number) => number) {
+  const out = await pmap(N, (i) => play(R, pols(i), seed0 + i * 7919));
   return measure(out, tested ? { seat: tested } : undefined);
 }
 

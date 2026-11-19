@@ -75,14 +75,20 @@ export function createState(cfg: GameConfig): GameState {
 /** Cards dealt face up into each starting Choir (V41: 2, leaving room to build). */
 export const STARTING_CHOIR = 2;
 
-export function* runGame(s: GameState): Gen<void> {
-  // Raguel cards dealt into a starting Choir bind a player at the start.
-  for (const p of s.players) if (p.choir.some((c) => c.id === H.raguel)) {
+/**
+ * The whole game, as a generator of decisions. `from` resumes at the start of a Day from a state saved there,
+ * and `onDayStart` sees the state at the start of every Day (before anything happens), so it can be saved: the
+ * strong bot's search forks games from these checkpoints instead of replaying every move since the first.
+ */
+export function* runGame(s: GameState, from?: number, onDayStart?: (s: GameState, day: number) => void): Gen<void> {
+  // Raguel cards dealt into a starting Choir bind a player at the start (already done in a resumed game).
+  if (from === undefined) for (const p of s.players) if (p.choir.some((c) => c.id === H.raguel)) {
     p.choir = p.choir.filter((c) => c.id !== H.raguel);
     yield* enterChoir(s, p.seat, H.raguel);
   }
   const last = DAYS;
-  for (let d = 1; d <= last; d++) {
+  for (let d = from ?? 1; d <= last; d++) {
+    onDayStart?.(s, d);
     s.day = d;
     s.day_ = freshDay();
     for (const p of s.players) p.offeredToday = false;
@@ -309,24 +315,22 @@ function* takeAction(s: GameState, seat: Seat, index: number): Gen<void> {
     return;
   }
   const labels: Record<string, string> = { offer: 'Offer: play a card or an allegiance token facedown onto the Altar', gather: 'Gather: take a card from the Altar into your Choir', exalt: 'Exalt: play a card from your hand into your Choir' };
-  preset = plan ?? null;
+  s.day_.preset = plan ?? null;
   const a = plan ? plan.action : (yield* chooseOne(s, seat, 'action', index ? 'Free Will: choose your second action.' : 'Choose your action.', legal.map((id) => ({ id, label: labels[id] }))))!;
   s.day_.actionsTaken.push({ seat, action: a as Action });
   for (const pact of s.pacts) if ((pact.a === seat || pact.b === seat) && pact.action === a && pact.day === s.day) pact.broken = true;
   if (a === 'offer') yield* doOffer(s, seat);
   if (a === 'gather') yield* doGather(s, seat);
   if (a === 'exalt') yield* doExalt(s, seat);
-  preset = null;
+  s.day_.preset = null;
 }
-
-/** The Judgment Day choice being carried out, if any (set by takeAction, read once by the action). */
-let preset: Plan | null = null;
 
 /** Choose an option: from the Judgment Day plan if there is one (null if it is no longer available), else by asking. */
 function* pick(s: GameState, seat: Seat, tag: string, prompt: string, opts: Option[]): Gen<string | null> {
-  if (!preset) return yield* chooseOne(s, seat, tag, prompt, opts);
-  const p = preset;
-  preset = null;
+  // Kept in the state, not the module: several games (a live one and the search's copies) can be mid-turn at once.
+  const p = s.day_.preset;
+  if (!p) return yield* chooseOne(s, seat, tag, prompt, opts);
+  s.day_.preset = null;
   const id = p.key.startsWith('card:') ? 'altar:' + s.altar.findIndex((a) => a.id === p.key.slice(5)) : p.token ? 'token:' + s.altarTokens.indexOf(p.token) : p.key;
   if (opts.some((o) => o.id === id)) return id;
   log(s, 'judgment', `${pname(s, seat)}'s chosen ${p.action === 'gather' ? 'card is gone' : 'card is no longer theirs'}: they do nothing.`);

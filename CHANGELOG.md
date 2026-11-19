@@ -2,6 +2,14 @@
 
 Older entries name files that have since been removed (design write-ups, simulator reports, archived spreadsheets and rulebook drafts, the V28 print kit); every one of them is in the git history before November 18, 2026.
 
+## Faster bots (November 19, 2026)
+
+Layer 1 of the bot plan (`design/bots.md`): the same bots, about 3× faster, with every move unchanged (checked by fingerprint).
+- **Engine:** the strong bot copies the game from the start of the Day (`Game.fork`) instead of replaying from the deal. 1.58 → 0.93 seconds for a game where all 4 players use the strong bot, on one core.
+- **Every core:** `game/tools/par.ts` runs a script's games in parallel with identical results; used by the lab's main modes and `skill45.ts`. With 4 cores: 0.53 s a game in the engine (3.0×), 0.13 s in the lab (3.1×).
+- **Fixed:** the Judgment Day choice being carried out was kept outside the game state, so two games running in one process could interfere. It is now part of the state.
+- **Tools:** `bench-bots.ts` (bot speed and move fingerprint); `skill45.ts` prints a standard error; a test that a copied game always matches a full replay (104 engine tests).
+
 ## V45: no offering, no harvest (November 19, 2026)
 
 Robert's questions about tokens and the Miser's Rule, tested in lab Rounds 44 and 45 (`design/tokens-and-offering.md`).

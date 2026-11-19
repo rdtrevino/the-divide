@@ -1,11 +1,13 @@
-// Run one experiment for one variant and print a JSON line. Used by run.sh to fill all cores.
+// Run one experiment for one variant and print a JSON line. The main modes spread their games over every core
+// (../par.ts; WORKERS=1 for one); run.sh runs several variants side by side.
 //   tsx exp.ts <variant> <mode> <N> [seed]
 // modes: mc4, mc3 (all Monte Carlo), h4, h3 (all heuristic), skill4 (one MC among heuristics),
 //        dumb4:<policy> (one fixed-strategy player among MC players), calib (target for 6.5 Days at 4p)
 import { type Rules, rules } from './core';
-import { play, runSet } from './lab';
+import { play, runSet, runSetPar } from './lab';
 import type { Policy } from './bots';
 import { VARIANTS } from './variants';
+import { pmap } from '../par';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const [name, mode, nStr, seedStr] = process.argv.slice(2);
@@ -23,14 +25,14 @@ const all = (pol: Policy, n: number) => () => Array(n).fill(pol) as Policy[];
 const one = (pol: Policy, rest: Policy, n: number) => (i: number) => { const a: Policy[] = Array(n).fill(rest); a[i % n] = pol; return a; };
 
 let out: any;
-if (mode === 'mc4') out = runSet(R(4), all('mc', 4), N, seed);
-else if (mode === 'mc3') out = runSet(R(3), all('mc', 3), N, seed);
-else if (mode === 'mc5' || mode === 'mc6') { const k = Number(mode[2]); out = runSet(R(k), all('mc', k), N, seed); }
-else if (mode === 'h4') out = runSet(R(4), all('heur', 4), N, seed);
-else if (mode === 'h3') out = runSet(R(3), all('heur', 3), N, seed);
-else if (mode === 'skill4') out = runSet(R(4), one('mc', 'heur', 4), N, seed, (i) => i % 4);
-else if (mode === 'skill3') out = runSet(R(3), one('mc', 'heur', 3), N, seed, (i) => i % 3);
-else if (mode.startsWith('dumb4:')) out = runSet(R(4), one(mode.slice(6) as Policy, 'mc', 4), N, seed, (i) => i % 4);
+if (mode === 'mc4') out = await runSetPar(R(4), all('mc', 4), N, seed);
+else if (mode === 'mc3') out = await runSetPar(R(3), all('mc', 3), N, seed);
+else if (mode === 'mc5' || mode === 'mc6') { const k = Number(mode[2]); out = await runSetPar(R(k), all('mc', k), N, seed); }
+else if (mode === 'h4') out = await runSetPar(R(4), all('heur', 4), N, seed);
+else if (mode === 'h3') out = await runSetPar(R(3), all('heur', 3), N, seed);
+else if (mode === 'skill4') out = await runSetPar(R(4), one('mc', 'heur', 4), N, seed, (i) => i % 4);
+else if (mode === 'skill3') out = await runSetPar(R(3), one('mc', 'heur', 3), N, seed, (i) => i % 3);
+else if (mode.startsWith('dumb4:')) out = await runSetPar(R(4), one(mode.slice(6) as Policy, 'mc', 4), N, seed, (i) => i % 4);
 else if (mode === 'calib') {
   // Find the target for which all-heuristic 4-player games last closest to 6.5 Days (and 3-player to 8).
   const res: Record<string, number> = {};
@@ -48,8 +50,8 @@ else if (mode === 'calib') {
 } else if (/^rows[3-6]$/.test(mode)) {
   // Reader data: every player's public record and true allegiance at each Evening, from all-Monte-Carlo games.
   const n = Number(mode[4]);
-  const rows: number[][] = [];
-  for (let i = 0; i < N; i++) { const st = play(R(n), Array(n).fill('mc'), seed + i * 7919); for (const r of st.readerRows) rows.push([i, ...r]); }
+  const games = await pmap(N, (i) => play(R(n), Array(n).fill('mc'), seed + i * 7919).readerRows);
+  const rows: number[][] = games.flatMap((g, i) => g.map((r) => [i, ...r]));
   writeFileSync(`results/rows-${name}-${n}p.json`, JSON.stringify(rows));
   out = { rows: rows.length };
 } else if (mode === 'calibmc') {

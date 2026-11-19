@@ -13,7 +13,7 @@ Check that the bots are ordered: `tsx smoke.ts 40` (random never wins among heur
 
 ## Running experiments
 
-Every variant is a named rule set in `variants.ts`.
+Every variant is a named rule set in `variants.ts`. The main modes (mc3, mc4, mc5, mc6, h3, h4, skill, dumb, rows) spread one variant's games over every core (`../par.ts`) with the same result as one core (`WORKERS=1`); `run.sh` also runs several variants side by side, so give it fewer variants at a time, or `WORKERS=1`, to avoid oversubscribing.
 
 ```bash
 ./run.sh out.jsonl calib 0 <variants...>      # target for ~6.5 Days with heuristic bots

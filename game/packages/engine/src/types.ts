@@ -200,6 +200,8 @@ export interface DayFlags {
   reveal?: { down: number; up: number };
   /** Judgment Day (V45): each player's secret action for the last Day, carried out in turn order. */
   plan?: Record<number, Plan>;
+  /** The Judgment Day choice being carried out right now (set by the action, read once by its first pick). */
+  preset?: Plan | null;
   /** What each Choir scores at this Reaping, before anyone gains (the Arbiter). */
   reaped?: Record<number, number>;
 }

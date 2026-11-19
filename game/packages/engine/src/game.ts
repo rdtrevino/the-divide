@@ -6,6 +6,22 @@ export type Input = { t: 'answer'; id: number; seat: Seat; choice: Answer };
 
 export class RuleError extends Error {}
 
+// Available in every runtime the engine runs in (browsers, Workers, Node 17+); the ES2022 lib does not declare it.
+declare function structuredClone<T>(value: T): T;
+
+/**
+ * A deep copy of the state, except that the log and stats (nine tenths of a late-game state) share their entries:
+ * entries are never changed once written, so only the arrays need copying.
+ */
+function copyState(s: GameState): GameState {
+  const c: GameState = structuredClone({ ...s, log: [], stats: [] });
+  c.log = s.log.slice();
+  c.stats = s.stats.slice();
+  return c;
+}
+
+type Checkpoint = { day: number; state: GameState; at: number };
+
 export class Game {
   readonly state: GameState;
   readonly inputs: Input[] = [];
@@ -13,17 +29,38 @@ export class Game {
   private answers = new Map<number, Answer>();
   private gen: Gen<void>;
 
-  /** `setup` changes the dealt state before play (tests, simulations); replays repeat it. */
-  constructor(readonly config: GameConfig, readonly opts: { setup?: (s: GameState) => void } = {}) {
-    this.state = createState(config);
-    opts.setup?.(this.state);
-    this.gen = runGame(this.state);
+  /** The state at the start of the current Day, and how many inputs had been given by then (see `fork`). */
+  private checkpoint: Checkpoint | null = null;
+
+  /**
+   * `setup` changes the dealt state before play (tests, simulations); replays repeat it.
+   * `resume` (used by `fork`) starts from a saved Day-start state instead of a fresh deal.
+   */
+  constructor(readonly config: GameConfig, readonly opts: { setup?: (s: GameState) => void } = {}, resume?: Checkpoint & { inputs: Input[] }) {
+    this.state = resume ? copyState(resume.state) : createState(config);
+    if (resume) this.inputs.push(...resume.inputs);
+    else opts.setup?.(this.state);
+    // Forks are short-lived and never forked again, so they skip the checkpoint copies.
+    const save = resume ? undefined : (s: GameState, day: number) => { this.checkpoint = { day, state: copyState(s), at: this.inputs.length }; };
+    this.gen = runGame(this.state, resume?.day, save);
     this.advance([]);
   }
 
   static replay(config: GameConfig, inputs: Input[], opts: Game['opts'] = {}): Game {
     const g = new Game(config, opts);
     for (const i of inputs) g.apply(i);
+    return g;
+  }
+
+  /**
+   * An independent copy of this game at this moment, identical to `Game.replay(config, inputs, opts)` but much
+   * cheaper: it starts from the state saved at the start of the current Day and replays only today's inputs.
+   */
+  fork(): Game {
+    const cp = this.checkpoint;
+    if (!cp) return Game.replay(this.config, this.inputs, this.opts);
+    const g = new Game(this.config, this.opts, { ...cp, inputs: this.inputs.slice(0, cp.at) });
+    for (let k = cp.at; k < this.inputs.length; k++) g.apply(this.inputs[k]);
     return g;
   }
 

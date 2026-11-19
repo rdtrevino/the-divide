@@ -1,5 +1,5 @@
 // Strong computer players: determinized Monte Carlo, like the design lab's bots (game/tools/lab).
-// For each real choice the bot tries every option: it replays the game to this moment, reshuffles everything it
+// For each real choice the bot tries every option: it copies the game at this moment (Game.fork), reshuffles everything it
 // cannot see, plays the rest of the Day forward with the fast heuristic bots, and keeps the option that leaves it
 // best placed against the strongest rival. Reads come from how it reshuffles: a player's secret tokens are dealt
 // leaning toward their Choir's colors, as a careful person would guess. Bluffs come from the search itself: it learns
@@ -72,9 +72,9 @@ function utility(s: GameState, q: Seat): number {
   return me - 0.6 * Math.max(...others) - 0.4 * (others.reduce((a, b) => a + b, 0) / others.length);
 }
 
-/** Replay to this decision, reshuffle the unseen, answer it with `choice`, and play out the rest of the Day. */
+/** Copy the game at this decision, reshuffle the unseen, answer it with `choice`, and play out the rest of the Day. */
 function rollout(g: Game, d: Decision, choice: Answer): number {
-  const r = Game.replay(g.config, g.inputs, g.opts);
+  const r = g.fork();
   determinize(r.state, d.seat);
   const day = r.state.day;
   const open = () => r.pending.filter((p) => r.waitingOn(p.seat).includes(p));
