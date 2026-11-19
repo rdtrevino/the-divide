@@ -78,6 +78,7 @@ Building a Choir should make you stronger as an individual (the "help yourself" 
 - The growing Choir, free Exalt, stores, sets and growth cards (V41 to V43).
 - **Synergy by alignment, not by named families** (Robert rejected families in V41). Light cards help Light, Dark cards help Dark, so the engine and the side are the same axis. That is what makes building your Choir a statement about which side you are on.
 - His own coalition rule from V41, where the stronger lean in a pair takes more, links Choir strength to standing within your side.
+- **The engine is public** (November 19): Choirs stay face up. "The whole point of engine building is for people to understand the actions you're taking"; hidden Choir cards were rejected as confusing and unworkable in print.
 
 ### 6. The most strategy and nuance for the least complexity
 

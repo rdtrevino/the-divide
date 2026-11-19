@@ -113,7 +113,9 @@ Why no single rule was enough: with every source of evidence the reader had, rem
 
 **What is still readable with all four rules:** mostly the face-up cards in your Choir (removing them drops the reader from 67% to 60%) and what you Gather, which are public choices a player can use to bluff.
 
-**The four hiding rules:**
+**Robert's decision (November 19): Choirs stay face up.** Hidden Choir cards (rule 3 below) are rejected: engine building only works if people can see and understand each other's Choirs, and hidden cards would be confusing and a nightmare in print. Rules 1, 2 and 4 are kept. Hiding the rest of a side's signal has to come from the allegiance system itself (next round: allegiance with twists, and mixed allegiance tokens).
+
+**The four hiding rules tested:**
 
 1. **Anonymous First Fruits.** Everyone puts their card facedown; the cards are shuffled together and turned face up onto the Altar. The table sees the colors, not whose.
 2. **Anonymous reveal.** In the Evening, the facedown Offers are shuffled together before they are turned face up. You know that someone Offered, never what.
