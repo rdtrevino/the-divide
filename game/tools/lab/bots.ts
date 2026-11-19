@@ -499,7 +499,7 @@ function valueBase(s: State, q: number) {
     const days = dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0);
     return s.glory[q] + tv * (P * tL + (1 - P) * tD) + days * 0.8 * k * (pl * cv.filter((v) => v > 0).length + (1 - pl) * cv.filter((v) => v < 0).length);
   }
-  if (s.R.stake) return s.glory[q] + stakeScore(s, q) + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q));
+  if (s.R.stake) return s.glory[q] + stakeScore(s, q) + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
   if (s.R.fate) return s.glory[q] + s.R.fate.perDay * s.fateDays[q] + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
   return s.glory[q] + H * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
 }

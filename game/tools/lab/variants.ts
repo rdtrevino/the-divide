@@ -432,3 +432,9 @@ Object.assign(VARIANTS, {
   // B with Choir cards worth two shares each (B's version of H)
   B2_3: DY({ reap: 0, shares: true, choirShare: 2 }, D3), B2_4: DY({ reap: 0, shares: true, choirShare: 2 }, D4),
 } as Record<string, V>);
+
+// ---- Round 40: the championship. Every milestone core under the same tests; and option H with the Starter Pantheon of ability cards.
+Object.assign(VARIANTS, {
+  HS3: DY({ reap: 2 }, { maxDays: 6, deck: STARTER }), HS4: DY({ reap: 2 }, { maxDays: 8, deck: STARTER }),
+  H5_3: DY({ reap: 2, perPlayer: 5 }, D3), H5_4: DY({ reap: 2, perPlayer: 5 }, D4),
+} as Record<string, V>);

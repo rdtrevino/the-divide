@@ -1,6 +1,6 @@
 # The Tide track: allegiance tokens made simple
 
-November 19, 2026. A proposal, not adopted. **Current recommendation: option H** (the Tide track with Choirs paying 2), from Round 39 below. It refines `allegiance-tokens.md` after Robert's feedback that the scoring there ("Light bank × Light tokens + Dark bank × Dark tokens") was confusing, even for him. Measured in `game/tools/lab`, Round 38 (`results/r38.jsonl`, `r38b.jsonl`, `r38-reader.txt`). Choirs stay face up, and anonymous First Fruits and the anonymous reveal stay.
+November 19, 2026. A proposal, not adopted. **Current recommendation: option H**, written up with its validation in `the-game-now.md` (the Tide track with Choirs paying 2), from Round 39 below. It refines `allegiance-tokens.md` after Robert's feedback that the scoring there ("Light bank × Light tokens + Dark bank × Dark tokens") was confusing, even for him. Measured in `game/tools/lab`, Round 38 (`results/r38.jsonl`, `r38b.jsonl`, `r38-reader.txt`). Choirs stay face up, and anonymous First Fruits and the anonymous reveal stay.
 
 ## Why the bank version was hard to grasp
 

@@ -8,4 +8,6 @@ In short: every card played should be a choice between helping yourself and help
 - Prefer changes to the core over patches (caps, catch-ups, tiebreaks). A rule that only fixes a symptom is a sign the core is missing something.
 - Bots cannot negotiate, bluff or betray. Say plainly what a simulation can and cannot show, and what needs people.
 
+**Start with `design/the-game-now.md`**: the current design on one page, how it got here, and its validation against the vision and every earlier version.
+
 Where things are: the rules in `rules/`, card data in `cards/`, standing decisions in `design/design-decisions.md`, the rework proposals and their evidence in `design/rework-proposal.md`, `design/ground-up.md` and `design/allegiance-tokens.md` and its simpler refinement `design/tide-track.md` (the current front-runner), the rework simulator in `game/tools/lab/` (see its README), the online game in `game/`.

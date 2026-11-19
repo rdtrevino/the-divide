@@ -170,6 +170,7 @@ export interface State {
   dayOffers: number[]; paxStats: number[]; gatherStats: number[];
   fate: number[]; fateDays: number[]; fateStats: number[]; offersBy: number[]; oathStats: number[];
   oathPool: number[]; // Oaths set aside, facedown
+  preReveal?: number[]; // Glory just before the end-of-game reveal (Fates, Oaths, stakes)
   banks: number[][]; creed: string[]; tok: number[][]; stakeType: string[]; stakeStats: number[];
   pub: number[][]; pubDay: number[][]; readerRows: number[][]; // what the table can see of each player (for the reader), and its log
   prevLean: number[]; prevWith: boolean[]; dayStart: number[]; council: number[]; bounty: number[]; anathema: number; ordeal: boolean[];
@@ -922,6 +923,7 @@ export function evening(s: State) {
     syncOaths(s);
   }
   s.altar = [];
+  if ((s.R.fate || s.R.stake) && s.day >= s.R.maxDays) s.preReveal = s.glory.slice();
   if (s.R.fate && s.day >= s.R.maxDays) for (let p = 0; p < n; p++) gain(s, p, s.R.fate.perDay * s.fateDays[p], 'fate');
   if (s.R.stake && s.day >= s.R.maxDays) for (let p = 0; p < n; p++) gain(s, p, stakeScore(s, p), 'stake');
   if (s.glory.some((g) => g >= s.R.target) || s.day >= s.R.maxDays) {
