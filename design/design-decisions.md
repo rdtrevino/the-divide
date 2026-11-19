@@ -1,8 +1,8 @@
 # The Divide: Design Decisions
 
-The standing principles behind the rules, what is still open, and what to watch in playtesting. Current to card data V44 and rulebook v14 (November 18, 2026).
+The standing principles behind the rules, what is still open, and what to watch in playtesting. Current to card data V45 and rulebook v15 (November 19, 2026).
 
-**Start with `vision.md`:** the core dilemma and principles that every decision here serves.
+**Start with `vision.md`:** the core dilemma and principles that every decision here serves. **`the-game-now.md`** is the current design and its validation.
 
 Where everything else lives:
 
@@ -22,21 +22,24 @@ Where everything else lives:
 
 | Players | Mode |
 |---|---|
-| 3 or 4 | The **Base game** (Host cards only) or the **Advanced game** (adds the 9 Celestials and 17 Events) |
-| 5 or 6 | **Hidden Roles**: secret Fates, the Balance and the Turn (not playable online; the engine does not implement it) |
+| 3 or 4 | The **Base game** (Host cards and allegiance tokens) or the **Advanced game** (adds the 9 Celestials and 17 Events) |
 
-One deck of 69 Host cards serves every mode: 23 Light, 23 Neutral (Acolyte and Nephilim among them), 23 Dark, numbered in that order. The Sabbath, Equilibrium and Armageddon move the Balance and are used only in Hidden Roles. Ithuriel, Urim and Asmadai were retired in V42; Revelation, Knowledge and Belial took over their abilities.
+**Hidden Roles is retired (V45).** The allegiance tokens give every game secret, shifting sides at 3 and 4 players, which is what Hidden Roles was for. Tested at 5 and 6 players (lab Round 41), the token core keeps sides hidden (53 to 57%), but a fair turn order needs Days in multiples of the player count (5 or 10 at 5 players, 6 at 6), which is either too short or too long, and seats measured 0.59 to 1.43. If a 5-player game is wanted later, start there. The Fates, the Turn, the Balance and its three Events (The Sabbath, Equilibrium, Armageddon) are retired with it.
+
+One deck of 69 Host cards: **every card is Light or Dark** (V45, Robert): 34 Light, 34 Dark, and Acolyte, whose color is the most recent Day won's. Ithuriel, Urim and Asmadai were retired in V42; Revelation, Knowledge and Belial took over their abilities.
 
 ## Design principles
 
-- **Every card between 0.75 and 1.25** win ratio in bot testing (Robert's target since V38). Today every Host card measures 0.8 to 1.2 and every Celestial 0.95 to 1.05 (`balance.md`).
+- **Every card between 0.75 and 1.25** win ratio in bot testing (Robert's target since V38). Under V45 every Host card measures 0.75 to 1.25 and every Celestial 0.86 to 1.23 (`balance.md`).
+- **No Neutral cards** (V45). A card that never scores is a trap, and a rule to pay it is a patch; every card is a side, so building is always a statement about sides.
 - **Few cards give easy Glory every turn.** Engines pay over time and can be lost.
-- **No profit from playing only one alignment.** The Tide rewards reading the table, not loyalty to a color.
+- **No profit from playing only one alignment.** A one-color Choir scores big on its Days and nothing on the others; a mixed one scores a little every Day and tells the table less.
 - **Paired cards are mirrors:** Raphael and Azazel, Hymn and Lamentation, Seraphim and Legion, Uriel and Beelzebub, Providence and Mammon, and the Light and Dark halves of the deck.
 - **Chaos and choice over automatic play.** Hidden information should create reads and bluffs, not just luck (why facedown Offers stayed and the face-up row and "draw 2, keep 1" were rejected in V35).
 - **Glory moves between players only when a card says so** (V40). Talk and promises are open and non-binding.
 - **Ties on "most" or "least" Glory:** the player using the card chooses, unless the card says otherwise (Envy).
-- **Secret personal objectives** were considered for the Open Game and rejected: they work the way Fates already do.
+- **Secret personal objectives** were considered and rejected: the allegiance tokens already are the secret objective.
+- **The public good stays public.** Offers earn nothing directly (V45); the Miser's Rule is the only thing that makes not contributing cost.
 
 ## Parked ideas
 
@@ -49,17 +52,17 @@ Versions Robert liked but did not pick in the V42 Host rework, to reconsider if 
 
 ## Still to decide
 
-- **V44 Celestials and Events** are measured and built, but not yet approved by Robert.
-- **Hidden Roles:** the winner tiebreak within the winning faction; how the endgame card bonus works when the Forsaken win; whether a player who Turns reveals their Fate; printed Fate token counts (4 Faithful, 4 Fallen, 2 Forsaken printed; setup needs at most 3, 3 and 1).
+- **V45 card and Celestial rewordings** are measured and built (`CHANGELOG.md`), but not yet approved card by card by Robert.
+- **The card frames** of the 23 cards that changed color need new art frames before printing.
+- **Talk rules worth a playtest:** may players show a token? trade tokens facedown?
 
 ## Playtest watch list
 
 Bots cannot bluff, negotiate or betray, so these are the questions only people can answer:
 
-- **Bluffing and political cards** (Mirage, Veil, Council, Covenant, Gabriel's read): do people play them better than the bots, whose numbers put Mirage and Veil at 0.82 to 0.83?
-- **Coalition scoring:** do tables learn to split their leans, or herd onto one side and score nothing?
-- **Snowballing:** does a leader after Day 3 run away with the game, or do coalitions pull them back?
-- **Facedown Offers:** does the table read First Fruits and facedown Offers, or just guess?
-- **Covenant and the leader:** can a pact with a player near 12 crown them?
-- **The Echo** varies most by player count (0.97 at 3, 1.05 at 4). **The Oracle and the Patron** (0.95) depend on judgment the bots only approximate.
-- **Purgatory** speeds the game up a little; if Days of reprieve feel flat, a Neutral Choir could gain 2.
+- **Tokens:** do people Offer tokens (the strong lab bots: about 3 a game) or hoard them? Does the reveal feel like a satisfying climax?
+- **Reads:** with anonymous Offers and mixed tokens, a careful card-counter is right about half the time. Does that make talk sharper or vaguer?
+- **The Miser's Rule:** does it feel fair, or like a tax? Does anyone game it?
+- **Length:** about 23 minutes at 3 players and 37 at 4 by the time model; real tables decide.
+- **Bluffing and political cards** (Mirage, Veil, Council, Covenant, Fig Leaves, Gabriel's read): where people should beat the bots.
+- **Mammon** sits at the bottom of the range (0.72 to 0.75); **the Whisper** at the top of the Celestials (1.2).

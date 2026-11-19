@@ -79,7 +79,7 @@ For questions the page does not answer, the database can be queried directly in 
 SELECT celestial, COUNT(*) AS seats, SUM(win_share) AS wins,
        ROUND(SUM(win_share) / SUM(1.0 / g.player_count), 2) AS win_ratio
 FROM game_players gp JOIN games g ON g.id = gp.game_id
-WHERE gp.is_bot = 0 AND g.card_version = 'V44'
+WHERE gp.is_bot = 0 AND g.card_version = 'V45'
 GROUP BY celestial ORDER BY win_ratio DESC;
 ```
 
@@ -134,7 +134,7 @@ New card art: put the plate in `art/plates/` and point the card's `plate` at it 
 
 ## Known limits
 
-- Hidden Roles (5 and 6 players) is not playable online; the engine does not implement it yet.
+- The game is for 3 or 4 players. Hidden Roles (5 and 6 players) was retired in V45.
 - Bots cannot bluff or make deals.
 - Ithuriel, Urim and Asmadai were retired in V42 and have no art; the Cards page shows them, with a placeholder, only when "Current deck only" is unchecked.
 - Table chat keeps the last 100 lines. A table nobody opens for two weeks is deleted (its finished games stay in the stats).

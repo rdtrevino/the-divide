@@ -438,3 +438,21 @@ Object.assign(VARIANTS, {
   HS3: DY({ reap: 2 }, { maxDays: 6, deck: STARTER }), HS4: DY({ reap: 2 }, { maxDays: 8, deck: STARTER }),
   H5_3: DY({ reap: 2, perPlayer: 5 }, D3), H5_4: DY({ reap: 2, perPlayer: 5 }, D4),
 } as Record<string, V>);
+
+// ---- Round 41: can the token core replace Hidden Roles at 5 and 6 players? (one and two turn-order rotations)
+Object.assign(VARIANTS, {
+  H5p5: DY({ reap: 2 }, { maxDays: 5 }), H5p10: DY({ reap: 2 }, { maxDays: 10 }),
+  H6p6: DY({ reap: 2 }, { maxDays: 6 }),
+} as Record<string, V>);
+
+// ---- Round 42: the real deck is a third Neutral. Does H hold, and should Neutral Choir cards score 1 on any won Day?
+const REAL = { L1: 22, D1: 22, L2: 1, D2: 1, N: 23 };
+Object.assign(VARIANTS, {
+  HR3: DY({ reap: 2 }, { maxDays: 6, deck: REAL }), HR4: DY({ reap: 2 }, { maxDays: 8, deck: REAL }),
+  HN3: DY({ reap: 2, neutralPay: 1 }, { maxDays: 6, deck: REAL }), HN4: DY({ reap: 2, neutralPay: 1 }, { maxDays: 8, deck: REAL }),
+} as Record<string, V>);
+// Robert (November 19): fewer or no Neutral cards, the rest made Light or Dark. Nephilim and Acolyte stay special.
+const FEW_N = { L1: 33, D1: 33, L2: 1, D2: 1, N: 1 };
+Object.assign(VARIANTS, {
+  HF3: DY({ reap: 2 }, { maxDays: 6, deck: FEW_N }), HF4: DY({ reap: 2 }, { maxDays: 8, deck: FEW_N }),
+} as Record<string, V>);

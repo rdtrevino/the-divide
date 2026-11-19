@@ -1,6 +1,7 @@
 // What each player is allowed to see. The server sends only this, never the raw state.
-import { alignment } from './core';
-import type { Decision, GameState, LogEntry, Seat } from './types';
+import { choirColors } from './core';
+import { DAYS } from './engine';
+import type { Decision, GameState, LogEntry, Seat, Side } from './types';
 
 export interface PlayerView {
   seat: Seat;
@@ -12,7 +13,14 @@ export interface PlayerView {
   /** Your own hand, or a hand revealed by Confession. */
   hand: string[] | null;
   choir: { id: string | null; facedown: boolean; used: boolean }[];
-  alignment: number | null;
+  /** Face-up Choir cards that count as Light and as Dark (each scores 2 when its color wins the Day). */
+  colors: { light: number; dark: number };
+  /** How many allegiance tokens they hold (public). */
+  tokenCount: number;
+  /** Your own tokens; everyone's once the game is over. */
+  tokens: Side[] | null;
+  /** Offers made this game (the Miser's Rule). */
+  offers: number;
 }
 
 export interface GameView {
@@ -24,6 +32,10 @@ export interface GameView {
   active: Seat | null;
   players: PlayerView[];
   altar: { id: string | null; facedown: boolean; offeredBy: Seat | null; kind?: string; sanctuary?: Seat }[];
+  /** Allegiance tokens Offered this Day: who Offered each is public, its color is not. */
+  altarTokens: { side: Side | null; by: Seat }[];
+  /** How many Days the game lasts. */
+  days: number;
   deckCount: number;
   discard: string[];
   eventDeckCount: number;
@@ -61,10 +73,16 @@ export function viewFor(s: GameState, seat: Seat | null, pending: Decision[] = [
       handCount: p.hand.length,
       hand: p.seat === seat || revealed.has(p.seat) || ended ? [...p.hand] : null,
       choir: p.choir.map((c) => ({ id: !c.facedown || p.seat === seat || ended ? c.id : null, facedown: c.facedown, used: c.used })),
-      alignment: alignment(s, p.seat),
+      colors: choirColors(s, p.seat),
+      tokenCount: p.tokens.length,
+      tokens: p.seat === seat || ended ? [...p.tokens] : null,
+      offers: p.offers,
     })),
     // A card someone peeked at (Knowledge, Belial) was shown to them once, in that decision; it is not shown again here.
-    altar: s.altar.map((a) => ({ id: !a.facedown || a.offeredBy === seat || ended ? a.id : null, facedown: a.facedown, offeredBy: a.offeredBy, kind: a.kind, sanctuary: a.sanctuary })),
+    // Who placed a card is hidden once the anonymous reveal has shuffled it (except from its owner).
+    altar: s.altar.map((a) => ({ id: !a.facedown || a.offeredBy === seat || ended ? a.id : null, facedown: a.facedown, offeredBy: a.anon && a.offeredBy !== seat ? null : a.offeredBy, kind: a.kind, sanctuary: a.sanctuary })),
+    altarTokens: s.altarTokens.map((t) => ({ side: t.by === seat || ended ? t.side : null, by: t.by })),
+    days: DAYS[s.players.length],
     deckCount: s.hostDeck.length,
     discard: [...s.discard],
     eventDeckCount: s.eventDeck.length,

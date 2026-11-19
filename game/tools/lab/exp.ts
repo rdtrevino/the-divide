@@ -25,6 +25,7 @@ const one = (pol: Policy, rest: Policy, n: number) => (i: number) => { const a: 
 let out: any;
 if (mode === 'mc4') out = runSet(R(4), all('mc', 4), N, seed);
 else if (mode === 'mc3') out = runSet(R(3), all('mc', 3), N, seed);
+else if (mode === 'mc5' || mode === 'mc6') { const k = Number(mode[2]); out = runSet(R(k), all('mc', k), N, seed); }
 else if (mode === 'h4') out = runSet(R(4), all('heur', 4), N, seed);
 else if (mode === 'h3') out = runSet(R(3), all('heur', 3), N, seed);
 else if (mode === 'skill4') out = runSet(R(4), one('mc', 'heur', 4), N, seed, (i) => i % 4);
@@ -44,9 +45,9 @@ else if (mode === 'calib') {
     res[`target${n}`] = best;
   }
   out = res;
-} else if (mode === 'rows3' || mode === 'rows4') {
+} else if (/^rows[3-6]$/.test(mode)) {
   // Reader data: every player's public record and true allegiance at each Evening, from all-Monte-Carlo games.
-  const n = mode === 'rows3' ? 3 : 4;
+  const n = Number(mode[4]);
   const rows: number[][] = [];
   for (let i = 0; i < N; i++) { const st = play(R(n), Array(n).fill('mc'), seed + i * 7919); for (const r of st.readerRows) rows.push([i, ...r]); }
   writeFileSync(`results/rows-${name}-${n}p.json`, JSON.stringify(rows));

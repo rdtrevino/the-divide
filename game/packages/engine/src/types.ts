@@ -4,7 +4,10 @@
 
 export type Seat = number;
 export type Dir = 'light' | 'dark' | 'neutral';
-export type Mode = 'open' | 'hidden';
+/** A side: the color of an allegiance token. */
+export type Side = 'light' | 'dark';
+/** One game for 3 and 4 players (V45). Hidden Roles, the 5–6 player mode, was retired. */
+export type Mode = 'open';
 
 export interface PlayerConfig {
   name: string;
@@ -36,12 +39,20 @@ export interface AltarCard {
   facedown: boolean;
   offeredBy: Seat | null;
   day: number;
-  /** How the card reached the Altar. Only 'offer' counts as an Offer (Snare, Mirage). */
+  /** How the card reached the Altar. Only 'offer' counts as an Offer (Snare, Mirage). First Fruits have no owner (V45: anonymous). */
   kind?: 'seed' | 'fruits' | 'offer' | 'vessel' | 'relic' | 'other';
   /** Players who have secretly seen this facedown card (Knowledge, Belial). */
   seenBy?: Seat[];
   /** Sanctuary: seat that protected this card for the rest of the Day. */
   sanctuary?: Seat;
+  /** Revealed in the Evening among the shuffled facedown cards (V45): who placed it is no longer shown. */
+  anon?: boolean;
+}
+
+/** An allegiance token Offered onto the Altar (V45). Not a card: only Gather and the Evening touch it. */
+export interface AltarToken {
+  side: Side;
+  by: Seat;
 }
 
 export interface Player {
@@ -52,6 +63,10 @@ export interface Player {
   hand: string[];
   choir: ChoirCard[];
   glory: number;
+  /** Secret allegiance tokens (V45). */
+  tokens: Side[];
+  /** Offers made this game (the Miser's Rule). */
+  offers: number;
 }
 
 export interface Pact {
@@ -68,6 +83,8 @@ export interface TideRecord {
   light: number;
   dark: number;
   margin: number;
+  /** Purgatory (V45): the Day counts for neither side on the Tide track. */
+  void?: boolean;
 }
 
 export interface Option {
@@ -128,10 +145,24 @@ export interface StatEvent {
   data?: Record<string, unknown>;
 }
 
+export interface Standing {
+  seat: Seat;
+  glory: number;
+  /** Glory from the Choir and abilities, before the reveal. */
+  before: number;
+  tokens: { light: number; dark: number };
+  /** Glory from tokens: each scores the Days its color won. */
+  fromTokens: number;
+  /** The Miser's Rule: 3 lost by whoever Offered the fewest times. */
+  miser: number;
+}
+
 export interface GameResult {
   winners: Seat[];
   finalTide: Dir;
-  standings: { seat: Seat; glory: number }[];
+  /** Days each side won on the Tide track. */
+  daysWon: { light: number; dark: number };
+  standings: Standing[];
 }
 
 export interface DayFlags {
@@ -144,7 +175,6 @@ export interface DayFlags {
   /** Seats that took each action this Day, in order (for Covenant). */
   actionsTaken: { seat: Seat; action: 'offer' | 'gather' | 'exalt' }[];
   eclipsed: Record<number, string>;
-  figLeaves: Seat[];
   heresy: Seat[];
   handLimitBonus: number;
   /** Bounty (V42): the player each holder named this Day. */
@@ -159,8 +189,8 @@ export interface DayFlags {
   council?: Record<number, Seat>;
   /** Facedown and face-up Altar counts when it was revealed (Veil). */
   reveal?: { down: number; up: number };
-  /** Players whose Choir leaned against the Tide at this Reaping (the Arbiter). */
-  against?: Seat[];
+  /** What each Choir scores at this Reaping, before anyone gains (the Arbiter). */
+  reaped?: Record<number, number>;
 }
 
 export interface GameState {
@@ -172,14 +202,14 @@ export interface GameState {
   hostDeck: string[];
   discard: string[];
   altar: AltarCard[];
+  /** Allegiance tokens Offered this Day (V45). */
+  altarTokens: AltarToken[];
   eventDeck: string[];
   eventDiscard: string[];
   currentEvent: string | null;
   firstPlayer: Seat;
   active: Seat | null;
   tides: TideRecord[];
-  /** Each player's Alignment color at their previous Reaping (for Apple). */
-  lastAlignColor: Record<number, Dir>;
   pacts: Pact[];
   bonds: { owner: Seat; bound: Seat }[];
   /** Anathema blocks Offer; Flaming Sword blocks Exalt and Gather. Each lasts until the start of its holder's next turn. */
@@ -195,8 +225,6 @@ export interface GameState {
   seq: number;
   decisionSeq: number;
   result: GameResult | null;
-  /** Players whose Choir leaned with the Tide at the last Reaping (Tree of Life). */
-  lastWithTide?: Seat[];
   /** Cards Eternity keeps on the Altar into the next Day. */
   relics?: { id: string; by: Seat | null }[];
 }

@@ -1,0 +1,30 @@
+{
+ "version": "V45",
+ "date": "2026-11-19",
+ "previous": "V45",
+ "changes": {
+  "Twilight": {
+   "text": "This card is Neutral, but at the Reaping it scores 1 whichever side wins. At the end of the Day: If the other cards in your Choir hold as many Light cards as Dark cards (at least 1 each), gain 2 Glory.",
+   "why": "The in-between card scores like Nephilim, 1 on any won Day (V45): it measured 0.59 never scoring"
+  },
+  "Ordeal": {
+   "text": "On your turn: You may invoke this card, then discard it. At this Reaping, your Choir scores double; if it scores nothing, lose 2 Glory.",
+   "why": "Spent (V45): as a Dark card that doubled every Day it measured 1.42"
+  }
+ },
+ "celestials": {
+  "The Eclipse": {
+   "text": "In the Morning: Choose a Light or Dark card in your Choir. It counts as the other color this Day.",
+   "why": "Chosen in the Evening it measured 1.55 (V45): now a guess made before any card is played"
+  },
+  "The Whisper": {
+   "text": "In the Morning: Name Light or Dark aloud. If that side wins the Day, gain 2 Glory; if the other side wins, lose 2.",
+   "why": "+2/-1 measured 1.65 (V45)"
+  },
+  "The Cantor": {
+   "text": "When you Offer, draw a card.",
+   "why": "A pair of Offers for one action measured 0.72 to 0.77 (V45): the Cantor now makes the public good cheaper instead"
+  }
+ },
+ "events": {}
+}

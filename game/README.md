@@ -16,14 +16,15 @@ The online version of The Divide. Everything here is TypeScript.
 
 ```
 npm install
-npm test                                   # engine tests (92, including about 600 bot games) and server tests (11)
+npm test                                   # engine tests (99, including about 600 bot games) and server tests (11)
 npm run dev                                # the whole site locally at http://127.0.0.1:8787
 npm run deploy                             # publish (see SITE.md)
 npm run sim -- --games 20000 --players 3,4 # balance report: every Celestial and Host card
 cd tools/sim && npx tsx card-balance.ts 20000 0 out.json  # every card on fixed seeds (run offsets in parallel and merge)
 cd tools/sim && npx tsx advanced.ts 20000 0 out.json      # Advanced game: Celestial win ratios, what each Event does
 cd tools/sim && npx tsx quality.ts 6000    # skill expression and comeback measurements
-cd tools/sim && npx tsx baseline.ts 10000  # the bot column on the Stats page (after a rules change)
+cd tools/sim && npx tsx baseline.ts 20000  # the bot column on the Stats page (after a rules change)
+cd tools/sim && npx tsx exp45.ts 16000     # V45 check: Days nobody wins, Offers, card groups, cards and Celestials out of range
 ```
 
 ## Testing a rule change

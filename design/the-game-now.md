@@ -1,6 +1,6 @@
 # The Divide, as it stands
 
-November 19, 2026. One place for the whole current design: what the game is now, how it got here, and how it measures against the vision (`vision.md`) and every other version we tested. It is a proposal for playtesting, not yet the rulebook; the published rules are still `rules/The_Divide_Rulebook_v14.md` (V44).
+November 19, 2026. One place for the whole current design: what the game is now, how it got here, and how it measures against the vision (`vision.md`) and every other version we tested. **Adopted by Robert as the version to build and playtest (V45):** it is now the rulebook (`rules/The_Divide_Rulebook_v15.md`), the card data and the online game. See "V45: building it" at the end for what changed on the way in.
 
 ## In one paragraph
 
@@ -27,7 +27,7 @@ Three or four players share one Altar. Every Day, each of you either **Offers** 
    - **Gather:** take a card or token from the Altar. A card goes into your Choir (discard one first if it is full). A token joins your hidden tokens. You may take a facedown one without looking.
    - **Exalt:** play a card from your hand into your Choir.
 3. **Evening.**
-   1. Shuffle the facedown Offers together and turn them face up, so nobody can tell whose was whose.
+   1. Shuffle the facedown Offers (and tokens) together and turn them face up, so nobody can tell whose was whose.
    2. **The heavier side wins the Day:** place a Day marker on the Tide track, that side up. On a tie, place no marker.
    3. **Choirs score:** each player gains **2 Glory for each card of the winning color in their Choir.**
    4. **Tokens left on the Altar** are shuffled facedown and handed out one at a time to whoever holds the fewest tokens.
@@ -149,3 +149,21 @@ A win rate of 1.00 is a fair share; with 300 games, differences under about ±0.
 1. **A print-and-play** for your group: the Tide track, 24 tokens, the one-page rules above and a player aid.
 2. **Rewrite the Starter Pantheon's 18 cards** for this core, then the rest of the 69.
 3. **A playable table on the site**, to collect real games, times and reveals.
+
+## V45: building it (Rounds 41–43)
+
+**Every card is Light or Dark** (Robert's call while it was being built). In the engine, with the real 69 cards, the 23 Neutral cards never scored at the Reaping and measured 0.50 to 0.70: traps. Two fixes were measured:
+
+| | 23 Neutral cards that never score | Neutral cards score 1 on any won Day | **Every card Light or Dark** |
+|---|---|---|---|
+| Card groups (engine bots) | Neutral 0.79 | 0.98–1.08 | **Light 1.04, Dark 0.94** |
+| Days nobody wins (engine) | 29% | 29% | **20%** |
+| Reader, 3p / 4p (lab) | 52% / 55% | 55% / 58% | **52% / 52%** |
+| Skill, 4p (lab) | 3.63× | 3.54× | 3.56× |
+| Extra rules | none, but traps | one, and a Neutral Offer satisfies the Miser's Rule while pushing nothing | **none** |
+
+Coloring them serves principle 5 (synergy by alignment: every card is a side) and principle 6 (one fewer concept to teach). After the rewording pass in `CHANGELOG.md`, every Host card measures 0.75 to 1.25 and every Celestial 0.86 to 1.23 over 20,000 bot games (`balance.md`).
+
+**Hidden Roles is retired.** The tokens do what it was for. At 5 and 6 players the token core still hides sides (a reader 53–57%), but a fair turn order needs a multiple of the player count in Days (5 or 10 at 5 players, 6 at 6), and seats measured 0.59 to 1.43 (lab Round 41, `results/r41.jsonl`). The game is for 3 and 4.
+
+**What the engine bots cannot show** is the same as before: talk, bluffs, and how the reveal feels. The engine bots are also weaker than the lab's (they Offer about 33% of the time against the lab bots' 50%), so treat their card numbers as a floor check.

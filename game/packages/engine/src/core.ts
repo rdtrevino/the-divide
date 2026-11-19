@@ -2,7 +2,7 @@
 import { C, E, H, HOST, cardName } from './data';
 import { shuffle } from './rng';
 import type {
-  AltarCard, Answer, ChoirCard, Decision, Dir, Gen, GameState, LogVisibility, Option, Player, Seat, StatEvent,
+  AltarCard, Answer, ChoirCard, Decision, Dir, Gen, GameState, LogVisibility, Option, Player, Seat, Side, StatEvent,
 } from './types';
 
 // ---------------------------------------------------------------- decisions
@@ -79,7 +79,7 @@ export function activeCards(p: Player): ChoirCard[] {
 /**
  * Whether a card's ability is working for this player: face up in their Choir, and not switched off by
  * The Flood or Let There Be Light (ruling confirmed November 16, 2026: those Events switch off every
- * ability of their colour, automatic ones included; the cards still count toward Alignment).
+ * ability of their colour, automatic ones included; the cards still score at the Reaping).
  */
 export function hasActive(s: GameState, seat: Seat, id: string): boolean {
   return activeCards(s.players[seat]).some((c) => c.id === id) && !blockedByEvent(s, seat, id);
@@ -103,13 +103,9 @@ export function handLimit(s: GameState, seat: Seat): number {
 /** The hand limit: 3, or 5 for the Dominion (V44). */
 export const baseHandLimit = (s: GameState, seat: Seat) => (isCelestial(s, seat, C.dominion) ? 5 : 3);
 
-/** What a card's value depends on: the Day and the Tides so far (Acolyte follows yesterday's Tide). */
+/** What a card's value depends on: the Day and the Tides so far (Acolyte follows the most recent Day won). */
 export type TideHistory = Pick<GameState, 'day' | 'tides'>;
 
-export const previousTide = (s: TideHistory): Dir | null => {
-  const prev = s.tides.find((t) => t.day === s.day - 1);
-  return prev ? prev.dir : null;
-};
 export const opposite = (d: Dir): Dir => (d === 'light' ? 'dark' : d === 'dark' ? 'light' : 'neutral');
 
 // ---------------------------------------------------------------- card values
@@ -120,45 +116,40 @@ export interface Value { light: number; dark: number }
 export function baseValue(s: TideHistory, id: string): Value {
   const h = HOST[id];
   if (!h) return { light: 0, dark: 0 };
-  // Acolyte (the card id is still host-shroud): its alignment matches the previous Day's Tide.
+  // Acolyte (the card id is still host-shroud, V45): the color of the most recent Day won; Light before any.
   if (id === H.shroud) {
-    const prev = previousTide(s);
-    if (prev === 'light') return { light: 1, dark: 0 };
-    if (prev === 'dark') return { light: 0, dark: 1 };
-    return { light: 0, dark: 0 };
+    const last = [...s.tides].reverse().find((t) => t.day < s.day && t.dir !== 'neutral');
+    return last?.dir === 'dark' ? { light: 0, dark: 1 } : { light: 1, dark: 0 };
   }
-  if (id === H.nephilim) return { light: 1, dark: 1 };
   if (h.alignment === 'light') return { light: h.value ?? 0, dark: 0 };
   if (h.alignment === 'dark') return { light: 0, dark: h.value ?? 0 };
   return { light: 0, dark: 0 };
 }
 
-/** Which colors a card counts as for effects that check for a Light or Dark card. */
-export function colorsOf(s: GameState, seat: Seat | null, id: string): { light: boolean; dark: boolean } {
+/** The color a card pushes and scores as (V45: every Host card is Light or Dark), turned over by Morning Star. */
+export function colorOf(s: GameState, seat: Seat | null, id: string): Side | null {
   const v = baseValue(s, id);
-  let light = v.light > 0;
-  let dark = v.dark > 0;
-  if (seat !== null && s.morningStar.some((m) => m.seat === seat && m.card === id) && id !== H.nephilim) [light, dark] = [dark, light];
-  return { light, dark };
+  const c: Side | null = v.light > 0 ? 'light' : v.dark > 0 ? 'dark' : null;
+  if (c && seat !== null && s.morningStar.some((m) => m.seat === seat && m.card === id)) return c === 'light' ? 'dark' : 'light';
+  return c;
 }
 
-export interface AlignOpts { reaping?: boolean }
+/** Which colors a card counts as for abilities that ask for a Light or Dark card (Nephilim is also Light). */
+export function colorsOf(s: GameState, seat: Seat | null, id: string): { light: boolean; dark: boolean } {
+  const c = colorOf(s, seat, id);
+  return { light: c === 'light' || id === H.nephilim, dark: c === 'dark' };
+}
 
-/** Net Alignment of a player's Choir. Positive = Light, negative = Dark. */
-export function alignment(s: GameState, seat: Seat, opts: AlignOpts = {}): number {
-  const p = s.players[seat];
+/** How many face-up Host cards in a Choir count as Light and as Dark (Nephilim counts as both). */
+export function choirColors(s: GameState, seat: Seat): { light: number; dark: number } {
   let light = 0;
   let dark = 0;
-  for (const c of p.choir) {
-    if (c.facedown || !c.id.startsWith('host-')) continue;
-    if (c.id === H.nephilim) continue; // its two values are Neutral
-    if (opts.reaping && s.day_.eclipsed[seat] === c.id) continue;
-    let v = baseValue(s, c.id);
-    if (s.morningStar.some((m) => m.seat === seat && m.card === c.id)) v = { light: v.dark, dark: v.light };
-    light += v.light;
-    dark += v.dark;
+  for (const c of activeCards(s.players[seat])) {
+    const k = colorsOf(s, seat, c.id);
+    if (k.light) light++;
+    if (k.dark) dark++;
   }
-  return light - dark;
+  return { light, dark };
 }
 export const dirOf = (n: number): Dir => (n > 0 ? 'light' : n < 0 ? 'dark' : 'neutral');
 
@@ -327,14 +318,13 @@ function addRaw(s: GameState, seat: Seat, n: number, source: GlorySource) {
 
 /**
  * Gain Glory from the Pot.
- * The Arbiter (V44): whenever it gains at the Reaping, 1 of that Glory is taken from a player whose Choir leaned
- * against the Tide (any player with Glory, if none of them has any).
+ * The Arbiter (V45): when its Choir scores at the Reaping, 1 of that Glory is taken from a player whose Choir
+ * scored less, if any of them has Glory.
  */
 export function* gain(s: GameState, seat: Seat, n: number, source: GlorySource): Gen<number> {
   if (n <= 0) return 0;
   if (isCelestial(s, seat, C.arbiter) && source === 'reaping') {
-    let rich = others(s, seat).filter((p) => p.glory > 0 && s.day_.against?.includes(p.seat));
-    if (!rich.length) rich = others(s, seat).filter((p) => p.glory > 0);
+    const rich = others(s, seat).filter((p) => p.glory > 0 && (s.day_.reaped?.[p.seat] ?? 0) < n);
     if (rich.length) {
       const t = yield* chooseOne(s, seat, 'arbiter.take', `The Arbiter: you gain ${n} Glory at the Reaping. Choose a player to take 1 of it from.`, rich.map((p) => seatOpt(s, p.seat)));
       const from = seatFromOpt(t!);
@@ -421,7 +411,8 @@ export function altarAvailable(s: GameState, seat: Seat): AltarCard[] {
 }
 
 export function altarLabel(s: GameState, a: AltarCard, viewer: Seat): string {
-  const by = a.offeredBy !== null && a.offeredBy >= 0 ? ` (${a.kind === 'fruits' ? 'First Fruits' : 'Offered'} by ${s.players[a.offeredBy]?.name ?? '?'})` : a.kind === 'seed' ? ' (Seed)' : '';
+  // Who placed a card is shown until the Evening's anonymous reveal (V45); First Fruits never show it.
+  const by = a.offeredBy !== null && a.offeredBy >= 0 && !a.anon ? ` (Offered by ${s.players[a.offeredBy]?.name ?? '?'})` : a.kind === 'seed' ? ' (Creation)' : a.kind === 'fruits' ? ' (First Fruits)' : '';
   if (a.facedown && a.offeredBy !== viewer) return 'Facedown card' + by;
   return cardName(a.id) + (a.facedown ? ' (your facedown card)' : '') + by;
 }

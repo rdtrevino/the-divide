@@ -94,7 +94,7 @@ export interface Rules {
     // 'days' (the Tide track): no banks. Each token scores tokVal for every Day its color won; the Choir pays reap per matching card each Evening.
     // 'world': no banks. Tokens of the color that won more Days score tokVal each (a tie: half each); the Choir pays as in 'days'.
     tokVal?: number; reap?: number;
-    shares?: boolean; choirShare?: number; // 'days' only: your Choir cards also score at the end like tokens of their color (public shares beside your hidden ones)
+    neutralPay?: number; shares?: boolean; choirShare?: number; // 'days' only: your Choir cards also score at the end like tokens of their color (public shares beside your hidden ones)
     onAltar?: 'lost' | 'fewest'; // a token left on the Altar is lost, or set aside for the players with the fewest tokens to draw
     collectBonus?: number;
     asCards?: boolean; // tokens are Host cards in the deck: drawn, held in hand, Offered like cards, Gathered to hand, never Exalted
@@ -800,7 +800,8 @@ export function fateScore(s: State, tide: Dir, net = 0): number[] {
 export function cardPayN(s: State, tide: Dir, k: number): number[] {
   const out = Array(s.R.n).fill(0);
   if (tide === 0) return out;
-  for (let p = 0; p < s.R.n; p++) for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) out[p] += k; }
+  const np = s.R.stake?.neutralPay ?? 0;
+  for (let p = 0; p < s.R.n; p++) for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) out[p] += k; else if (v === 0) out[p] += np; }
   return out;
 }
 export function cardPay(s: State, tide: Dir): number[] {

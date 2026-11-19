@@ -2,6 +2,28 @@
 
 Older entries name files that have since been removed (design write-ups, simulator reports, archived spreadsheets and rulebook drafts, the V28 print kit); every one of them is in the git history before November 18, 2026.
 
+## V45: the Tide track, allegiance tokens, and every card Light or Dark (November 19, 2026)
+
+Robert adopted the Tide-track core (`design/the-game-now.md`, measured in the lab over Rounds 35 to 42). Card data V45, rulebook v15.
+
+**The core rules** (engine, site, rulebook)
+- **Allegiance tokens.** Each player is dealt 6 secret tokens from an even, shuffled pool (9 + 9 at 3 players, 12 + 12 at 4). At the end each scores 1 Glory for every Day its color won. A token can be **Offered** facedown (it counts 2) and **Gathered** (it needs no room); tokens left on the Altar go, one at a time, to whoever holds the fewest.
+- **The Tide track.** The heavier side **wins the Day**; a tie is Neutral and no one wins. The track replaces the race to 12.
+- **The Reaping:** each Choir card of the winning color scores **2 Glory**. No lean, no pairs, no losses.
+- **Offers earn nothing** directly: the Offer is the public good. **The Miser's Rule:** whoever Offered the fewest times loses 3 at the end (nobody, if all tied).
+- **Anonymous First Fruits** (shuffled, no owner) and an **anonymous reveal** (facedown Offers and tokens are shuffled before they turn face up).
+- **Fixed length:** 6 Days at 3 players, 8 at 4, so every seat is first equally often.
+- **Hidden Roles is retired** (and with it the Fates, the Turn, the Balance, and The Sabbath, Equilibrium and Armageddon). The tokens give every game secret, shifting sides. A lab test at 5 and 6 players (Round 41) found the reads still hidden (53 to 57%) but the turn order unfair (seats 0.59 to 1.43) and 5 players too long at 10 Days; the game is for 3 and 4.
+
+**Every card is Light or Dark** (Robert). A Neutral card never scores at the Reaping, so all 23 measured 0.50 to 0.70. A Neutral-pay rule was tested and balanced them, but it adds a rule and lets a Neutral Offer satisfy the Miser's Rule without pushing anything. Coloring them is simpler, keeps the deck mirrored (34 Light, 34 Dark, and Acolyte, whose color changes), cuts Days nobody wins from 29% to 20%, and in the lab is as hard to read (52%) and as skillful (3.56x) as any version.
+- **Made Light:** Eternity, Raguel, Firmament, Stillness, Council, Prophecy, Moderation, Flaming Sword, Jubilee, Vessel, Twilight. **Made Dark:** Fig Leaves, Outcast, Heresy, Mirage, Veil, Apple, Forger, Watchers, Ordeal, Zealot, Nephilim (which also counts as Light for card abilities). **Acolyte** takes the color of the most recent Day won (Light before any).
+
+**Cards reworded for the new scoring** ("lean", "with the Tide", and losses at the Reaping no longer exist): Providence and Mammon (fill on Light or Dark Days), Tree of Life (Light today and yesterday), Mercy (your Choir scored nothing), Ordeal (spent; double, or lose 2), Raguel (their Choir outscores yours), Firmament and Leviathan (the margin alone), Moderation (as many Light as Dark cards), Fig Leaves (take back a facedown Offer), Heresy (score the losing color), Council (both Choirs score), Apple (the Tide turned), Favor, Defiance, Bounty, Parasite and Scapegoat ("scored nothing", Scapegoat costs 2), Hubris (8), Envy (5), Uriel and Beelzebub (1), Moloch (2), Flaming Sword (Exalt only), Morning Star (costs 1).
+**Celestials:** the Tempest (may destroy a facedown card), the Eclipse (in the Morning, a card counts as the other color), the Cantor (draw when you Offer), the Patron (exchange a hand card with a Choir card), the Whisper (+1 / -1), the Arbiter (take from a Choir that scored less). **Events:** Purgatory (the Day counts for neither side), False Prophecy and Famine reworded, the Flood and Let There Be Light (the cards still score), the Fast (no Turn).
+**Measured** (`design/balance.md`): every Host card 0.75 to 1.25 and every Celestial 0.86 to 1.23 over 20,000 bot games.
+
+**Engine and site:** the engine plays only V45 (99 engine tests, including 600 bot games); the table shows the Tide track, each Choir's colors, everyone's token count, your own tokens and what they are worth, tokens on the Altar, and the reveal in the results; the Learn page and the Rules page teach V45. `cards/tools/apply_changes.py` can now change a card's alignment. Every card whose color changed needs a reprinted frame (Reprint List).
+
 ## The engine keeps only the current rules; history moves to the git log (November 18, 2026)
 
 No card text, rules or balance changes, and nothing on the site looks or plays differently.

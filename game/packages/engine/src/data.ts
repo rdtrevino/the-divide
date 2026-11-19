@@ -27,11 +27,10 @@ export interface SimpleDef {
   numeral?: string;
 }
 
-const data = raw as unknown as { hosts: HostDef[]; celestials: SimpleDef[]; events: SimpleDef[]; fates: SimpleDef[] };
+const data = raw as unknown as { hosts: HostDef[]; celestials: SimpleDef[]; events: SimpleDef[] };
 export const HOSTS = data.hosts;
 export const CELESTIALS = data.celestials;
 export const EVENTS = data.events;
-export const FATES = data.fates;
 
 export const HOST: Record<string, HostDef> = Object.fromEntries(HOSTS.map((h) => [h.id, h]));
 export const CELESTIAL: Record<string, SimpleDef> = Object.fromEntries(CELESTIALS.map((c) => [c.id, c]));

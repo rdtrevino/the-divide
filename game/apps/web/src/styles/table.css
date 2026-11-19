@@ -28,16 +28,26 @@
 .side-toggle { display: none; position: relative; }
 .unread { position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--danger); }
 
-/* Glory track */
-.track { flex: 1; min-width: 160px; max-width: 560px; margin: 0 auto; padding: 4px 16px 0; }
-.track-line { position: relative; height: 34px; }
-.track-line::before { content: ''; position: absolute; left: 0; right: 0; top: 13px; height: 2px; background: linear-gradient(90deg, var(--hair), var(--gold)); border-radius: 2px; }
-.track-tick { position: absolute; top: 9px; width: 1px; height: 10px; background: var(--hair); }
-.track-tick i { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font: 600 9px var(--font-title); color: var(--faint); font-style: normal; }
-.track-tick.goal { background: var(--gold-bright); height: 14px; top: 7px; width: 2px; }
-.track-tick.goal i { color: var(--gold-bright); }
-.track-peg { position: absolute; top: 3px; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: var(--seat); color: #14100a; font: 700 11px/20px var(--font-title); text-align: center; border: 1px solid rgba(0, 0, 0, 0.6); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); transition: left 0.7s var(--ease), transform 0.4s var(--ease); transform: translateY(calc(var(--stack) * 7px)) translateX(calc(var(--stack) * 5px)); z-index: 2; }
-
+/* The Tide track: one space per Day, and the Days each side has won */
+.ttrack { flex: 1; display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 0; }
+.tide-pip.empty { color: var(--faint); font: 600 9px var(--font-title); border-style: dashed; background: transparent; }
+.tide-pip.void { opacity: 0.45; }
+.ttrack-won { display: inline-flex; gap: 8px; font-family: var(--font-title); font-size: 13px; }
+.ttrack-won .light { color: var(--light); }
+.ttrack-won .dark { color: #b3a8f0; }
+/* Choir colors and tokens beside each player */
+.choirchip, .tokchip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-title); font-size: 11px; color: var(--muted); }
+.choirchip .light, .result-table .light { color: var(--light); }
+.choirchip .dark, .result-table .dark { color: #b3a8f0; }
+.tokchip i { width: 10px; height: 10px; transform: rotate(45deg); border: 1px solid var(--gold-deep); background: linear-gradient(135deg, #3a2e1c, #14110d); }
+.tokchip.mine { gap: 3px; }
+.tokchip.mine small { margin-left: 4px; color: var(--gold-soft); }
+.tok { width: 8px; height: 8px; transform: rotate(45deg); border-radius: 1px; }
+.tok.light { background: var(--light); }
+.tok.dark { background: var(--dark); }
+.altar-tok { align-self: center; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 13px; border: 2px solid var(--seat, var(--hair)); background: rgba(0, 0, 0, 0.4); color: var(--muted); }
+.altar-tok.light { background: var(--light); color: #1a1208; }
+.altar-tok.dark { background: var(--dark-deep); color: #fff; }
 
 /* Stage: the board above, the decision bar below. Card sizes come from --u (set by the fitter). */
 .stage {

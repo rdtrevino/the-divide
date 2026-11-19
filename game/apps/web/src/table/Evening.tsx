@@ -6,7 +6,7 @@ import { Card } from '../components/Card';
 import { nameOf } from '../lib/cards';
 import { DIR_LABEL, altarNote, seatColor } from './bits';
 
-interface TideData { tide: { dir: string; light: number; dark: number; margin: number }; event: string | null; altar: { id: string; offeredBy: number | null; kind?: string }[] }
+interface TideData { tide: { dir: string; light: number; dark: number; margin: number; void?: boolean }; event: string | null; altar: { id: string; offeredBy: number | null; kind?: string }[]; tokens?: { light: number; dark: number } }
 
 const QUIET = new Set(['evening', 'tide', 'reveal', 'activate']);
 
@@ -37,7 +37,7 @@ export function Evening(p: { day: number; log: LogEntry[]; view: GameView; onClo
       <div class="evening-in panel">
         <div class="evening-head">
           <div class="eyebrow">Evening of Day {p.day}{data.event ? ` · ${nameOf(data.event)}` : ''}</div>
-          <h2 class={`verdict ${tide.dir}`}>{tide.dir === 'neutral' ? 'The Tide is Neutral' : `The Tide runs ${DIR_LABEL[tide.dir]} by ${tide.margin}`}</h2>
+          <h2 class={`verdict ${tide.dir}`}>{tide.dir === 'neutral' ? 'Neutral: no one wins the Day' : `${DIR_LABEL[tide.dir]} wins the Day by ${tide.margin}${tide.void ? ' (Purgatory: it counts for neither side)' : ''}`}</h2>
         </div>
         <div class="scale">
           <span class="scale-n light num">{tide.light}<small>Light</small></span>
@@ -49,7 +49,8 @@ export function Evening(p: { day: number; log: LogEntry[]; view: GameView; onClo
         </div>
         <div class="evening-altar">
           {data.altar.map((a) => <Card id={a.id} w="var(--cw-evening)" compact owner={a.offeredBy} tag={a.kind === 'seed' ? 'Creation' : a.kind === 'relic' ? 'Eternity' : undefined} note={altarNote(a.kind, a.offeredBy !== null ? p.view.players[a.offeredBy]?.name ?? null : null)} />)}
-          {!data.altar.length && <span class="muted">The Altar was empty.</span>}
+          {(['light', 'dark'] as const).flatMap((k) => Array.from({ length: data.tokens?.[k] ?? 0 }, () => <span class={`altar-tok ${k}`} data-tip={`A ${DIR_LABEL[k]} token: it counted 2`}>◆</span>))}
+          {!data.altar.length && !(data.tokens?.light || data.tokens?.dark) && <span class="muted">The Altar was empty.</span>}
         </div>
         <div class="evening-cols">
           {before.length > 0 && (

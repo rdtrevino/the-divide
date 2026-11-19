@@ -40,3 +40,5 @@ Other modes: `skill4`/`skill3` (one Monte Carlo player among heuristics), `dumb4
 | WR | Win ratio of the tested seat (skill and exploit modes) |
 
 All results from the proposal are in `results/` (round numbers match the proposal).
+
+Rounds 38–42 (November 19): the Tide track (`DY` variants), the finalists (`A`, `B`, `H`, `M`), the championship of every milestone core (Round 40), 5 and 6 players (Round 41, modes `mc5`, `mc6`, `rows5`, `rows6`), and the deck's Neutral cards (Round 42: `HR`, `HN`, `HF`). Written up in `design/tide-track.md` and `design/the-game-now.md`.
