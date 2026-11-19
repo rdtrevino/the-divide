@@ -1,6 +1,6 @@
 # Bots: strong, fast and human-like
 
-November 19, 2026. Robert asked whether testing and play bots could be both strong and fast, instead of choosing one. The answer is three layers. Layers 1 and 2 are done; layer 3 is the plan.
+November 19, 2026. Robert asked whether testing and play bots could be both strong and fast, instead of choosing one. The answer is three layers. All three are done (layer 3 except pacing and the site's level picker).
 
 ## Where the bots stood
 
@@ -49,9 +49,9 @@ What limits it:
 | Bot | Among 3 heuristic bots (600–800 games) | Against the strong bot, 2 seats each (400–600 games) | ms a decision, averaged over all decisions |
 |---|---|---|---|
 | Heuristic | 1.00 | — | 0.03 |
-| **Learned** | **1.62 ± 0.07** | **0.81 vs 1.19** | **0.15–0.2** |
+| **Learned** (since the token correction: 1.55 and 0.99 vs 1.01, layer 3) | **1.62 ± 0.07** | **0.81 vs 1.19** | **0.15–0.2** |
 | Hybrid, top 2 × 2 playouts | 1.69 ± 0.08 | 1.07 vs 0.93 | 3.9 |
-| **Hybrid, top 2 × 4 (`HYBRID`)** | **1.76 ± 0.08** | **1.12 vs 0.88** | **6.9** |
+| **Hybrid, top 2 × 4 (`HYBRID`)** (since the token correction: 1.09 vs 0.91) | **1.76 ± 0.08** | **1.12 vs 0.88** | **6.9** |
 | Strong (Monte Carlo) | 1.98 ± 0.09 | 1.00 | 6.7 (33 on the decisions it searches) |
 
 - **The learned bot** keeps over half the strong bot's edge over the heuristic, at about 1/35 of its cost. It is the bot for the site: after warm-up, a decision takes a median 0.15 ms and at most about 3.7 ms (the first few). The free plan allows 10 ms a request. The weights are 206 KB, packed as base64 float32. The website bundle does not include them.
@@ -68,14 +68,54 @@ The single-glance network looks like it has reached its ceiling. More strength c
 
 **Retraining** after a rule or card change takes about 15 minutes (`game/tools/distill/README.md`): generate data, train, test, copy the weights.
 
-## Layer 3: human-like play (after)
+## Layer 3: human-like play, on the learned bot (done, except pacing)
 
-Strength and human-likeness are separate settings.
-- **Close-call mistakes, not blunders:** choose among the best options with probabilities weighted by the search's values. Difficulty becomes a sharpness setting.
-- **Real reads:** guess rival tokens with the lab's trained reader instead of "+8% per Choir card of a color".
-- **Deliberate bluffing:** a small cost on moves that give your side away to the reader (vision principle 2: make the table read the message wrong). The reader numbers would then measure bots that hide on purpose.
-- **Personalities:** the loyalist, the token hoarder, the builder, the gambler. Tables feel different, and we learn whether the game holds up against different styles (principle 9).
-- **Pacing:** think longer on close decisions.
-- **Later:** tune the bots to real games from the site, which records every move.
+Everything here is built on the learned bot, which is cheap enough for heavy testing: a 4-player game takes about 14 ms (heuristic bots: 3; the strong bot: about 2,000). **The simulations now play it by default** (`game/tools/sim/bot.ts`; `BOT=heuristic` for the old bot): 16,000 games take about a minute on 4 cores.
+
+**A correction first.** The style tests showed the learned bot Offered tokens too freely (8.7 a game at a 4-player table):
+- An Expert that rarely Offered tokens beat it 1.16 to 1.
+- Its own token spending lost even at a table of such players (0.81).
+- The teacher's estimate of a held token is rough.
+
+A token Offer now costs the learned bot a little extra (`TOKEN_OFFER_COST` in `learned.ts`). With it, **the learned bot plays the strong bot even (0.99 to 1.01, from 0.81)** and still beats heuristic bots 1.55×; token Offers fall to 3.4 a game. Retraining with a better token estimate should replace the correction.
+
+**Levels** (`LEVELS` in `game/packages/engine/src/persona.ts`): the learned bot's scores, sampled with a temperature, so a weaker player's mistakes are close calls, not blunders. 600 games each (`tools/sim/personas.ts`):
+
+| Level | Temperature | Among 3 heuristic bots | Among 3 Experts |
+|---|---|---|---|
+| Novice | 2 | 0.35 | 0.21 |
+| Casual | 1 | 0.77 | 0.43 |
+| Skilled | 0.5 | 1.13 | 0.71 |
+| Expert | 0 | 1.51 | 1.00 |
+
+**Styles** (`STYLES`): small bonuses for kinds of move, at Expert sharpness. 800 games each:
+
+| Style | Plays | Among other styles | Among 3 Experts |
+|---|---|---|---|
+| Loyalist | pushes toward its own token majority | 0.97 | 0.71 |
+| Builder | favors Exalt and Gather | 0.90 | 0.83 |
+| Hoarder | rarely Offers a token | 1.35 | 1.01 |
+| Gambler | Offers tokens freely | 0.61 | 0.60 |
+| Bluffer | avoids Choir cards that give its side away (below) | 1.18 | 0.71 |
+
+**No style beats balanced play** among Experts (principle 9): predictable loyalty and free token spending lose.
+
+**Reads, and a finding about the game** (`tools/sim/reader.ts`):
+- **The reader:** a logistic model of each player's side from public facts only: their Choir's colors, the cards they have put in it, the tokens they have Offered and Gathered, and the Day. It is fitted on half the games and scored on the other half.
+
+| Table | The reader names a player's side | Guessing |
+|---|---|---|
+| Heuristic bots | 57% | 51% |
+| Strong (Monte Carlo) bots, 400 games | **73%** | 50% |
+| Expert learned bots, 2,000 games | **83%** | 51% |
+
+- **Strong players hedge:** they hold tokens of one color and build a Choir of the other, so they are paid whichever side wins. A Light card going into a strong player's Choir reads as Dark tokens.
+- **That makes sides readable under strong play.** It cuts against principle 2 (a side you can never be sure of) and is the vision's "engine versus Tide" tension. The lab measured 52%, with a different model and bots that hedge less. **An open question for Robert**, not changed here (`DECISIONS.md`).
+- **The Bluffer** avoids Choir cards that move this reader toward its true side. The reader names its side only 38% of the time, worse than guessing, against 82% for the Experts. It gives up the hedge's income (0.71 among Experts), and bots never act on reads, so what a bluff earns against people who do cannot be measured here.
+
+**Not done:**
+- **Pacing:** thinking longer on close decisions, a server and UI change.
+- **Choosing a level or style when seating a bot on the site:** the server plays the Expert. It needs a room option and UI.
+- **Fitting the bots to real games from the site:** not yet.
 
 **What no layer gives:** talk. Bots still cannot negotiate, promise or betray (principle 7). Only people can test that.

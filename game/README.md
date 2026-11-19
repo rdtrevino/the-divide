@@ -19,7 +19,8 @@ The online version of The Divide. Everything here is TypeScript.
 
 ```
 npm install
-npm test                                   # engine tests (106, including hundreds of bot games) and server tests (11)
+npm test                                   # engine tests (107, including hundreds of bot games) and server tests (11)
+# Simulations play the learned bot by default; BOT=heuristic for the fast heuristic (tools/sim/bot.ts).
 npm run dev                                # the whole site locally at http://127.0.0.1:8787
 npm run deploy                             # publish (see SITE.md)
 npm run sim -- --games 20000 --players 3,4 # balance report: every Celestial and Host card
@@ -31,6 +32,8 @@ cd tools/sim && npx tsx skill45.ts 200 4   # one strong (Monte Carlo) bot among 
 cd tools/sim && npx tsx card-value.ts 2500 0 1 out.json  # what each card is worth in hand, against a plain card of its color (STRONG=1: a strong player)
 cd tools/sim && npx tsx bench-bots.ts 24 4 all            # strong-bot speed, and a fingerprint of every move (a speed-up must not change it)
 cd tools/distill && npx tsx eval.ts builtin 400 skill4    # the learned bot (the site's bots) among heuristic bots; retraining: tools/distill/README.md
+cd tools/sim && npx tsx personas.ts 600 levels            # bot levels (and `styles`, `sweep`): win shares
+cd tools/sim && npx tsx reader.ts 2000 [bluffer]          # how readable sides are from public facts (TABLE=heuristic|strong)
 ```
 
 ## Testing a rule change

@@ -2,6 +2,14 @@
 
 Older entries name files that have since been removed (design write-ups, simulator reports, archived spreadsheets and rulebook drafts, the V28 print kit); every one of them is in the git history before November 18, 2026.
 
+## Human-like bots (November 19, 2026)
+
+Layer 3 of the bot plan (`design/bots.md`), built on the learned bot.
+- **Simulations play the learned bot by default** (`BOT=heuristic` for the old one): about 14 ms a 4-player game.
+- **The learned bot pays a small extra cost to Offer a token:** it overspent them; it now plays the strong bot even.
+- **Levels and styles** (`persona.ts`): Novice to Expert by sampling temperature; Loyalist, Builder, Hoarder, Gambler, Bluffer. Tested by `tools/sim/personas.ts`.
+- **A reader** (`tools/sim/reader.ts`): strong players hedge (a Choir opposite their tokens), which makes their sides 73–83% readable. An open question, in `DECISIONS.md`, with card measurements under stronger play.
+
 ## The learned bot (November 19, 2026)
 
 Layer 2 of the bot plan (`design/bots.md`).

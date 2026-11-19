@@ -4,6 +4,7 @@ import { botAnswer } from '../src/bots';
 import { Game } from '../src/game';
 import { DECISION_FEATURES, OPTION_FEATURES, encode, learnedAnswer } from '../src/learned';
 import { isSearched } from '../src/mc';
+import { LEVELS, STYLES, personaAnswer } from '../src/persona';
 import type { GameState } from '../src/types';
 
 declare function structuredClone<T>(value: T): T;
@@ -52,4 +53,15 @@ describe('learned bot', () => {
       expect(g.state.result).toBeTruthy();
     }
   });
+
+  it('personas play legal games, and the same seed gives the same game', () => {
+    const play = (seed: number) => {
+      const ps = [LEVELS.novice, LEVELS.casual, STYLES.bluffer, STYLES.hoarder];
+      const g = new Game({ seed, mode: 'open', players: ps.map((p, k) => ({ name: p.name + k, isBot: true })) });
+      while (!g.over) for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, personaAnswer(g.state, d, ps[d.seat]));
+      return JSON.stringify(g.inputs);
+    };
+    for (const seed of [1, 2]) expect(play(seed)).toBe(play(seed));
+  });
 });
+

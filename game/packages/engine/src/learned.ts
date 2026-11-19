@@ -233,8 +233,18 @@ function forward(ready: Ready, decision: number[], options: number[][]): number[
 /** The network's score for each option of a decision (higher is better). */
 export function learnedScores(s: GameState, d: Decision, heuristicPick = botAnswer(s, d)[0], net: Weights = NET): number[] {
   const { decision, options } = encode(s, d, heuristicPick);
-  return forward(prepare(net as Packed), decision, options);
+  const OFFER_TOKEN = KINDS.indexOf('offerToken');
+  return forward(prepare(net as Packed), decision, options).map((x, i) => x - TOKEN_OFFER_COST * options[i][OFFER_TOKEN]);
 }
+
+/**
+ * A measured correction (November 19): the network, like its teacher, overvalues Offering a token (the teacher's
+ * estimate of a held token is rough). A player who Offered tokens rarely beat it 1.16 to 1, and its own token spending
+ * lost even at a table of such players (0.81). With this extra cost on a token Offer (score units, about half a Glory)
+ * it plays the strong bot even (0.99 to 1.01, from 0.81) and still beats heuristic bots 1.55x; a cost of 2 gave 1.01
+ * and 1.41x. Retraining with a better token estimate should make it unnecessary. Persona styles adjust relative to it.
+ */
+export const TOKEN_OFFER_COST = 1;
 
 /**
  * Decode the weights and run the network a few times, so the first real decision is already fast (the JavaScript
@@ -247,6 +257,14 @@ export function warmLearnedBot(times = 30, net: Weights = NET): void {
   opt[0] = 1; opt[KINDS.length] = 0.5;
   for (let k = 0; k < times; k++) forward(ready, dec, [opt, opt, opt, opt]);
 }
+
+/** What each option of a decision does, as its seat sees it (for personas: persona.ts). */
+export function describeOptions(s: GameState, d: Decision): { kind: string; push: number; tokenSide: number; mine: number; color: number }[] {
+  const v = viewFor(s, d.seat);
+  return d.options.map((o) => { const m = describe(v, d, o); return { ...m, color: m.card ? sgn(signedValue(v, m.card)) : 0 }; });
+}
+/** The seat's own token majority: 1 for Light, -1 for Dark, 0 for even. */
+export const tokenLean = (s: GameState, seat: number) => { const t = s.players[seat].tokens; const l = t.filter((x) => x === 'light').length; return sgn(l - (t.length - l)); };
 
 /** A decision's options, best first by the network (for a search that tries only the most promising few). */
 export function learnedRanking(s: GameState, d: Decision, net: Weights = NET): string[] {
