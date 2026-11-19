@@ -2,7 +2,7 @@
 // Usage: npx tsx eval.ts <weights.json | builtin> <games> <mode>
 //   skill4, skill3: one learned seat among heuristic bots (the same seeds as tools/sim/skill45.ts). 1.00 is a fair share.
 //   vs4, vs3:       the learned bot against the strong (Monte Carlo) bot: half the seats each, alternating by game.
-//   mcskill4:       the strong bot's own skill on the same seeds, for comparison.
+//   (The strong bot's own skill on the same seeds: tools/sim/skill45.ts.)
 //   mclskill4:      the strong bot with the learned bot playing its playouts (expert iteration), among heuristic bots.
 //   mclvs4:         that bot against the plain strong bot, two seats each.
 import { readFileSync } from 'node:fs';
@@ -20,7 +20,6 @@ const res = await pmap(G, (i) => {
   // Which bot plays each seat; `tested` are the seats measured.
   const kind = Array.from({ length: n }, (_, k) => {
     if (mode.startsWith('skill')) return k === i % n ? 'learned' : 'heur';
-    if (mode.startsWith('mcskill')) return k === i % n ? 'mc' : 'heur';
     if (mode.startsWith('mclskill')) return k === i % n ? 'learned' : 'heur';
     if (mode.startsWith('mclvs')) return (k + i) % 2 === 0 ? 'learned' : 'mc';
     return (k + i) % 2 === 0 ? 'learned' : 'mc';

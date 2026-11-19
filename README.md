@@ -2,7 +2,7 @@
 
 A card game of divine ambition for 3 or 4 players by Robert Treviño. Players feed a shared, partly hidden Altar whose weight decides which side wins each Day, build public Choirs that score when their color wins, and hold a secret mix of Light and Dark allegiance tokens that score at the end. Every card is a choice between helping yourself and helping a side you can never be sure is yours.
 
-**Current versions:** card data **V45**, rulebook **v15** (November 19, 2026). **Start with `design/the-game-now.md`.**
+**Current versions:** card data **V45**, rulebook **v15** (November 19, 2026). **Start with `design/the-game-now.md`; every decision is indexed in `DECISIONS.md`.**
 
 ## What's here
 
@@ -16,6 +16,7 @@ A card game of divine ambition for 3 or 4 players by Robert Treviño. Players fe
 | `art/overview/` | Contact sheets for a quick look at all the art. |
 | `game/` | The online game: rules engine, computer players, balance simulator, the live server and the website. See `game/README.md` and `game/SITE.md`. |
 | `print/` | The scripts that render the Claude Design deck sheets into print PDFs, and how to use them. |
+| `DECISIONS.md` | Every decision in one line (what, why, where the evidence is), newest first. |
 | `CHANGELOG.md` | What changed in each version and why, what was tried and rejected, and which cards need reprinting. |
 
 Earlier card spreadsheets, rulebook drafts, print sheets, design write-ups and simulator reports are in the git history (removed November 18, 2026); the CHANGELOG records what each one decided.
@@ -40,7 +41,7 @@ Earlier card spreadsheets, rulebook drafts, print sheets, design write-ups and s
 - **Play:** https://thedivide.pages.dev (3 or 4 players, bots fill empty seats). Every finished game is saved to the stats database and shown on the site's Stats page. Guide: `game/SITE.md`.
 - **Engine:** every Open Game rule and card is implemented and tested in `game/packages/engine` (`npm test` runs 99 engine tests, including about 600 full bot games, and 11 server tests).
 - **Stats database:** Cloudflare D1 database `divide-stats`. The schema and balance views are in `game/apps/server/migrations/0001_init.sql`.
-- **Balance testing:** `game/tools/sim` plays thousands of bot games on fixed seeds: `npm run sim` and `card-balance.ts` measure every card, `advanced.ts` the Celestials and Events. To test a rule change, run them on a branch and on `main` and compare.
+- **Balance testing:** `game/tools/sim` plays thousands of bot games on fixed seeds: `npm run sim` and `exp45.ts` measure every card, `advanced.ts` the Celestials and Events. To test a rule change, run them on a branch and on `main` and compare.
 
 ## Next
 

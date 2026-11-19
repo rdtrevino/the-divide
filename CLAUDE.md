@@ -8,6 +8,8 @@ In short: every card played should be a choice between helping yourself and help
 - Prefer changes to the core over patches (caps, catch-ups, tiebreaks). A rule that only fixes a symptom is a sign the core is missing something.
 - Bots cannot negotiate, bluff or betray. Say plainly what a simulation can and cannot show, and what needs people.
 
+**`DECISIONS.md`** is the one-line-per-decision index (newest first): add a line whenever something is adopted, rejected or retired, and keep tools and tests lean (remove what a change makes redundant).
+
 **Start with `design/the-game-now.md`**: the current design on one page, how it got here, and its validation against the vision and every earlier version.
 
 The current rules: `rules/The_Divide_Rulebook_v15.md` (card data V45) and the two-page `rules/The_Divide_Quick_Guide.md`. The latest decisions and their evidence: `design/tokens-and-offering.md` (no offering, no harvest; tokens; leftovers) and the "Seven Days" section of `the-game-now.md` (Judgment Day). Card text changes go through `cards/changes/*.json` and `cards/tools/apply_changes.py`, never by hand.
