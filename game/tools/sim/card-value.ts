@@ -3,10 +3,11 @@
 // color and value with no ability. The difference in that player's win rate is the card's value, however it is used:
 // kept and activated, spent, discarded, stolen or planted.
 // Also records how the card was used, so each card can be judged by its role.
-// STRONG=1: the tested player is the Monte Carlo bot (mc.ts); the rest of the table plays the heuristic.
+// STRONG=1: the tested player is the Monte Carlo bot (mc.ts); the rest of the table plays the simulation bot (bot.ts).
 // Usage: [STRONG=1] npx tsx card-value.ts <pairs per card> <worker> <workers> <out.json>
 import { writeFileSync } from 'node:fs';
-import { Game, HOST, HOSTS, OPEN_SET_ASIDE_HOSTS, STRONG as MC, botAnswer, strongAnswer } from '@divide/engine';
+import { Game, HOST, HOSTS, OPEN_SET_ASIDE_HOSTS, STRONG as MC, strongAnswer } from '@divide/engine';
+import { answer } from './bot';
 import type { GameState, HostDef } from '@divide/engine';
 
 const PAIRS = Number(process.argv[2] ?? 400);
@@ -45,7 +46,7 @@ function play(seed: number, n: number, seat: number, x: string, give: string) {
   const g = new Game({ seed, mode: 'open', players: Array.from({ length: n }, (_, k) => ({ name: 'P' + k, isBot: true })) }, { setup: (s) => deal(s, seat, x, give) });
   let steps = 0;
   while (!g.over) {
-    for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, STRONG && d.seat === seat ? strongAnswer(g, d) : botAnswer(g.state, d));
+    for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, STRONG && d.seat === seat ? strongAnswer(g, d) : answer(g.state, d));
     if (++steps > 20000) throw new Error('stall');
   }
   return g.state;

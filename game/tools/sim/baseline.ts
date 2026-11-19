@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { playBotGame } from '@divide/engine';
+import { BOT } from './bot';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const GAMES = Number(process.argv[2] ?? 10000);
@@ -18,7 +19,7 @@ const cards: Record<string, Agg> = {};
 for (let g = 0; g < GAMES; g++) {
   const n = g % 2 ? 4 : 3;
   const advanced = g % 4 >= 2;
-  const s = playBotGame({ seed: 500000 + g, mode: 'open', advanced, players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) }).state;
+  const s = playBotGame({ seed: 500000 + g, mode: 'open', advanced, players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) }, 20000, [], BOT).state;
   const res = s.result!;
   for (const p of s.players) {
     const won = res.winners.includes(p.seat) ? 1 / res.winners.length : 0;

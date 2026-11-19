@@ -9,4 +9,4 @@ export { strongAnswer, searchScores, isSearched, STRONG, type Strength } from '.
 export { HYBRID, learnedAnswer, learnedScores, learnedRanking, encode, hasLearnedWeights, warmLearnedBot, DECISION_FEATURES, OPTION_FEATURES, type Weights } from './learned';
 export { CHOIR_PAY, DAYS, STARTING_CHOIR, TOKENS_EACH, TOKEN_WEIGHT, OPEN_SET_ASIDE_HOSTS, OPEN_SET_ASIDE_EVENTS, daysWon, legalActions, setTide } from './engine';
 export { baseValue, choirColors, CHOIR_LIMIT } from './core';
-export { playBotGame } from './autoplay';
+export { playBotGame, type BaseBot } from './autoplay';

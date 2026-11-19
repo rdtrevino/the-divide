@@ -2,12 +2,13 @@
 // 0.75-1.25, and win ratio by seat (from the Day 1 first player). Heuristic bots; games run on every core (../par.ts).
 // Usage: npx tsx exp45.ts <games>
 import { DAYS, HOST, playBotGame } from '@divide/engine';
+import { BOT } from './bot';
 import { pmap } from '../par';
 const G = Number(process.argv[2] ?? 4000);
 type Tally = Record<string, { w: number; e: number }>;
 const games = await pmap(G, (g) => {
   const n = g % 2 ? 4 : 3, advanced = g % 4 >= 2;
-  const s = playBotGame({ seed: 900000 + g, mode: 'open', advanced, players: ['A', 'B', 'C', 'D'].slice(0, n).map((name) => ({ name, isBot: true })) }).state;
+  const s = playBotGame({ seed: 900000 + g, mode: 'open', advanced, players: ['A', 'B', 'C', 'D'].slice(0, n).map((name) => ({ name, isBot: true })) }, 20000, [], BOT).state;
   let offers = 0, acts = 0, tokOff = 0;
   for (const e of s.stats) if (e.type === 'action' && e.source !== 'fruits' && e.source !== 'offer.card') { acts++; if (e.source === 'offer') { offers++; if (e.data?.token) tokOff++; } }
   const first = (((s.firstPlayer - DAYS) % n) + n) % n; // the marker passes once each Evening
