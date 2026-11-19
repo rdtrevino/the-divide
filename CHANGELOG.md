@@ -2,6 +2,15 @@
 
 Older entries name files that have since been removed (design write-ups, simulator reports, archived spreadsheets and rulebook drafts, the V28 print kit); every one of them is in the git history before November 18, 2026.
 
+## Core validation (November 19, 2026)
+
+A proposal, not adopted (`design/core-validation.md`).
+- **The engine can play core rule variants** (`rules.ts`); the defaults are the current rules.
+- **The strong bot tested 20 of them** (`tools/sim/core.ts`, `exploits.ts`).
+- **What it found:** under strong play, players hedge, which makes sides 70–72% readable.
+- **The recommendation:** Devotion (each Choir card of your token side scores 1 at the end) brings the reader to 50–58%, with 8 tokens each as an option.
+- **Re-confirmed:** no offering, no harvest; Judgment Day; and the leftover rule.
+
 ## Human-like bots (November 19, 2026)
 
 Layer 3 of the bot plan (`design/bots.md`), built on the learned bot.

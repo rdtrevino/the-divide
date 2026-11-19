@@ -110,7 +110,7 @@ A token Offer now costs the learned bot a little extra (`TOKEN_OFFER_COST` in `l
 | Expert learned bots, 2,000 games | **83%** | 51% |
 
 - **Strong players hedge:** they hold tokens of one color and build a Choir of the other, so they are paid whichever side wins. A Light card going into a strong player's Choir reads as Dark tokens.
-- **That makes sides readable under strong play.** It cuts against principle 2 (a side you can never be sure of) and is the vision's "engine versus Tide" tension. The lab measured 52%, with a different model and bots that hedge less. **An open question for Robert**, not changed here (`DECISIONS.md`).
+- **That makes sides readable under strong play.** It cuts against principle 2 (a side you can never be sure of) and is the vision's "engine versus Tide" tension. The lab measured 52%, with a different model and bots that hedge less. Tested in `core-validation.md`: one end-of-game rule, Devotion, brings it to 50–58% (proposed, not adopted).
 - **The Bluffer** avoids Choir cards that move this reader toward its true side. The reader names its side only 38% of the time, worse than guessing, against 82% for the Experts. It gives up the hedge's income (0.71 among Experts), and bots never act on reads, so what a bluff earns against people who do cannot be measured here.
 
 **Not done:**

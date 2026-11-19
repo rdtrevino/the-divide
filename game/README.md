@@ -19,7 +19,7 @@ The online version of The Divide. Everything here is TypeScript.
 
 ```
 npm install
-npm test                                   # engine tests (107, including hundreds of bot games) and server tests (11)
+npm test                                   # engine tests (110, including hundreds of bot games) and server tests (11)
 # Simulations play the learned bot by default; BOT=heuristic for the fast heuristic (tools/sim/bot.ts).
 npm run dev                                # the whole site locally at http://127.0.0.1:8787
 npm run deploy                             # publish (see SITE.md)
@@ -34,6 +34,8 @@ cd tools/sim && npx tsx bench-bots.ts 24 4 all            # strong-bot speed, an
 cd tools/distill && npx tsx eval.ts builtin 400 skill4    # the learned bot (the site's bots) among heuristic bots; retraining: tools/distill/README.md
 cd tools/sim && npx tsx personas.ts 600 levels            # bot levels (and `styles`, `sweep`): win shares
 cd tools/sim && npx tsx reader.ts 2000 [bluffer]          # how readable sides are from public facts (TABLE=heuristic|strong)
+cd tools/sim && ./core.sh results/out.jsonl 300 current devotion1   # core rule variants with strong bots (variants.ts); python3 core_table.py results/out.jsonl
+cd tools/sim && npx tsx exploits.ts devotion1 300          # fixed strategies under a variant: every one should lose
 ```
 
 ## Testing a rule change

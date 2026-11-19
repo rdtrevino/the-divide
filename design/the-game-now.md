@@ -191,3 +191,12 @@ Robert questioned three pieces: a token costing a whole action, where leftover t
 - **Tokens stay an Offer**, and are best made card-shaped so a token Offer looks like any other. Making tokens cheaper to play (at dawn, or free alongside an action) gets them used more but makes the uneven mixes matter more.
 - **Leftover tokens still go to whoever holds the fewest.** It works as a refund in disguise, and every alternative makes players hoard.
 - **Cards reworked for the new rule:** Anathema (other players' Offers go face up, instead of being blocked), Temptation (turns a rival's card to the other color for the Day), Mercy (only if you Offered), Moloch (3), Ordeal (no penalty), Favor (your Choir outscored everyone else's).
+
+## Under strong play (core validation, November 19)
+
+The engine's strong bots validated the core: fair seats and token mixes, every fixed strategy loses, and no offering, no harvest, Judgment Day and the leftover rule all earn their place. One weakness showed:
+- **Strong players hedge:** they hold tokens of one color and build a Choir of the other.
+- **So sides are readable:** a reader names them 70–72% of the time (guessing: 50%).
+
+**The proposed fix is one end-of-game rule, Devotion:** each Choir card of the color you hold more tokens of scores 1. It brings the reader to 50–58% and makes your side matter more. Optionally, deal 8 tokens each, which gives the fairest seats. Not adopted; the evidence is in `core-validation.md`.
+
