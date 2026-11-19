@@ -385,3 +385,15 @@ Object.assign(VARIANTS, {
   tk_rand2_mob: { ...SB, stake: { kind: 'tokens', perPlayer: 2, mix: 'random', mobile: true, score: 'weighted' } },
   tk_cards: { ...SB, deck: TOKDECK, stake: { kind: 'tokens', asCards: true, score: 'weighted' } },
 } as Record<string, V>);
+
+// ---- Round 36: tuned twists; making token collection matter; rewarding commitment
+const TK = (extra: Record<string, unknown>): V => ({ ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, score: 'weighted', ...extra } as any });
+Object.assign(VARIANTS, {
+  cr_fb2: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'follower', 'balancerH'] } },
+  cr_dbl2: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'doubleL1', 'doubleD1'] } },
+  cr_all2: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'follower', 'balancerH', 'doubleL1', 'doubleD1'] } },
+  tk_fewest: TK({ onAltar: 'fewest' }),
+  tk_conc: TK({ score: 'concentrate' }),
+  tk_conc_fewest: TK({ score: 'concentrate', onAltar: 'fewest' }),
+  tk_4: TK({ perPlayer: 4 }),
+} as Record<string, V>);

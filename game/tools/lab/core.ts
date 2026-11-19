@@ -90,7 +90,8 @@ export interface Rules {
     mix?: 'even' | 'random';
     poolL?: number; poolD?: number;
     mobile?: boolean; // tokens can be Offered (Light/Dark +2) and Gathered; a token left on the Altar is lost
-    score?: 'weighted' | 'winner' | 'collect';
+    score?: 'weighted' | 'winner' | 'collect' | 'concentrate'; // concentrate: tokens count squared (rewards committing to one color)
+    onAltar?: 'lost' | 'fewest'; // a token left on the Altar is lost, or set aside for the players with the fewest tokens to draw
     collectBonus?: number;
     asCards?: boolean; // tokens are Host cards in the deck: drawn, held in hand, Offered like cards, Gathered to hand, never Exalted
   };
@@ -673,7 +674,7 @@ export function tokCounts(s: State, p: number): number[] {
   for (const c of held) { if (s.cards[c].v > 0) L++; else D++; }
   return [L, D];
 }
-const CREED_LABEL: Record<string, number> = { faithful: 1, fallen: -1, follower: 2, balancer: 3, doubleL: 4, doubleD: 5 };
+const CREED_LABEL: Record<string, number> = { faithful: 1, fallen: -1, follower: 2, balancer: 3, doubleL: 4, doubleD: 5, balancerH: 3, doubleL1: 4, doubleD1: 5 };
 export function stakeLabel(s: State, p: number) {
   if (s.R.stake!.kind === 'creed') return CREED_LABEL[s.creed[p]] ?? 0;
   const [L, D] = tokCounts(s, p);
@@ -692,6 +693,9 @@ export function stakeScore(s: State, p: number): number {
       case 'balancer': return 2 * Math.min(Lb, Db);
       case 'doubleL': return Lb + 2 * cv.filter((v) => v < 0).length;
       case 'doubleD': return Db + 2 * cv.filter((v) => v > 0).length;
+      case 'balancerH': return 1.5 * Math.min(Lb, Db);
+      case 'doubleL1': return Lb + cv.filter((v) => v < 0).length;
+      case 'doubleD1': return Db + cv.filter((v) => v > 0).length;
     }
     return 0;
   }
@@ -703,6 +707,7 @@ export function stakeScore(s: State, p: number): number {
     if (dw > lw) return (Db * tD) / norm;
     return (Lb * tL + Db * tD) / (2 * norm);
   }
+  if (S.score === 'concentrate') return (Lb * tL * tL + Db * tD * tD) / (norm * norm * 2);
   return (Lb * tL + Db * tD) / norm + (S.score === 'collect' ? (S.collectBonus ?? 1) * (tL + tD) : 0);
 }
 function dealStakes(s: State, seed: number) {
@@ -874,11 +879,20 @@ export function evening(s: State) {
   s.tides.push(tide);
   s.gloryByDay.push(s.glory.slice());
   for (const a of s.altar) {
-    if (isTok(s, a.c)) { s.stakeStats[2]++; if (s.R.stake?.asCards) s.discard.push(a.c); continue; }
+    if (isTok(s, a.c)) { s.stakeStats[2]++; if (s.R.stake?.asCards) s.discard.push(a.c); else if (s.R.stake?.onAltar === 'fewest') s.oathPool.push(a.c); continue; }
     if (s.R.fate?.oath && s.cards[a.c].ab === 'oath') {
       if (s.R.fate.oathReturn === 'shuffle' || a.by < 0) s.oathPool.push(a.c); // set aside facedown with the others
       else s.hand[a.by].push(a.c);
     } else s.discard.push(a.c);
+  }
+  if (s.R.stake?.onAltar === 'fewest' && s.oathPool.length) {
+    // Tokens left on the Altar are set aside facedown; the players with the fewest tokens draw them, one each, in turn.
+    shuffle(s, s.oathPool);
+    while (s.oathPool.length) {
+      const lo = Math.min(...s.tok.map((t) => t.length));
+      const who = [...Array(n).keys()].filter((p) => s.tok[p].length === lo);
+      for (const p of who) { if (!s.oathPool.length) break; s.tok[p].push(s.oathPool.pop()!); see(s, p, P.drew); }
+    }
   }
   if (s.R.fate?.oath && s.R.fate.oathReturn === 'shuffle') {
     // Anyone left without an Oath draws one at random from the set-aside Oaths: a new allegiance nobody else can see.

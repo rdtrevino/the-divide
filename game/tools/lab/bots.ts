@@ -147,8 +147,9 @@ export function stakeWeights(s: State, p: number): number[] {
   const [Lb, Db] = s.banks[p];
   if (S.kind === 'creed') {
     switch (s.creed[p]) {
-      case 'faithful': case 'doubleL': return [1, 0];
-      case 'fallen': case 'doubleD': return [0, 1];
+      case 'faithful': case 'doubleL': case 'doubleL1': return [1, 0];
+      case 'fallen': case 'doubleD': case 'doubleD1': return [0, 1];
+      case 'balancerH': return Lb > Db + 1 ? [0.15, 1.5] : Db > Lb + 1 ? [1.5, 0.15] : [0.75, 0.75];
       case 'follower': return Lb > Db + 1 ? [1, 0.15] : Db > Lb + 1 ? [0.15, 1] : [0.6, 0.6];
       case 'balancer': return Lb > Db + 1 ? [0.2, 2] : Db > Lb + 1 ? [2, 0.2] : [1, 1];
     }
@@ -161,6 +162,7 @@ export function stakeWeights(s: State, p: number): number[] {
     const pL = Math.max(0.15, Math.min(0.85, 0.5 + 0.15 * (lw - dw)));
     return [(pL * tL) / norm, ((1 - pL) * tD) / norm];
   }
+  if (S.score === 'concentrate') return [(tL * tL) / (norm * norm * 2), (tD * tD) / (norm * norm * 2)];
   return [tL / norm, tD / norm];
 }
 function stakeDay(s: State, p: number, cards: number[], pl: number) {
@@ -287,9 +289,9 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
       if (a.t === 'gather' && choirHas(s, p, 'pilgrim')) sc += 1;
       if (a.t === 'exalt' && choirHas(s, p, 'patron') && val(s, added) !== 0) sc += 1;
       if (a.t === 'exalt' && a.h) sc += 0.05; // a person would rather not show their side
-      if (s.R.stake?.kind === 'creed' && (s.creed[p] === 'doubleL' || s.creed[p] === 'doubleD')) {
-        const off = s.creed[p] === 'doubleL' ? -1 : 1; // the other color counts 2 each at the end
-        sc += 2 * ((knownAdded && sgn(val(s, added)) === off ? 1 : 0) - (removed >= 0 && sgn(val(s, removed)) === off ? 1 : 0));
+      if (s.R.stake?.kind === 'creed' && ['doubleL', 'doubleD', 'doubleL1', 'doubleD1'].includes(s.creed[p])) {
+        const off = s.creed[p].startsWith('doubleL') ? -1 : 1; // the other color counts at the end
+        sc += (s.creed[p].endsWith('1') ? 1 : 2) * ((knownAdded && sgn(val(s, added)) === off ? 1 : 0) - (removed >= 0 && sgn(val(s, removed)) === off ? 1 : 0));
       }
       if (removed >= 0 && choirHas(s, p, 'martyr')) sc += 1;
     }
