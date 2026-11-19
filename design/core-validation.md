@@ -167,3 +167,5 @@ Devotion would be a 17th rule, fixing a problem that appears only when every pla
 - **8 tokens each** (no new rule) stays an option.
 - **Next:** a first-game setup with fewer card texts; possibly a subtraction study (do First Fruits, the anonymous shuffles and a token counting 2 still earn their place?); then the cards.
 
+**Update (same day):** the hedge comes from no offering, no harvest itself. Replacing that rule with the Miser removes the hedge without adding Devotion. See `harvest-and-sizes.md`.
+

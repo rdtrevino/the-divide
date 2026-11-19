@@ -36,6 +36,7 @@ cd tools/sim && npx tsx personas.ts 600 levels            # bot levels (and `sty
 cd tools/sim && npx tsx reader.ts 2000 [bluffer]          # how readable sides are from public facts (TABLE=heuristic|strong)
 cd tools/sim && ./core.sh results/out.jsonl 300 current devotion1   # core rule variants with strong bots (variants.ts); python3 core_table.py results/out.jsonl
 cd tools/sim && npx tsx exploits.ts devotion1 300          # fixed strategies under a variant: every one should lose
+cd tools/sim && npx tsx exposure.ts 2000                  # how often token Offers are exposed, and what they tell (TABLE=strong)
 ```
 
 ## Testing a rule change
