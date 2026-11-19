@@ -10,4 +10,5 @@ export { HYBRID, learnedAnswer, learnedScores, learnedRanking, encode, hasLearne
 export { CHOIR_PAY, DAYS, STARTING_CHOIR, TOKENS_EACH, TOKEN_WEIGHT, OPEN_SET_ASIDE_HOSTS, OPEN_SET_ASIDE_EVENTS, daysWon, legalActions, setTide } from './engine';
 export { baseValue, choirColors, CHOIR_LIMIT } from './core';
 export { playBotGame, type BaseBot } from './autoplay';
+export { DEFAULT_RULES, rulesOf, type CoreRules } from './rules';
 export { personaAnswer, LEVELS, STYLES, type Persona } from './persona';

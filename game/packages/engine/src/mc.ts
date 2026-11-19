@@ -7,6 +7,7 @@
 import { botAnswer, choirCardValue, tokenWorth } from './bots';
 import { activeCards, choirColors } from './core';
 import { Game } from './game';
+import { rulesOf } from './rules';
 import type { Answer, Decision, GameState, Seat, Side } from './types';
 
 /** Decisions worth searching; everything else is answered by the heuristic. */
@@ -16,7 +17,11 @@ const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card',
  * `policy` plays everyone's choices inside the playouts (default: the heuristic bot). `rank` orders the options to
  * try, best first (default: the heuristic's choice, then the options in order); the first `maxOptions` are searched.
  */
-export interface Strength { rollouts: number; maxOptions: number; policy?: (s: GameState, d: Decision) => Answer; rank?: (s: GameState, d: Decision) => string[] }
+export interface Strength {
+  rollouts: number; maxOptions: number; policy?: (s: GameState, d: Decision) => Answer; rank?: (s: GameState, d: Decision) => string[];
+  /** A fixed lean added to each option's estimate (for testing fixed strategies played well otherwise). */
+  bias?: (s: GameState, d: Decision, id: string) => number;
+}
 export const STRONG: Strength = { rollouts: 8, maxOptions: 6 };
 
 let seq = 1;
@@ -59,8 +64,15 @@ function value(s: GameState, q: Seat): number {
   const p = s.players[q];
   if (s.phase === 'ended') return p.glory;
   let v = p.glory;
-  for (const t of p.tokens) v += tokenWorth(s, t);
+  const R = rulesOf(s), cc0 = choirColors(s, q);
+  // Faith (a variant): a token scores only if the Choir holds its color; until then it is worth about half.
+  for (const t of p.tokens) v += tokenWorth(s, t) * (R.faith && !cc0[t] ? 0.5 : 1);
   for (const c of activeCards(p)) v += choirCardValue(s, c.id) + (c.store ?? 0);
+  if (R.devotion) {
+    // Devotion (a variant): Choir cards of the color you hold more tokens of score again at the end.
+    const l = p.tokens.filter((t) => t === 'light').length, d = p.tokens.length - l, cc = choirColors(s, q);
+    if (l !== d) v += R.devotion * (l > d ? cc.light : cc.dark);
+  }
   return v;
 }
 
@@ -106,7 +118,7 @@ export function searchScores(g: Game, d: Decision, k: Strength = STRONG, quick =
   const scores = ids.map((id) => {
     let total = 0;
     for (let i = 0; i < k.rollouts; i++) { seq = base + i * 7919; total += rollout(g, d, [id], k.policy); }
-    return total / k.rollouts;
+    return total / k.rollouts + (k.bias ? k.bias(g.state, d, id) : 0);
   });
   return { ids, scores };
 }

@@ -10,6 +10,7 @@ import {
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
+import { rulesOf } from './rules';
 import type { TideHistory } from './core';
 import type { Dir, GameConfig, GameState, Gen, Option, Plan, Seat, Side, Standing, TideRecord } from './types';
 
@@ -57,9 +58,10 @@ export function createState(cfg: GameConfig): GameState {
     seat, name: p.name, isBot: p.isBot, celestial: advanced ? p.celestial ?? pool.pop()! : '', hand: [], choir: [], glory: 0, tokens: [], offeredToday: false,
   }));
   // V45: shuffle an even pool of allegiance tokens and deal each player 6, so mixes are uneven and secret.
-  const half = (TOKENS_EACH * s.players.length) / 2;
+  const R = rulesOf(s);
+  const half = (R.tokensEach * s.players.length) / 2 + R.bag;
   const tokens = shuffle(s, [...Array<Side>(half).fill('light'), ...Array<Side>(half).fill('dark')]);
-  for (const p of s.players) p.tokens = tokens.splice(0, TOKENS_EACH);
+  for (const p of s.players) p.tokens = tokens.splice(0, R.tokensEach);
   for (const p of s.players) {
     // Each player is dealt a hidden hand and 2 random face-up Choir cards (room for 4).
     for (let i = 0; i < baseHandLimit(s, p.seat); i++) p.hand.push(drawHost(s)!);
@@ -96,7 +98,7 @@ export function* runGame(s: GameState, from?: number, onDayStart?: (s: GameState
     yield* morning(s);
     yield* firstFruits(s);
     s.phase = 'noon';
-    if (d === last) yield* judgmentDay(s);
+    if (d === last && rulesOf(s).judgment) yield* judgmentDay(s);
     const n = s.players.length;
     for (let i = 0; i < n; i++) yield* takeTurn(s, (s.firstPlayer + i) % n);
     s.active = null;
@@ -584,6 +586,11 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
 
   // The Tide, marked on the Tide track. Purgatory: the Day counts for neither side.
   const tide = setTide(s);
+  if (rulesOf(s).choirVote) {
+    // Variant: each Choir adds 1 for the color it holds more of.
+    for (const p of s.players) { const c = choirColors(s, p.seat); if (c.light > c.dark) tide.light++; else if (c.dark > c.light) tide.dark++; }
+    tide.dir = dirOf(tide.light - tide.dark); tide.margin = Math.abs(tide.light - tide.dark);
+  }
   if (eventOn(s, E.purgatory) && tide.dir !== 'neutral') tide.void = true;
   s.tides.push(tide);
   stat(s, { type: 'tide', data: { ...tide } });
@@ -612,15 +619,32 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
   }
   // The Reaping.
   yield* reaping(s, tide, order);
+  if (rulesOf(s).fall && tide.dir !== 'neutral' && !tide.void) {
+    // Variant (the Fall): each player discards one Choir card of the losing color.
+    const lost = opposite(tide.dir) as Side;
+    for (const seat of order) {
+      const cards = activeCards(s.players[seat]).filter((c) => colorsOf(s, seat, c.id)[lost]);
+      if (!cards.length) continue;
+      const pick = (yield* chooseOne(s, seat, 'choir.discard', `The Fall: discard one of your ${lost === 'light' ? 'Light' : 'Dark'} Choir cards.`, cards.map((c) => cardOpt(c.id))))!;
+      yield* discardFromChoir(s, seat, pick, 'the Fall');
+    }
+  }
 
   // Allegiance tokens left on the Altar are shuffled and handed out, one at a time, to whoever holds the fewest
   // (ties in turn order from the first player). Only the receiver sees what they got.
+  if (rulesOf(s).leftovers === 'lost') s.altarTokens = [];
   for (const t of shuffle(s, s.altarTokens.splice(0))) {
     const fewest = Math.min(...s.players.map((p) => p.tokens.length));
     const to = order.find((x) => s.players[x].tokens.length === fewest)!;
     s.players[to].tokens.push(t.side);
     log(s, 'tokens', `${pname(s, to)} receives a token left on the Altar (they hold the fewest).`);
     log(s, 'tokens', `It is a ${tokenName(t.side)} token.`, [to]);
+  }
+  if (rulesOf(s).passTokens && !finalDay) {
+    // Variant: everyone passes one token, at random and facedown, to the left. Only giver and receiver see it.
+    const passed = s.players.map((p) => (p.tokens.length ? p.tokens.splice(randInt(s, p.tokens.length), 1)[0] : null));
+    passed.forEach((t, k) => { if (t) s.players[(k + 1) % s.players.length].tokens.push(t); });
+    log(s, 'tokens', 'Everyone passes a token to the left.');
   }
   if (finalDay) return;
 
@@ -672,11 +696,13 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     const seat = p.seat;
     delta[seat] = 0;
     if (eventOn(s, E.famine) || tide.dir === 'neutral') continue;
-    if (!p.offeredToday) { if (activeCards(p).length) log(s, 'harvest', `${p.name} did not Offer today, so their Choir does not score.`); continue; }
+    const R = rulesOf(s);
+    if (!p.offeredToday && R.harvest === 'offer') { if (activeCards(p).length) log(s, 'harvest', `${p.name} did not Offer today, so their Choir does not score.`); continue; }
     let side = (eventOn(s, E.falseProphecy) ? opposite(tide.dir) : tide.dir) as Side;
     if (s.day_.heresy.includes(seat)) side = opposite(side) as Side;
     const count = activeCards(p).filter((c) => scores(s, seat, c.id, side)).length;
-    delta[seat] = CHOIR_PAY * count * (s.day_.ordeal.includes(seat) ? 2 : 1);
+    const full = (R.choirPay * count + R.choirFlat * activeCards(p).length) * (s.day_.ordeal.includes(seat) ? 2 : 1);
+    delta[seat] = !p.offeredToday && R.harvest === 'half' ? Math.floor(full / 2) : full;
   }
   // Scapegoat (V45): pay 2 Glory so another player who would score at this Reaping scores nothing.
   for (const seat of order) {
@@ -787,8 +813,16 @@ export function* endGame(s: GameState): Gen<void> {
   for (const p of s.players) {
     const before = p.glory;
     const tokens = { light: p.tokens.filter((t) => t === 'light').length, dark: p.tokens.filter((t) => t === 'dark').length };
-    const fromTokens = tokens.light * won.light + tokens.dark * won.dark;
+    const R = rulesOf(s);
+    // Faith (a variant): tokens of a color score only if the Choir holds a card of that color.
+    const cc = choirColors(s, p.seat), counts = (k: 'light' | 'dark') => (!R.faith || cc[k] > 0 ? tokens[k] : 0);
+    const fromTokens = R.tokenValue * (counts('light') * won.light + counts('dark') * won.dark);
     yield* gain(s, p.seat, fromTokens, 'tokens');
+    if (R.devotion && tokens.light !== tokens.dark) {
+      // Variant (Devotion): each Choir card of the color you hold more tokens of scores again.
+      const k = tokens.light > tokens.dark ? 'light' : 'dark', n = cc[k];
+      if (n) { yield* gain(s, p.seat, R.devotion * n, 'devotion'); log(s, 'devotion', `${p.name}'s Choir holds ${n} ${k === 'light' ? 'Light' : 'Dark'} card${n > 1 ? 's' : ''} of their side: +${R.devotion * n}.`); }
+    }
     standings.push({ seat: p.seat, glory: p.glory, before, tokens, fromTokens });
     log(s, 'tokens', `${p.name} held ${tokens.light} Light and ${tokens.dark} Dark: +${fromTokens}.`);
   }

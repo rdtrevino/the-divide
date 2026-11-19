@@ -21,6 +21,8 @@ export interface GameConfig {
   players: PlayerConfig[];
   /** Advanced game: Celestials and Events (V41). The Base game has neither. */
   advanced?: boolean;
+  /** Core rule variants for testing (rules.ts); omitted means the current rules. */
+  rules?: Partial<import('./rules').CoreRules>;
 }
 
 export interface ChoirCard {
