@@ -132,6 +132,7 @@ function fateDay(s: State, p: number, cards: number[], pl: number, pn = 0.35) {
   let nL = 0, nD = 0, nN = 0;
   for (const v of cards) { if (v > 0) nL++; else if (v < 0) nD++; else nN++; }
   if (F.mult && s.fate[p] === 0) return F.perDay * pn * (1 + nN);
+  if (F.mult && F.anyColour) return F.perDay * (s.fate[p] === 1 ? pl : 1 - pl) * (1 + nL + nD);
   if (F.mult) return F.perDay * (s.fate[p] === 1 ? pl * (1 + nL) : (1 - pl) * (1 + nD));
   return pl * (F.choirPay * nL + (s.fate[p] === 1 ? F.perDay : 0)) + (1 - pl) * (F.choirPay * nD + (s.fate[p] === -1 ? F.perDay : 0));
 }

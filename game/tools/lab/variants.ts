@@ -349,3 +349,14 @@ Object.assign(VARIANTS, {
   oath2_veil: OATH2({ miserTax: 3, veiledExalt: true }),
   fmF2_veil: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, veiledExalt: true }),
 } as Record<string, V>);
+
+// ---- Round 33: hide who did what (anonymous First Fruits) and stop the Choir from naming your side (any-colour multiplier)
+const OATH_ANY = { ...OATH_ANON_SHUF, anyColour: true };
+Object.assign(VARIANTS, {
+  o33_veil_ff: OATH2({ miserTax: 3, veiledExalt: true, anonReveal: true, anonFruits: true, fate: OATH_ANON_SHUF }),
+  o33_any_ff: OATH2({ miserTax: 3, anonReveal: true, anonFruits: true, fate: OATH_ANY }),
+  o33_any_veil_ff: OATH2({ miserTax: 3, veiledExalt: true, anonReveal: true, anonFruits: true, fate: OATH_ANY }),
+  o33_any: OATH2({ miserTax: 3, anonReveal: true, fate: OATH_ANY }),
+  f33_veil_ff: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, veiledExalt: true, anonFruits: true }),
+  f33_any_ff: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, anonFruits: true, fate: { pool: [1, 1, -1, -1, 0, 0], perDay: 1, choirPay: 0, mult: true, anyColour: true } }),
+} as Record<string, V>);

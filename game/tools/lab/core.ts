@@ -69,7 +69,9 @@ export interface Rules {
   pax?: { margin: number; dom: number[]; indiv: number[]; tie: 'lowGlory' | 'lower' };
   /** Fates: each player secretly draws a Fate (1 Light, -1 Dark) from `pool`. Every Evening each Choir card matching the Tide earns
    *  `choirPay`; every Day the Tide matches your Fate is worth `perDay`, scored only at the end (after maxDays). */
-  fate?: { pool: number[]; perDay: number; choirPay: number; mult?: boolean; oath?: boolean; oathHand?: boolean; oathReturn?: 'owner' | 'shuffle' };
+  fate?: { pool: number[]; perDay: number; choirPay: number; mult?: boolean; oath?: boolean; oathHand?: boolean; oathReturn?: 'owner' | 'shuffle'; anyColour?: boolean };
+  /** Anonymous First Fruits: they are placed facedown, shuffled together, then turned face up, so nobody knows whose was whose. */
+  anonFruits?: boolean;
   /** Anonymous reveal: facedown Offers are shuffled together before they are turned face up, so nobody learns whose card was whose. */
   anonReveal?: boolean;
   /** Veiled Exalt: you may Exalt a card facedown. It counts for you as usual; the table sees only a hidden card. */
@@ -355,8 +357,10 @@ export function applyFruits(s: State, picks: number[]) {
     const [c] = s.hand[p].splice(picks[p], 1);
     s.altar.push({ c, up: true, by: p, kind: 0, seen: 0 });
     s.decisions[p]++;
-    see(s, p, sgn(val(s, c)) > 0 ? P.ffL : sgn(val(s, c)) < 0 ? P.ffD : -1);
-    if (s.cards[c].ab === 'oath') see(s, p, sgn(val(s, c)) > 0 ? P.oathL : P.oathD);
+    if (!s.R.anonFruits) {
+      see(s, p, sgn(val(s, c)) > 0 ? P.ffL : sgn(val(s, c)) < 0 ? P.ffD : -1);
+      if (s.cards[c].ab === 'oath') see(s, p, sgn(val(s, c)) > 0 ? P.oathL : P.oathD);
+    }
   }
   for (let p = 0; p < s.R.n; p++) { const c = draw(s); if (c !== undefined) s.hand[p].push(c); }
   syncOaths(s);
@@ -650,7 +654,7 @@ export function fateScore(s: State, tide: Dir, net = 0): number[] {
     }
     if (F.mult) {
       // Multiplied: a Day the Tide matches your Fate scores 1 plus 1 per Choir card of your Fate's alignment (paid at the end).
-      if (s.fate[p] === tide) { let k = 1; for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) k++; } s.fateDays[p] += k; }
+      if (s.fate[p] === tide) { let k = 1; for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide || (F.anyColour && v !== 0)) k++; } s.fateDays[p] += k; }
       continue;
     }
     for (const x of s.choir[p]) { const v = x.flip ? -val(s, x.c) : val(s, x.c); if (sgn(v) === tide) out[p] += F.choirPay; }
