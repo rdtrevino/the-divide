@@ -6,7 +6,7 @@ network's softmax over a decision's options should match the teacher's preferenc
 decision then weighs about the same, whatever its scale (Judgment Day estimates swing by 100 where others swing by 1).
 --loss mse compares centered scores with centered estimates instead. Games whose number ends in 0 are held out.
 
-Usage: python3 train.py <data dir> [<data dir> ...] [--out weights.json] [--hidden 128,64] [--epochs 40] [--seed 1]
+Usage: python3 train.py <data dir> [<data dir> ...] [--out weights.json (packed for the engine, pack.py)] [--hidden 128,64] [--epochs 40] [--seed 1]
 Prints, on held-out games: how often each player picks the teacher's best option, and the mean regret (the teacher's
 estimate of its best option minus that of the option picked, in its utility units, about 1 Glory each).
 """
@@ -155,7 +155,8 @@ tags = ['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'j
 by_tag = {tg: evaluate(val_dec & (meta[:, 1] == k)) for k, tg in enumerate(tags) if (val_dec & (meta[:, 1] == k)).any()}
 print(json.dumps({'validation': ev, 'byTag': {k: {n: v[n] for n in ('learned', 'heuristic')} for k, v in by_tag.items()}}, indent=1))
 if a.out:
-    r5 = lambda x: [float(f'{v:.5g}') for v in x]
-    json.dump({'trainedOn': [os.path.basename(d.rstrip('/')) for d in a.dirs], 'hidden': a.hidden, 'validation': {k: ev[k] for k in ('learned', 'heuristic', 'random')},
-               'mean': r5(mu), 'scale': r5(sc), 'layers': [{'W': [r5(row) for row in w], 'b': r5(b)} for w, b in zip(W, B)]}, open(a.out, 'w'), separators=(',', ':'))
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from pack import pack
+    json.dump(pack(mu, sc, W, B, hidden=a.hidden, trainedOn=[os.path.basename(d.rstrip('/')) for d in a.dirs], temp=a.temp,
+                   validation={k: ev[k] for k in ('learned', 'heuristic', 'random')}), open(a.out, 'w'), separators=(',', ':'))
     print('wrote', a.out, os.path.getsize(a.out) // 1024, 'KB', file=sys.stderr)

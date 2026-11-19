@@ -181,49 +181,75 @@ export function encode(s: GameState, d: Decision, heuristicPick = botAnswer(s, d
   return { decision: decisionFeatures(v, d, t), options: d.options.map((o) => optionFeatures(v, d, o, heuristicPick, t)) };
 }
 
-interface Layer { W: number[][]; b: number[] }
-interface Weights { mean: number[]; scale: number[]; layers: Layer[] }
-const NET = WEIGHTS as unknown as Partial<Weights>;
+/**
+ * Weights as tools/distill/pack.py writes them: each layer's matrix (rows x cols, row-major) and bias as base64
+ * float32, with the input scaling already folded into the first layer.
+ */
+interface Packed { format: 2; layers: { rows: number; cols: number; w: string; b: string }[] }
+export type Weights = Partial<Packed>;
+const NET = WEIGHTS as unknown as Weights;
+
 /** Weights fit this encoder only if their input size matches (they must be retrained when the inputs change). */
-const fits = (net: Partial<Weights>) => !!net.layers?.length && net.layers[0].W[0]?.length === DECISION_FEATURES + OPTION_FEATURES;
+const fits = (net: Weights) => net.format === 2 && !!net.layers?.length && net.layers[0].cols === DECISION_FEATURES + OPTION_FEATURES;
 export const hasLearnedWeights = () => fits(NET);
 
-/** The network, prepared for speed: flat rows, the input scaling folded into the first layer. */
-interface Ready { first: Float64Array[]; firstBias: Float64Array; rest: { W: Float64Array[]; b: Float64Array }[] }
-const prepared = new WeakMap<object, Ready>();
-function prepare(net: Weights): Ready {
-  let r = prepared.get(net);
-  if (r) return r;
-  // (x - mean) * scale, then W: fold the scale into W and the mean into the bias.
-  const L0 = net.layers[0];
-  const first = L0.W.map((row) => Float64Array.from(row, (w, i) => w * net.scale[i]));
-  const firstBias = Float64Array.from(L0.b, (b, k) => b - first[k].reduce((t, w, i) => t + w * net.mean[i], 0));
-  r = { first, firstBias, rest: net.layers.slice(1).map((L) => ({ W: L.W.map((row) => Float64Array.from(row)), b: Float64Array.from(L.b) })) };
-  prepared.set(net, r);
-  return r;
-}
+// Available in browsers, Workers and Node 16+; the ES2022 lib does not declare it.
+declare function atob(data: string): string;
 
-/** The network's score for each option (higher is better). The decision's part of the first layer is computed once. */
-export function learnedScores(s: GameState, d: Decision, heuristicPick = botAnswer(s, d)[0], net: Partial<Weights> = NET): number[] {
-  const { decision, options } = encode(s, d, heuristicPick);
-  const { first, firstBias, rest } = prepare(net as Weights);
-  const nd = decision.length, H = first.length;
+function floats(b64: string): Float32Array {
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Float32Array(bytes.buffer);
+}
+interface Ready { layers: { rows: number; cols: number; w: Float32Array; b: Float32Array }[] }
+const prepared = new WeakMap<object, Ready>();
+const prepare = (net: Packed): Ready => {
+  let r = prepared.get(net);
+  if (!r) { r = { layers: net.layers.map((L) => ({ rows: L.rows, cols: L.cols, w: floats(L.w), b: floats(L.b) })) }; prepared.set(net, r); }
+  return r;
+};
+
+/** The network's score for each option row (decision features shared; the first layer's share is computed once). */
+function forward(ready: Ready, decision: number[], options: number[][]): number[] {
+  const [L0, ...rest] = ready.layers;
+  const nd = decision.length, H = L0.rows, C = L0.cols;
   const shared = new Float64Array(H);
-  for (let k = 0; k < H; k++) { const w = first[k]; let t = firstBias[k]; for (let i = 0; i < nd; i++) t += w[i] * decision[i]; shared[k] = t; }
+  for (let k = 0, row = 0; k < H; k++, row += C) { let t = L0.b[k]; for (let i = 0; i < nd; i++) t += L0.w[row + i] * decision[i]; shared[k] = t; }
   return options.map((o) => {
+    // Option features are mostly zeros (one-hot kinds and cards): only the nonzero ones are multiplied.
+    const nz: number[] = [];
+    for (let i = 0; i < o.length; i++) if (o[i] !== 0) nz.push(i);
     let x = new Float64Array(H);
-    for (let k = 0; k < H; k++) { const w = first[k]; let t = shared[k]; for (let i = 0; i < o.length; i++) if (o[i] !== 0) t += w[nd + i] * o[i]; x[k] = t > 0 ? t : 0; }
-    rest.forEach((L, j) => {
-      const y = new Float64Array(L.b.length);
-      for (let r = 0; r < y.length; r++) { const w = L.W[r]; let t = L.b[r]; for (let i = 0; i < x.length; i++) t += w[i] * x[i]; y[r] = j < rest.length - 1 && t < 0 ? 0 : t; }
+    for (let k = 0, row = nd; k < H; k++, row += C) { let t = shared[k]; for (const i of nz) t += L0.w[row + i] * o[i]; x[k] = t > 0 ? t : 0; }
+    for (let j = 0; j < rest.length; j++) {
+      const L = rest[j], y = new Float64Array(L.rows), last = j === rest.length - 1;
+      for (let r = 0, row = 0; r < L.rows; r++, row += L.cols) { let t = L.b[r]; for (let i = 0; i < L.cols; i++) t += L.w[row + i] * x[i]; y[r] = !last && t < 0 ? 0 : t; }
       x = y;
-    });
+    }
     return x[0];
   });
 }
 
+/** The network's score for each option of a decision (higher is better). */
+export function learnedScores(s: GameState, d: Decision, heuristicPick = botAnswer(s, d)[0], net: Weights = NET): number[] {
+  const { decision, options } = encode(s, d, heuristicPick);
+  return forward(prepare(net as Packed), decision, options);
+}
+
+/**
+ * Decode the weights and run the network a few times, so the first real decision is already fast (the JavaScript
+ * engine optimizes code once it has run). The server calls this at startup, which Workers do not count against a
+ * request's CPU time. Not run on import, so pages that never use the learned bot do not carry its weights.
+ */
+export function warmLearnedBot(times = 30, net: Weights = NET): void {
+  if (!fits(net)) return;
+  const ready = prepare(net as Packed), dec = new Array<number>(DECISION_FEATURES).fill(0.5), opt = new Array<number>(OPTION_FEATURES).fill(0);
+  opt[0] = 1; opt[KINDS.length] = 0.5;
+  for (let k = 0; k < times; k++) forward(ready, dec, [opt, opt, opt, opt]);
+}
+
 /** The learned bot's answer: the best-scored option on searched decisions, the heuristic's elsewhere. */
-export function learnedAnswer(s: GameState, d: Decision, net: Partial<Weights> = NET): Answer {
+export function learnedAnswer(s: GameState, d: Decision, net: Weights = NET): Answer {
   const quick = botAnswer(s, d);
   if (!isSearched(d) || !fits(net)) return quick;
   const sc = learnedScores(s, d, quick[0], net);
