@@ -1,16 +1,9 @@
-// Core rule variants tested by core.ts and exploits.ts (engine rules.ts holds the flags and their defaults).
+// Core rule variants for core.ts and exploits.ts (engine rules.ts holds the switches and their defaults). Only the
+// questions still open have switches; the rejected variants and the re-checked standing decisions were removed once
+// decided (their results stay in results/core-r1..r3.jsonl; design/core-validation.md).
 import type { CoreRules } from '@divide/engine';
 
 export const VARIANTS: Record<string, Partial<CoreRules>> = {
   current: {},
-  // Standing decisions, re-checked with strong bots.
-  harvestAlways: { harvest: 'always' }, harvestHalf: { harvest: 'half' }, noJudgment: { judgment: false }, leftoversLost: { leftovers: 'lost' },
-  // Hedging and readability.
-  devotion1: { devotion: 1 }, devotion2: { devotion: 2 }, choirPay1: { choirPay: 1 }, tokenValue2: { tokenValue: 2 },
-  passTokens: { passTokens: true }, bag2: { bag: 2 }, choirVote: { choirVote: true }, choirFlat: { choirPay: 1, choirFlat: 1 },
-  tokens4: { tokensEach: 4 }, tokens8: { tokensEach: 8 },
-  // Round 2: the engine tied to the secret side, Choirs that churn, and a colorless Choir (for contrast).
-  fall: { fall: true }, faith: { faith: true }, colorless: { choirPay: 0, choirFlat: 2 },
-  dev1t8: { devotion: 1, tokensEach: 8 }, dev1pass: { devotion: 1, passTokens: true },
-  dev1fall: { devotion: 1, fall: true },
+  devotion1: { devotion: 1 }, devotion2: { devotion: 2 }, tokens8: { tokensEach: 8 }, dev1t8: { devotion: 1, tokensEach: 8 },
 };

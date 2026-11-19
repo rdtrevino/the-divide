@@ -19,8 +19,6 @@ export interface Persona {
   build?: number;
   /** Bonus (or, negative, a cost) for Offering a token, on top of the learned bot's own (learned.ts, TOKEN_OFFER_COST). */
   tokens?: number;
-  /** Bonus for putting a card of your own token majority's color in your Choir (negative: of the other color, a hedge). */
-  align?: number;
   /** Bluffing: a cost for putting a card in your Choir that tells the table your side (by the reader, READ below). */
   conceal?: number;
 }
@@ -61,13 +59,12 @@ export function personaAnswer(s: GameState, d: Decision, p: Persona): Answer {
   const quick = botAnswer(s, d);
   if (!isSearched(d) || !hasLearnedWeights()) return quick;
   const sc = learnedScores(s, d, quick[0]);
-  if (p.loyal || p.build || p.tokens || p.conceal || p.align) {
+  if (p.loyal || p.build || p.tokens || p.conceal) {
     const lean = tokenLean(s, d.seat);
     describeOptions(s, d).forEach((m, i) => {
       if (p.loyal) sc[i] += p.loyal * Math.sign(m.push) * lean;
       if (p.build && /^(exaltCard|gatherCard|gatherHidden|actExalt|actGather)$/.test(m.kind)) sc[i] += p.build;
       if (p.tokens && m.kind === 'offerToken') sc[i] += p.tokens;
-      if (p.align && lean && /^(exaltCard|gatherCard|gatherDiscard)$/.test(m.kind) && m.color) sc[i] += p.align * lean * m.color;
       // A card entering the Choir shifts the table's read by READ; a bluffer avoids shifts toward its true side.
       if (p.conceal && lean && /^(exaltCard|gatherCard|gatherDiscard)$/.test(m.kind) && m.color) sc[i] -= p.conceal * lean * (m.color > 0 ? READ.light : READ.dark);
     });

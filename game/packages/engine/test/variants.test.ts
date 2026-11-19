@@ -1,16 +1,13 @@
-// Core rule variants (rules.ts) must play whole games legally, and the defaults must be the current rules.
+// Core rule switches under test (rules.ts) must play whole games legally, and the defaults must be the current rules.
 import { describe, expect, it } from 'vitest';
 import { botAnswer } from '../src/bots';
 import { Game } from '../src/game';
 import { choirColors } from '../src/core';
 import { DEFAULT_RULES, type CoreRules } from '../src/rules';
 
-const VARIANTS: Partial<CoreRules>[] = [
-  { devotion: 1 }, { faith: true }, { fall: true }, { choirVote: true }, { passTokens: true }, { bag: 2 },
-  { harvest: 'always' }, { harvest: 'half' }, { judgment: false }, { leftovers: 'lost' }, { tokensEach: 8, choirPay: 1, choirFlat: 1, tokenValue: 2 },
-];
+const VARIANTS: Partial<CoreRules>[] = [{ devotion: 1 }, { tokensEach: 8 }, { devotion: 1, tokensEach: 8 }];
 
-describe('core rule variants', () => {
+describe('core rule switches', () => {
   it('play whole games with legal answers', () => {
     for (const [k, rules] of VARIANTS.entries()) for (const n of [3, 4]) {
       const g = new Game({ seed: 50 + k, mode: 'open', rules, players: Array.from({ length: n }, (_, j) => ({ name: 'P' + j, isBot: true })) });

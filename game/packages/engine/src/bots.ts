@@ -3,7 +3,6 @@
 import { CHOIR_LIMIT, baseValue, choirColors, dirOf, hasActive } from './core';
 import { CHOIR_PAY, DAYS, TOKEN_WEIGHT, daysWon } from './engine';
 import { E, H, HOST } from './data';
-import { rulesOf } from './rules';
 import type { Answer, Decision, Dir, GameState, Option, Seat } from './types';
 
 /** Small deterministic PRNG per decision, so simulations are reproducible without touching game RNG. */
@@ -53,11 +52,11 @@ export const daysAfter = (s: GameState) => Math.max(0, DAYS - s.day);
 /** A colored card in the Choir scores on about half the Days left. */
 export const choirCardValue = (s: GameState, id: string | undefined) => {
   if (!id) return 0;
-  const v = val(s, id), R = rulesOf(s);
-  return (R.choirPay * 0.5 + R.choirFlat * 0.8) * daysAfter(s) * ((v.light > 0 ? 1 : 0) + (v.dark > 0 ? 1 : 0));
+  const v = val(s, id);
+  return CHOIR_PAY * 0.5 * daysAfter(s) * ((v.light > 0 ? 1 : 0) + (v.dark > 0 ? 1 : 0));
 };
 /** What holding a token of a side is worth by the end: the Days it has won, and about half of those to come. */
-export const tokenWorth = (s: GameState, side: 'light' | 'dark') => rulesOf(s).tokenValue * (daysWon(s)[side] + 0.5 * daysAfter(s));
+export const tokenWorth = (s: GameState, side: 'light' | 'dark') => daysWon(s)[side] + 0.5 * daysAfter(s);
 
 /** Players acting after `seat` this Day can still swing the Tide; discount accordingly. */
 function laterPlayers(s: GameState, seat: Seat) {

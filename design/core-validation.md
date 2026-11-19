@@ -1,6 +1,8 @@
 # The core under strong play: validation and reworks
 
-November 19, 2026. Robert asked to finalize and validate the core structure before any card changes: validate V45 with the new bots, and test changes and reworks that keep the vision and make the game deep without making it heavy. **A recommendation, not adopted.** Every rule here can be switched on in the engine (`game/packages/engine/src/rules.ts`); the measurements are in `game/tools/sim/results/` (`core-r1` to `core-r3`, `core-confirm`, `exploits-r3`).
+November 19, 2026. Robert asked to finalize and validate the core structure before any card changes: validate V45 with the new bots, and test changes and reworks that keep the vision and make the game deep without making it heavy.
+
+**Outcome: V45 stands as it is. Devotion is held until playtesting**, because it adds a rule to fix a problem that only consistently strong players show (Section 4). The measurements are in `game/tools/sim/results/` (`core-r1` to `core-r3`, `core-confirm`, `exploits-r3`). The engine keeps switches only for the open questions (Devotion and the number of tokens, `rules.ts`); the switches for the rejected variants were removed once decided, as with earlier reworks, and are in the git history.
 
 ## Method
 
@@ -103,6 +105,8 @@ Twenty variants in three rounds, each aimed at a vision principle, mostly at the
 
 ## Recommendation
 
+*(Section 4 revises this: hold Devotion until playtesting.)*
+
 **Adopt Devotion** (one rule), and consider **8 tokens each** (a number, not a rule).
 
 > At the end, after the tokens score: **each card in your Choir of the color you hold more tokens of scores 1 Glory.**
@@ -145,3 +149,21 @@ Measured against `vision.md`:
 - The rulebook, Quick Guide and engine default (`rules.ts`: `devotion: 1`, and `tokensEach: 8` if chosen).
 - Retrain the learned bot on the new rules (`game/tools/distill/README.md`, about 15 minutes); the site's bots use it.
 - Then the card work: re-measure the cards under the final core with the retrained bot (`exp45.ts`, `card-value.ts`).
+
+## 4. Revised: hold Devotion until people have played (Robert's review)
+
+Robert asked whether the game is still digestible. Counted honestly, the core a new player learns grew from about 10 rule points (V44) to about 16 (V45), even though scoring got simpler. Most of the growth is five small fixes, each of which earns its place in the measurements:
+- a token counts 2;
+- leftover tokens go to whoever holds the fewest;
+- no offering, no harvest;
+- Judgment Day;
+- the anonymous shuffles.
+
+The bigger weight, though, is the 69 card texts, not the core.
+
+Devotion would be a 17th rule, fixing a problem that appears only when every player is a strong, consistent hedger, which a first playtest group is unlikely to be. So:
+- **V45 is the game to playtest, unchanged.**
+- **Devotion stays ready** (one switch in `rules.ts`), to adopt only if real players read sides from Choirs.
+- **8 tokens each** (no new rule) stays an option.
+- **Next:** a first-game setup with fewer card texts; possibly a subtraction study (do First Fruits, the anonymous shuffles and a token counting 2 still earn their place?); then the cards.
+

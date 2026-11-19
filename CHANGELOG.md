@@ -4,12 +4,13 @@ Older entries name files that have since been removed (design write-ups, simulat
 
 ## Core validation (November 19, 2026)
 
-A proposal, not adopted (`design/core-validation.md`).
-- **The engine can play core rule variants** (`rules.ts`); the defaults are the current rules.
+V45 stands; Devotion is held until playtesting (`design/core-validation.md`).
+- **The engine played core rule variants** (`rules.ts`); after the study, it keeps switches only for the open questions (Devotion, tokens each).
 - **The strong bot tested 20 of them** (`tools/sim/core.ts`, `exploits.ts`).
 - **What it found:** under strong play, players hedge, which makes sides 70–72% readable.
-- **The recommendation:** Devotion (each Choir card of your token side scores 1 at the end) brings the reader to 50–58%, with 8 tokens each as an option.
+- **The fix, held until playtesting:** Devotion (each Choir card of your token side scores 1 at the end) brings the reader to 50–58%, with 8 tokens each as an option. It would be a 17th rule, for a problem only strong, consistent hedgers show.
 - **Re-confirmed:** no offering, no harvest; Judgment Day; and the leftover rule.
+- **The site's Stats page** now shows the learned bot's card numbers (Apple 1.30, Leviathan 1.29 and Acolyte 0.68 outside the target, for the card work).
 
 ## Human-like bots (November 19, 2026)
 

@@ -64,10 +64,9 @@ function value(s: GameState, q: Seat): number {
   const p = s.players[q];
   if (s.phase === 'ended') return p.glory;
   let v = p.glory;
-  const R = rulesOf(s), cc0 = choirColors(s, q);
-  // Faith (a variant): a token scores only if the Choir holds its color; until then it is worth about half.
-  for (const t of p.tokens) v += tokenWorth(s, t) * (R.faith && !cc0[t] ? 0.5 : 1);
+  for (const t of p.tokens) v += tokenWorth(s, t);
   for (const c of activeCards(p)) v += choirCardValue(s, c.id) + (c.store ?? 0);
+  const R = rulesOf(s);
   if (R.devotion) {
     // Devotion (a variant): Choir cards of the color you hold more tokens of score again at the end.
     const l = p.tokens.filter((t) => t === 'light').length, d = p.tokens.length - l, cc = choirColors(s, q);

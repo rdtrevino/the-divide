@@ -198,5 +198,5 @@ The engine's strong bots validated the core: fair seats and token mixes, every f
 - **Strong players hedge:** they hold tokens of one color and build a Choir of the other.
 - **So sides are readable:** a reader names them 70–72% of the time (guessing: 50%).
 
-**The proposed fix is one end-of-game rule, Devotion:** each Choir card of the color you hold more tokens of scores 1. It brings the reader to 50–58% and makes your side matter more. Optionally, deal 8 tokens each, which gives the fairest seats. Not adopted; the evidence is in `core-validation.md`.
+**The fix, if it is ever needed, is one end-of-game rule, Devotion:** each Choir card of the color you hold more tokens of scores 1. It brings the reader to 50–58% and makes your side matter more. Optionally, deal 8 tokens each, which gives the fairest seats. **Held until playtesting:** it would add a rule for a problem only consistently strong players show. The evidence is in `core-validation.md`.
 
