@@ -2,7 +2,7 @@
 // (samples the hidden cards, plays the rest of the Day for every option, keeps the best on average).
 import {
   type Action, type Dir, type State, type ScoreTable, TABLES, act, active, altarWeight, applyFruits, choirHas, clone,
-  evening, lean, leanSum, legal, rnd, sgn, shuffle, val, ab, sideWeights, syncOaths,
+  evening, lean, leanSum, legal, rnd, sgn, shuffle, val, ab, sideWeights, syncOaths, isTok, tokCounts, stakeScore,
 } from './core';
 
 export type Policy = 'random' | 'heur' | 'mc' | 'offer' | 'build' | 'loyal' | 'follow';
@@ -38,7 +38,7 @@ const RATE: Record<string, number> = {
 const rate = (s: State, c: number) => RATE[ab(s, c) ?? ''] ?? 0;
 
 export function daysLeft(s: State) {
-  if (s.R.fate) return Math.max(1, s.R.maxDays - s.day + 1);
+  if (s.R.fate || s.R.stake) return Math.max(1, s.R.maxDays - s.day + 1);
   const lead = Math.max(...s.glory);
   return Math.max(1, Math.min(6, ((s.R.target - lead) / s.R.target) * 7));
 }
@@ -141,16 +141,46 @@ function fateLaterPl(s: State) {
   for (let q = 0; q < s.R.n; q++) t += lean(s, q);
   return Math.max(0.25, Math.min(0.75, 0.5 + 0.07 * t));
 }
+/** Stakes: how much a point added to the Light bank and to the Dark bank is worth to p at the end. */
+export function stakeWeights(s: State, p: number): number[] {
+  const S = s.R.stake!;
+  const [Lb, Db] = s.banks[p];
+  if (S.kind === 'creed') {
+    switch (s.creed[p]) {
+      case 'faithful': case 'doubleL': return [1, 0];
+      case 'fallen': case 'doubleD': return [0, 1];
+      case 'follower': return Lb > Db + 1 ? [1, 0.15] : Db > Lb + 1 ? [0.15, 1] : [0.6, 0.6];
+      case 'balancer': return Lb > Db + 1 ? [0.2, 2] : Db > Lb + 1 ? [2, 0.2] : [1, 1];
+    }
+    return [0, 0];
+  }
+  const [tL, tD] = tokCounts(s, p);
+  const norm = S.asCards ? 1 : (S.perPlayer ?? 2) / 2;
+  if (S.score === 'winner') {
+    const lw = s.tides.filter((t) => t > 0).length, dw = s.tides.filter((t) => t < 0).length;
+    const pL = Math.max(0.15, Math.min(0.85, 0.5 + 0.15 * (lw - dw)));
+    return [(pL * tL) / norm, ((1 - pL) * tD) / norm];
+  }
+  return [tL / norm, tD / norm];
+}
+function stakeDay(s: State, p: number, cards: number[], pl: number) {
+  const [wL, wD] = stakeWeights(s, p);
+  let nL = 0, nD = 0;
+  for (const v of cards) { if (v > 0) nL++; else if (v < 0) nD++; }
+  return pl * wL * (1 + nL) + (1 - pl) * wD * (1 + nD);
+}
 let HYP: number[] | null = null; // hypothetical Choir values for the option being scored (Fates)
 const choirVals = (s: State, p: number) => s.choir[p].map((x) => (x.flip ? -val(s, x.c) : val(s, x.c)));
 
 /** Today's expected Reaping and the value of the position later, for any scoring system. */
 function expNow(s: State, p: number, mine: number, m: number, sd: number) {
+  if (s.R.stake) return stakeDay(s, p, HYP ?? choirVals(s, p), PHI(m / sd));
   if (s.R.choirCardPay && !s.R.fate) { const cv = HYP ?? choirVals(s, p); const pl = PHI(m / sd); return s.R.choirCardPay * (pl * cv.filter((v) => v > 0).length + (1 - pl) * cv.filter((v) => v < 0).length); }
   if (s.R.fate) return fateDay(s, p, HYP ?? choirVals(s, p), PHI(m / sd), PHI((1.5 - m) / sd) - PHI((-1.5 - m) / sd));
   return s.R.pax ? paxExp(s, p, mine, m, sd) : reapExp(s, p, sgn(mine), PHI(m / sd));
 }
 function expLater(s: State, p: number, mine: number) {
+  if (s.R.stake) return stakeDay(s, p, HYP ?? choirVals(s, p), fateLaterPl(s));
   if (s.R.choirCardPay && !s.R.fate) { const cv = HYP ?? choirVals(s, p); const pl = fateLaterPl(s); return s.R.choirCardPay * (pl * cv.filter((v) => v > 0).length + (1 - pl) * cv.filter((v) => v < 0).length); }
   if (s.R.fate) return fateDay(s, p, HYP ?? choirVals(s, p), fateLaterPl(s));
   return s.R.pax ? paxLater(s, p, mine) : posVal(s, p, sgn(mine));
@@ -194,6 +224,34 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
   for (const a of acts) {
     let sc = 0;
     if (a.t === 'pass') { out.push(-5); continue; }
+    if (a.t === 'tok') {
+      // A +2 vote for that color, paid for with a share of your own stake in it.
+      const m = e.m + 2 * a.col;
+      const w = stakeWeights(s, p);
+      const [tL, tD] = tokCounts(s, p);
+      const held = a.col > 0 ? tL : tD;
+      const bank = s.banks[p][a.col > 0 ? 0 : 1];
+      const share = held > 0 ? w[a.col > 0 ? 0 : 1] / held : 0; // value of one bank point carried by this token
+      const plF = fateLaterPl(s);
+      const nC = choirVals(s, p).filter((v) => sgn(v) === a.col).length;
+      const future = (dl - 1) * 0.8 * (a.col > 0 ? plF : 1 - plF) * (1 + nC);
+      sc = expNow(s, p, leanSum(s, p), m, sd) - share * (bank + future + 1);
+      out.push(sc + (noise ? rnd(s) * noise : 0));
+      continue;
+    }
+    if (a.t === 'gather' && isTok(s, s.altar[a.k].c)) {
+      const kn = knows(s, p, a.k);
+      const col = kn ? sgn(val(s, s.altar[a.k].c)) : 0;
+      const removed = kn ? val(s, s.altar[a.k].c) : 0;
+      const [tL, tD] = tokCounts(s, p);
+      const w = stakeWeights(s, p);
+      const plF = fateLaterPl(s);
+      // a token you take raises your stake in its color (unknown color: half each)
+      const per = (c: number) => { const held = c > 0 ? tL : tD; const bank = s.banks[p][c > 0 ? 0 : 1]; const nC = choirVals(s, p).filter((v) => sgn(v) === c).length; const unit = held > 0 ? w[c > 0 ? 0 : 1] / held : 1 / ((s.R.stake?.perPlayer ?? 2) / 2); return unit * (bank + (dl - 1) * 0.8 * (c > 0 ? plF : 1 - plF) * (1 + nC)); };
+      sc = expNow(s, p, leanSum(s, p), e.m - removed, sd) + (col === 0 ? 0.5 * (per(1) + per(-1)) : per(col));
+      out.push(sc + (noise ? rnd(s) * noise : 0));
+      continue;
+    }
     if (a.t === 'offer') {
       const c = s.hand[p][a.i];
       let w = val(s, c);
@@ -229,6 +287,10 @@ export function heurScores(s: State, p: number, acts: Action[], noise: number): 
       if (a.t === 'gather' && choirHas(s, p, 'pilgrim')) sc += 1;
       if (a.t === 'exalt' && choirHas(s, p, 'patron') && val(s, added) !== 0) sc += 1;
       if (a.t === 'exalt' && a.h) sc += 0.05; // a person would rather not show their side
+      if (s.R.stake?.kind === 'creed' && (s.creed[p] === 'doubleL' || s.creed[p] === 'doubleD')) {
+        const off = s.creed[p] === 'doubleL' ? -1 : 1; // the other color counts 2 each at the end
+        sc += 2 * ((knownAdded && sgn(val(s, added)) === off ? 1 : 0) - (removed >= 0 && sgn(val(s, removed)) === off ? 1 : 0));
+      }
       if (removed >= 0 && choirHas(s, p, 'martyr')) sc += 1;
     }
     out.push(sc + (noise ? rnd(s) * noise : 0));
@@ -295,7 +357,7 @@ function fixedAction(s: State, p: number, pol: Policy): Action {
     // Never change sides: only consider actions that keep the current lean.
     const cur = lean(s, p);
     const keep = (a: Action) => {
-      if (a.t === 'offer' || a.t === 'pass') return true;
+      if (a.t === 'offer' || a.t === 'pass' || a.t === 'tok') return true;
       const c = a.t === 'exalt' ? s.hand[p][a.i] : s.altar[a.k].c;
       const r = a.r >= 0 ? val(s, s.choir[p][a.r].c) : 0;
       return cur === 0 || sgn(leanSum(s, p) + val(s, c) - r) === cur;
@@ -324,7 +386,7 @@ function determinize(s: State, p: number, salt: number): State {
   const pool: number[] = [...d.deck];
   for (let q = 0; q < d.R.n; q++) if (q !== p) pool.push(...d.hand[q]);
   const hidden: number[] = [];
-  for (let k = 0; k < d.altar.length; k++) if (!knows(d, p, k)) { pool.push(d.altar[k].c); hidden.push(k); }
+  for (let k = 0; k < d.altar.length; k++) if (!knows(d, p, k) && !isTok(d, d.altar[k].c)) { pool.push(d.altar[k].c); hidden.push(k); }
   for (let q = 0; q < d.R.n; q++) if (q !== p) for (const x of d.choir[q]) if (x.hid) pool.push(x.c); // other players' veiled Choir cards
   shuffle(d, pool);
   for (const k of hidden) {
@@ -340,6 +402,22 @@ function determinize(s: State, p: number, salt: number): State {
   }
   for (let q = 0; q < d.R.n; q++) if (q !== p) { const n = d.hand[q].length; d.hand[q] = pool.splice(0, n); }
   for (let q = 0; q < d.R.n; q++) if (q !== p) for (const x of d.choir[q]) if (x.hid && pool.length) x.c = pool.shift()!;
+  if (d.R.stake?.kind === 'creed') {
+    const bag = d.R.stake.creeds!.slice();
+    bag.splice(bag.indexOf(d.creed[p]), 1);
+    shuffle(d, bag);
+    for (let q = 0; q < d.R.n; q++) if (q !== p) d.creed[q] = bag.pop()!;
+  } else if (d.R.stake && !d.R.stake.asCards) {
+    // Everyone sees how many tokens each player holds, not their colors.
+    // A facedown token on the Altar is visibly a token, but its color is hidden.
+    const toks: number[] = [];
+    for (let q = 0; q < d.R.n; q++) if (q !== p) toks.push(...d.tok[q]);
+    const onAltar: number[] = [];
+    for (let k = 0; k < d.altar.length; k++) if (isTok(d, d.altar[k].c) && !knows(d, p, k)) { toks.push(d.altar[k].c); onAltar.push(k); }
+    shuffle(d, toks);
+    for (const k of onAltar) d.altar[k].c = toks.pop()!;
+    for (let q = 0; q < d.R.n; q++) if (q !== p) { const k = d.tok[q].length; d.tok[q] = toks.splice(0, k); }
+  }
   if (d.R.fate?.oath) syncOaths(d);
   else if (d.R.fate) {
     // Other players' Fates are secret: re-draw them from the bag (minus my own), leaning slightly toward their public Choir.
@@ -382,6 +460,7 @@ function value(s: State, q: number) {
 function valueBase(s: State, q: number) {
   const dl = daysLeft(s);
   const H = Math.min(dl - 1, 2.5) * 0.5;
+  if (s.R.stake) return s.glory[q] + stakeScore(s, q) + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q));
   if (s.R.fate) return s.glory[q] + s.R.fate.perDay * s.fateDays[q] + (dl - (s.phase === 'noon' || s.phase === 'fruits' ? 1 : 0)) * 0.8 * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
   return s.glory[q] + H * expLater(s, q, leanSum(s, q)) + choirIncome(s, q, s.choir[q].map((x) => x.c)) * dl * 0.7;
 }
@@ -415,7 +494,7 @@ function prune(s: State, p: number, acts: Action[], max: number) {
   const idx = acts.map((_, i) => i).sort((a, b) => sc[b] - sc[a]);
   const keep = new Set(idx.slice(0, max - 2));
   // make sure each action type is represented by its best option
-  for (const t of ['offer', 'exalt', 'gather']) { const i = idx.find((j) => acts[j].t === t); if (i !== undefined) keep.add(i); }
+  for (const t of ['offer', 'exalt', 'gather', 'tok']) { const i = idx.find((j) => acts[j].t === t); if (i !== undefined) keep.add(i); }
   return [...keep].map((i) => acts[i]);
 }
 

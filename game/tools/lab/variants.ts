@@ -360,3 +360,28 @@ Object.assign(VARIANTS, {
   f33_veil_ff: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, veiledExalt: true, anonFruits: true }),
   f33_any_ff: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, anonFruits: true, fate: { pool: [1, 1, -1, -1, 0, 0], perDay: 1, choirPay: 0, mult: true, anyColour: true } }),
 } as Record<string, V>);
+
+// ---- Rounds 35-36: Robert's ideas. Choirs stay face up. Kept hiding rules: anonymous First Fruits and anonymous reveal.
+const SB: V = {
+  hand: 3, choirStart: 2, choirMax: 4, fruits: true, omens: 0, crown: 1, deck: PLAIN44, offerReward: 'none', tieBreak: 'none',
+  target: 999, target3: 999, target4: 999, maxDays: 7, miserTax: 3, anonReveal: true, anonFruits: true,
+};
+const TOKDECK = { ...PLAIN44, 'L2:tokL': 6, 'D2:tokD': 6 };
+Object.assign(VARIANTS, {
+  // baseline: Oaths with the three kept hiding rules, Choirs face up
+  o35_oath: OATH2({ miserTax: 3, anonReveal: true, anonFruits: true, fate: OATH_ANON_SHUF }),
+  // Idea 1: creeds (a secret allegiance card that says how your two public banks score)
+  cr_plain: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'faithful', 'fallen', 'fallen', 'fallen'] } },
+  cr_fb: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'follower', 'balancer'] } },
+  cr_dbl: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'doubleL', 'doubleD'] } },
+  cr_all: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'follower', 'balancer', 'doubleL', 'doubleD'] } },
+  // Idea 2: allegiance tokens (score = Light bank x Light tokens + Dark bank x Dark tokens)
+  tk_even_fixed: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'even', mobile: false, score: 'weighted' } },
+  tk_rand_fixed: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: false, score: 'weighted' } },
+  tk_even_mob: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'even', mobile: true, score: 'weighted' } },
+  tk_rand_mob: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, score: 'weighted' } },
+  tk_rand_mob_win: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, score: 'winner' } },
+  tk_rand_mob_col: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, score: 'collect', collectBonus: 1 } },
+  tk_rand2_mob: { ...SB, stake: { kind: 'tokens', perPlayer: 2, mix: 'random', mobile: true, score: 'weighted' } },
+  tk_cards: { ...SB, deck: TOKDECK, stake: { kind: 'tokens', asCards: true, score: 'weighted' } },
+} as Record<string, V>);

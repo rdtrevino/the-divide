@@ -62,6 +62,7 @@ export interface Metrics {
   offerRate: number; // share of Noon actions that are Offers
   fate?: { share: number; leanShowsFate: number; offersForFate: number; offersForChoir: number; whenSplit: number[]; fateSideWins: number; winRatioByFate?: Record<string, number> };
   oath?: number[]; // per game: Oaths Offered, stolen (Gathered from another player's Offer), Exalted
+  stake?: { winRatioByType: Record<string, number>; tokens: number[] }; // tokens Offered, taken, lost per game
   miserBlocked?: number; // share of games in which the Miser's Rule changed the winner // 10th and 90th percentile across games: days, winner's ability share, winner's Glory // mean Evening Glory change for Choirs [with the Tide, against it, Neutral], and the table mean // win ratio and play rate of each ability in final Choirs; Glory it produced per game
 }
 
@@ -75,6 +76,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
   const sg = [0, 0, 0, 0], sn = [0, 0, 0, 0];
   const px = [0, 0, 0, 0, 0, 0], gt = [0, 0, 0]; let acts = 0;
   const os = [0, 0, 0, 0];
+  const sk = [0, 0, 0]; const stC: Record<string, number> = {}, stW: Record<string, number> = {};
   const fs = [0, 0, 0, 0, 0, 0, 0]; let fateG = 0, fateTot = 0, fateTeamWin = 0, miserB = 0;
   const fCount: Record<string, number> = {}, fWin: Record<string, number> = {};
   const gDays: number[] = [], gAbil: number[] = [], gWin: number[] = [];
@@ -87,6 +89,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
     sw += s.switches.reduce((a, b) => a + b, 0) / n;
     cross += s.offerStats[1]; offs += s.offerStats[0];
     s.fateStats.forEach((x, i) => (fs[i] += x));
+    if (s.R.stake) { s.stakeStats.forEach((x, i) => (sk[i] += x)); for (let p = 0; p < n; p++) { const k = s.stakeType[p]; stC[k] = (stC[k] ?? 0) + 1; if (s.winners.includes(p)) stW[k] = (stW[k] ?? 0) + 1 / s.winners.length; } }
     s.oathStats.forEach((x, i) => (os[i] += x));
     if (s.R.fate) for (let p = 0; p < n; p++) { const k = String(s.fate[p]); fCount[k] = (fCount[k] ?? 0) + 1; if (s.winners.includes(p)) fWin[k] = (fWin[k] ?? 0) + 1 / s.winners.length; }
     if (s.R.miser) { const top = Math.max(...s.glory); if (!s.winners.some((w) => s.glory[w] === top)) miserB++; }
@@ -166,6 +169,7 @@ export function measure(states: State[], tested?: { seat: (i: number) => number 
     altarSize: alt / D, facedownAtReveal: fdn / D, crownGain: cg / Math.max(1, cn), othersGain: og / Math.max(1, on), crownPartnered: cp / Math.max(1, cg), leadChanges: lc / G, lossDays: rl / (D * n), dominance: px[0] / Math.max(1, px[0] + px[1]), freeRide: [+(px[2] / Math.max(1, px[4])).toFixed(2), +(px[3] / Math.max(1, px[4])).toFixed(2)], gathers: gt.map((x) => +(x / Math.max(1, gt[0] + gt[1] + gt[2])).toFixed(2)), offerRate: offs / Math.max(1, acts),
     fate: states[0].R.fate ? { share: fateG / Math.max(1, fateTot), leanShowsFate: fs[0] / Math.max(1, fs[1]), offersForFate: fs[3] / Math.max(1, fs[2]), offersForChoir: fs[4] / Math.max(1, fs[2]), whenSplit: [fs[5], fs[6]], fateSideWins: fateTeamWin / G, winRatioByFate: Object.fromEntries(Object.keys(fCount).map((k) => [k === '1' ? 'Light' : k === '-1' ? 'Dark' : 'Forsaken', +(((fWin[k] ?? 0) / fCount[k]) * n).toFixed(2)])) } : undefined,
     miserBlocked: states[0].R.miser ? miserB / G : undefined,
+    stake: states[0].R.stake ? { winRatioByType: Object.fromEntries(Object.keys(stC).sort().map((k) => [k, +(((stW[k] ?? 0) / stC[k]) * n).toFixed(2)])), tokens: sk.map((x) => +(x / G).toFixed(2)) } : undefined,
     oath: states[0].R.fate?.oath ? os.slice(0, 3).map((x) => +(x / G).toFixed(2)) : undefined, spread: Object.fromEntries(([['days', gDays], ['abil', gAbil], ['winGlory', gWin]] as [string, number[]][]).map(([k, a]) => { const b = a.slice().sort((x, y) => x - y); return [k, [+b[Math.floor(b.length * 0.1)].toFixed(2), +b[Math.floor(b.length * 0.9)].toFixed(2)]]; })), sideGain: sg.map((x, i) => +(x / Math.max(1, sn[i])).toFixed(2)),
     abilities: Object.fromEntries([...new Set([...Object.keys(abH), ...Object.keys(abG)])].sort().map((a) => [a, { wr: +(((abW[a] ?? 0) / Math.max(1, abH[a] ?? 0)) * n).toFixed(2), held: +((abH[a] ?? 0) / G).toFixed(2), glory: +((abG[a] ?? 0) / G).toFixed(2) }])),
   };
