@@ -3,14 +3,14 @@ import { TURN } from './abilities';
 import { endOfDayTriggers, keepRelics, morningTriggers, noteOffer, parasitePlant, placeRelics, wisdomPeek } from './triggers';
 import {
   activation, activeCards, altarAvailable, altarLabel, altarShielded, ask, askAll, baseHandLimit,
-  baseValue, canActivate, canSpend, cardOpt, CHOIR_LIMIT, choirColors, chooseOne, colorOf, colorsOf, dirOf, discardableForRoom,
+  baseValue, canActivate, canSpend, cardOpt, choirColors, chooseOne, colorOf, colorsOf, dirOf, discardableForRoom,
   discardFromChoir, drawHost, drawTo, enterChoir, eventOn, gain, hasActive, isCelestial, log, lose, makeRoom,
   markToday, opposite, others, pay, pname, sanctuaryAllows, seatFromOpt, seatOpt, snareHit, stat, transfer,
   usedToday, yesNo,
 } from './core';
 import { C, CELESTIALS, E, EVENTS, H, HOSTS, cardName } from './data';
 import { randInt, shuffle } from './rng';
-import { DEFAULT_RULES, rulesOf } from './rules';
+import { DEFAULT_RULES, choirLimit, rulesOf } from './rules';
 import type { TideHistory } from './core';
 import type { Dir, GameConfig, GameState, Gen, Option, Plan, Seat, Side, Standing, TideRecord } from './types';
 
@@ -256,7 +256,7 @@ function* eventOnReveal(s: GameState, ev: string): Gen<void> {
       if (!id) continue;
       yield* discardFromChoir(s, p.seat, id, 'the Plague');
       const c = drawHost(s);
-      if (c && p.choir.length < CHOIR_LIMIT) yield* enterChoir(s, p.seat, c);
+      if (c && p.choir.length < choirLimit(s)) yield* enterChoir(s, p.seat, c);
     }
   }
 }
@@ -288,7 +288,7 @@ export function* takeTurn(s: GameState, seat: Seat): Gen<void> {
 
 function canRoom(s: GameState, seat: Seat) {
   const p = s.players[seat];
-  return p.choir.length < CHOIR_LIMIT || discardableForRoom(s, p).length > 0;
+  return p.choir.length < choirLimit(s) || discardableForRoom(s, p).length > 0;
 }
 
 type Action = 'offer' | 'gather' | 'exalt';
@@ -674,11 +674,13 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     const seat = p.seat;
     delta[seat] = 0;
     if (eventOn(s, E.famine) || tide.dir === 'neutral') continue;
-    if (!p.offeredToday) { if (activeCards(p).length) log(s, 'harvest', `${p.name} did not Offer today, so their Choir does not score.`); continue; }
+    const harvest = rulesOf(s).harvest;
+    if (!p.offeredToday && harvest === 'offer') { if (activeCards(p).length) log(s, 'harvest', `${p.name} did not Offer today, so their Choir does not score.`); continue; }
     let side = (eventOn(s, E.falseProphecy) ? opposite(tide.dir) : tide.dir) as Side;
     if (s.day_.heresy.includes(seat)) side = opposite(side) as Side;
     const count = activeCards(p).filter((c) => scores(s, seat, c.id, side)).length;
-    delta[seat] = CHOIR_PAY * count * (s.day_.ordeal.includes(seat) ? 2 : 1);
+    const full = CHOIR_PAY * count * (s.day_.ordeal.includes(seat) ? 2 : 1);
+    delta[seat] = !p.offeredToday && harvest === 'half' ? Math.floor(full / 2) : full;
   }
   // Scapegoat (V45): pay 2 Glory so another player who would score at this Reaping scores nothing.
   for (const seat of order) {
@@ -799,6 +801,17 @@ export function* endGame(s: GameState): Gen<void> {
     }
     standings.push({ seat: p.seat, glory: p.glory, before, tokens, fromTokens });
     log(s, 'tokens', `${p.name} held ${tokens.light} Light and ${tokens.dark} Dark: +${fromTokens}.`);
+  }
+  const R = rulesOf(s);
+  if (R.miser || R.generous) {
+    // Variants (the Miser, the Generous): the fewest Offers lose, or the most gain, at the end; nobody if all tied.
+    const offers = s.players.map((p) => s.stats.filter((e) => e.seat === p.seat && e.type === 'action' && e.source === 'offer').length);
+    const lo = Math.min(...offers), hi = Math.max(...offers);
+    if (lo !== hi) for (const p of s.players) {
+      if (R.miser && offers[p.seat] === lo) { yield* lose(s, p.seat, R.miser, 'miser'); log(s, 'miser', `${p.name} Offered the fewest times (${lo}): -${R.miser}.`); }
+      if (R.generous && offers[p.seat] === hi) { yield* gain(s, p.seat, R.generous, 'generous'); log(s, 'generous', `${p.name} Offered the most times (${hi}): +${R.generous}.`); }
+    }
+    for (const st of standings) st.glory = s.players[st.seat].glory;
   }
   const final = s.tides[s.tides.length - 1]?.dir ?? 'neutral';
   const best = Math.max(...standings.map((x) => x.glory));

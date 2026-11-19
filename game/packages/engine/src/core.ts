@@ -1,4 +1,5 @@
 // Shared helpers: decisions, logging, Glory, zones, card values, targeting.
+import { DEFAULT_RULES, choirLimit, rulesOf } from './rules';
 import { C, E, H, HOST, cardName } from './data';
 import { shuffle } from './rng';
 import type {
@@ -101,7 +102,7 @@ export function handLimit(s: GameState, seat: Seat): number {
   return n;
 }
 /** The hand limit: 3, or 5 for the Dominion (V44). */
-export const baseHandLimit = (s: GameState, seat: Seat) => (isCelestial(s, seat, C.dominion) ? 5 : 3);
+export const baseHandLimit = (s: GameState, seat: Seat) => rulesOf(s).handSize + (isCelestial(s, seat, C.dominion) ? 2 : 0);
 
 /** What a card's value depends on: the Day and the Tides so far (Acolyte follows the most recent Day won). */
 export type TideHistory = Pick<GameState, 'day' | 'tides'>;
@@ -278,7 +279,8 @@ export function discardableForRoom(s: GameState, p: Player): ChoirCard[] {
 }
 
 /** A Choir holds up to 4 cards (V41). */
-export const CHOIR_LIMIT = 4;
+/** The usual Choir size (a game's own is choirLimit(s), rules.ts). */
+export const CHOIR_LIMIT = DEFAULT_RULES.choirLimit;
 
 /** Put a card into a Choir. Caller must ensure there is room. Handles entry triggers. */
 export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
@@ -297,7 +299,7 @@ export function* enterChoir(s: GameState, seat: Seat, id: string): Gen<void> {
 /** Make room in a full Choir by discarding (player's choice among voluntary options). Returns false if impossible. */
 export function* makeRoom(s: GameState, seat: Seat, why: string): Gen<boolean> {
   const p = s.players[seat];
-  if (p.choir.length < CHOIR_LIMIT) return true;
+  if (p.choir.length < choirLimit(s)) return true;
   const opts = discardableForRoom(s, p);
   if (!opts.length) return false;
   const pick = yield* chooseOne(s, seat, 'choir.discard', `Your Choir is full. Choose a card to discard (${why}).`, opts.map((c) => cardOpt(c.id)));

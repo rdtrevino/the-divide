@@ -1,9 +1,10 @@
 // Card abilities that trigger at set moments rather than on their holder's turn: when you Offer or Exalt
 // (Wisdom), when Parasite is played, In the Morning (Gabriel, Council), at the end of the Day (Gabriel, Council,
 // Tree of Life, Defiance, Remnant, Parasite) and when the Altar is cleared (Eternity). Most are the V43 reworks.
+import { choirLimit } from './rules';
 import { H, cardName } from './data';
 import {
-  activation, canActivate, canAffordTribute, cardOpt, CHOIR_LIMIT, chooseOne, colorsOf, discardableForRoom,
+  activation, canActivate, canAffordTribute, cardOpt, chooseOne, colorsOf, discardableForRoom,
   drawHost, gain, hasActive, log, makeRoom, others, payTribute, pname, protectedFrom, removeFromChoir, seatFromOpt,
   seatOpt, stat,
 } from './core';
@@ -32,7 +33,7 @@ export function noteOffer(s: GameState, seat: Seat, cards: string[]) {
 
 /** Parasite: when you Exalt or Gather it, put it into another player's Choir instead. Returns true if planted. */
 export function* parasitePlant(s: GameState, seat: Seat): Gen<boolean> {
-  const targets = others(s, seat).filter((o) => !protectedFrom(s, seat, o.seat, 'replace') && canAffordTribute(s, seat, o.seat) && (o.choir.length < CHOIR_LIMIT || discardableForRoom(s, o).length > 0));
+  const targets = others(s, seat).filter((o) => !protectedFrom(s, seat, o.seat, 'replace') && canAffordTribute(s, seat, o.seat) && (o.choir.length < choirLimit(s) || discardableForRoom(s, o).length > 0));
   if (!targets.length) return false;
   const pick = yield* chooseOne(s, seat, 'parasite.target', "Parasite: put it into another player's Choir.", targets.map((o) => seatOpt(s, o.seat)));
   if (!pick) return false;
@@ -87,7 +88,7 @@ export function* endOfDayTriggers(s: GameState, order: Seat[], scored: (seat: Se
     const othersScored = s.players.filter((o) => o.seat !== seat && scored(o.seat)).length;
     if (hasActive(s, seat, H.defiance) && scored(seat) && othersScored * 2 < s.players.length - 1) { yield* gain(s, seat, 1, H.defiance); log(s, 'defiance', `${p.name} gained 1 Glory (Defiance).`); }
     // Remnant: 1 Glory if 2 or more places in your Choir are empty.
-    if (hasActive(s, seat, H.remnant) && CHOIR_LIMIT - p.choir.length >= 2) { yield* gain(s, seat, 1, H.remnant); log(s, 'remnant', `${p.name} gained 1 Glory (Remnant).`); }
+    if (hasActive(s, seat, H.remnant) && choirLimit(s) - p.choir.length >= 2) { yield* gain(s, seat, 1, H.remnant); log(s, 'remnant', `${p.name} gained 1 Glory (Remnant).`); }
   }
   // Parasite (V45): its planter gains 1 when its holder's Choir scored nothing; it is discarded when their Choir scored.
   for (const p of s.players) {

@@ -2,7 +2,7 @@
 // "On your turn" Host abilities, and Celestial turn powers (once per Day).
 import { C, H, cardName } from './data';
 import {
-  altarAvailable, altarLabel, altarPeekable, altarShielded, ask, canAffordTribute, canSpend, cardOpt, CHOIR_LIMIT,
+  altarAvailable, altarLabel, altarPeekable, altarShielded, ask, canAffordTribute, canSpend, cardOpt,
   chooseOne, colorsOf, discardableForRoom, discardFromChoir, discardFromHand, drawHost, drawTo, enterChoir, gain,
   handLimit, log, lose, makeRoom, others, pay, payTribute, peekHost, pname, protectedFrom, removeFromChoir,
   sanctuaryAllows, seatFromOpt, seatOpt, snareHit, targetableChoir,

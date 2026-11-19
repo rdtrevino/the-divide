@@ -5,7 +5,10 @@ import { Game } from '../src/game';
 import { choirColors } from '../src/core';
 import { DEFAULT_RULES, type CoreRules } from '../src/rules';
 
-const VARIANTS: Partial<CoreRules>[] = [{ devotion: 1 }, { tokensEach: 8 }, { devotion: 1, tokensEach: 8 }];
+const VARIANTS: Partial<CoreRules>[] = [
+  { devotion: 1 }, { tokensEach: 8 }, { devotion: 1, tokensEach: 8 }, { harvest: 'always' }, { harvest: 'half' },
+  { harvest: 'always', miser: 3 }, { harvest: 'always', generous: 3 }, { handSize: 2 }, { handSize: 4 }, { choirLimit: 3 }, { choirLimit: 6 },
+];
 
 describe('core rule switches', () => {
   it('play whole games with legal answers', () => {
@@ -38,4 +41,21 @@ describe('core rule switches', () => {
       }
     }
   });
+
+  it('the Miser and the Generous score the fewest and the most Offers at the end (nobody if all tied)', () => {
+    for (const seed of [21, 22, 23, 24]) {
+      const g = new Game({ seed, mode: 'open', rules: { harvest: 'always', miser: 3, generous: 2 }, players: [0, 1, 2, 3].map((j) => ({ name: 'P' + j, isBot: true })) });
+      while (!g.over) for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, botAnswer(g.state, d));
+      const s = g.state, offers = s.players.map((p) => s.stats.filter((e) => e.seat === p.seat && e.type === 'action' && e.source === 'offer').length);
+      const lo = Math.min(...offers), hi = Math.max(...offers);
+      for (const p of s.players) {
+        const st = s.result!.standings.find((x) => x.seat === p.seat)!;
+        const devotionless = st.before + st.fromTokens;
+        const want = lo === hi ? 0 : (offers[p.seat] === lo ? -3 : 0) + (offers[p.seat] === hi ? 2 : 0);
+        expect(Math.max(0, devotionless + want) === p.glory || devotionless + want === p.glory).toBe(true);
+        expect(st.glory).toBe(p.glory);
+      }
+    }
+  });
 });
+

@@ -14,11 +14,11 @@ def pair(v, k, fmt='{:.2f}'):
 def mixr(v, m):
     x = v.get(m, {}).get('mixes')
     return '-' if not x else '{:.2f}–{:.2f}'.format(min(x.values()), max(x.values()))
-cols = ['variant', 'reader 4p/3p', 'align', 'skill', 'seats 4p / 3p', 'mixes 4p', 'with/against 4p', 'offer', 'gath', 'exalt', 'tok/pl', 'close', 'neutral', 'flips', 'tokens%/choir%']
+cols = ['variant', 'reader 4p/3p', 'align', 'skill', 'seats 4p / 3p', 'mixes 4p', 'with/against 4p', 'offer', 'gath', 'exalt', 'entropy', 'close choices', 'tok/pl', 'close days', 'neutral', 'flips', 'tokens%/choir%']
 print('| ' + ' | '.join(cols) + ' |'); print('|' + '---|' * len(cols))
 for name, v in rows.items():
     m4 = v.get('main4', {}); sk = v.get('skill4', {})
     print('| ' + ' | '.join([name, pair(v, 'reader'), pair(v, 'alignment'), f"{sk.get('skill', float('nan')):.2f}±{sk.get('skillSe', 0):.2f}" if sk else '-',
         pair(v, 'seatRange'), mixr(v, 'main4'), f"{m4.get('withWorld', 0):.2f}/{m4.get('againstWorld', 0):.2f}" if m4 else '-',
-        pair(v, 'offers'), pair(v, 'gathers'), pair(v, 'exalts'), pair(v, 'tokenOffersPerPlayer'), pair(v, 'closeDays'), pair(v, 'neutralDays'), pair(v, 'revealFlips'),
+        pair(v, 'offers'), pair(v, 'gathers'), pair(v, 'exalts'), pair(v, 'actionEntropy'), pair(v, 'closeChoices'), pair(v, 'tokenOffersPerPlayer'), pair(v, 'closeDays'), pair(v, 'neutralDays'), pair(v, 'revealFlips'),
         f"{m4.get('winnerGloryFromTokens', 0):.2f}/{m4.get('winnerGloryFromChoir', 0):.2f}" if m4 else '-']) + ' |')

@@ -67,6 +67,14 @@ function value(s: GameState, q: Seat): number {
   for (const t of p.tokens) v += tokenWorth(s, t);
   for (const c of activeCards(p)) v += choirCardValue(s, c.id) + (c.store ?? 0);
   const R = rulesOf(s);
+  if (R.miser || R.generous) {
+    // The Miser / the Generous (variants): the risk of ending with the fewest Offers, or the chance of the most,
+    // surer as the game goes on.
+    const offers = s.players.map((x) => s.stats.filter((e) => e.seat === x.seat && e.type === 'action' && e.source === 'offer').length);
+    const mine = offers[q], rest = offers.filter((_, k) => k !== q), f = Math.min(1, s.day / 7);
+    if (R.miser) v -= R.miser * f * (mine < Math.min(...rest) ? 1 : mine === Math.min(...rest) ? 0.5 : 0);
+    if (R.generous) v += R.generous * f * (mine > Math.max(...rest) ? 1 : mine === Math.max(...rest) ? 0.5 : 0);
+  }
   if (R.devotion) {
     // Devotion (a variant): Choir cards of the color you hold more tokens of score again at the end.
     const l = p.tokens.filter((t) => t === 'light').length, d = p.tokens.length - l, cc = choirColors(s, q);

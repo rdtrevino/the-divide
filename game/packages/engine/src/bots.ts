@@ -1,6 +1,7 @@
 // Computer players. Heuristic, not perfect: they weigh what a Light or a Dark Day is worth to them (their Choir
 // and their secret tokens), read the Altar, and answer every kind of decision sensibly.
-import { CHOIR_LIMIT, baseValue, choirColors, dirOf, hasActive } from './core';
+import { choirLimit, rulesOf } from './rules';
+import { baseValue, choirColors, dirOf, hasActive } from './core';
 import { CHOIR_PAY, DAYS, TOKEN_WEIGHT, daysWon } from './engine';
 import { E, H, HOST } from './data';
 import type { Answer, Decision, Dir, GameState, Option, Seat } from './types';
@@ -110,7 +111,7 @@ function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
     const n = s.players[seat].choir.filter((c) => !c.facedown && c.id !== id && (k === 'light' ? signed(s, c.id) > 0 : signed(s, c.id) < 0)).length;
     return n >= 3 ? 2 : 0.15 * n * 2;
   }
-  if (id === H.remnant) return CHOIR_LIMIT - s.players[seat].choir.length > 2 ? 0.8 : 0;
+  if (id === H.remnant) return choirLimit(s) - s.players[seat].choir.length > 2 ? 0.8 : 0;
   return ENGINE_RATE[id] ?? 0;
 }
 const daysLeft = (s: GameState) => daysAfter(s) + 1;
@@ -194,7 +195,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const p = s.players[seat];
       const scores: Record<string, number> = {};
       const now = dayValue(st, altar, w);
-      const room = p.choir.length < CHOIR_LIMIT;
+      const room = p.choir.length < choirLimit(s);
       const worst = worstChoirCard(s, seat, want);
       const replaced = room ? 0 : choirCardValue(s, worst?.id) + engineVal(s, seat, worst?.id);
       /** My stake if `id` joins my Choir (and the worst card leaves a full one). */
@@ -204,7 +205,8 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       };
       // No offering, no harvest: until you have Offered today, an Offer also lets your Choir score tonight.
       const cc = choirColors(s, seat);
-      const harvest = p.offeredToday ? 0 : dayValue({ light: CHOIR_PAY * cc.light, dark: CHOIR_PAY * cc.dark }, altar, w);
+      const unlock = rulesOf(s).harvest === 'offer' ? 1 : rulesOf(s).harvest === 'half' ? 0.5 : 0;
+      const harvest = p.offeredToday ? 0 : unlock * dayValue({ light: CHOIR_PAY * cc.light, dark: CHOIR_PAY * cc.dark }, altar, w);
       if (has('offer')) {
         const cards = p.hand.map((c) => dayValue(st, altar + signed(s, c), w) - now - 0.15 * choirCardValue(s, c));
         const tokens = (['light', 'dark'] as const).filter((k) => p.tokens.includes(k)).map((k) => {
@@ -295,7 +297,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     }
     case 'gather.source': {
       const p = s.players[seat];
-      const room = p.choir.length < CHOIR_LIMIT;
+      const room = p.choir.length < choirLimit(s);
       const worst = worstChoirCard(s, seat, want);
       const now = dayValue(st, altar, w);
       const o = pickBest(d.options, (o) => {

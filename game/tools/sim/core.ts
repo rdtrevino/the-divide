@@ -3,7 +3,7 @@
 // (engine rules.ts); the learned bot cannot, since it has the current rules built in.
 // Usage: npx tsx core.ts <variant> <mode> <games>   (prints one JSON line)
 //   modes: main3, main4 (strong bots in every seat), skill4 (one strong bot among three heuristic bots)
-import { DAYS, Game, STRONG, botAnswer, choirColors, strongAnswer, type GameState } from '@divide/engine';
+import { DAYS, Game, STRONG, botAnswer, choirColors, isSearched, searchScores, strongAnswer, type Decision, type GameState } from '@divide/engine';
 import { pmap } from '../par';
 import { ReaderLog, fitReader } from './readerlib';
 import { VARIANTS } from './variants';
@@ -20,8 +20,20 @@ const games = await pmap(G, (i) => {
   const dealt = g.state.players.map((p) => p.tokens.filter((t) => t === 'light').length - p.tokens.filter((t) => t === 'dark').length);
   const strong = mode === 'skill4' ? new Set([i % n]) : new Set(Array.from({ length: n }, (_, k) => k));
   const reader = new ReaderLog(n);
+  // How hard each Offer / Gather / Exalt choice is: the gap between the strong bot's two best estimates (the same
+  // search strongAnswer runs, so play is unchanged).
+  const gaps: number[] = [];
+  const strongPlay = (d: Decision) => {
+    if (d.tag !== 'action' || !isSearched(d)) return strongAnswer(g, d, STRONG);
+    const { ids, scores } = searchScores(g, d, STRONG);
+    let b = 0;
+    for (let k = 1; k < ids.length; k++) if (scores[k] > scores[b]) b = k;
+    const sorted = [...scores].sort((x, y) => y - x);
+    gaps.push(sorted[0] - sorted[1]);
+    return [ids[b]];
+  };
   while (!g.over) {
-    for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, strong.has(d.seat) ? strongAnswer(g, d, STRONG) : botAnswer(g.state, d));
+    for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, strong.has(d.seat) ? strongPlay(d) : botAnswer(g.state, d));
     if (mode !== 'skill4') reader.update(g.state);
   }
   const s: GameState = g.state, r = s.result!;
@@ -46,12 +58,13 @@ const games = await pmap(G, (i) => {
   });
   const leaderBefore = players.reduce((b, p, k) => (p.before > players[b].before ? k : b), 0);
   return {
-    players, rows: reader.rows, tested: i % n,
+    players, rows: reader.rows, tested: i % n, gaps,
     close: s.tides.filter((t) => t.dir !== 'neutral' && t.margin <= 1).length, neutral: s.tides.filter((t) => t.dir === 'neutral').length, days: s.tides.length,
     flip: !r.winners.includes(leaderBefore) ? 1 : 0,
   };
 });
 
+const entropy = (xs: number[]) => { const t = xs.reduce((a, b) => a + b, 0); return -xs.reduce((h, x) => (x ? h + (x / t) * Math.log2(x / t) : h), 0); };
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
 const se = (xs: number[]) => { const m = mean(xs); return Math.sqrt(xs.reduce((t, x) => t + (x - m) ** 2, 0) / Math.max(1, xs.length - 1) / Math.max(1, xs.length)); };
 const r2 = (x: number) => +x.toFixed(2);
@@ -82,6 +95,10 @@ if (mode === 'skill4') {
     revealFlips: r2(mean(games.map((g) => g.flip))),
     winnerGloryFromTokens: r2(mean(winners.map((p) => p.fromTokens / Math.max(1, p.glory)))), winnerGloryFromChoir: r2(mean(winners.map((p) => p.reap / Math.max(1, p.glory)))),
     margin: r2(mean(games.map((g) => { const gl = g.players.map((p) => p.glory).sort((a, b) => b - a); return gl[0] - gl[1]; }))),
+    // Real decisions: the share of action choices whose two best options were within 1 Glory, and how evenly the three
+    // actions are used (entropy in bits; 1.58 is all three equally).
+    closeChoices: r2(mean(games.flatMap((g) => g.gaps).map((x) => (x < 1 ? 1 : 0)))),
+    actionEntropy: r2(entropy([all.reduce((t, p) => t + p.offers, 0), all.reduce((t, p) => t + p.gathers, 0), all.reduce((t, p) => t + p.exalts, 0)])),
   });
 }
 out.secondsPerGame = r2((performance.now() - t0) / 1000 / G);
