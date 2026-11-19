@@ -1,0 +1,218 @@
+{
+ "version": "V45",
+ "date": "2026-11-19",
+ "previous": "V45",
+ "changes": {
+  "Eternity": {
+   "text": "At the end of the Day: You may keep one card on the Altar, face up, through the next Day.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Raguel": {
+   "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At the end of each Day their Choir scores more than yours, gain 1 Glory.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark; ability eased, as a scoring card it measured 1.39 to 1.43",
+   "wording": false
+  },
+  "Firmament": {
+   "text": "At the end of the Day: If the Day was won by exactly 1, gain 1 Glory.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Stillness": {
+   "text": "At the end of the Day: If the Tide was Neutral (a tie or an empty Altar), gain 1 Glory.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Council": {
+   "text": "In the Morning: You may name another player. At the end of the Day, if both your Choirs scored, each of you gains 1 Glory.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Prophecy": {
+   "text": "In the Morning: Declare Light or Dark. At the end of the Day, if the Tide matches, gain 1 Glory; otherwise (a Neutral Tide included), lose 1 Glory.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Moderation": {
+   "text": "At the end of the Day: If your Choir holds as many Light cards as Dark cards, gain 1 Glory.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Flaming Sword": {
+   "text": "On your turn: No other player may Exalt until the start of your next turn.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark; ability eased, as a scoring card it measured 1.39 to 1.43",
+   "wording": false
+  },
+  "Jubilee": {
+   "text": "On your turn: You may discard any number of cards from your hand, then draw back up to your hand limit.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Vessel": {
+   "text": "On your turn: You may place a card from your hand on the Altar facedown (this is not an Offer). At the end of the Day, if it is still there, gain 1 Glory if it matches the Tide, or lose 1 if it opposes it.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Light +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Fig Leaves": {
+   "text": "In the Evening, before the Altar is revealed: You may take back into your hand one facedown card you Offered this Day.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Outcast": {
+   "text": "At the end of the Day: If you have the least Glory (or are tied for it), gain 1 Glory.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Heresy": {
+   "text": "On your turn: You may pay 1 Glory. At this Day's Reaping, your Choir scores its cards of the losing color instead.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Mirage": {
+   "text": "Other players cannot Gather, flip, look at, exchange, or destroy cards you placed on the Altar before the Evening.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Veil": {
+   "text": "At the end of the Day: If more Altar cards were facedown than face up when it was revealed, gain 1 Glory.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Apple": {
+   "text": "At the end of the Day: If the Tide turned (the side that won today lost yesterday), gain 1 Glory.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Forger": {
+   "text": "When you Gather or Exalt, you may take the card from the discard pile instead.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Watchers": {
+   "text": "On your turn: Look at the top 3 cards of the Host deck. Put 1 into your hand and discard a card from your hand, then return the rest in any order.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Ordeal": {
+   "text": "On your turn: You may invoke this card. At this Reaping, your Choir scores double; if it scores nothing, lose 2 Glory.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark; ability eased, as a scoring card it measured 1.39 to 1.43",
+   "wording": false
+  },
+  "Zealot": {
+   "text": "At the end of the Day: If every other card in your Choir (at least 3) shares one alignment, gain 1 Glory.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): fewer Neutral cards. A Neutral card never scores at the Reaping, so all 23 were traps (0.50 to 0.70 of a fair share). Made Dark +1, keeping its ability; the deck stays mirrored, 33 Light and 33 Dark",
+   "wording": false
+  },
+  "Nephilim": {
+   "text": "This card counts as both Light +1 and Dark +1 for any card that asks for one. On the Altar its two values cancel, and at the Reaping it scores 1 whichever side wins.",
+   "why": "Scoring as both colors measured 1.31 to 1.42 (V45): it now scores 1 on any won Day"
+  },
+  "Twilight": {
+   "text": "At the end of the Day: If the other cards in your Choir hold as many Light cards as Dark cards (at least 1 each), gain 3 Glory.",
+   "why": "Stays Neutral (it is the in-between), so it never scores at the Reaping: 3 Glory instead of 2 (V45)"
+  },
+  "Uriel": {
+   "text": "At the end of the Day: If your Choir has 3 or more other Light cards, gain 1 Glory.",
+   "why": "With a mostly colored deck a full Light Choir is common: 1.29 to 1.41 at 2 Glory (V45)"
+  },
+  "Beelzebub": {
+   "text": "At the end of the Day: If your Choir has 3 or more other Dark cards, gain 1 Glory.",
+   "why": "Mirrors Uriel (V45)"
+  },
+  "Hubris": {
+   "text": "At the end of the Day: If the player with the most Glory gained 8 or more Glory this Day, they give 1 to you.",
+   "why": "1.26 to 1.28 at 6 (V45)"
+  },
+  "Moloch": {
+   "text": "On your turn: You may discard 1 other Host card from your Choir to gain 2 Glory. Its ability must not have been used this turn.",
+   "why": "A Choir card now scores every Day its color wins, so giving one up is dearer: 0.64 at 1 Glory (V45)"
+  }
+ },
+ "celestials": {
+  "The Tempest": {
+   "text": "When you Offer, you may destroy a card on the Altar, face up or facedown.",
+   "why": "0.80 to 0.89 when it could only destroy face-up cards (V45)"
+  },
+  "The Eclipse": {
+   "text": "In the Evening, before the Altar is revealed: Choose a Light or Dark card in your Choir. It counts as the other color at this Day's Reaping.",
+   "why": "Counting as both measured 1.43 to 1.64 (V45): now a guess made before the reveal"
+  },
+  "The Cantor": {
+   "text": "When you Offer a card, you may Offer a second card with it. Both go facedown, and they count as one Offer.",
+   "why": "0.75 to 0.77 with matching pairs face up (V45): now a bigger, hidden push"
+  },
+  "The Patron": {
+   "text": "On your turn: Exchange a card from your hand with a card in another player's Choir.",
+   "why": "Giving a card now always helps its receiver (V45; 0.61 to 0.78): the Patron now takes one in exchange"
+  },
+  "The Whisper": {
+   "text": "In the Morning: Name Light or Dark aloud. If that side wins the Day, gain 2 Glory; if the other side wins, lose 1.",
+   "why": "Making every card score measured 1.73 to 1.96 (V45)"
+  },
+  "The Arbiter": {
+   "text": "When your Choir scores at the Reaping, take 1 of that Glory from another player whose Choir scored less.",
+   "why": "Few Choirs score nothing in a colored deck (V45; 0.72 to 0.81)"
+  }
+ },
+ "events": {}
+}

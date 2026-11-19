@@ -2,6 +2,7 @@
 // Usage: npx tsx advanced.ts <games> [offset] [out.json]
 import { writeFileSync } from 'node:fs';
 import { CELESTIALS, EVENTS, cardName, playBotGame } from '@divide/engine';
+import { BOT } from './bot';
 
 const [gamesArg, offArg, outArg] = process.argv.slice(2);
 const GAMES = Number(gamesArg ?? 4000);
@@ -18,7 +19,7 @@ let days = 0;
 const len = { 3: [] as number[], 4: [] as number[] };
 for (let g = 0; g < GAMES; g++) {
   const n = g % 2 ? 4 : 3;
-  const s = playBotGame({ seed: 700000 + OFF + g, mode: 'open', advanced: true, players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) }).state;
+  const s = playBotGame({ seed: 700000 + OFF + g, mode: 'open', advanced: true, players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) }, 20000, [], BOT).state;
   const res = s.result!;
   (len as any)[n].push(s.day);
   const share = 1 / res.winners.length;

@@ -1,6 +1,7 @@
 // Play rate of every Host card: how often it is held, and how it gets played (Offered, Exalted, Gathered, ability used).
 // Usage: npx tsx playrate.ts GAMES
-import { Game, botAnswer, HOSTS } from '@divide/engine';
+import { Game, HOSTS } from '@divide/engine';
+import { answer } from './bot';
 const N = Number(process.argv[2] ?? 2000);
 const z = () => Object.fromEntries(HOSTS.map((h: any) => [h.id, 0])) as Record<string, number>;
 const heldGames = z(), heldSeats = z(), heldDays = z(), offered = z(), exalted = z(), gathered = z(), fired = z();
@@ -12,7 +13,7 @@ for (let i = 0; i < N; i++) {
   const held = g.state.players.map(() => new Set<string>());
   let day = g.state.day;
   while (!g.over) {
-    for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, botAnswer(g.state, d));
+    for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, answer(g.state, d));
     if (g.state.day !== day || g.over) { day = g.state.day; for (const p of g.state.players) for (const c of p.choir) if (!c.facedown) { held[p.seat].add(c.id); heldDays[c.id] = (heldDays[c.id] ?? 0) + 1; } }
   }
   const any = new Set<string>();

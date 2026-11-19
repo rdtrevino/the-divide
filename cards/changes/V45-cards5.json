@@ -1,0 +1,13 @@
+{
+ "version": "V45",
+ "date": "2026-11-19",
+ "previous": "V45",
+ "changes": {
+  "Morning Star": {
+   "text": "On your turn: You may pay 1 Glory. Choose a card in your Choir. It counts as the opposite alignment this Day.",
+   "why": "Free, it turned a losing card almost every Day once every card has a color (V45: 1.31)"
+  }
+ },
+ "celestials": {},
+ "events": {}
+}

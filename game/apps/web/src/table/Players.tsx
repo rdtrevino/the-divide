@@ -1,10 +1,10 @@
 // The players around the table: opponents along the top, you along the bottom.
-// Each panel keeps its facts (name, Glory, lean, hand size, notes) beside its cards, not above
+// Each panel keeps its facts (name, Glory, Choir colors, tokens, hand size, notes) beside its cards, not above
 // and below them, so the whole table fits on one screen.
 import { CHOIR_LIMIT, type GameView } from '@divide/engine';
 import { useContext } from 'preact/hooks';
 import { Card } from '../components/Card';
-import { Countdown, alignText, alignTip, alignTone, choirTag, seatColor, statusNotes } from './bits';
+import { Countdown, choirTag, colorsTip, seatColor, statusNotes } from './bits';
 import { PickCtx } from './pick';
 
 export interface Waiting { seat: number; deadline: number | null }
@@ -49,6 +49,26 @@ function ChoirCards(p: { view: GameView; seat: number; w: string; full?: boolean
   );
 }
 
+function ChoirChip(p: { c: { light: number; dark: number }; whose: string }) {
+  return <span class="choirchip" data-tip={colorsTip(p.c, p.whose)}><b class="light">☀{p.c.light}</b><b class="dark">☾{p.c.dark}</b></span>;
+}
+
+/** Your secret tokens, and what they are worth on the Tide track so far. */
+function MyTokens(p: { view: GameView; seat: number }) {
+  const pl = p.view.players[p.seat];
+  const t = pl.tokens ?? [];
+  const L = t.filter((x) => x === 'light').length, D = t.length - L;
+  const won = { light: 0, dark: 0 };
+  for (const x of p.view.tides) if (!x.void && x.dir !== 'neutral') won[x.dir]++;
+  const worth = L * won.light + D * won.dark;
+  return (
+    <span class="tokchip mine" data-tip={`Your secret tokens: ${L} Light, ${D} Dark. Each scores 1 for every Day its color wins: ${worth} so far. Offer each Day, or your Choir will not score that Evening`}>
+      <i />{Array.from({ length: L }, () => <b class="tok light" />)}{Array.from({ length: D }, () => <b class="tok dark" />)}
+      <small>{worth} so far</small>
+    </span>
+  );
+}
+
 function Status(p: { isBot: boolean; connected: boolean; away: boolean; first: boolean; waiting?: Waiting; skew: number }) {
   return (
     <>
@@ -76,9 +96,10 @@ export function PlayerPanel(p: { view: GameView; seat: number; waiting?: Waiting
       <div class="pp-info">
         <div class="pp-name-row"><span class="pp-dot" /><span class="pp-name">{pl.name}</span></div>
         <div class="pp-status"><Status isBot={pl.isBot} connected={p.connected} away={p.away} first={p.view.firstPlayer === p.seat && p.view.phase !== 'ended'} waiting={p.waiting} skew={p.skew} /></div>
-        <div class="pp-glory" data-tip={`${pl.name} has ${pl.glory} Glory. The first to 12 ends the game`}><b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small></div>
+        <div class="pp-glory" data-tip={`${pl.name} has ${pl.glory} Glory so far. Tokens are added at the end`}><b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small></div>
         <div class="pp-tags">
-          <span class={`align ${alignTone(pl.alignment)}`} data-tip={alignTip(pl.alignment, `${pl.name}'s`)}>{alignText(pl.alignment)}</span>
+          <ChoirChip c={pl.colors} whose={`${pl.name}'s`} />
+          <span class="tokchip" data-tip={`${pl.name} holds ${pl.tokenCount} secret allegiance token${pl.tokenCount === 1 ? '' : 's'}`}><i />{pl.tokenCount}</span>
           <span class="pp-handcount" id={`hand-${p.seat}`} data-tip={`${pl.name} holds ${pl.handCount} card${pl.handCount === 1 ? '' : 's'} in hand`}><i />{pl.handCount}</span>
         </div>
         <div class="pp-notes"><Notes view={p.view} seat={p.seat} /></div>
@@ -107,11 +128,12 @@ export function MyArea(p: { view: GameView; seat: number }) {
     <div class={`mine${active ? ' active' : ''}`} style={{ '--seat': seatColor(p.seat) } as any}>
       <div class="mine-me">
         <div class="mine-name"><span class="pp-dot" />{pl.name}{p.view.firstPlayer === p.seat && p.view.phase !== 'ended' && <span class="pp-first" data-tip="You are the first player this Day">1st</span>}</div>
-        <div class="mine-glory" data-tip="Your Glory. The first to 12 ends the game">
+        <div class="mine-glory" data-tip="Your Glory so far. Your tokens are added at the end">
           <b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small>
         </div>
         <div class="mine-notes">
-          <span class={`align ${alignTone(pl.alignment)}`} data-tip={alignTip(pl.alignment, 'Your')}>{alignText(pl.alignment)}</span>
+          <ChoirChip c={pl.colors} whose="Your" />
+          <MyTokens view={p.view} seat={p.seat} />
           <Notes view={p.view} seat={p.seat} />
         </div>
       </div>

@@ -1,0 +1,486 @@
+// Every rework tested in the lab. Targets are filled per player count after calibration (target3, target4).
+import { type Rules, TABLES } from './core';
+
+type V = Partial<Rules> & { target3?: number; target4?: number };
+
+export const VARIANTS: Record<string, V> = {
+  // ---- Round 1: scoring and the Offer's reward (vanilla deck, no abilities)
+  v44: {},
+  v44_match: { offerReward: 'match' },
+  spoils_flat: { score: TABLES.spoils },
+  spoils_match: { score: TABLES.spoils, offerReward: 'match' },
+  spoils_none: { score: TABLES.spoils, offerReward: 'none' },
+  spoilsLone_match: { score: TABLES.spoilsLone, offerReward: 'match' },
+  spoils42_match: { score: TABLES.spoils42, offerReward: 'match' },
+  spoils421L_match: { score: TABLES.spoils421L, offerReward: 'match' },
+  mirror1_match: { score: TABLES.mirror1, offerReward: 'match' },
+  pair_match: { score: TABLES.pair, offerReward: 'match' },
+  flat2_match: { score: TABLES.flat2, offerReward: 'match' },
+  sym_match: { score: TABLES.sym, offerReward: 'match' },
+};
+
+const T = (win: number[], lose: number[]) => ({ win: [0, ...win, 0, 0, 0], lose: [0, ...lose, ...Array(5).fill(lose[lose.length - 1] ?? 0)] });
+
+Object.assign(VARIANTS, {
+  // ---- Round 2: more scoring tables, all with Tide-matched Offers
+  s220_match: { score: T([2, 2, 0], [0]), offerReward: 'match' },
+  s220L_match: { score: T([2, 2, 0], [-1, 0]), offerReward: 'match' },
+  s320_match: { score: T([3, 2, 0], [0]), offerReward: 'match' },
+  s320L_match: { score: T([3, 2, 0], [-1, 0]), offerReward: 'match' },
+  s310L_match: { score: T([3, 1, 0], [-1, 0]), offerReward: 'match' },
+  s321_match: { score: T([3, 2, 1, 0], [0]), offerReward: 'match' },
+  s330_match: { score: T([3, 3, 0], [0]), offerReward: 'match' },
+  s420L_match: { score: T([4, 2, 0], [-1, 0]), offerReward: 'match' },
+  s220_none: { score: T([2, 2, 0], [0]), offerReward: 'none' },
+  s220_flat: { score: T([2, 2, 0], [0]), offerReward: 'flat' },
+} as Record<string, V>);
+
+const CORE: V = { score: T([3, 2, 0], [0]), offerReward: 'match' };
+Object.assign(VARIANTS, {
+  // ---- Round 3: structure, on the working core (alone 3, two 2, three+ 0; no losses; Offers pay when they match the Tide)
+  core: CORE,
+  core_anon: { ...CORE, anonymous: true },
+  core_omen1: { ...CORE, omens: 1 },
+  core_omen2: { ...CORE, omens: 2 },
+  core_catchup: { ...CORE, order: 'catchup' },
+  core_fbet: { ...CORE, fruitsBet: true },
+  core_2turns: { ...CORE, turns: 2 },
+  core_choir3: { ...CORE, choirMax: 3 },
+  core_hand4: { ...CORE, hand: 4 },
+  core_backhand: { ...CORE, replaced: 'hand' },
+  core_nofruits: { ...CORE, fruits: false },
+  core_noblind: { ...CORE, gatherBlind: false },
+  core_start3: { ...CORE, choirStart: 3 },
+} as Record<string, V>);
+
+const C2: V = { score: T([3, 2, 0], [-1, 0]), offerReward: 'match' };
+Object.assign(VARIANTS, {
+  // ---- Round 4: combinations (alone 3 / two 2 / three+ 0; a lone loser -1; Tide-matched Offers)
+  c_lone: C2,
+  c_omen: { ...C2, omens: 1 },
+  c_omen_s3: { ...C2, omens: 1, choirStart: 3 },
+  c_omen_cu: { ...C2, omens: 1, order: 'catchup' },
+  c_omen_s3_cu: { ...C2, omens: 1, choirStart: 3, order: 'catchup' },
+  c_nl_omen_s3: { ...CORE, omens: 1, choirStart: 3 },
+  c_omen_h4: { ...C2, omens: 1, hand: 4 },
+  c_omen_s3_h4: { ...C2, omens: 1, choirStart: 3, hand: 4 },
+  c_omen2_s3: { ...C2, omens: 2, choirStart: 3 },
+} as Record<string, V>);
+
+Object.assign(VARIANTS, {
+  // ---- Round 5: the Crown (the sole leader's Choir counts as two Choirs)
+  k_nl_omen_s3: { ...CORE, omens: 1, choirStart: 3, crown: 2 },
+  k_omen_s3: { ...C2, omens: 1, choirStart: 3, crown: 2 },
+  k_omen: { ...C2, omens: 1, crown: 2 },
+  k_nl_omen: { ...CORE, omens: 1, crown: 2 },
+  k_nl_omen_s3_h4: { ...CORE, omens: 1, choirStart: 3, hand: 4, crown: 2 },
+  k_omen_s3_h4: { ...C2, omens: 1, choirStart: 3, hand: 4, crown: 2 },
+  k_220_omen_s3: { score: T([2, 2, 0], [0]), offerReward: 'match', omens: 1, choirStart: 3, crown: 2 },
+} as Record<string, V>);
+
+// ---- Round 7: the engine layer. Each ability appears on a Light and a Dark card (or two Neutral cards).
+const K: V = { ...CORE, omens: 1, choirStart: 3, crown: 2 };
+const ENGINE_24 = {
+  L1: 9, D1: 9, L2: 2, D2: 2, N: 4,
+  'L1:herald': 2, 'D1:herald': 2, 'L1:banner': 1, 'D1:banner': 1, 'L1:bond': 1, 'D1:bond': 1,
+  'L1:trumpet': 1, 'D1:trumpet': 1, 'L1:store': 1, 'D1:store': 1, 'L1:tithe': 1, 'D1:tithe': 1,
+  'L1:zealot': 1, 'D1:zealot': 1, 'N:seer': 2, 'N:sanctuary': 2, 'N:turncoat': 2, 'N:twilight': 2,
+};
+Object.assign(VARIANTS, {
+  e24_s3: { ...K, deck: ENGINE_24 },
+  e24_s2: { ...K, choirStart: 2, deck: ENGINE_24 },
+  e24_s2_c3: { ...K, choirStart: 2, choirMax: 3, deck: ENGINE_24 },
+} as Record<string, V>);
+
+const ENGINE_B = {
+  L1: 9, D1: 9, L2: 2, D2: 2, N: 4,
+  'L1:banner2': 1, 'D1:banner2': 1, 'L1:bond': 1, 'D1:bond': 1, 'L1:tithe': 1, 'D1:tithe': 1, 'L1:hedge': 1, 'D1:hedge': 1,
+  'L1:trumpet': 1, 'D1:trumpet': 1, 'L1:zealot': 1, 'D1:zealot': 1, 'L1:store3': 1, 'D1:store3': 1,
+  'N:seer': 2, 'N:sanctuary': 2, 'N:turncoat': 2, 'N:scribe': 2,
+};
+const ENGINE_S = { // sparse: 11 ability cards
+  L1: 12, D1: 12, L2: 2, D2: 2, N: 6,
+  'L1:banner2': 1, 'D1:banner2': 1, 'L1:tithe': 1, 'D1:hedge': 1, 'L1:bond': 1, 'D1:zealot': 1, 'L1:store3': 1, 'D1:trumpet': 1,
+  'N:seer': 1, 'N:turncoat': 1, 'N:scribe': 1,
+};
+Object.assign(VARIANTS, {
+  eb_s2: { ...K, choirStart: 2, deck: ENGINE_B },
+  eb_s3: { ...K, deck: ENGINE_B },
+  es_s2: { ...K, choirStart: 2, deck: ENGINE_S },
+} as Record<string, V>);
+
+const ENGINE_M = {
+  L1: 10, D1: 10, L2: 2, D2: 2, N: 4,
+  'L1:banner2': 1, 'D1:banner2': 1, 'L1:bond': 1, 'D1:bond': 1, 'L1:hedge': 1, 'D1:hedge': 1, 'L1:zealot': 1, 'D1:zealot': 1,
+  'L1:store3': 1, 'D1:store3': 1, 'L1:horn': 1, 'D1:horn': 1,
+  'N:tithe': 2, 'N:prophet': 2, 'N:sanctuary': 1, 'N:turncoat': 1,
+};
+Object.assign(VARIANTS, {
+  em_s2: { ...K, choirStart: 2, deck: ENGINE_M },
+  em_s3: { ...K, deck: ENGINE_M },
+  em_s2_l: { ...C2, omens: 1, crown: 2, choirStart: 2, deck: ENGINE_M }, // with a lone loser -1
+  em_s2_220: { score: T([2, 2, 0], [0]), offerReward: 'match', omens: 1, crown: 2, choirStart: 2, deck: ENGINE_M },
+} as Record<string, V>);
+
+const ENGINE_M2 = {
+  L1: 10, D1: 10, L2: 2, D2: 2, N: 4,
+  'L1:banner2': 1, 'D1:banner2': 1, 'L1:bond': 1, 'D1:bond': 1, 'L1:hedge': 1, 'D1:hedge': 1, 'L1:zealot2': 1, 'D1:zealot2': 1,
+  'L1:store3': 1, 'D1:store3': 1, 'L1:horn': 1, 'D1:horn': 1,
+  'N:tithe': 2, 'N:prophet': 2, 'N:sanctuary': 1, 'N:turncoat': 1,
+};
+Object.assign(VARIANTS, {
+  em2_s2: { ...K, choirStart: 2, deck: ENGINE_M2 },
+  em2_s2_220: { score: T([2, 2, 0], [0]), offerReward: 'match', omens: 1, crown: 2, choirStart: 2, deck: ENGINE_M2 },
+  em2_s3: { ...K, deck: ENGINE_M2 },
+} as Record<string, V>);
+
+const ENGINE_F = { // final candidate: 10 abilities, 16 ability cards, 44 cards
+  L1: 10, D1: 10, L2: 2, D2: 2, N: 4,
+  'L1:banner2': 1, 'D1:banner2': 1, 'L1:bond': 1, 'D1:bond': 1, 'L1:hedge': 1, 'D1:hedge': 1, 'L1:zealot1': 1, 'D1:zealot1': 1,
+  'L1:store3': 1, 'D1:store3': 1, 'L1:trumpet2': 1, 'D1:trumpet2': 1,
+  'N:traitor': 2, 'N:prophet': 2, 'N:turncoat': 2,
+};
+const ENGINE_FS = { // sparser: 12 ability cards, 44 cards
+  L1: 12, D1: 12, L2: 2, D2: 2, N: 4,
+  'L1:banner2': 1, 'D1:banner2': 1, 'L1:bond': 1, 'D1:bond': 1, 'L1:hedge': 1, 'D1:hedge': 1,
+  'L1:store3': 1, 'D1:zealot1': 1, 'L1:trumpet2': 1, 'D1:trumpet2': 1, 'N:traitor': 1, 'N:prophet': 1,
+};
+Object.assign(VARIANTS, {
+  ef: { ...K, choirStart: 2, deck: ENGINE_F },
+  ef_220: { score: T([2, 2, 0], [0]), offerReward: 'match', omens: 1, crown: 2, choirStart: 2, deck: ENGINE_F },
+  efs: { ...K, choirStart: 2, deck: ENGINE_FS },
+  ef_vanilla: { ...K, choirStart: 2, deck: { L1: 18, D1: 18, L2: 2, D2: 2, N: 4 } },
+} as Record<string, V>);
+
+Object.assign(VARIANTS, {
+  final: { ...K, choirStart: 2, deck: ENGINE_F, target: 12, target3: 12, target4: 12 },
+  v44_ref: { target: 12, target3: 12, target4: 12 },
+} as Record<string, V>);
+
+Object.assign(VARIANTS, {
+  final_tb: { ...K, choirStart: 2, deck: ENGINE_F, target: 12, target3: 12, target4: 12, tieBreak: 'yesterday' },
+} as Record<string, V>);
+
+// ---- Round 16: Robert's questions. Base = the recommended rules (final_tb); one change each.
+const FB: V = { ...K, choirStart: 2, deck: ENGINE_F, target: 12, target3: 12, target4: 12, tieBreak: 'yesterday' };
+Object.assign(VARIANTS, {
+  q_base: FB,
+  q_lose1: { ...FB, score: T([3, 2, 0], [-1]) },                       // every Choir against the Tide loses 1
+  q_heavy: { ...FB, score: T([3, 2, 0], [-1]), loseHeavy: 2 },         // only Choirs leaning by 2 or more lose 1
+  q_luke: { ...FB, score: T([3, 2, 0], [-1]), neutralLoss: 1 },        // against loses 1, and a Neutral Choir loses 1
+  q_lone: { ...FB, score: T([3, 2, 0], [-1, 0]) },                     // only a lone Choir against loses 1
+  q_heavyluke: { ...FB, score: T([3, 2, 0], [-1]), loseHeavy: 2, neutralLoss: 1 },
+  q_p1: { ...FB, score: T([3, 1, 0], [0]) },                           // a pair gains 1 each
+  q_p1_lose1: { ...FB, score: T([3, 1, 0], [-1]) },
+  q_p1_heavy: { ...FB, score: T([3, 1, 0], [-1]), loseHeavy: 2 },
+  q_nocrown: { ...FB, crown: 1 },
+  q_softcrown: { ...FB, crown: 1, crownTax: 1 },                       // the sole leader gains 1 less at the Reaping
+  q_noomen: { ...FB, omens: 0 },
+} as Record<string, V>);
+
+const LONE = T([3, 2, 0], [-1, 0]);
+Object.assign(VARIANTS, {
+  // ---- Round 17: stakes without herding, and a gentler Crown
+  q_betloss: { ...FB, betLoss: 1 },
+  q_lone_betloss: { ...FB, score: LONE, betLoss: 1 },
+  q_soft_lone: { ...FB, score: LONE, crown: 1, crownTax: 1 },
+  q_soft_lone_t13: { ...FB, score: LONE, crown: 1, crownTax: 1, target: 13, target3: 13, target4: 13 },
+  q_soft_lone_t14: { ...FB, score: LONE, crown: 1, crownTax: 1, target: 14, target3: 14, target4: 14 },
+  q_soft_lone_bl: { ...FB, score: LONE, crown: 1, crownTax: 1, betLoss: 1 },
+  q_p1_soft_lone: { ...FB, score: T([3, 1, 0], [-1, 0]), crown: 1, crownTax: 1 },
+  q_soft_lone_cu: { ...FB, score: LONE, crown: 1, crownTax: 1, order: 'catchup' },
+} as Record<string, V>);
+
+Object.assign(VARIANTS, {
+  // ---- Round 18
+  q_soft_bl: { ...FB, crown: 1, crownTax: 1, betLoss: 1 },
+  q_soft_bl_t13: { ...FB, crown: 1, crownTax: 1, betLoss: 1, target: 13, target3: 13, target4: 13 },
+  q_420_soft_bl: { ...FB, score: T([4, 2, 0], [0]), crown: 1, crownTax: 1, betLoss: 1, target: 13, target3: 13, target4: 13 },
+  q_p1_nocrown_bl: { ...FB, score: T([3, 1, 0], [0]), crown: 1, betLoss: 1 },
+  q_soft: { ...FB, crown: 1, crownTax: 1 },
+} as Record<string, V>);
+
+// ---- Round 19: Pantheons. Recommended rules: 3/2/0, wrong bets cost 1, soft Crown, the Omen, a tie keeps yesterday's Tide.
+const REC: V = { ...FB, crown: 1, crownTax: 1, betLoss: 1, target: 13, target3: 13, target4: 13 };
+const LIGHT_POOL = ['L1:treeOfLife', 'L1:uriel', 'L1:remnant2', 'L1:seraph', 'L1:martyr', 'L1:michael', 'L1:raphael', 'L1:store', 'L1:mercy2', 'L1:turncoat'];
+const DARK_POOL = ['D1:leviathan', 'D1:defiance', 'D1:uriel', 'D1:favor2', 'D1:hubris', 'D1:seraph', 'D1:snare', 'D1:envy', 'D1:anathema', 'D1:winnowing', 'D1:raphael', 'D1:abaddon', 'D1:scapegoat', 'D1:store', 'D1:bounty2'];
+const NEUTRAL_POOL = ['N:firmament', 'N:outcastOld', 'N:council', 'N:stillness2', 'N:apple', 'N:moderation2', 'N:prophecy', 'N:mirage', 'N:vessel', 'N:ordeal', 'N:acolyte'];
+const PLAIN = { L1: 10, D1: 10, L2: 1, D2: 1, N: 4 };
+Object.assign(VARIANTS, {
+  rec: { ...REC },
+  rec_pantheon: { ...REC, pantheon: { base: PLAIN, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [7, 7, 4] } },
+  rec_pantheon_s: { ...REC, pantheon: { base: { L1: 13, D1: 13, L2: 1, D2: 1, N: 4 }, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [4, 4, 4] } },
+  rec_all: { ...REC, pantheon: { base: { L2: 1, D2: 1 }, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [10, 15, 11] } },
+} as Record<string, V>);
+
+// ---- Round 20: race to 12 with Pantheons, and a fixed Starter Pantheon of mirrored pairs
+const STARTER = {
+  ...PLAIN,
+  'L1:treeOfLife': 1, 'L1:store': 1, 'L1:raphael': 1, 'L1:seraph': 1, 'L1:uriel': 1, 'L1:mercy2': 1, 'L1:turncoat': 1,
+  'D1:leviathan': 1, 'D1:store': 1, 'D1:raphael': 1, 'D1:seraph': 1, 'D1:uriel': 1, 'D1:defiance': 1, 'D1:scapegoat': 1,
+  'N:firmament': 1, 'N:council': 1, 'N:prophecy': 1, 'N:vessel': 1,
+};
+const REC12: V = { ...REC, target: 12, target3: 12, target4: 12 };
+Object.assign(VARIANTS, {
+  rec12_pantheon: { ...REC12, pantheon: { base: PLAIN, pools: [LIGHT_POOL, DARK_POOL, NEUTRAL_POOL], picks: [7, 7, 4] } },
+  rec12_starter: { ...REC12, deck: STARTER },
+} as Record<string, V>);
+
+// ---- Round 21: can the patches go, and can Choir strength link the engine to the alliances?
+Object.assign(VARIANTS, {
+  r21_starter: { ...REC12, deck: STARTER },
+  r21_nocrown: { ...REC12, deck: STARTER, crownTax: 0 },
+  r21_noomen: { ...REC12, deck: STARTER, omens: 0 },
+  r21_bare: { ...REC12, deck: STARTER, crownTax: 0, omens: 0 },
+  r21_bare_notie: { ...REC12, deck: STARTER, crownTax: 0, omens: 0, tieBreak: 'none' },
+  r21_senior31: { ...REC12, deck: STARTER, pairSplit: [3, 1] },          // alone 3; pair: stronger 3, weaker 1, equal 2 each
+  r21_senior31_bare: { ...REC12, deck: STARTER, pairSplit: [3, 1], crownTax: 0, omens: 0 },
+  r21_senior21_bare: { ...REC12, deck: STARTER, score: T([3, 2, 0], [0]), pairSplit: [2, 1], crownTax: 0, omens: 0 },
+} as Record<string, V>);
+
+// ---- Round 22: the dominance core, from the ground up (plain deck; no Crown, no Omen, no crowding rule)
+const PLAIN44 = { L1: 18, D1: 18, L2: 2, D2: 2, N: 4 };
+const DOM = (margin: number, dom: number[], indiv: number[], extra: V = {}): V => ({
+  n: 4, hand: 3, choirStart: 2, choirMax: 4, fruits: true, omens: 0, crown: 1, deck: PLAIN44,
+  offerReward: 'none', tieBreak: 'none', pax: { margin, dom, indiv, tie: 'lowGlory' }, ...extra,
+});
+Object.assign(VARIANTS, {
+  d_m2_31_2: DOM(2, [3, 1], [2]),
+  d_m2_42_2: DOM(2, [4, 2], [2]),
+  d_m2_42_21: DOM(2, [4, 2], [2, 1]),
+  d_m3_42_2: DOM(3, [4, 2], [2]),
+  d_m1_31_2: DOM(1, [3, 1], [2]),
+  d_m2_321_1: DOM(2, [3, 2, 1], [1]),
+  d_m2_31_1: DOM(2, [3, 1], [1]),
+  d_m2_42_2_bet: DOM(2, [4, 2], [2], { offerReward: 'match' }),
+} as Record<string, V>);
+
+// ---- Round 23: Fates. Secret Fate from a bag of 3 Light + 3 Dark; Choir cards matching the Tide pay; Fate Days pay at the end.
+const FATE = (perDay: number, choirPay: number, extra: V = {}): V => ({
+  hand: 3, choirStart: 2, choirMax: 4, fruits: true, omens: 0, crown: 1, deck: PLAIN44, offerReward: 'none', tieBreak: 'none',
+  target: 999, target3: 999, target4: 999, maxDays: 7, fate: { pool: [1, 1, 1, -1, -1, -1], perDay, choirPay }, ...extra,
+});
+Object.assign(VARIANTS, {
+  f_2_1: FATE(2, 1),
+  f_3_1: FATE(3, 1),
+  f_1_1: FATE(1, 1),
+  f_2_1_bet: FATE(2, 1, { offerReward: 'match' }),
+  f_2_1_known: FATE(2, 1, { fate: { pool: [1, 1, -1, -1], perDay: 2, choirPay: 1 } }), // 4p: always 2 v 2 (team sizes known)
+  f_2_1_d6: FATE(2, 1, { maxDays: 6 }),
+  f_2_1_d8: FATE(2, 1, { maxDays: 8 }),
+} as Record<string, V>);
+
+// ---- Round 24: the collection plate. Offers matching the Tide share a pot of 2 + 1 per losing Offer; Choir cards matching the Tide pay 1.
+const PLATE = (base: number, extra: V = {}): V => ({
+  hand: 3, choirStart: 2, choirMax: 4, fruits: true, omens: 0, crown: 1, deck: PLAIN44, tieBreak: 'none',
+  offerReward: 'pari', pariBase: base, choirCardPay: 1, ...extra,
+});
+Object.assign(VARIANTS, {
+  c_plate2: PLATE(2),
+  c_plate3: PLATE(3),
+  c_plate1: PLATE(1),
+  c_plate2_fate: PLATE(2, { target: 999, target3: 999, target4: 999, maxDays: 7, fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 2, choirPay: 1 } }),
+} as Record<string, V>);
+
+// ---- Round 25: Fates, multiplied (no hedging: your Choir pays only on your Fate's Days)
+Object.assign(VARIANTS, {
+  fm_1: FATE(1, 0, { fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 1, choirPay: 0, mult: true } }),
+  fm_1_bet: FATE(1, 0, { fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 1, choirPay: 0, mult: true }, offerReward: 'match' }),
+  fm_1_known: FATE(1, 0, { fate: { pool: [1, 1, -1, -1], perDay: 1, choirPay: 0, mult: true } }),
+  fm_1_c5: FATE(1, 0, { fate: { pool: [1, 1, 1, -1, -1, -1], perDay: 1, choirPay: 0, mult: true }, choirMax: 5 }),
+} as Record<string, V>);
+
+// ---- Round 22b: Dominance as fixed 7-Day games (same length as Fates), for a fair comparison
+const D7: V = { target: 999, target3: 999, target4: 999, maxDays: 7 };
+Object.assign(VARIANTS, {
+  d7_m2_31_2: { ...DOM(2, [3, 1], [2]), ...D7 },
+  d7_m2_42_2: { ...DOM(2, [4, 2], [2]), ...D7 },
+  d7_m3_42_2: { ...DOM(3, [4, 2], [2]), ...D7 },
+  d7_m1_31_2: { ...DOM(1, [3, 1], [2]), ...D7 },
+  d7_m2_42_2_bet: { ...DOM(2, [4, 2], [2], { offerReward: 'match' }), ...D7 },
+} as Record<string, V>);
+
+// ---- Round 26: multiplied Fates with the Forsaken (wins narrow Days, multiplied by Neutral Choir cards)
+const N8 = { L1: 16, D1: 16, L2: 2, D2: 2, N: 8 };
+const MF = (pool: number[], extra: V = {}): V => FATE(1, 0, { fate: { pool, perDay: 1, choirPay: 0, mult: true }, ...extra });
+Object.assign(VARIANTS, {
+  fm_n8: MF([1, 1, 1, -1, -1, -1], { deck: N8 }),
+  fmF_n8: MF([1, 1, 1, -1, -1, -1, 0], { deck: N8 }),
+  fmF2_n8: MF([1, 1, -1, -1, 0, 0], { deck: N8 }),
+  fmF_n4: MF([1, 1, 1, -1, -1, -1, 0]),
+} as Record<string, V>);
+
+// ---- Round 27: the Miser's Rule (the player who Offered fewest cannot win), on multiplied Fates
+Object.assign(VARIANTS, {
+  fm_miser: MF([1, 1, 1, -1, -1, -1], { miser: true }),
+  fmF_n8_miser: MF([1, 1, 1, -1, -1, -1, 0], { deck: N8, miser: true }),
+} as Record<string, V>);
+
+// ---- Round 28: Oaths that pass through the Altar (allegiance is an Oath card: +2 when Offered, can be Gathered, returns home if not)
+const OATH_DECK = { L1: 18, D1: 18, L2: 2, D2: 2, N: 4, 'L2:oath': 3, 'D2:oath': 3 };
+const OATH = (extra: V = {}): V => FATE(1, 0, { deck: OATH_DECK, fate: { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true }, ...extra });
+Object.assign(VARIANTS, {
+  oath: OATH(),
+  oath_miser: OATH({ miser: true }),
+  oath_n8: OATH({ deck: { ...OATH_DECK, L1: 16, D1: 16, N: 8 } }),
+} as Record<string, V>);
+
+// ---- Round 29: Oaths that cannot be Exalted (a Gathered Oath goes to hand), and the soft Miser's Rule (fewest Offers lose 3 Glory)
+const OATH2 = (extra: V = {}): V => FATE(1, 0, { deck: OATH_DECK, fate: { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true, oathHand: true }, ...extra });
+Object.assign(VARIANTS, {
+  oath2: OATH2(),
+  oath2_tax3: OATH2({ miserTax: 3 }),
+  fm_tax3: MF([1, 1, 1, -1, -1, -1], { miserTax: 3 }),
+  fmF2_tax3: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3 }),
+} as Record<string, V>);
+
+// ---- Round 31: how obvious is your side? Anonymous reveal, shuffled Oath return
+Object.assign(VARIANTS, {
+  oath3_anon: OATH2({ miserTax: 3, anonReveal: true, fate: { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true, oathHand: true, oathReturn: 'shuffle' } }),
+  oath3_shuffle: OATH2({ miserTax: 3, fate: { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true, oathHand: true, oathReturn: 'shuffle' } }),
+  oath2_anon: OATH2({ miserTax: 3, anonReveal: true }),
+  fmF2_anon: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true }),
+} as Record<string, V>);
+
+// ---- Round 32: veiled Exalt (hidden Choir cards), alone and with the anonymous reveal and shuffled Oath return
+const OATH_ANON_SHUF = { pool: [], perDay: 1, choirPay: 0, mult: true, oath: true, oathHand: true, oathReturn: 'shuffle' as const };
+Object.assign(VARIANTS, {
+  oath3_veil: OATH2({ miserTax: 3, veiledExalt: true, anonReveal: true, fate: OATH_ANON_SHUF }),
+  oath2_veil: OATH2({ miserTax: 3, veiledExalt: true }),
+  fmF2_veil: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, veiledExalt: true }),
+} as Record<string, V>);
+
+// ---- Round 33: hide who did what (anonymous First Fruits) and stop the Choir from naming your side (any-colour multiplier)
+const OATH_ANY = { ...OATH_ANON_SHUF, anyColour: true };
+Object.assign(VARIANTS, {
+  o33_veil_ff: OATH2({ miserTax: 3, veiledExalt: true, anonReveal: true, anonFruits: true, fate: OATH_ANON_SHUF }),
+  o33_any_ff: OATH2({ miserTax: 3, anonReveal: true, anonFruits: true, fate: OATH_ANY }),
+  o33_any_veil_ff: OATH2({ miserTax: 3, veiledExalt: true, anonReveal: true, anonFruits: true, fate: OATH_ANY }),
+  o33_any: OATH2({ miserTax: 3, anonReveal: true, fate: OATH_ANY }),
+  f33_veil_ff: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, veiledExalt: true, anonFruits: true }),
+  f33_any_ff: MF([1, 1, -1, -1, 0, 0], { deck: N8, miserTax: 3, anonReveal: true, anonFruits: true, fate: { pool: [1, 1, -1, -1, 0, 0], perDay: 1, choirPay: 0, mult: true, anyColour: true } }),
+} as Record<string, V>);
+
+// ---- Rounds 35-36: Robert's ideas. Choirs stay face up. Kept hiding rules: anonymous First Fruits and anonymous reveal.
+const SB: V = {
+  hand: 3, choirStart: 2, choirMax: 4, fruits: true, omens: 0, crown: 1, deck: PLAIN44, offerReward: 'none', tieBreak: 'none',
+  target: 999, target3: 999, target4: 999, maxDays: 7, miserTax: 3, anonReveal: true, anonFruits: true,
+};
+const TOKDECK = { ...PLAIN44, 'L2:tokL': 6, 'D2:tokD': 6 };
+Object.assign(VARIANTS, {
+  // baseline: Oaths with the three kept hiding rules, Choirs face up
+  o35_oath: OATH2({ miserTax: 3, anonReveal: true, anonFruits: true, fate: OATH_ANON_SHUF }),
+  // Idea 1: creeds (a secret allegiance card that says how your two public banks score)
+  cr_plain: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'faithful', 'fallen', 'fallen', 'fallen'] } },
+  cr_fb: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'follower', 'balancer'] } },
+  cr_dbl: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'doubleL', 'doubleD'] } },
+  cr_all: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'follower', 'balancer', 'doubleL', 'doubleD'] } },
+  // Idea 2: allegiance tokens (score = Light bank x Light tokens + Dark bank x Dark tokens)
+  tk_even_fixed: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'even', mobile: false, score: 'weighted' } },
+  tk_rand_fixed: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: false, score: 'weighted' } },
+  tk_even_mob: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'even', mobile: true, score: 'weighted' } },
+  tk_rand_mob: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, score: 'weighted' } },
+  tk_rand_mob_win: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, score: 'winner' } },
+  tk_rand_mob_col: { ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, score: 'collect', collectBonus: 1 } },
+  tk_rand2_mob: { ...SB, stake: { kind: 'tokens', perPlayer: 2, mix: 'random', mobile: true, score: 'weighted' } },
+  tk_cards: { ...SB, deck: TOKDECK, stake: { kind: 'tokens', asCards: true, score: 'weighted' } },
+} as Record<string, V>);
+
+// ---- Round 36: tuned twists; making token collection matter; rewarding commitment
+const TK = (extra: Record<string, unknown>): V => ({ ...SB, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, score: 'weighted', ...extra } as any });
+Object.assign(VARIANTS, {
+  cr_fb2: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'follower', 'balancerH'] } },
+  cr_dbl2: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'doubleL1', 'doubleD1'] } },
+  cr_all2: { ...SB, stake: { kind: 'creed', creeds: ['faithful', 'faithful', 'fallen', 'fallen', 'follower', 'balancerH', 'doubleL1', 'doubleD1'] } },
+  tk_fewest: TK({ onAltar: 'fewest' }),
+  tk_conc: TK({ score: 'concentrate' }),
+  tk_conc_fewest: TK({ score: 'concentrate', onAltar: 'fewest' }),
+  tk_4: TK({ perPlayer: 4 }),
+} as Record<string, V>);
+
+// ---- Round 38: simpler scoring for the allegiance tokens (Robert, November 19: "the multiplication feels like a lot").
+// No banks. One shared Tide track counts the Days each color won.
+//   days:  each token scores 1 for every Day its color won; your Choir scores 1 per card of the Tide's color each Evening.
+//   world: tokens of the color that won more Days score tokVal each.
+const DY = (extra: Record<string, unknown> = {}, top: Partial<V> = {}): V => ({ ...SB, ...top, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, onAltar: 'fewest', score: 'days', tokVal: 1, reap: 1, ...extra } as any });
+Object.assign(VARIANTS, {
+  dy6: DY(),
+  dy6_nomiser: DY({}, { miserTax: 0 }),
+  dy6_fixed: DY({ mobile: false }),
+  dy4: DY({ perPlayer: 4 }),
+  dy6_r0: DY({ reap: 0 }),
+  dy6_r2: DY({ reap: 2 }),
+  wd6: DY({ score: 'world', tokVal: 4 }),
+  wd4: DY({ score: 'world', perPlayer: 4, tokVal: 5 }),
+  sh6: DY({ reap: 0, shares: true }),
+  sh4: DY({ reap: 0, shares: true, perPlayer: 4 }),
+  // every seat first equally often: 6 Days at 3 players, 8 at 4
+  dy6_d6: DY({}, { maxDays: 6 }),
+  dy6_d8: DY({}, { maxDays: 8 }),
+  dy4_d6: DY({ perPlayer: 4 }, { maxDays: 6 }),
+  dy4_d8: DY({ perPlayer: 4 }, { maxDays: 8 }),
+} as Record<string, V>);
+
+// ---- Round 39: comparing the three finalists (Robert): A Tide track, B Choir as public shares, H Choir pays 2. 6 Days at 3 players, 8 at 4.
+const D3 = { maxDays: 6 }, D4 = { maxDays: 8 };
+Object.assign(VARIANTS, {
+  A3: DY({}, D3), A4: DY({}, D4),
+  B3: DY({ reap: 0, shares: true }, D3), B4: DY({ reap: 0, shares: true }, D4),
+  H3: DY({ reap: 2 }, D3), H4: DY({ reap: 2 }, D4),
+  // in between: the Choir weighs 1.5 times a token-Day
+  M3: DY({ reap: 3, tokVal: 2 }, D3), M4: DY({ reap: 3, tokVal: 2 }, D4),
+  // B with Choir cards worth two shares each (B's version of H)
+  B2_3: DY({ reap: 0, shares: true, choirShare: 2 }, D3), B2_4: DY({ reap: 0, shares: true, choirShare: 2 }, D4),
+} as Record<string, V>);
+
+// ---- Round 40: the championship. Every milestone core under the same tests; and option H with the Starter Pantheon of ability cards.
+Object.assign(VARIANTS, {
+  HS3: DY({ reap: 2 }, { maxDays: 6, deck: STARTER }), HS4: DY({ reap: 2 }, { maxDays: 8, deck: STARTER }),
+  H5_3: DY({ reap: 2, perPlayer: 5 }, D3), H5_4: DY({ reap: 2, perPlayer: 5 }, D4),
+} as Record<string, V>);
+
+// ---- Round 41: can the token core replace Hidden Roles at 5 and 6 players? (one and two turn-order rotations)
+Object.assign(VARIANTS, {
+  H5p5: DY({ reap: 2 }, { maxDays: 5 }), H5p10: DY({ reap: 2 }, { maxDays: 10 }),
+  H6p6: DY({ reap: 2 }, { maxDays: 6 }),
+} as Record<string, V>);
+
+// ---- Round 42: the real deck is a third Neutral. Does H hold, and should Neutral Choir cards score 1 on any won Day?
+const REAL = { L1: 22, D1: 22, L2: 1, D2: 1, N: 23 };
+Object.assign(VARIANTS, {
+  HR3: DY({ reap: 2 }, { maxDays: 6, deck: REAL }), HR4: DY({ reap: 2 }, { maxDays: 8, deck: REAL }),
+  HN3: DY({ reap: 2, neutralPay: 1 }, { maxDays: 6, deck: REAL }), HN4: DY({ reap: 2, neutralPay: 1 }, { maxDays: 8, deck: REAL }),
+} as Record<string, V>);
+// Robert (November 19): fewer or no Neutral cards, the rest made Light or Dark. Nephilim and Acolyte stay special.
+const FEW_N = { L1: 33, D1: 33, L2: 1, D2: 1, N: 1 };
+Object.assign(VARIANTS, {
+  HF3: DY({ reap: 2 }, { maxDays: 6, deck: FEW_N }), HF4: DY({ reap: 2 }, { maxDays: 8, deck: FEW_N }),
+} as Record<string, V>);
+
+// ---- Round 43: 7 Days at every player count (Robert), with and without Judgment Day (a secret, simultaneous last Day).
+const COLORED = { L1: 33, D1: 33, L2: 1, D2: 1, N: 1 };
+const S7 = (extra: Partial<V> = {}) => DY({ reap: 2 }, { maxDays: 7, deck: COLORED, ...extra });
+Object.assign(VARIANTS, { d7: S7(), d7j: S7({ secretLast: true } as Partial<V>), d6j3: DY({ reap: 2 }, { maxDays: 6, deck: COLORED, secretLast: true } as Partial<V>) } as Record<string, V>);
+
+// ---- Round 44 (Robert): how tokens are played, where leftovers go, and the Miser's Rule without tracking.
+// Base: 7 Days with Judgment Day, every card Light or Dark, Choir pays 2, tokens Offered as an action, leftovers to the fewest,
+// fewest Offers lose 3.
+const J = (stake: Record<string, unknown> = {}, top: Record<string, unknown> = {}): V =>
+  ({ ...SB, deck: COLORED, maxDays: 7, secretLast: true, ...top, stake: { kind: 'tokens', perPlayer: 6, mix: 'random', mobile: true, onAltar: 'fewest', score: 'days', tokVal: 1, reap: 2, ...stake } }) as V;
+Object.assign(VARIANTS, {
+  J0: J(),
+  // the Miser's Rule
+  Jnm: J({}, { miserTax: 0 }), Jzero: J({}, { miserTax: 0, miserDay: 'zero' }), Jhalf: J({}, { miserTax: 0, miserDay: 'half' }),
+  Jround: J({}, { miserTax: 0, offerRound: true, turns: 2 }),
+  // how tokens are played
+  Jff: J({ tokFruits: 'also' }), Jffo: J({ tokFruits: 'only' }), Jfree: J({ tokFree: true }),
+  J2: J({}, { turns: 2 }), J2d5: J({}, { turns: 2, maxDays: 5 }),
+  // where leftover tokens go
+  Jlost: J({ onAltar: 'lost' }), Jref: J({ onAltar: 'refund' }), Jreff: J({ onAltar: 'refundFewest' }), Jvic: J({ onAltar: 'victors' }), Jlos: J({ onAltar: 'losers' }),
+} as Record<string, V>);
+// Round 45: "no offering, no harvest" with the token ideas.
+Object.assign(VARIANTS, {
+  K1: J({}, { miserTax: 0, miserDay: 'zero' }), K2: J({ tokHidden: true }, { miserTax: 0, miserDay: 'zero' }),
+  K3: J({ tokFruits: 'also' }, { miserTax: 0, miserDay: 'zero' }), K4: J({ tokFree: true }, { miserTax: 0, miserDay: 'zero' }),
+  K5: J({ onAltar: 'refundFewest' }, { miserTax: 0, miserDay: 'zero' }),
+} as Record<string, V>);

@@ -4,7 +4,7 @@ import { marked } from 'marked';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Site } from '../components/Site';
 import { Link } from '../lib/router';
-import source from '../../../../../rules/The_Divide_Rulebook_v14.md?raw';
+import source from '../../../../../rules/The_Divide_Rulebook_v15.md?raw';
 
 // The rulebook's version line is for the designer, not for players.
 const raw = source.replace(/^\*\*Version:\*\*.*\n/m, '');
@@ -12,7 +12,7 @@ const raw = source.replace(/^\*\*Version:\*\*.*\n/m, '');
 const slug = (text: string) => text.toLowerCase().replace(/<[^>]+>/g, '').replace(/[*_]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const plain = (md: string) => md.replace(/\*\*|\*|_|`|^#+\s*|^>\s*/gm, '').trim();
 /** Reference sections start folded; open them from the contents or by searching. */
-const FOLDED = new Set(['rulings', 'hidden-roles', 'glossary']);
+const FOLDED = new Set(['rulings', 'glossary']);
 
 interface Section { id: string; title: string; md: string; html: string }
 
@@ -117,7 +117,6 @@ export function Rules() {
         <article class="prose">
           <div class="rules-intro" dangerouslySetInnerHTML={{ __html: intro }} />
           <Link href="/learn" class="learn-cta">New to The Divide? <b>Learn to play in 5 minutes →</b></Link>
-          <p class="rules-note">This site plays the <b>Open Game</b> for 3 or 4 players. Hidden Roles (5 or 6 players) is described below but is not playable online yet.</p>
           <div class="rules-search">
             <input class="field" type="search" value={q} placeholder="Look up a rule or a card: Tide, Exalt, Mirage…" aria-label="Search the rules" onInput={(e) => setQ((e.target as HTMLInputElement).value)} />
           </div>

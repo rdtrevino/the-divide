@@ -1,6 +1,7 @@
 // How often each Host card's ability does something, per Day it is held face up in a Choir, and the Glory it earns.
 // Usage: npx tsx usage.ts GAMES
-import { Game, botAnswer, HOSTS } from '@divide/engine';
+import { Game, HOSTS } from '@divide/engine';
+import { answer } from './bot';
 const N = Number(process.argv[2] ?? 1000);
 const held: Record<string, number> = {}, fired: Record<string, number> = {}, earned: Record<string, number> = {};
 const byName = new Map(HOSTS.map((h: any) => [h.name, h.id]));
@@ -9,7 +10,7 @@ for (let i = 0; i < N; i++) {
   const g = new Game({ seed: 880000 + i, mode: 'open', players: Array.from({ length: n }, (_, k) => ({ name: 'P' + k, isBot: true })) });
   let day = g.state.day;
   while (!g.over) {
-    for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, botAnswer(g.state, d));
+    for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, answer(g.state, d));
     if (g.state.day !== day) { day = g.state.day; for (const p of g.state.players) for (const c of p.choir) if (!c.facedown) held[c.id] = (held[c.id] ?? 0) + 1; }
   }
   const seen = new Set<number>();

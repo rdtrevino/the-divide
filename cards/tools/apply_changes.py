@@ -5,7 +5,7 @@ Usage (from the repo root):
     python3 cards/tools/apply_changes.py cards/changes/V37.json
 
 Reads cards/changes/<VERSION>.json: {"version", "date", "previous", "changes": {Host name: {text, why,
-cadence?, wording?}}, "celestials": {Celestial name: {text, why}}, "events": {Event name: {text, why, wording?}}}
+cadence?, wording?, alignment?}}, "celestials": {Celestial name: {text, why}}, "events": {Event name: {text, why, wording?}}}
 and updates, in step:
   - cards/cards.json and game/packages/engine/src/cards.data.json (card text, version, date)
   - cards/The_Divide_Cards_<previous>.xlsx -> cards/The_Divide_Cards_<VERSION>.xlsx
@@ -14,7 +14,7 @@ and updates, in step:
   - cards/cards.csv, regenerated from the workbook's main sheet
 
 Every changed card is marked "Reprint: rules changed", unless its entry has "wording": true (a wording-only
-change). A Host entry may also carry (V42): "value" (Offering value) with "offering" (the workbook's Offering
+change). A Host entry may also carry (V42): "value" (Offering value), "alignment" (V45: light or dark) with "offering" (the workbook's Offering
 text), "rename" (a new card name), "openGame" (false retires the card) and "oncePerGame". Requires openpyxl.
 
 A change set whose "previous" equals its "version" is a wording pass within that version: the files are updated
@@ -57,7 +57,7 @@ def main(change_path: str) -> None:
                 card["text"] = changes[k]["text"]
                 if "cadence" in changes[k]:
                     card["cadence"] = changes[k]["cadence"]
-                for f in ("value", "openGame", "oncePerGame"):
+                for f in ("value", "alignment", "openGame", "oncePerGame"):
                     if f in changes[k]:
                         card[f] = changes[k][f]
                 if "rename" in changes[k]:
@@ -84,7 +84,7 @@ def main(change_path: str) -> None:
     status_col = head.index("Print status")
     note_col = head.index("Rules change vs printed card")
     cad_col = head.index("Cadence")
-    off_col, open_col = head.index("Offering"), head.index("In open game")
+    off_col, open_col, type_col = head.index("Offering"), head.index("In open game"), head.index("Type")
     for row in main_ws.iter_rows(min_row=2):
         k = (row[0].value, row[2].value)
         if k in changes:
@@ -93,6 +93,8 @@ def main(change_path: str) -> None:
                 row[cad_col].value = changes[k]["cadence"]
             if "offering" in changes[k]:
                 row[off_col].value = changes[k]["offering"]
+            if "alignment" in changes[k]:
+                row[type_col].value = changes[k]["alignment"].title()
             if changes[k].get("openGame") is False:
                 row[open_col].value = "No (retired)"
             if changes[k].get("wording"):

@@ -1,0 +1,1 @@
+rows-o33_veil_ff-4p.json {"rows": 8400, "allegiance mix": {"-1": 0.37, "0": 0.27, "1": 0.37}, "guess the commonest side": 0.37, "simple reader": 0.6, "strong reader": 0.68, "strong, confident (80%+) and right": 0.37, "strong, confident and wrong": 0.06, "strong by Day": {"1": 0.69, "2": 0.77, "3": 0.78, "4": 0.74, "5": 0.7, "6": 0.57, "7": 0.49}}

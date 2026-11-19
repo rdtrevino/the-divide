@@ -1,0 +1,13 @@
+{
+ "version": "V45",
+ "date": "2026-11-19",
+ "previous": "V45",
+ "changes": {},
+ "celestials": {
+  "The Whisper": {
+   "text": "In the Morning: Name Light or Dark aloud. If that side wins the Day, gain 1 Glory; if the other side wins, lose 1.",
+   "why": "+2/-2 measured 1.45 (V45); +1/-1 measures 1.20"
+  }
+ },
+ "events": {}
+}

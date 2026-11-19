@@ -1,4 +1,4 @@
-// Small pieces of the table: countdowns, the Glory track, the Tide record, player status notes.
+// Small pieces of the table: countdowns, the Tide track, player status notes.
 import type { GameView } from '@divide/engine';
 import { useEffect, useState } from 'preact/hooks';
 
@@ -23,39 +23,28 @@ export function Countdown(p: { deadline: number | null; skew: number; class?: st
   return <span class={`countdown num${s <= 15 ? ' low' : ''} ${p.class ?? ''}`} data-tip="Time left for this choice. When it runs out, a bot makes it">{Math.floor(s / 60)}:{String(s % 60).padStart(2, '0')}</span>;
 }
 
-/** The race to 12: one marker per player on a track to the target. */
-export function GloryTrack(p: { view: GameView; target: number }) {
-  const max = Math.max(p.target, ...p.view.players.map((x) => x.glory));
+/** The Tide track: one space per Day; each Day won is marked for its side. Tokens score these at the end. */
+export function TideTrack(p: { view: GameView }) {
+  const won = { light: 0, dark: 0 };
+  for (const t of p.view.tides) if (!t.void && t.dir !== 'neutral') won[t.dir]++;
   return (
-    <div class="track" role="img" aria-label={`Glory: ${p.view.players.map((x) => `${x.name} ${x.glory}`).join(', ')}`}>
-      <div class="track-line">
-        {Array.from({ length: max + 1 }, (_, i) => (
-          <span class={`track-tick${i === p.target ? ' goal' : ''}`} style={{ left: `${(i / max) * 100}%` }}><i>{i}</i></span>
-        ))}
-        {p.view.players.map((x) => {
-          const same = p.view.players.filter((o) => o.glory === x.glory);
-          const k = same.findIndex((o) => o.seat === x.seat);
+    <div class="ttrack" aria-label={`The Tide track: Light ${won.light}, Dark ${won.dark}, of ${p.view.days} Days`}>
+      <span class="tides">
+        {Array.from({ length: p.view.days }, (_, i) => {
+          const t = p.view.tides[i];
+          if (!t) return <span class="tide-pip empty" data-tip={`Day ${i + 1}: still to come`}>{i + 1}</span>;
+          const label = t.dir === 'neutral' ? 'Neutral: no one won' : `${DIR_LABEL[t.dir]} by ${t.margin}${t.void ? ' (Purgatory: counts for neither side)' : ''}`;
           return (
-            <span class="track-peg" data-tip={`${x.name}: ${x.glory} Glory`} style={{ left: `${(x.glory / max) * 100}%`, '--seat': seatColor(x.seat), '--stack': k - (same.length - 1) / 2 } as any}>
-              {x.name.slice(0, 1).toUpperCase()}
+            <span class={`tide-pip ${t.dir}${t.void ? ' void' : ''}`} data-tip={`Day ${t.day}: ${label} (Light ${t.light}, Dark ${t.dark})`}>
+              {t.dir === 'light' ? '☀' : t.dir === 'dark' ? '☾' : '•'}
             </span>
           );
         })}
-      </div>
+      </span>
+      <span class="ttrack-won" data-tip="Days each side has won. At the end, every token scores 1 for each Day its color won">
+        <b class="light">☀ {won.light}</b><b class="dark">☾ {won.dark}</b>
+      </span>
     </div>
-  );
-}
-
-export function TideRecord(p: { view: GameView }) {
-  if (!p.view.tides.length) return <span class="muted tides-none">No Tide yet</span>;
-  return (
-    <span class="tides" aria-label="Tides so far">
-      {p.view.tides.map((t) => (
-        <span class={`tide-pip ${t.dir}`} data-tip={`Day ${t.day}: ${DIR_LABEL[t.dir]}${t.dir === 'neutral' ? '' : ` by ${t.margin}`} (Light ${t.light}, Dark ${t.dark})`}>
-          {t.dir === 'light' ? '☀' : t.dir === 'dark' ? '☾' : '•'}
-        </span>
-      ))}
-    </span>
   );
 }
 
@@ -75,7 +64,8 @@ export function statusNotes(view: GameView, seat: number): { text: string; tone?
     if (b.bound === seat) out.push({ text: `Bound to ${name(b.owner)} (Raguel)` });
   }
   const blocked = (act: string) => view.anathema.some((a) => a.target === seat && (a.action ?? 'offer') === act);
-  if (blocked('offer')) out.push({ text: 'Anathema: cannot Offer', tone: 'bad' });
+  if (blocked('faceup')) out.push({ text: 'Anathema: Offers face up', tone: 'bad' });
+  if (p.offeredToday && view.phase !== 'ended') out.push({ text: 'Offered today' });
   const sword = ['exalt', 'gather'].filter(blocked).map((x) => x[0].toUpperCase() + x.slice(1));
   if (sword.length) out.push({ text: `Flaming Sword: cannot ${sword.join(' or ')}`, tone: 'bad' });
   return out;
@@ -90,19 +80,14 @@ export function choirTag(view: GameView, seat: number, id: string | null, used: 
   return undefined;
 }
 
-/** What a lean means at the Reaping, in one line. How strongly a Choir leans does not matter, only which way. */
-export const alignTip = (n: number | null, whose: string) => {
-  if (n === null) return `${whose} lean`;
-  if (n === 0) return `${whose} Choir leans neither way: it gains and loses nothing at the Reaping`;
-  const dir = n > 0 ? 'Light' : 'Dark';
-  return `${whose} Choir leans ${dir}. On a ${dir} Tide: alone +3, two +1 each, three or more 0. On a ${n > 0 ? 'Dark' : 'Light'} Tide: alone −3, otherwise −1`;
-};
+/** A Choir's cards by color: each scores 2 Glory when its color wins the Day. */
+export const colorsTip = (c: { light: number; dark: number }, whose: string) =>
+  `${whose} Choir holds ${c.light} Light and ${c.dark} Dark card${c.dark === 1 ? '' : 's'}. Each scores 2 Glory when its color wins the Day`;
 /** Who put a card on the Altar, and how. */
 export const altarNote = (kind: string | undefined, who: string | null) => {
   if (kind === 'seed') return 'Revealed by Creation';
+  if (kind === 'fruits') return 'First Fruits: no one knows whose';
   if (!who) return undefined;
-  return kind === 'fruits' ? `First Fruits from ${who}` : kind === 'offer' ? `Offered by ${who}` : kind === 'vessel' ? `Placed by ${who} (Vessel; not an Offer)` : kind === 'relic' ? `Kept on the Altar by Eternity` : `Placed by ${who}`;
+  return kind === 'offer' ? `Offered by ${who}` : kind === 'vessel' ? `Placed by ${who} (Vessel; not an Offer)` : kind === 'relic' ? `Kept on the Altar by Eternity` : `Placed by ${who}`;
 };
-export const alignText = (n: number | null) => (n === null ? '' : n === 0 ? 'Neutral' : `${n > 0 ? 'Light' : 'Dark'} ${Math.abs(n)}`);
-export const alignTone = (n: number | null) => (!n ? 'neutral' : n > 0 ? 'light' : 'dark');
 export const listNames = (names: string[]) => (names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);

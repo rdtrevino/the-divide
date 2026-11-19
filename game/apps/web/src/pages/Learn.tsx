@@ -1,4 +1,4 @@
-// Learn to play: a short, clickable walk through the Open Game, with real cards and small things to try.
+// Learn to play: a short, clickable walk through the game, with real cards and small things to try.
 import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { Card } from '../components/Card';
@@ -29,37 +29,62 @@ function Meter(p: { light: number; dark: number }) {
       <span class="lm-n light">{p.light}<small>Light</small></span>
       <div class="lm-bar"><i class="light" style={{ width: `${(p.light / total) * 100}%` }} /><i class="dark" style={{ width: `${(p.dark / total) * 100}%` }} /></div>
       <span class="lm-n dark">{p.dark}<small>Dark</small></span>
-      <div class={`lm-verdict ${dir}`}>{dir === 'neutral' ? 'The Tide is Neutral' : `The Tide is ${dir === 'light' ? 'Light' : 'Dark'}`}</div>
+      <div class={`lm-verdict ${dir}`}>{dir === 'neutral' ? 'Neutral: no one wins the Day' : `${dir === 'light' ? 'Light' : 'Dark'} wins the Day`}</div>
     </div>
   );
 }
 
 // ---------------------------------------------------------------- interactive pieces
 
-const CHOIR_POOL = ['host-michael', 'host-mercy', 'host-gabriel', 'host-moloch', 'host-abaddon', 'host-ordeal'];
+const CHOIR_POOL = ['host-michael', 'host-mercy', 'host-gabriel', 'host-moloch', 'host-abaddon', 'host-envy'];
 
 function ChoirBuilder() {
   const [picked, setPicked] = useState<string[]>(['host-michael', 'host-gabriel', 'host-moloch']);
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length < 4 ? [...p, id] : [...p.slice(1), id]));
-  const light = picked.reduce((a, id) => a + Math.max(0, signed(id)), 0);
-  const dark = picked.reduce((a, id) => a + Math.max(0, -signed(id)), 0);
-  const net = light - dark;
+  const light = picked.filter((id) => signed(id) > 0).length;
+  const dark = picked.filter((id) => signed(id) < 0).length;
   return (
     <div class="learn-try" data-no-zoom>
       <div class="eyebrow">Try it: pick up to 4 cards for your Choir</div>
       <div class="learn-pick">
         {CHOIR_POOL.map((id) => <Card id={id} w="calc((100cqw - 40px) / 6)" compact selectable={!picked.includes(id)} selected={picked.includes(id)} onClick={() => toggle(id)} />)}
       </div>
-      <div class={`learn-result ${leanClass(net)}`}>
-        Light {light} − Dark {dark} = <b>{net === 0 ? 'Neutral (0)' : `${lean(net)} ${Math.abs(net)}`}</b>
-        <span>{net === 0 ? 'A balanced Choir never gains or loses at the Reaping.' : `Your Choir leans ${lean(net)}. It scores when the Tide runs ${lean(net)}.`}</span>
+      <div class="learn-result">
+        <span class="light">A Light Day pays you <b>{2 * light}</b></span> · <span class="dark">a Dark Day pays you <b>{2 * dark}</b></span>
+        <span>{light && dark ? 'A mixed Choir scores whichever side wins, a little each time.' : light || dark ? `All your cards are ${light ? 'Light' : 'Dark'}: big Days when ${light ? 'Light' : 'Dark'} wins, nothing when it loses.` : 'Pick some cards.'}</span>
       </div>
     </div>
   );
 }
 
-// This Evening's Altar, already revealed: Light 2 against Dark 3, so one Gather of Silence makes the Tide Neutral.
-const ALTAR = ['host-wisdom', 'host-free-will', 'host-council', 'host-serpent', 'host-silence', 'host-leviathan'];
+/** Your secret tokens against the Tide track. */
+function TokenCalc() {
+  const [mine, setMine] = useState(4);
+  const [lw, setLw] = useState(4);
+  const days = 7;
+  const dw = days - lw;
+  const score = mine * lw + (6 - mine) * dw;
+  return (
+    <div class="learn-try">
+      <div class="eyebrow">Try it: every game lasts 7 Days</div>
+      <div class="learn-row">
+        <span class="learn-label">Your 6 tokens</span>
+        {[6, 5, 4, 3, 2, 1, 0].map((k) => <button class={`chip${mine === k ? ' on' : ''}`} onClick={() => setMine(k)}>{k} Light · {6 - k} Dark</button>)}
+      </div>
+      <div class="learn-row">
+        <span class="learn-label">Days won</span>
+        {Array.from({ length: days + 1 }, (_, k) => <button class={`chip${lw === k ? ' on' : ''}`} onClick={() => setLw(k)}>Light {k} · Dark {days - k}</button>)}
+      </div>
+      <div class="learn-result gain">
+        <b>+{score} Glory</b>
+        <span>{mine} Light × {lw} + {6 - mine} Dark × {dw}. Everyone holds some of each, so every Day pays everyone a little, and some much more than others.</span>
+      </div>
+    </div>
+  );
+}
+
+// This Evening's Altar, already revealed: Light 2 against Dark 3, so one Gather of Silence makes the Day a tie.
+const ALTAR = ['host-wisdom', 'host-free-will', 'host-serpent', 'host-silence', 'host-leviathan'];
 
 function AltarBuilder() {
   const [off, setOff] = useState<string[]>([]);
@@ -92,62 +117,25 @@ function AltarBuilder() {
   );
 }
 
-function ReapingCalc() {
-  const [side, setSide] = useState<'with' | 'against' | 'neutral'>('with');
-  const [sharing, setSharing] = useState(2);
-  const [alone, setAlone] = useState(true);
-  const result = side === 'against' ? (alone ? -3 : -1) : side === 'neutral' ? 0 : sharing === 1 ? 3 : sharing === 2 ? 1 : 0;
-  const why = side === 'against' ? (alone ? 'Alone against the Tide: the worst result there is.' : 'Others lean Dark with you, so each of you loses only 1.')
-    : side === 'neutral' ? 'A Neutral Choir neither gains nor loses.'
-    : sharing === 1 ? 'Alone with the Tide: the best result there is.'
-    : sharing === 2 ? 'You share the Tide with one partner: 1 each.'
-    : 'Three or more Choirs share the Tide, so none of them is paid. Someone should have switched sides.';
-  return (
-    <div class="learn-try">
-      <div class="eyebrow">Try it: the Tide is Light</div>
-      <div class="learn-row">
-        <span class="learn-label">Your Choir</span>
-        {([['with', 'Leans Light'], ['against', 'Leans Dark'], ['neutral', 'Neutral']] as const).map(([k, l]) => <button class={`chip${side === k ? ' on' : ''}`} onClick={() => setSide(k)}>{l}</button>)}
-      </div>
-      {side === 'with' && (
-        <div class="learn-row">
-          <span class="learn-label">Choirs leaning Light, yours included</span>
-          {[1, 2, 3].map((k) => <button class={`chip${sharing === k ? ' on' : ''}`} onClick={() => setSharing(k)}>{k === 3 ? '3 or more' : k}</button>)}
-        </div>
-      )}
-      {side === 'against' && (
-        <div class="learn-row">
-          <span class="learn-label">Choirs leaning Dark, yours included</span>
-          {([[true, '1'], [false, '2 or more']] as const).map(([k, l]) => <button class={`chip${alone === k ? ' on' : ''}`} onClick={() => setAlone(k)}>{l}</button>)}
-        </div>
-      )}
-      <div class={`learn-result ${result > 0 ? 'gain' : result < 0 ? 'loss' : ''}`}>
-        <b>{result > 0 ? `+${result} Glory` : result < 0 ? `${result} Glory` : 'No change'}</b>
-        <span>{why}</span>
-      </div>
-    </div>
-  );
-}
-
 type ActionKey = 'offer' | 'gather' | 'exalt';
 
 const ACTIONS: Record<ActionKey, { title: string; icon: string; badge: string; tone: string; summary: string; steps: string[]; why: string }> = {
   offer: {
-    title: 'Offer', icon: '✦', badge: '+1 Glory', tone: 'gain',
+    title: 'Offer', icon: '✦', badge: 'Push a side', tone: 'gain',
     summary: 'Hand → Altar, facedown',
     steps: [
-      'Choose a card from your hand and put it on the Altar facedown.',
-      'Then gain 1 Glory.',
+      'Put a card from your hand on the Altar facedown, or one of your tokens: a token counts 2 for its color.',
+      'It earns you nothing directly. It pushes the Day toward a side, and everyone who holds that side gains.',
       'Nobody sees what you Offered until the Evening, and anyone who acts after you can still Gather it away.',
     ],
-    why: 'Your income, and your secret vote on the Tide.',
+    why: 'The public good: your secret vote on who wins the Day. And no offering, no harvest: your Choir scores only on a Day you Offered.',
   },
   gather: {
     title: 'Gather', icon: '❖', badge: 'Free', tone: '',
     summary: 'Altar → your Choir',
     steps: [
-      'Take one card from the Altar into your Choir.',
-      'You can take a facedown Altar card without knowing what it is.',
+      'Take one card from the Altar into your Choir, or a token into your hidden tokens.',
+      'You can take a facedown card or token without knowing what it is.',
       'If your Choir already has 4 cards, discard one of them first.',
     ],
     why: 'Reshape your Choir for free, or pull a card off the Altar so it stops pushing the Tide.',
@@ -160,7 +148,7 @@ const ACTIONS: Record<ActionKey, { title: string; icon: string; badge: string; t
       'If your Choir already has 4 cards, discard one of them first.',
       'The card never touches the Altar, so nobody sees it coming.',
     ],
-    why: 'Build exactly the Choir you want. It costs no Glory, but you give up the Offer.',
+    why: 'Build exactly the Choir you want. It helps only you.',
   },
 };
 
@@ -209,14 +197,14 @@ const TIMINGS: Record<TimingKey, { title: string; when: string; cards: string[];
   evening: {
     title: 'In the Evening', when: 'Before the Altar is revealed',
     cards: ['host-fig-leaves'],
-    how: 'Works after every turn, just before the facedown cards on the Altar are turned over. Fig Leaves can have your Choir sit out the Day.',
+    how: 'Works after every turn, just before the facedown cards on the Altar are turned over. Fig Leaves can take back a card you Offered.',
     tip: 'You decide knowing every move but not every card. Read the Offers you saw go down.',
   },
   reaping: {
     title: 'At the end of the Day', when: 'After the Choirs are scored',
     cards: ['host-twilight', 'host-uriel'],
     how: 'Works in the Evening, after every Choir is scored. Most pay Glory on a condition; some store it on the card for later.',
-    tip: 'These pay every Evening, on top of the Tide. A few of them can carry you to 12.',
+    tip: 'These pay every Evening, on top of your Choir\'s scoring. Over 7 Days they add up.',
   },
   always: {
     title: 'Always on', when: 'No label, or “When…”',
@@ -248,7 +236,7 @@ function Timings() {
           <p class="muted">{info.tip}</p>
         </div>
       </div>
-      <p class="learn-small">◆ <b>Spent cards</b>, like Free Will and Mercy, end with “then discard this card”: they work once. Save them for the Day they decide.</p>
+      <p class="learn-small">◆ <b>Spent cards</b>, like Free Will and Michael, end with “then discard this card”: they work once. Save them for the Day they decide.</p>
     </div>
   );
 }
@@ -262,8 +250,8 @@ const STEPS: Step[] = [
     title: 'The Divide in 5 minutes',
     body: (
       <>
-        <p>Each Day, everyone secretly feeds a shared Altar. In the Evening the Altar tips toward the Light or the Dark. Players whose Choirs lean that way score, and the fewer of them, the more each one gets. So you need allies, but not too many.</p>
-        <p>This walk-through teaches the 3 and 4 player game, the one you play on this site. Use <b>Next</b>, or the arrow keys.</p>
+        <p>Each Day, everyone secretly feeds a shared Altar, and the heavier side, Light or Dark, wins the Day. You hold a secret mix of Light and Dark <b>tokens</b>, and so does everyone else, so you never quite know who is on your side.</p>
+        <p>Every card you play is a choice between helping yourself and helping a side. This walk-through teaches the game for 3 or 4 players. Use <b>Next</b>, or the arrow keys.</p>
       </>
     ),
     side: (
@@ -275,19 +263,19 @@ const STEPS: Step[] = [
     ),
   },
   {
-    title: 'The goal: 12 Glory',
+    title: 'The goal: the most Glory',
     body: (
       <>
-        <p><b>Glory</b> is your score. You gain it from cards you Offer, from the Tide each Evening, and from your Choir's abilities.</p>
-        <p>The first Evening anyone finishes with <b>12 or more Glory</b>, the game ends and <b>the most Glory wins</b>.</p>
+        <p><b>Glory</b> is your score. Your <b>Choir</b> earns it every Evening, and your secret <b>tokens</b> earn it all at once at the end.</p>
+        <p>Every game lasts <b>7 Days</b>. On the seventh, <b>Judgment Day</b>, everyone chooses their action in secret before anyone acts. Then the tokens are revealed, and <b>the most Glory wins</b>.</p>
       </>
     ),
     side: (
       <div class="learn-track">
-        {[['Ada', 12, 'var(--seat-0)'], ['Ben', 9, 'var(--seat-1)'], ['Cy', 6, 'var(--seat-2)']].map(([n, g, c]) => (
-          <div class="lt-row"><span>{n}</span><div class="lt-bar"><i style={{ width: `${(Number(g) / 14) * 100}%`, background: c as string }} /><em style={{ left: `${(12 / 14) * 100}%` }} title="12 Glory" /></div><b class="num">{g}</b></div>
+        {[['Ada', 14, 20, 'var(--seat-0)'], ['Ben', 22, 9, 'var(--seat-1)'], ['Cy', 17, 14, 'var(--seat-2)']].map(([n, c, t, col]) => (
+          <div class="lt-row"><span>{n}</span><div class="lt-bar"><i style={{ width: `${(Number(c) / 40) * 100}%`, background: col as string }} /><i style={{ width: `${(Number(t) / 40) * 100}%`, background: col as string, opacity: 0.45 }} /></div><b class="num">{Number(c) + Number(t)}</b></div>
         ))}
-        <p class="muted small">The line marks 12. Ada reached it, so the game is over, and Ada has the most: Ada wins.</p>
+        <p class="muted small">Solid: Glory from the Choir during the game. Faded: the tokens at the end. Ben led all game; Ada's tokens win it.</p>
       </div>
     ),
   },
@@ -295,8 +283,9 @@ const STEPS: Step[] = [
     title: 'What you have',
     body: (
       <ul class="learn-list">
-        <li><b>A Choir</b> of up to 4 cards, face up in front of you. You start with 2, dealt at random. Their abilities are yours to use, and together they lean Light or Dark: that is your side.</li>
+        <li><b>A Choir</b> of up to 4 cards, face up in front of you. You start with 2, dealt at random. Their abilities are yours to use.</li>
         <li><b>A hand</b> of 3 cards only you can see. You refill it every Evening.</li>
+        <li><b>Six secret tokens</b>, some Light and some Dark, dealt from a shuffled pile. Everyone sees how many you hold, never which.</li>
         <li class="muted">In the <b>Advanced game</b>, everyone also has a <b>Celestial</b> (a public power), and an <b>Event</b> changes one rule each Day.</li>
       </ul>
     ),
@@ -308,31 +297,41 @@ const STEPS: Step[] = [
     ),
   },
   {
-    title: 'Light, Dark and Neutral',
+    title: 'Light and Dark',
     body: (
       <>
-        <p>Every card has a value at the bottom: <span class="tag light">Light +1</span> <span class="tag dark">Dark +1</span>, sometimes +2, or <span class="tag neutral">Neutral</span>.</p>
-        <p>On the <b>Altar</b>, a card's value pushes the Tide its way. In your <b>Choir</b>, it pulls your lean its way. Neutral cards push and pull nothing, but they still have abilities.</p>
+        <p>Every card is <span class="tag light">Light</span> or <span class="tag dark">Dark</span>, worth +1 (a few +2).</p>
+        <p>On the <b>Altar</b>, a card pushes the Day its way. In your <b>Choir</b>, it scores on the Days its color wins. Its ability is yours either way.</p>
         <p class="muted">Hover over any card (or press and hold on a phone) to read it full size.</p>
       </>
     ),
     side: (
       <div class="learn-cards">
         <Card id="host-michael" w={150} />
-        <Card id="host-ordeal" w={150} />
+        <Card id="host-twilight" w={150} />
         <Card id="host-moloch" w={150} />
       </div>
     ),
   },
   {
-    title: 'Your Choir leans',
+    title: 'Your Choir scores',
     body: (
       <>
-        <p>Add up the Light in your Choir, subtract the Dark: that's your <b>lean</b>, and the side you are on.</p>
-        <p>Everyone can see your Choir, so everyone knows whose side you are on, and who you are competing with.</p>
+        <p>Each Evening, <b>every card in your Choir of the winning color scores 2 Glory</b>. Nothing is ever lost.</p>
+        <p>Everyone can see your Choir, so everyone can see what each side's win is worth to you. That is a clue to your side, not a proof.</p>
       </>
     ),
     side: <ChoirBuilder />,
+  },
+  {
+    title: 'Your secret tokens',
+    body: (
+      <>
+        <p>Every Day is marked on the <b>Tide track</b> for the side that won it. At the end, <b>each of your tokens scores 1 for every Day its color won</b>.</p>
+        <p>Nobody is purely on one side: a Light Day pays every Light token at the table, yours and your rivals'. So the question is never only "who wins?", but "who paid for it?"</p>
+      </>
+    ),
+    side: <TokenCalc />,
   },
   {
     title: 'Morning: the Day begins',
@@ -341,7 +340,7 @@ const STEPS: Step[] = [
       <p>Every Day has three parts: <b>Morning</b> sets up the Altar, at <b>Noon</b> everyone takes a turn, and in the <b>Evening</b> the Tide is set and everyone scores.</p>
       <ol class="learn-list">
         <li><b>Predictions:</b> cards like Prophecy are used now. <span class="muted">(In the Advanced game, an Event is revealed first.)</span></li>
-        <li><b>First Fruits:</b> everyone secretly picks one card from their hand, then all are revealed together onto the Altar. Then everyone draws one.</li>
+        <li><b>First Fruits:</b> everyone secretly gives one card from their hand. They are shuffled and turned face up onto the Altar, so no one knows whose is whose. Then everyone draws one.</li>
       </ol>
       </>
     ),
@@ -350,9 +349,9 @@ const STEPS: Step[] = [
         <div>
           <div class="learn-label">The Altar after First Fruits</div>
           <div class="learn-cards tight">
-            <Card id="host-wisdom" w={78} compact owner={0} />
-            <Card id="host-serpent" w={78} compact owner={1} />
-            <Card id="host-leviathan" w={78} compact owner={2} />
+            <Card id="host-wisdom" w={78} compact />
+            <Card id="host-serpent" w={78} compact />
+            <Card id="host-leviathan" w={78} compact />
           </div>
         </div>
       </div>
@@ -364,20 +363,20 @@ const STEPS: Step[] = [
       <>
         <p>Going around the table, each player takes <b>one turn</b> and picks <b>one of three actions</b>:</p>
         <ul class="learn-list">
-          <li><b>Offer</b> a card to the Altar, facedown, and <b>gain 1 Glory</b>.</li>
-          <li><b>Gather</b> a card into your Choir, <b>free</b>.</li>
-          <li><b>Exalt</b> a card from your hand into your Choir, <b>free</b>.</li>
+          <li><b>Offer</b> a card, or one of your tokens, facedown onto the Altar: it helps a side.</li>
+          <li><b>Gather</b> a card into your Choir, or a token from the Altar: it helps you.</li>
+          <li><b>Exalt</b> a card from your hand into your Choir: it helps you.</li>
         </ul>
-        <p class="muted">A hidden Offer can help you, hurt a rival, or bluff: the table only sees it in the Evening.</p>
+        <p class="muted">An Offer helps everyone who holds that side, and it is what lets your own Choir score tonight. Building helps only you. That choice, every turn, is the game.</p>
       </>
     ),
     side: <Actions />,
   },
   {
-    title: 'Evening: the Tide',
+    title: 'Evening: who wins the Day',
     body: (
       <>
-        <p>When everyone has had a turn, every facedown card on the Altar is turned face up. Add up its Light and its Dark. The heavier side is the <b>Tide</b>. A tie is a Neutral Tide.</p>
+        <p>When everyone has had a turn, the facedown Offers are shuffled and turned face up, so the table sees what was given but not by whom. Add up the Light and the Dark (a token counts 2). The heavier side <b>wins the Day</b>: mark it on the Tide track. A tie is Neutral, and no one wins.</p>
       </>
     ),
     side: <AltarBuilder />,
@@ -386,17 +385,18 @@ const STEPS: Step[] = [
     title: 'The Reaping',
     body: (
       <>
-        <p>Now every Choir is scored. Alone, you win or lose big:</p>
-        <ul class="learn-list">
-          <li><b>Alone with the Tide:</b> gain 3. <b>Alone against it:</b> lose 3.</li>
-          <li><b>Two with the Tide:</b> gain 1 each.</li>
-          <li><b>Three or more with it:</b> nobody gains.</li>
-          <li><b>Against it with company:</b> lose 1 each.</li>
-        </ul>
-        <p class="muted">So you want allies to win the Tide, but as few as possible. Then the Altar is cleared, hands are refilled, and a new Day begins.</p>
+        <p>Every Choir card of the winning color scores <b>2 Glory</b>, <b>if its owner Offered today</b>: no offering, no harvest.</p>
+        <p>Then any tokens left on the Altar are handed out, one at a time, to whoever holds the fewest. The Altar is cleared, hands are refilled, and a new Day begins.</p>
+        <p class="muted">An Offered token is gone from you, and may land in a rival's hand. That is its price.</p>
       </>
     ),
-    side: <ReapingCalc />,
+    side: (
+      <Callout>
+        <div class="eyebrow">Example: Light wins the Day</div>
+        <p>Ada's Choir holds two Light cards and a Dark one: she scores <b>4</b>.</p>
+        <p>Ben's Choir is all Dark: he scores nothing today. But Ben may hold mostly Light tokens, and Light just won a Day.</p>
+      </Callout>
+    ),
   },
   {
     title: 'Building your Choir',
@@ -405,10 +405,10 @@ const STEPS: Step[] = [
         <p>Your Choir is your side, and it is also your engine. Its cards' abilities are yours to use.</p>
         <ul class="learn-list">
           <li><b>Grow it</b> with a Gather from the Altar or an Exalt from your hand, both free. It holds 4 cards; when it is full, a new card replaces one of yours, which is discarded.</li>
-          <li><b>Every card does two jobs.</b> Its value moves your lean; its ability earns you Glory or gets in someone's way.</li>
-          <li><b>Neutral cards</b> add an ability without moving your lean, so you can build without changing sides.</li>
+          <li><b>Every card does two jobs.</b> Its color scores on the Days that color wins; its ability earns you Glory or gets in someone's way.</li>
+          <li><b>Mix or commit.</b> A Choir of one color scores big on its Days and nothing on the others; a mixed Choir scores a little every Day, and tells the table less.</li>
         </ul>
-        <p class="muted">An Offer pays 1 Glory once. A good Choir card pays every Day, so build early.</p>
+        <p class="muted">A card in your Choir pays every Day it is there, so build early, but someone has to pay for the Days.</p>
       </>
     ),
     side: <Timings />,
@@ -417,14 +417,15 @@ const STEPS: Step[] = [
     title: 'How it ends',
     body: (
       <>
-        <p>After any Reaping where someone has <b>12 or more</b>, the game ends. <b>Most Glory wins</b>; a tie is shared.</p>
+        <p>After the last Evening, everyone <b>reveals their tokens</b>. Each scores 1 for every Day its color won.</p>
+        <p>Then <b>the most Glory wins</b>; a tie is shared.</p>
       </>
     ),
     side: (
       <Callout>
         <div class="eyebrow">Example</div>
-        <p>After the Reaping, Ada has 12 Glory, Ben 13 and Cy 9.</p>
-        <p>Ada reached 12, so the game ends, but <b>Ben has the most. Ben wins.</b></p>
+        <p>Light won 4 Days and Dark won 2. Ada holds 4 Light and 2 Dark tokens: 4 × 4 + 2 × 2 = <b>20</b>, added to the Glory her Choir earned.</p>
+        <p>Ben led all game with a big Dark Choir, but he hoarded his cards and Offered the least: he loses 3, and Ada wins.</p>
       </Callout>
     ),
   },
@@ -432,10 +433,10 @@ const STEPS: Step[] = [
     title: 'Playing well',
     body: (
       <ul class="learn-list">
-        <li><b>Too many on one side pays no one.</b> When three Choirs lean the same way, someone has to switch. Say so at the table.</li>
-        <li><b>Build for later.</b> Offers pay now; a strong Choir keeps paying every Evening.</li>
-        <li><b>Read the table.</b> First Fruits are the one honest card each player has to show you. A card someone throws out of their Choir tells you which way they've decided to lean.</li>
-        <li><b>Make deals.</b> Talk at the table. Promises aren't binding, so trust carefully.</li>
+        <li><b>No offering, no harvest.</b> A Day you build instead of Offering, your Choir earns nothing. Choose those Days when your Choir's color looks likely to lose anyway.</li>
+        <li><b>A token is your strongest push and your dearest.</b> Spend one when a Day truly hangs on it.</li>
+        <li><b>Read the table.</b> Choirs are public, Offers are anonymous, and a Choir full of Light cards may hide a hand of Dark tokens.</li>
+        <li><b>Make deals.</b> The Tide track gives everyone the same numbers to argue over. Promises aren't binding, so trust carefully.</li>
       </ul>
     ),
     side: (

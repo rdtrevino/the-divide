@@ -2,6 +2,79 @@
 
 Older entries name files that have since been removed (design write-ups, simulator reports, archived spreadsheets and rulebook drafts, the V28 print kit); every one of them is in the git history before November 18, 2026.
 
+## Core validation (November 19, 2026)
+
+V45 stands; Devotion is held until playtesting (`design/core-validation.md`).
+- **The engine played core rule variants** (`rules.ts`); after the study, it keeps switches only for the open questions (Devotion, tokens each).
+- **The strong bot tested 20 of them** (`tools/sim/core.ts`, `exploits.ts`).
+- **What it found:** under strong play, players hedge, which makes sides 70–72% readable.
+- **The fix, held until playtesting:** Devotion (each Choir card of your token side scores 1 at the end) brings the reader to 50–58%, with 8 tokens each as an option. It would be a 17th rule, for a problem only strong, consistent hedgers show.
+- **Re-confirmed:** no offering, no harvest; Judgment Day; and the leftover rule.
+- **The site's Stats page** now shows the learned bot's card numbers (Apple 1.30, Leviathan 1.29 and Acolyte 0.68 outside the target, for the card work).
+
+## Human-like bots (November 19, 2026)
+
+Layer 3 of the bot plan (`design/bots.md`), built on the learned bot.
+- **Simulations play the learned bot by default** (`BOT=heuristic` for the old one): about 14 ms a 4-player game.
+- **The learned bot pays a small extra cost to Offer a token:** it overspent them; it now plays the strong bot even.
+- **Levels and styles** (`persona.ts`): Novice to Expert by sampling temperature; Loyalist, Builder, Hoarder, Gambler, Bluffer. Tested by `tools/sim/personas.ts`.
+- **A reader** (`tools/sim/reader.ts`): strong players hedge (a Choir opposite their tokens), which makes their sides 73–83% readable. An open question, in `DECISIONS.md`, with card measurements under stronger play.
+
+## The learned bot (November 19, 2026)
+
+Layer 2 of the bot plan (`design/bots.md`).
+- **Learned bot** (`learned.ts`): a small network trained on the strong bot, reading only its seat's view. 1.62× a fair share among heuristic bots, 0.81 against the strong bot, a median 0.15 ms a decision.
+- **The site's bots** now use it (`roomCore.ts`), warmed at Worker startup; the heuristic still answers minor decisions. Not yet deployed.
+- **Hybrid strong bot** (`HYBRID`): searches only the network's top 2 options, with learned playouts. Beats the strong bot 1.12 to 0.88 at the same cost.
+- **Tools:** `game/tools/distill` (data, training in numpy, play tests). Removed four redundant sim scripts; `exp45.ts` now reports seats and runs on every core. **`DECISIONS.md`** indexes every decision.
+
+## Faster bots (November 19, 2026)
+
+Layer 1 of the bot plan (`design/bots.md`): the same bots, about 3× faster, with every move unchanged (checked by fingerprint).
+- **Engine:** the strong bot copies the game from the start of the Day (`Game.fork`) instead of replaying from the deal. 1.58 → 0.93 seconds for a game where all 4 players use the strong bot, on one core.
+- **Every core:** `game/tools/par.ts` runs a script's games in parallel with identical results; used by the lab's main modes and `skill45.ts`. With 4 cores: 0.53 s a game in the engine (3.0×), 0.13 s in the lab (3.1×).
+- **Fixed:** the Judgment Day choice being carried out was kept outside the game state, so two games running in one process could interfere. It is now part of the state.
+- **Tools:** `bench-bots.ts` (bot speed and move fingerprint); `skill45.ts` prints a standard error; a test that a copied game always matches a full replay (104 engine tests).
+
+## V45: no offering, no harvest (November 19, 2026)
+
+Robert's questions about tokens and the Miser's Rule, tested in lab Rounds 44 and 45 (`design/tokens-and-offering.md`).
+- **The Miser's Rule is replaced by "no offering, no harvest":** your Choir scores at the Reaping only on a Day you Offered (a card or a token). Offers rise to 67–68% of actions; strong play beats simple play 3.91×; nothing is tracked across the game.
+- **Kept:** tokens are played as an Offer; leftover tokens go to whoever holds the fewest. Tokens should be made card-shaped, so a token Offer looks like any other.
+- **Cards:** Anathema (other players' Offers go face up, instead of being blocked: 1.88 under the new rule), Temptation (a rival's Choir card counts as the opposite alignment this Day), Mercy (only if you Offered: 1.57), Moloch (3 Glory), Ordeal (no penalty), Favor (your Choir outscored everyone else's).
+- **Site:** the table notes who has Offered today; the results drop the Miser column.
+
+## V45: 7 Days and Judgment Day (November 19, 2026)
+
+Robert's call, after lab Round 43 (`design/the-game-now.md`, "Seven Days at every table?").
+- **Every game lasts 7 Days** (it was 6 at 3 players and 8 at 4): one number to learn.
+- **Judgment Day.** On Day 7, after First Fruits, every player chooses their whole action in secret (which action and which card or token), then the turns carry them out in order. An action that can no longer be done does nothing. Measured with strong bots, seats are 0.92–1.12 at 3 players and 0.89–1.16 at 4 (7 Days without it: up to 1.24), and the rule holds at 5 and 6 players (0.85–1.24) if the game ever grows.
+- **Engine and site:** the secret choice is a Judgment Day prompt listing every action you could take; the table shows "Judgment Day" on Day 7; both bots play it. 101 engine tests.
+- **Strong computer players** (`game/packages/engine/src/mc.ts`): Monte Carlo search like the lab's, with reads (token guesses lean toward each player's Choir). One wins 2.4 times its share among the fast bots. The site still uses the fast bots.
+- **Card measurement** (`game/tools/sim/card-value.ts`): what a card's ability is worth, from paired games against a plain card of its color, with each card's role (kept, activated, Glory made).
+
+## V45: the Tide track, allegiance tokens, and every card Light or Dark (November 19, 2026)
+
+Robert adopted the Tide-track core (`design/the-game-now.md`, measured in the lab over Rounds 35 to 42). Card data V45, rulebook v15.
+
+**The core rules** (engine, site, rulebook)
+- **Allegiance tokens.** Each player is dealt 6 secret tokens from an even, shuffled pool (9 + 9 at 3 players, 12 + 12 at 4). At the end each scores 1 Glory for every Day its color won. A token can be **Offered** facedown (it counts 2) and **Gathered** (it needs no room); tokens left on the Altar go, one at a time, to whoever holds the fewest.
+- **The Tide track.** The heavier side **wins the Day**; a tie is Neutral and no one wins. The track replaces the race to 12.
+- **The Reaping:** each Choir card of the winning color scores **2 Glory**. No lean, no pairs, no losses.
+- **Offers earn nothing** directly: the Offer is the public good. **The Miser's Rule:** whoever Offered the fewest times loses 3 at the end (nobody, if all tied).
+- **Anonymous First Fruits** (shuffled, no owner) and an **anonymous reveal** (facedown Offers and tokens are shuffled before they turn face up).
+- **Fixed length:** 6 Days at 3 players, 8 at 4, so every seat is first equally often.
+- **Hidden Roles is retired** (and with it the Fates, the Turn, the Balance, and The Sabbath, Equilibrium and Armageddon). The tokens give every game secret, shifting sides. A lab test at 5 and 6 players (Round 41) found the reads still hidden (53 to 57%) but the turn order unfair (seats 0.59 to 1.43) and 5 players too long at 10 Days; the game is for 3 and 4.
+
+**Every card is Light or Dark** (Robert). A Neutral card never scores at the Reaping, so all 23 measured 0.50 to 0.70. A Neutral-pay rule was tested and balanced them, but it adds a rule and lets a Neutral Offer satisfy the Miser's Rule without pushing anything. Coloring them is simpler, keeps the deck mirrored (34 Light, 34 Dark, and Acolyte, whose color changes), cuts Days nobody wins from 29% to 20%, and in the lab is as hard to read (52%) and as skillful (3.56x) as any version.
+- **Made Light:** Eternity, Raguel, Firmament, Stillness, Council, Prophecy, Moderation, Flaming Sword, Jubilee, Vessel, Twilight. **Made Dark:** Fig Leaves, Outcast, Heresy, Mirage, Veil, Apple, Forger, Watchers, Ordeal, Zealot, Nephilim (which also counts as Light for card abilities). **Acolyte** takes the color of the most recent Day won (Light before any).
+
+**Cards reworded for the new scoring** ("lean", "with the Tide", and losses at the Reaping no longer exist): Providence and Mammon (fill on Light or Dark Days), Tree of Life (Light today and yesterday), Mercy (your Choir scored nothing), Ordeal (spent; double, or lose 2), Raguel (their Choir outscores yours), Firmament and Leviathan (the margin alone), Moderation (as many Light as Dark cards), Fig Leaves (take back a facedown Offer), Heresy (score the losing color), Council (both Choirs score), Apple (the Tide turned), Favor, Defiance, Bounty, Parasite and Scapegoat ("scored nothing", Scapegoat costs 2), Hubris (8), Envy (5), Uriel and Beelzebub (1), Moloch (2), Flaming Sword (Exalt only), Morning Star (costs 1).
+**Celestials:** the Tempest (may destroy a facedown card), the Eclipse (in the Morning, a card counts as the other color), the Cantor (draw when you Offer), the Patron (exchange a hand card with a Choir card), the Whisper (+1 / -1), the Arbiter (take from a Choir that scored less). **Events:** Purgatory (the Day counts for neither side), False Prophecy and Famine reworded, the Flood and Let There Be Light (the cards still score), the Fast (no Turn).
+**Measured** (`design/balance.md`): every Host card 0.75 to 1.25 and every Celestial 0.86 to 1.23 over 20,000 bot games.
+
+**Engine and site:** the engine plays only V45 (99 engine tests, including 600 bot games); the table shows the Tide track, each Choir's colors, everyone's token count, your own tokens and what they are worth, tokens on the Altar, and the reveal in the results; the Learn page and the Rules page teach V45. `cards/tools/apply_changes.py` can now change a card's alignment. Every card whose color changed needs a reprinted frame (Reprint List).
+
 ## The engine keeps only the current rules; history moves to the git log (November 18, 2026)
 
 No card text, rules or balance changes, and nothing on the site looks or plays differently.

@@ -1,0 +1,157 @@
+{
+ "version": "V45",
+ "date": "2026-11-19",
+ "previous": "V44",
+ "changes": {
+  "Providence": {
+   "text": "At the end of each Day Light wins, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card.",
+   "why": "A Light store: fills on Light Days (V45; there is no lean to lean with)"
+  },
+  "Mammon": {
+   "text": "At the end of each Day Dark wins, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card.",
+   "why": "The Dark store, mirroring Providence (V45)"
+  },
+  "Tree of Life": {
+   "text": "At the end of the Day: If Light won today and yesterday, gain 1 Glory.",
+   "why": "A Light streak on the Tide track (V45)"
+  },
+  "Mercy": {
+   "text": "At the end of the Day: If your Choir scored nothing at the Reaping, gain 1 Glory.",
+   "why": "Nothing is lost at the Reaping any more (V45): Mercy now comforts an empty Reaping"
+  },
+  "Ordeal": {
+   "text": "On your turn: You may invoke this card. At this Reaping, your Choir scores double.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  },
+  "Raguel": {
+   "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At the end of each Day their Choir scores, gain 1 Glory.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  },
+  "Nephilim": {
+   "text": "This card counts as both Light +1 and Dark +1 at once. In your Choir it scores whichever side wins the Day. On the Altar its two values cancel.",
+   "why": "Says how it scores under per-card scoring (V45)"
+  },
+  "Firmament": {
+   "text": "At the end of the Day: If the Day was won by exactly 1, gain 1 Glory.",
+   "why": "A close Day pays; no lean needed (V45)"
+  },
+  "Leviathan": {
+   "text": "At the end of the Day: If the Day was won by 3 or more, gain 1 Glory.",
+   "why": "A landslide pays; no lean needed (V45)"
+  },
+  "Moderation": {
+   "text": "At the end of the Day: If your Choir holds as many Light cards as Dark cards, gain 1 Glory.",
+   "why": "A balanced Choir, in cards rather than lean (V45)"
+  },
+  "Fig Leaves": {
+   "text": "In the Evening, before the Altar is revealed: You may take back into your hand one facedown card you Offered this Day.",
+   "why": "Sitting out meant nothing once the Reaping has no losses (V45). Now it covers a retreat: an Offer the table saw can vanish before the reveal"
+  },
+  "Heresy": {
+   "text": "On your turn: You may pay 1 Glory. At this Day's Reaping, your Choir scores its cards of the losing color instead.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  },
+  "Council": {
+   "text": "In the Morning: You may name another player. At the end of the Day, if both your Choirs scored, each of you gains 1 Glory.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  },
+  "Apple": {
+   "text": "At the end of the Day: If the Tide turned (the side that won today lost yesterday), gain 1 Glory.",
+   "why": "It still rewards a change of sides, now on the Tide track (V45)"
+  },
+  "Favor": {
+   "text": "At the end of the Day: If 2 or more other players' Choirs scored nothing at the Reaping, gain 1 Glory.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  },
+  "Hubris": {
+   "text": "At the end of the Day: If the player with the most Glory gained 6 or more Glory this Day, they give 1 to you.",
+   "why": "Choirs score 2 a card (V45), so a big Day is 6, not 4"
+  },
+  "Envy": {
+   "text": "On your turn: If the player with the most Glory has at least 5 more Glory than you, they lose 1 Glory. Each tied leader loses 1.",
+   "why": "Scores run about twice as high (V45)"
+  },
+  "Parasite": {
+   "text": "When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if their Choir scored nothing, you gain 1 Glory; if it scored, discard this card.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  },
+  "Scapegoat": {
+   "text": "When another player's Choir would score at the Reaping, you may pay 2 Glory. It scores nothing.",
+   "why": "A Reaping is worth more now (2 a card), so denying one costs 2 (V45)"
+  },
+  "Defiance": {
+   "text": "At the end of the Day: If your Choir scored and most other players' Choirs did not, gain 1 Glory.",
+   "why": "The underdog's reward, without lean (V45)"
+  },
+  "Bounty": {
+   "text": "In the Morning: You may name a player. At the end of the Day, if their Choir scored nothing, gain 1 Glory; if it scored, lose 1 Glory.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  }
+ },
+ "celestials": {
+  "The Eclipse": {
+   "text": "In the Evening, before the Altar is revealed: Choose a card in your Choir. It counts as both Light and Dark at this Day's Reaping.",
+   "why": "Making a card Neutral only loses Glory under per-card scoring (V45); now the chosen card scores whichever side wins"
+  },
+  "The Cantor": {
+   "text": "When you Offer a card, you may Offer a second card of the same alignment (Light, Dark, or Neutral). Both go face up.",
+   "why": "Offers earn no Glory (V45): the Cantor is now a louder push"
+  },
+  "The Whisper": {
+   "text": "In the Morning: Name Light or Dark aloud. If that side wins the Day, every card in your Choir scores at the Reaping.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  },
+  "The Arbiter": {
+   "text": "When your Choir scores at the Reaping, take 1 of that Glory from another player whose Choir scored nothing.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping"
+  }
+ },
+ "events": {
+  "Let There Be Light": {
+   "text": "The abilities of Dark Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still score at the Reaping. Neutral cards are unaffected.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping",
+   "wording": true
+  },
+  "The Flood": {
+   "text": "The abilities of Light Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still score at the Reaping. Neutral cards are unaffected.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping",
+   "wording": true
+  },
+  "Purgatory": {
+   "text": "This Day counts for neither side on the Tide track. Choirs still score.",
+   "why": "No losses to suspend any more (V45); Purgatory now suspends the Day for the tokens"
+  },
+  "False Prophecy": {
+   "text": "Mark the Tide track as normal. At the Reaping, Choirs score as if the other side had won.",
+   "why": "No Balance (V45)"
+  },
+  "Famine": {
+   "text": "No Choir scores at the Reaping this Day.",
+   "why": "Scoring words for V45: no lean, no losses at the Reaping",
+   "wording": true
+  },
+  "The Fast": {
+   "text": "No one may Exalt or spend Glory this Day.",
+   "why": "No Turn cards (V45)",
+   "wording": true
+  },
+  "The Sabbath": {
+   "text": "The Balance marker does not move this Day. The Reaping still occurs.",
+   "why": "Moved the Balance (Hidden Roles, retired in V45)",
+   "openGame": false,
+   "wording": true
+  },
+  "Equilibrium": {
+   "text": "In the Morning, move the Balance marker 1 space toward the center. No effect if it is already on the center space.",
+   "why": "Moved the Balance (Hidden Roles, retired in V45)",
+   "openGame": false,
+   "wording": true
+  },
+  "Armageddon": {
+   "text": "The Balance marker may move up to 3 spaces this Day.",
+   "why": "Moved the Balance (Hidden Roles, retired in V45)",
+   "openGame": false,
+   "wording": true
+  }
+ }
+}

@@ -1,6 +1,6 @@
 {
-  "version": "V44",
-  "date": "2026-11-18",
+  "version": "V45",
+  "date": "2026-11-19",
   "hosts": [
     {
       "id": "host-michael",
@@ -44,7 +44,7 @@
     {
       "id": "host-providence",
       "name": "Providence",
-      "text": "At the end of each Day your Choir leans with the Tide, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card.",
+      "text": "At the end of each Day Light wins, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card.",
       "openGame": true,
       "face": "art/faces/host/04-providence.jpg",
       "plate": "art/plates/host/04-providence.jpg",
@@ -70,7 +70,7 @@
     {
       "id": "host-tree-of-life",
       "name": "Tree of Life",
-      "text": "At the end of the Day: If your Choir leaned with the Tide today and yesterday, gain 1 Glory.",
+      "text": "At the end of the Day: If Light won today and yesterday, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/06-tree-of-life.jpg",
       "plate": "art/plates/host/06-tree-of-life.jpg",
@@ -148,7 +148,7 @@
     {
       "id": "host-uriel",
       "name": "Uriel",
-      "text": "At the end of the Day: If your Choir has 3 or more other Light cards, gain 2 Glory.",
+      "text": "At the end of the Day: If your Choir has 3 or more other Light cards, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/12-uriel.jpg",
       "plate": "art/plates/host/12-uriel.jpg",
@@ -200,7 +200,7 @@
     {
       "id": "host-mercy",
       "name": "Mercy",
-      "text": "If yours is the only Choir against the Tide, lose 1 instead of 3, then discard this card.",
+      "text": "At the end of the Day: If you Offered this Day and your Choir scored nothing, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/16-mercy.jpg",
       "plate": "art/plates/host/16-mercy.jpg",
@@ -239,7 +239,7 @@
     {
       "id": "host-morning-star",
       "name": "Morning Star",
-      "text": "On your turn: Choose a card in your Choir. It counts as the opposite alignment this Day.",
+      "text": "On your turn: You may pay 1 Glory. Choose a card in your Choir. It counts as the opposite alignment this Day.",
       "openGame": true,
       "face": "art/faces/host/19-morning-star.jpg",
       "plate": "art/plates/host/19-morning-star.jpg",
@@ -309,8 +309,8 @@
       "face": "art/faces/host/24-vessel.jpg",
       "plate": "art/plates/host/24-vessel.jpg",
       "number": 24,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "On your turn",
       "oncePerGame": false
     },
@@ -322,34 +322,34 @@
       "face": "art/faces/host/25-eternity.jpg",
       "plate": "art/plates/host/25-eternity.jpg",
       "number": 25,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
     {
       "id": "host-ordeal",
       "name": "Ordeal",
-      "text": "On your turn: You may invoke this card. At this Reaping, double the Glory you gain or lose from your Choir's Alignment.",
+      "text": "On your turn: You may invoke this card, then discard it. At this Reaping, your Choir scores double.",
       "openGame": true,
       "face": "art/faces/host/26-ordeal.jpg",
       "plate": "art/plates/host/26-ordeal.jpg",
       "number": 26,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "On your turn",
       "oncePerGame": false
     },
     {
       "id": "host-raguel",
       "name": "Raguel",
-      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At the end of the Day, if they gained Glory at the Reaping, gain 1 Glory; if they lost Glory at the Reaping, lose 1 Glory.",
+      "text": "When this enters your Choir, choose another player. They are Bound to you while it remains. At the end of each Day their Choir scores more than yours, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/27-raguel.jpg",
       "plate": "art/plates/host/27-raguel.jpg",
       "number": 27,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "When this enters your Choir",
       "oncePerGame": false
     },
@@ -361,8 +361,8 @@
       "face": "art/faces/host/28-twilight.jpg",
       "plate": "art/plates/host/28-twilight.jpg",
       "number": 28,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
@@ -374,8 +374,8 @@
       "face": "art/faces/host/29-zealot.jpg",
       "plate": "art/plates/host/29-zealot.jpg",
       "number": 29,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
@@ -387,15 +387,15 @@
       "face": "art/faces/host/30-stillness.jpg",
       "plate": "art/plates/host/30-stillness.jpg",
       "number": 30,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
     {
       "id": "host-shroud",
       "name": "Acolyte",
-      "text": "This card's alignment matches the previous Day's Tide: Light +1 after a Light Tide, Dark +1 after a Dark Tide. After a Neutral Tide, or on Day 1, it is Neutral.",
+      "text": "This card's color matches the most recent Day won: Light after a Light Day, Dark after a Dark Day. Before any Day is won, it is Light.",
       "openGame": true,
       "face": "art/faces/host/31-shroud.jpg",
       "plate": "art/plates/host/31-shroud.jpg",
@@ -408,12 +408,12 @@
     {
       "id": "host-nephilim",
       "name": "Nephilim",
-      "text": "This card counts as both Light +1 and Dark +1 at once. It satisfies any effect requiring a Light card and any requiring a Dark card. For your Alignment and the Tide, its two values are Neutral.",
+      "text": "This card also counts as a Light card, for any card that asks for one.",
       "openGame": true,
       "face": "art/faces/host/32-nephilim.jpg",
       "plate": "art/plates/host/32-nephilim.jpg",
       "number": 32,
-      "alignment": "both",
+      "alignment": "dark",
       "value": 1,
       "cadence": "Passive",
       "oncePerGame": false
@@ -421,52 +421,52 @@
     {
       "id": "host-firmament",
       "name": "Firmament",
-      "text": "At the end of the Day: If the Tide won by exactly 1 and your Choir leans with it, gain 1 Glory.",
+      "text": "At the end of the Day: If the Day was won by exactly 1, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/33-firmament.jpg",
       "plate": "art/plates/host/33-firmament.jpg",
       "number": 33,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
     {
       "id": "host-moderation",
       "name": "Moderation",
-      "text": "At the end of the Day: If your Choir leans neither way, gain 1 Glory.",
+      "text": "At the end of the Day: If your Choir holds as many Light cards as Dark cards, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/34-moderation.jpg",
       "plate": "art/plates/host/34-moderation.jpg",
       "number": 34,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
     {
       "id": "host-fig-leaves",
       "name": "Fig Leaves",
-      "text": "In the Evening, before the Altar is revealed: You may have your Choir sit out this Day. It gains nothing, loses nothing, and does not count as leaning either way.",
+      "text": "In the Evening, before the Altar is revealed: You may take back into your hand one facedown card you Offered this Day.",
       "openGame": true,
       "face": "art/faces/host/35-fig-leaves.jpg",
       "plate": "art/plates/host/35-fig-leaves.jpg",
       "number": 35,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "In the Evening",
       "oncePerGame": false
     },
     {
       "id": "host-flaming-sword",
       "name": "Flaming Sword",
-      "text": "On your turn: No other player may Exalt or Gather until the start of your next turn.",
+      "text": "On your turn: No other player may Exalt until the start of your next turn.",
       "openGame": true,
       "face": "art/faces/host/36-flaming-sword.jpg",
       "plate": "art/plates/host/36-flaming-sword.jpg",
       "number": 36,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "On your turn",
       "oncePerGame": false
     },
@@ -478,34 +478,34 @@
       "face": "art/faces/host/37-outcast.jpg",
       "plate": "art/plates/host/37-outcast.jpg",
       "number": 37,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
     {
       "id": "host-heresy",
       "name": "Heresy",
-      "text": "On your turn: You may pay 1 Glory. Your Choir counts as leaning the opposite way this Day.",
+      "text": "On your turn: You may pay 1 Glory. At this Day's Reaping, your Choir scores its cards of the losing color instead.",
       "openGame": true,
       "face": "art/faces/host/38-heresy.jpg",
       "plate": "art/plates/host/38-heresy.jpg",
       "number": 38,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "On your turn",
       "oncePerGame": false
     },
     {
       "id": "host-council",
       "name": "Council",
-      "text": "In the Morning: You may name another player. At the end of the Day, if your Choirs lean the same way, each of you gains 1 Glory.",
+      "text": "In the Morning: You may name another player. At the end of the Day, if both your Choirs scored, each of you gains 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/39-council.jpg",
       "plate": "art/plates/host/39-council.jpg",
       "number": 39,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "In the Morning",
       "oncePerGame": false
     },
@@ -517,8 +517,8 @@
       "face": "art/faces/host/40-mirage.jpg",
       "plate": "art/plates/host/40-mirage.jpg",
       "number": 40,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "Passive",
       "oncePerGame": false
     },
@@ -530,8 +530,8 @@
       "face": "art/faces/host/41-veil.jpg",
       "plate": "art/plates/host/41-veil.jpg",
       "number": 41,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
@@ -543,8 +543,8 @@
       "face": "art/faces/host/42-prophecy.jpg",
       "plate": "art/plates/host/42-prophecy.jpg",
       "number": 42,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "In the Morning",
       "oncePerGame": false
     },
@@ -556,21 +556,21 @@
       "face": "art/faces/host/43-watchers.jpg",
       "plate": "art/plates/host/43-watchers.jpg",
       "number": 43,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "On your turn",
       "oncePerGame": false
     },
     {
       "id": "host-apple",
       "name": "Apple",
-      "text": "At the end of the Day: If your Choir leans the other way from yesterday, gain 2 Glory.",
+      "text": "At the end of the Day: If the Tide turned (the side that won today lost yesterday), gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/44-apple.jpg",
       "plate": "art/plates/host/44-apple.jpg",
       "number": 44,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "At the end of the Day",
       "oncePerGame": false
     },
@@ -582,8 +582,8 @@
       "face": "art/faces/host/45-forger.jpg",
       "plate": "art/plates/host/45-forger.jpg",
       "number": 45,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "dark",
+      "value": 1,
       "cadence": "When you Gather or Exalt",
       "oncePerGame": false
     },
@@ -595,15 +595,15 @@
       "face": "art/faces/host/46-jubilee.jpg",
       "plate": "art/plates/host/46-jubilee.jpg",
       "number": 46,
-      "alignment": "neutral",
-      "value": 0,
+      "alignment": "light",
+      "value": 1,
       "cadence": "On your turn",
       "oncePerGame": false
     },
     {
       "id": "host-anathema",
       "name": "Anathema",
-      "text": "On your turn: No other player may Offer until the start of your next turn.",
+      "text": "On your turn: Until the start of your next turn, other players' Offers go on the Altar face up.",
       "openGame": true,
       "face": "art/faces/host/47-anathema.jpg",
       "plate": "art/plates/host/47-anathema.jpg",
@@ -629,7 +629,7 @@
     {
       "id": "host-favor",
       "name": "Favor",
-      "text": "At the end of the Day: If 2 or more other players lost Glory at the Reaping, gain 1 Glory.",
+      "text": "At the end of the Day: If your Choir scored more than every other player's, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/49-favor.jpg",
       "plate": "art/plates/host/49-favor.jpg",
@@ -642,7 +642,7 @@
     {
       "id": "host-temptation",
       "name": "Temptation",
-      "text": "On your turn: Play a card from your hand into another player's Choir. If their Choir is full, they discard one of its cards first.",
+      "text": "On your turn: Choose a card in another player's Choir. It counts as the opposite alignment this Day.",
       "openGame": true,
       "face": "art/faces/host/50-temptation.jpg",
       "plate": "art/plates/host/50-temptation.jpg",
@@ -694,7 +694,7 @@
     {
       "id": "host-moloch",
       "name": "Moloch",
-      "text": "On your turn: You may discard 1 other Host card from your Choir to gain 1 Glory. Its ability must not have been used this turn.",
+      "text": "On your turn: You may discard 1 other Host card from your Choir to gain 3 Glory. Its ability must not have been used this turn.",
       "openGame": true,
       "face": "art/faces/host/54-moloch.jpg",
       "plate": "art/plates/host/54-moloch.jpg",
@@ -707,7 +707,7 @@
     {
       "id": "host-beelzebub",
       "name": "Beelzebub",
-      "text": "At the end of the Day: If your Choir has 3 or more other Dark cards, gain 2 Glory.",
+      "text": "At the end of the Day: If your Choir has 3 or more other Dark cards, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/55-beelzebub.jpg",
       "plate": "art/plates/host/55-beelzebub.jpg",
@@ -720,7 +720,7 @@
     {
       "id": "host-leviathan",
       "name": "Leviathan",
-      "text": "At the end of the Day: If the Tide won by 3 or more and your Choir leans with it, gain 1 Glory.",
+      "text": "At the end of the Day: If the Day was won by 3 or more, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/56-leviathan.jpg",
       "plate": "art/plates/host/56-leviathan.jpg",
@@ -733,7 +733,7 @@
     {
       "id": "host-hubris",
       "name": "Hubris",
-      "text": "At the end of the Day: If the player with the most Glory gained 4 or more Glory this Day, they give 1 to you.",
+      "text": "At the end of the Day: If the player with the most Glory gained 8 or more Glory this Day, they give 1 to you.",
       "openGame": true,
       "face": "art/faces/host/57-hubris.jpg",
       "plate": "art/plates/host/57-hubris.jpg",
@@ -759,7 +759,7 @@
     {
       "id": "host-mammon",
       "name": "Mammon",
-      "text": "At the end of each Day your Choir leans with the Tide, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card.",
+      "text": "At the end of each Day Dark wins, put 1 Glory from the Pot on this card. On your turn: You may take all the Glory on it, then discard this card.",
       "openGame": true,
       "face": "art/faces/host/59-mammon.jpg",
       "plate": "art/plates/host/59-mammon.jpg",
@@ -772,7 +772,7 @@
     {
       "id": "host-envy",
       "name": "Envy",
-      "text": "On your turn: If the player with the most Glory has at least 3 more Glory than you, they lose 1 Glory. Each tied leader loses 1.",
+      "text": "On your turn: If the player with the most Glory has at least 5 more Glory than you, they lose 1 Glory. Each tied leader loses 1.",
       "openGame": true,
       "face": "art/faces/host/60-envy.jpg",
       "plate": "art/plates/host/60-envy.jpg",
@@ -798,7 +798,7 @@
     {
       "id": "host-parasite",
       "name": "Parasite",
-      "text": "When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if they lost Glory at the Reaping, you gain 1 Glory; if they gained Glory at the Reaping, discard this card.",
+      "text": "When you Exalt or Gather this card, put it into another player's Choir instead. They cannot discard it. At the end of each Day, if their Choir scored nothing, you gain 1 Glory; if it scored, discard this card.",
       "openGame": true,
       "face": "art/faces/host/62-parasite.jpg",
       "plate": "art/plates/host/62-parasite.jpg",
@@ -837,7 +837,7 @@
     {
       "id": "host-scapegoat",
       "name": "Scapegoat",
-      "text": "When another player would gain Glory at the Reaping, you may pay 1 Glory. They gain nothing.",
+      "text": "When another player's Choir would score at the Reaping, you may pay 2 Glory. It scores nothing.",
       "openGame": true,
       "face": "art/faces/host/65-scapegoat.jpg",
       "plate": "art/plates/host/65-scapegoat.jpg",
@@ -850,7 +850,7 @@
     {
       "id": "host-defiance",
       "name": "Defiance",
-      "text": "At the end of the Day: If your Choir leans with the Tide and more Choirs leaned against it than with it, gain 1 Glory.",
+      "text": "At the end of the Day: If your Choir scored and most other players' Choirs did not, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/66-defiance.jpg",
       "plate": "art/plates/host/66-defiance.jpg",
@@ -863,7 +863,7 @@
     {
       "id": "host-bounty",
       "name": "Bounty",
-      "text": "In the Morning: You may name a player. At the end of the Day, if they lost Glory at the Reaping, gain 1 Glory; if they gained Glory at the Reaping, lose 1 Glory.",
+      "text": "In the Morning: You may name a player. At the end of the Day, if their Choir scored nothing, gain 1 Glory; if it scored, lose 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/67-bounty.jpg",
       "plate": "art/plates/host/67-bounty.jpg",
@@ -943,7 +943,7 @@
     {
       "id": "celestial-the-tempest",
       "name": "The Tempest",
-      "text": "When you Offer, you may destroy a face-up card on the Altar.",
+      "text": "When you Offer, you may destroy a card on the Altar, face up or facedown.",
       "openGame": true,
       "face": "art/faces/celestial/I-the-tempest.jpg",
       "plate": "art/plates/celestial/I-the-tempest.jpg",
@@ -961,7 +961,7 @@
     {
       "id": "celestial-the-eclipse",
       "name": "The Eclipse",
-      "text": "In the Evening: Choose a card in your Choir. It counts as Neutral at this Day's Reaping.",
+      "text": "In the Morning: Choose a Light or Dark card in your Choir. It counts as the other color this Day.",
       "openGame": true,
       "face": "art/faces/celestial/III-the-eclipse.jpg",
       "plate": "art/plates/celestial/III-the-eclipse.jpg",
@@ -970,7 +970,7 @@
     {
       "id": "celestial-the-cantor",
       "name": "The Cantor",
-      "text": "When you Offer, you may Offer a second card of the same alignment (Light, Dark, or Neutral). Both go face up, and each earns its reward.",
+      "text": "When you Offer, draw a card.",
       "openGame": true,
       "face": "art/faces/celestial/IV-the-cantor.jpg",
       "plate": "art/plates/celestial/IV-the-cantor.jpg",
@@ -979,7 +979,7 @@
     {
       "id": "celestial-the-patron",
       "name": "The Patron",
-      "text": "On your turn: Play a card from your hand into another player's Choir. If it is full, they discard one of its cards first.",
+      "text": "On your turn: Exchange a card from your hand with a card in another player's Choir.",
       "openGame": true,
       "face": "art/faces/celestial/V-the-patron.jpg",
       "plate": "art/plates/celestial/V-the-patron.jpg",
@@ -1006,7 +1006,7 @@
     {
       "id": "celestial-the-whisper",
       "name": "The Whisper",
-      "text": "In the Morning: Name Light or Dark aloud. At the Reaping, if the Tide matches, your Choir counts as leaning with it.",
+      "text": "In the Morning: Name Light or Dark aloud. If that side wins the Day, gain 1 Glory; if the other side wins, lose 1.",
       "openGame": true,
       "face": "art/faces/celestial/VIII-the-whisper.jpg",
       "plate": "art/plates/celestial/VIII-the-whisper.jpg",
@@ -1015,7 +1015,7 @@
     {
       "id": "celestial-the-arbiter",
       "name": "The Arbiter",
-      "text": "When you gain Glory at the Reaping, take 1 of it from another player: one whose Choir leaned against the Tide, if any of them has Glory.",
+      "text": "When your Choir scores at the Reaping, take 1 of that Glory from another player whose Choir scored less.",
       "openGame": true,
       "face": "art/faces/celestial/IX-the-arbiter.jpg",
       "plate": "art/plates/celestial/IX-the-arbiter.jpg",
@@ -1050,7 +1050,7 @@
     {
       "id": "event-let-there-be-light",
       "name": "Let There Be Light",
-      "text": "The abilities of Dark Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still count toward Alignment. Neutral cards are unaffected.",
+      "text": "The abilities of Dark Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still score at the Reaping. Neutral cards are unaffected.",
       "openGame": true,
       "face": "art/faces/event/let-there-be-light.jpg",
       "plate": "art/plates/event/let-there-be-light.jpg"
@@ -1090,7 +1090,7 @@
     {
       "id": "event-purgatory",
       "name": "Purgatory",
-      "text": "No Choir loses Glory at the Reaping this Day. A Choir that leans neither way gains 1 Glory.",
+      "text": "This Day counts for neither side on the Tide track. Choirs still score.",
       "openGame": true,
       "face": "art/faces/event/purgatory.jpg",
       "plate": "art/plates/event/purgatory.jpg"
@@ -1114,7 +1114,7 @@
     {
       "id": "event-false-prophecy",
       "name": "False Prophecy",
-      "text": "Set the Tide and move the Balance marker as normal. During the Reaping, score as if the Tide ran the opposite direction.",
+      "text": "Mark the Tide track as normal. At the Reaping, Choirs score as if the other side had won.",
       "openGame": true,
       "face": "art/faces/event/false-prophecy.jpg",
       "plate": "art/plates/event/false-prophecy.jpg"
@@ -1122,7 +1122,7 @@
     {
       "id": "event-famine",
       "name": "Famine",
-      "text": "No Choir gains or loses Glory at the Reaping this Day, and no Choir counts as leaning with or against the Tide.",
+      "text": "No Choir scores at the Reaping this Day.",
       "openGame": true,
       "face": "art/faces/event/famine.jpg",
       "plate": "art/plates/event/famine.jpg"
@@ -1170,7 +1170,7 @@
     {
       "id": "event-the-flood",
       "name": "The Flood",
-      "text": "The abilities of Light Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still count toward Alignment. Neutral cards are unaffected.",
+      "text": "The abilities of Light Host cards in Choirs do not work this Day, including abilities that work on their own. The cards still score at the Reaping. Neutral cards are unaffected.",
       "openGame": true,
       "face": "art/faces/event/the-flood.jpg",
       "plate": "art/plates/event/the-flood.jpg"
@@ -1178,7 +1178,7 @@
     {
       "id": "event-the-fast",
       "name": "The Fast",
-      "text": "No one may Exalt, Turn, or spend Glory this Day.",
+      "text": "No one may Exalt or spend Glory this Day.",
       "openGame": true,
       "face": "art/faces/event/the-fast.jpg",
       "plate": "art/plates/event/the-fast.jpg"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GLORY_TARGET, Game, playBotGame, viewFor } from '../src';
+import { DAYS, TOKENS_EACH, Game, daysWon, playBotGame, viewFor } from '../src';
 
 const names = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
 const cfg = (seed: number, n: number) => ({ seed, mode: 'open' as const, players: names.slice(0, n).map((name) => ({ name, isBot: true })) });
@@ -21,14 +21,32 @@ describe('bot games run to completion', () => {
         const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
         expect(new Set(zones).size).toBe(zones.length);
         expect(zones.length).toBe(69);
-        // The game ends at the first Reaping where someone reaches the Glory target, and the winner has the most Glory.
+        // V45: a fixed number of Days; every token is still held by someone; each scores the Days its color won.
+        expect(s.day).toBe(DAYS);
+        expect(s.log.some((l) => l.kind === 'judgment')).toBe(true);
+        expect(s.players.reduce((t, p) => t + p.tokens.length, 0) + s.altarTokens.length).toBe(TOKENS_EACH * n);
+        const won = daysWon(s);
+        for (const x of s.result!.standings) {
+          expect(x.fromTokens).toBe(x.tokens.light * won.light + x.tokens.dark * won.dark);
+          expect(x.glory).toBe(x.before + x.fromTokens);
+        }
         const best = Math.max(...s.players.map((p) => p.glory));
-        if (s.day < 60) expect(best).toBeGreaterThanOrEqual(GLORY_TARGET); // 60 Days is the engine's safety stop
         expect(s.result!.winners.every((w) => s.players[w].glory === best)).toBe(true);
         if (!advanced) expect(s.log.some((l) => l.kind === 'event')).toBe(false);
       }
     });
   }
+});
+
+describe('strong bots (Monte Carlo)', () => {
+  it('play legal, complete games, and are deterministic', () => {
+    for (const seed of [3, 4]) {
+      const a = playBotGame({ ...cfg(seed, 3), advanced: true }, 20000, [0]);
+      const b = playBotGame({ ...cfg(seed, 3), advanced: true }, 20000, [0]);
+      expect(a.state.result).not.toBeNull();
+      expect(b.state.result).toEqual(a.state.result);
+    }
+  });
 });
 
 describe('replay is deterministic', () => {

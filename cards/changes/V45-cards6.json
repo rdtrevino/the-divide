@@ -1,0 +1,29 @@
+{
+ "version": "V45",
+ "date": "2026-11-19",
+ "previous": "V45",
+ "changes": {
+  "Anathema": {
+   "text": "On your turn: Until the start of your next turn, other players' Offers go on the Altar face up.",
+   "why": "Blocking Offers stops whole Choirs from scoring under 'no offering, no harvest' (V45: 1.88); now it exposes them instead"
+  },
+  "Temptation": {
+   "text": "On your turn: Choose a card in another player's Choir. It counts as the opposite alignment this Day.",
+   "why": "Giving a card always helps its receiver once every card scores (V45: 0.62); now a rival's card is turned against them"
+  },
+  "Mercy": {
+   "text": "At the end of the Day: If you Offered this Day and your Choir scored nothing, gain 1 Glory.",
+   "why": "It must not pay for skipping the Offer (V45: 1.57)"
+  },
+  "Moloch": {
+   "text": "On your turn: You may discard 1 other Host card from your Choir to gain 3 Glory. Its ability must not have been used this turn.",
+   "why": "A Choir card is worth more now (V45: 0.68 at 2)"
+  },
+  "Ordeal": {
+   "text": "On your turn: You may invoke this card, then discard it. At this Reaping, your Choir scores double.",
+   "why": "No penalty (V45: 0.73 with it)"
+  }
+ },
+ "celestials": {},
+ "events": {}
+}

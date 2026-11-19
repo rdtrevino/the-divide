@@ -1,10 +1,13 @@
 // One game room: seats, the running Game, bots, the turn timer, and what each connection is sent.
 // This file has no Cloudflare dependencies, so it runs in plain Node for tests; room.ts wires it to a Durable Object.
-import { Game, RuleError, botAnswer, viewFor, type Decision, type GameConfig, type Input } from '@divide/engine';
+import { Game, RuleError, learnedAnswer, viewFor, warmLearnedBot, type Decision, type GameConfig, type Input } from '@divide/engine';
 import {
   DEFAULT_TIMER, TIMER_CHOICES, type ChatLine, type ClientMsg, type RoomOptions, type RoomPublic, type ServerMsg,
   type StateMsg,
 } from '@divide/protocol';
+
+// Ready the learned bot when the Worker starts (startup time is not charged to a request), so its first move is fast.
+warmLearnedBot();
 
 // ---------------------------------------------------------------- timing
 
@@ -431,7 +434,8 @@ export class RoomCore {
     const g = this.game!;
     const before = g.state.seq;
     try {
-      g.answer(d.seat, d.id, botAnswer(g.state, d));
+      // The learned bot (design/bots.md): a fraction of a millisecond a decision; the heuristic's answer on minor ones.
+      g.answer(d.seat, d.id, learnedAnswer(g.state, d));
     } catch {
       // A bot should never produce an illegal answer; if it does, take the first legal options so the table is not stuck.
       g.answer(d.seat, d.id, d.options.slice(0, Math.max(1, d.min)).map((o) => o.id));

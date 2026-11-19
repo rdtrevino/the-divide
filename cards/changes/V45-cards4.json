@@ -1,0 +1,27 @@
+{
+ "version": "V45",
+ "date": "2026-11-19",
+ "previous": "V45",
+ "changes": {
+  "Nephilim": {
+   "text": "This card also counts as a Light card, for any card that asks for one.",
+   "alignment": "dark",
+   "value": 1,
+   "offering": "+1 Dark",
+   "why": "Robert (V45): no Neutral cards at all, so there is no in-between rule to teach. Nephilim is Dark and, for card abilities, Light too; it pushes and scores as Dark"
+  },
+  "Twilight": {
+   "text": "At the end of the Day: If the other cards in your Choir hold as many Light cards as Dark cards (at least 1 each), gain 2 Glory.",
+   "alignment": "light",
+   "value": 1,
+   "offering": "+1 Light",
+   "why": "Robert (V45): no Neutral cards. Twilight is Light"
+  },
+  "Acolyte": {
+   "text": "This card's color matches the most recent Day won: Light after a Light Day, Dark after a Dark Day. Before any Day is won, it is Light.",
+   "why": "Robert (V45): no Neutral cards. Acolyte is never Neutral: it keeps the last winner's color"
+  }
+ },
+ "celestials": {},
+ "events": {}
+}

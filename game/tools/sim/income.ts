@@ -1,6 +1,7 @@
 // Engine income: Glory each Host card earns per Day it sits face up in a Choir (bot play).
 // Usage: npx tsx income.ts GAMES
-import { Game, botAnswer } from '@divide/engine';
+import { Game } from '@divide/engine';
+import { answer } from './bot';
 const N = Number(process.argv[2] ?? 1000);
 const held: Record<string, number> = {}, earned: Record<string, number> = {}, lostG: Record<string, number> = {};
 const src: Record<string, number> = {};
@@ -9,7 +10,7 @@ for (let i = 0; i < N; i++) {
   const g = new Game({ seed: 424242 + i, mode: 'open', players: Array.from({ length: n }, (_, k) => ({ name: 'P' + k, isBot: true })) });
   let day = g.state.day;
   while (!g.over) {
-    for (const d of [...g.pending]) { if (g.pending.includes(d)) g.answer(d.seat, d.id, botAnswer(g.state, d)); }
+    for (const d of [...g.pending]) { if (g.pending.includes(d)) g.answer(d.seat, d.id, answer(g.state, d)); }
     if (g.state.day !== day) { day = g.state.day; for (const p of g.state.players) for (const c of p.choir) if (!c.facedown) held[c.id] = (held[c.id] ?? 0) + 1; }
   }
   for (const e of g.state.stats as any[]) if (e.type === 'glory') {

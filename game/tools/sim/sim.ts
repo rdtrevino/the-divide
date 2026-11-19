@@ -2,6 +2,7 @@
 // Usage: npm run sim -- --games 20000 --players 3,4 --out report
 import { writeFileSync } from 'node:fs';
 import { CELESTIALS, HOSTS, cardName, playBotGame } from '@divide/engine';
+import { BOT } from './bot';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a, i, all) => (a.startsWith('--') ? [a.slice(2), all[i + 1]] : [])).filter((x) => x.length));
 const GAMES = Number(args.games ?? 10000);
@@ -22,7 +23,7 @@ const ties = { count: 0 };
 const t0 = Date.now();
 for (let g = 0; g < GAMES; g++) {
   const n = COUNTS[g % COUNTS.length];
-  const game = playBotGame({ seed: 100000 + g, mode: 'open', players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) });
+  const game = playBotGame({ seed: 100000 + g, mode: 'open', players: NAMES.slice(0, n).map((name) => ({ name, isBot: true })) }, 20000, [], BOT);
   const s = game.state;
   const res = s.result!;
   if (res.winners.length > 1) ties.count++;

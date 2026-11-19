@@ -1,5 +1,6 @@
 // Game-quality measurements: skill expression, snowballing, final-Day drama.
-import { Game, botAnswer, type Decision, type GameState } from '@divide/engine';
+import { Game, type Decision, type GameState } from '@divide/engine';
+import { answer } from './bot';
 
 const N = Number(process.argv[2] ?? 6000);
 const NAMES = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
@@ -18,7 +19,7 @@ function play(seed: number, policies: Policy[]): GameState {
   while (!g.over) {
     for (const d of [...g.pending]) {
       if (!g.pending.includes(d)) continue;
-      g.answer(d.seat, d.id, policies[d.seat] === 'smart' ? botAnswer(g.state, d) : randomAnswer(d, seed));
+      g.answer(d.seat, d.id, policies[d.seat] === 'smart' ? answer(g.state, d) : randomAnswer(d, seed));
     }
     if (++guard > 20000) throw new Error('stall');
   }

@@ -3,11 +3,12 @@
 // Tree of Life, Defiance, Remnant, Parasite) and when the Altar is cleared (Eternity). Most are the V43 reworks.
 import { H, cardName } from './data';
 import {
-  activation, alignment, canActivate, canAffordTribute, cardOpt, CHOIR_LIMIT, chooseOne, colorsOf, discardableForRoom,
+  activation, canActivate, canAffordTribute, cardOpt, CHOIR_LIMIT, chooseOne, colorsOf, discardableForRoom,
   drawHost, gain, hasActive, log, makeRoom, others, payTribute, pname, protectedFrom, removeFromChoir, seatFromOpt,
   seatOpt, stat,
 } from './core';
 import type { AltarCard, Dir, GameState, Gen, Seat, TideRecord } from './types';
+
 
 /** Wisdom: when you Offer or Exalt, look at the top 2 Host cards; put 1 into your hand and discard the other. */
 export function* wisdomPeek(s: GameState, seat: Seat): Gen<void> {
@@ -60,49 +61,43 @@ export function* morningTriggers(s: GameState): Gen<void> {
       }
     }
     if (hasActive(s, p.seat, H.council) && canActivate(s, p.seat, H.council)) {
-      const pick = yield* chooseOne(s, p.seat, 'council.player', 'Council: name a player. If your Choirs lean the same way at the end of the Day, each of you gains 1 Glory.', others(s, p.seat).map((o) => seatOpt(s, o.seat)), true);
+      const pick = yield* chooseOne(s, p.seat, 'council.player', 'Council: name a player. If both your Choirs score at the Reaping, each of you gains 1 Glory.', others(s, p.seat).map((o) => seatOpt(s, o.seat)), true);
       if (pick) yield* activation(s, p.seat, H.council, function* () {
         (s.day_.council ??= {})[p.seat] = seatFromOpt(pick);
-        log(s, 'council', `${p.name} called a Council with ${pname(s, seatFromOpt(pick))}: if their Choirs lean the same way at the end of the Day, each gains 1 Glory.`);
+        log(s, 'council', `${p.name} called a Council with ${pname(s, seatFromOpt(pick))}: if both their Choirs score at the Reaping, each gains 1 Glory.`);
       });
     }
   }
 }
 
-/** At the end of the Day, after the Reaping's scoring. */
-export function* endOfDayTriggers(s: GameState, order: Seat[], gained: Record<number, number>, lost: Record<number, number>, withTide: Set<Seat>, tide: TideRecord): Gen<void> {
+/** At the end of the Day, after the Reaping's scoring. `scored`: whether a player's Choir scored at this Reaping. */
+export function* endOfDayTriggers(s: GameState, order: Seat[], scored: (seat: Seat) => boolean, tide: TideRecord): Gen<void> {
+  const yesterday = s.tides.find((t) => t.day === s.day - 1)?.dir;
   for (const seat of order) {
     const p = s.players[seat];
     // Gabriel: +1 if the named player Offered a card of the named alignment.
     const seer = s.day_.seer?.[seat];
     if (seer && hasActive(s, seat, H.gabriel) && (s.day_.offered?.[seer.t] ?? []).some((c) => colorsOf(s, null, c)[seer.dir as 'light' | 'dark'])) { yield* gain(s, seat, 1, H.gabriel); log(s, 'gabriel', `${p.name} read ${pname(s, seer.t)} right: +1 Glory (Gabriel).`); }
-    // Council: each gains 1 if your Choirs lean the same way.
+    // Council (V45): each gains 1 if both Choirs scored.
     const partner = s.day_.council?.[seat];
-    if (partner !== undefined && hasActive(s, seat, H.council)) {
-      const a = Math.sign(alignment(s, seat)), b = Math.sign(alignment(s, partner));
-      if (a && a === b) { yield* gain(s, seat, 1, H.council); yield* gain(s, partner, 1, H.council); log(s, 'council', `${p.name} and ${pname(s, partner)} lean the same way: each gains 1 Glory (Council).`); }
-    }
-    // Tree of Life: 1 Glory if your Choir leaned with the Tide today and yesterday.
-    if (hasActive(s, seat, H.treeOfLife) && withTide.has(seat) && (s.lastWithTide ?? []).includes(seat)) { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name} gained 1 Glory (Tree of Life).`); }
-    // Defiance: 1 Glory if you lean with the Tide and more Choirs leaned against it than with it.
-    if (hasActive(s, seat, H.defiance) && tide.dir !== 'neutral' && withTide.has(seat)) {
-      const sign = tide.dir === 'light' ? 1 : -1;
-      const against = s.players.filter((o) => !withTide.has(o.seat) && !s.day_.figLeaves.includes(o.seat) && Math.sign(alignment(s, o.seat)) === -sign).length;
-      if (against > withTide.size) { yield* gain(s, seat, 1, H.defiance); log(s, 'defiance', `${p.name} gained 1 Glory (Defiance).`); }
-    }
+    if (partner !== undefined && hasActive(s, seat, H.council) && scored(seat) && scored(partner)) { yield* gain(s, seat, 1, H.council); yield* gain(s, partner, 1, H.council); log(s, 'council', `${p.name} and ${pname(s, partner)} both scored: each gains 1 Glory (Council).`); }
+    // Tree of Life (V45): 1 Glory if Light won today and yesterday.
+    if (hasActive(s, seat, H.treeOfLife) && tide.dir === 'light' && yesterday === 'light') { yield* gain(s, seat, 1, H.treeOfLife); log(s, 'treeOfLife', `${p.name} gained 1 Glory (Tree of Life).`); }
+    // Defiance (V45): 1 Glory if your Choir scored and most other players' did not.
+    const othersScored = s.players.filter((o) => o.seat !== seat && scored(o.seat)).length;
+    if (hasActive(s, seat, H.defiance) && scored(seat) && othersScored * 2 < s.players.length - 1) { yield* gain(s, seat, 1, H.defiance); log(s, 'defiance', `${p.name} gained 1 Glory (Defiance).`); }
     // Remnant: 1 Glory if 2 or more places in your Choir are empty.
     if (hasActive(s, seat, H.remnant) && CHOIR_LIMIT - p.choir.length >= 2) { yield* gain(s, seat, 1, H.remnant); log(s, 'remnant', `${p.name} gained 1 Glory (Remnant).`); }
   }
-  // Parasite: its planter gains 1 when its holder lost Glory; it is discarded when its holder gained.
+  // Parasite (V45): its planter gains 1 when its holder's Choir scored nothing; it is discarded when their Choir scored.
   for (const p of s.players) {
     for (const c of [...p.choir]) {
       const by = c.by;
       if (c.id !== H.parasite || c.facedown || by === undefined) continue;
-      if (lost[p.seat] > 0) { yield* gain(s, by, 1, H.parasite); log(s, 'parasite', `${pname(s, by)} fed on ${p.name}'s loss at the Reaping: +1 Glory (Parasite).`); }
-      else if (gained[p.seat] > 0 && removeFromChoir(s, p.seat, H.parasite)) { s.discard.push(H.parasite); log(s, 'parasite', `${p.name} gained Glory at the Reaping, and the Parasite in their Choir is discarded.`); }
+      if (!scored(p.seat)) { yield* gain(s, by, 1, H.parasite); log(s, 'parasite', `${pname(s, by)} fed on ${p.name}'s empty Reaping: +1 Glory (Parasite).`); }
+      else if (removeFromChoir(s, p.seat, H.parasite)) { s.discard.push(H.parasite); log(s, 'parasite', `${p.name}'s Choir scored, and the Parasite in it is discarded.`); }
     }
   }
-  s.lastWithTide = [...withTide];
 }
 
 /** Eternity: at the end of the Day, keep one card on the Altar, face up, through the next Day. Returns the kept cards. */

@@ -1,13 +1,12 @@
 // The game table. Everything shown here comes from the view the server sends for your seat;
 // the browser never sees another player's hand or a facedown card it should not.
-import { GLORY_TARGET } from '@divide/engine';
 import type { ClientMsg } from '@divide/protocol';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useFit } from '../lib/fit';
 import { useFlip } from '../lib/flip';
 import { Link } from '../lib/router';
 import type { RoomSnap } from '../lib/room';
-import { GloryTrack, TideRecord } from './bits';
+import { TideTrack } from './bits';
 import { Center } from './Center';
 import { Evening } from './Evening';
 import { MyArea, PlayerPanel } from './Players';
@@ -106,11 +105,10 @@ export function Table(p: { snap: RoomSnap; send: (m: ClientMsg) => void }) {
         <header class="t-top">
           <Link href="/" class="wordmark t-mark" title="Leave the table">The Divide</Link>
           <div class="t-day">
-            <b>Day {view.day || 1}</b>
-            <span>{PHASE[view.phase]}</span>
+            <b>Day {view.day || 1} of {view.days}</b>
+            <span>{view.day === view.days && view.phase !== 'ended' ? `Judgment Day · ${PHASE[view.phase]}` : PHASE[view.phase]}</span>
           </div>
-          <TideRecord view={view} />
-          <GloryTrack view={view} target={GLORY_TARGET} />
+          <TideTrack view={view} />
           <button class={`t-room${copied ? ' copied' : ''}`} data-tip="Click to copy the invite link for this table" onClick={copyLink}>
             <small>{copied ? 'Invite link' : 'Table code'}</small>
             <b>{copied ? 'Copied' : state.room.code}</b>

@@ -38,6 +38,7 @@ export function Center(p: { view: GameView }) {
             <span class="light" data-tip="Light from the face-up cards on the Altar">Light {tally.light}</span>
             <span class="dark" data-tip="Dark from the face-up cards on the Altar">Dark {tally.dark}</span>
             {hidden > 0 && <span class="hid" data-tip="Facedown cards count toward the Tide, but no one sees them until the Evening">{hidden} facedown</span>}
+            {view.altarTokens.length > 0 && <span class="hid" data-tip="Each allegiance token counts 2 for its color. No one sees which until the Evening">{view.altarTokens.length} token{view.altarTokens.length > 1 ? 's' : ''}</span>}
           </span>
         </div>
         <div class="altar-row">
@@ -72,7 +73,10 @@ export function Center(p: { view: GameView }) {
               />
             );
           })}
-          {!view.altar.length && <span class="muted altar-empty">The Altar is empty</span>}
+          {view.altarTokens.map((t) => (
+            <span class={`altar-tok ${t.side ?? 'hidden'}`} style={{ '--seat': `var(--seat-${t.by % 4})` } as any} data-tip={t.side ? `Your ${t.side === 'light' ? 'Light' : 'Dark'} token: it counts 2` : `An allegiance token Offered by ${view.players[t.by]?.name}: it counts 2 for its color`}>◆</span>
+          ))}
+          {!view.altar.length && !view.altarTokens.length && <span class="muted altar-empty">The Altar is empty</span>}
         </div>
       </div>
 
