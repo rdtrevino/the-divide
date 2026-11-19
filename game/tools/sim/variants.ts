@@ -12,4 +12,5 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   // Round 2: the engine tied to the secret side, Choirs that churn, and a colorless Choir (for contrast).
   fall: { fall: true }, faith: { faith: true }, colorless: { choirPay: 0, choirFlat: 2 },
   dev1t8: { devotion: 1, tokensEach: 8 }, dev1pass: { devotion: 1, passTokens: true },
+  dev1fall: { devotion: 1, fall: true },
 };
