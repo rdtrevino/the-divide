@@ -19,8 +19,8 @@ export interface PlayerView {
   tokenCount: number;
   /** Your own tokens; everyone's once the game is over. */
   tokens: Side[] | null;
-  /** Offers made this game (the Miser's Rule). */
-  offers: number;
+  /** Whether they Offered this Day: no offering, no harvest. */
+  offeredToday: boolean;
 }
 
 export interface GameView {
@@ -76,12 +76,12 @@ export function viewFor(s: GameState, seat: Seat | null, pending: Decision[] = [
       colors: choirColors(s, p.seat),
       tokenCount: p.tokens.length,
       tokens: p.seat === seat || ended ? [...p.tokens] : null,
-      offers: p.offers,
+      offeredToday: p.offeredToday,
     })),
     // A card someone peeked at (Knowledge, Belial) was shown to them once, in that decision; it is not shown again here.
     // Who placed a card is hidden once the anonymous reveal has shuffled it (except from its owner).
     altar: s.altar.map((a) => ({ id: !a.facedown || a.offeredBy === seat || ended ? a.id : null, facedown: a.facedown, offeredBy: a.anon && a.offeredBy !== seat ? null : a.offeredBy, kind: a.kind, sanctuary: a.sanctuary })),
-    altarTokens: s.altarTokens.map((t) => ({ side: t.by === seat || ended ? t.side : null, by: t.by })),
+    altarTokens: s.altarTokens.map((t) => ({ side: t.by === seat || t.shown || ended ? t.side : null, by: t.by })),
     days: DAYS,
     deckCount: s.hostDeck.length,
     discard: [...s.discard],

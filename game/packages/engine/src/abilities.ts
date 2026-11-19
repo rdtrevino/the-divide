@@ -125,7 +125,7 @@ export const TURN: Record<string, TurnAbility> = {
     *run(s, seat) {
       s.day_.ordeal.push(seat);
       yield* discardFromChoir(s, seat, H.ordeal, 'Ordeal');
-      log(s, 'ordeal', `${pname(s, seat)} invoked Ordeal: their Choir scores double this Day, or loses 2 if it scores nothing.`);
+      log(s, 'ordeal', `${pname(s, seat)} invoked Ordeal: their Choir scores double this Day.`);
     },
   },
   [H.watchers]: {
@@ -157,27 +157,25 @@ export const TURN: Record<string, TurnAbility> = {
     },
   },
   [H.anathema]: {
-    // V42: no other player may Offer until the start of your next turn.
-    can: (s, seat) => !s.anathema.some((a) => a.by === seat && a.action === 'offer'),
+    // V45: until the start of your next turn, other players' Offers go face up (it no longer blocks them: with no
+    // offering, no harvest, a blocked Offer would stop whole Choirs from scoring).
+    can: (s, seat) => !s.anathema.some((a) => a.by === seat && a.action === 'faceup'),
     *run(s, seat) {
-      for (const p of others(s, seat)) s.anathema.push({ target: p.seat, by: seat, action: 'offer' });
-      log(s, 'anathema', `No other player may Offer until the start of ${pname(s, seat)}'s next turn (Anathema).`);
+      for (const p of others(s, seat)) s.anathema.push({ target: p.seat, by: seat, action: 'faceup' });
+      log(s, 'anathema', `Until the start of ${pname(s, seat)}'s next turn, other players' Offers go face up (Anathema).`);
     },
   },
   [H.temptation]: {
-    // V42: play a card from your hand into another player's Choir.
-    can: (s, seat) => temptationPairs(s, seat).length > 0,
+    // V45: a card in another player's Choir counts as the opposite alignment this Day (Morning Star, aimed at a rival).
+    can: (s, seat) => temptationTargets(s, seat).length > 0,
     *run(s, seat) {
-      const p = s.players[seat];
-      const pairs = temptationPairs(s, seat);
-      const pick = yield* chooseOne(s, seat, 'temptation.give', "Temptation: play a card from your hand into another player's Choir.", pairs.map(({ c, o }) => ({ id: `${c}|${o}`, label: `${cardName(c)} into ${pname(s, o)}'s Choir`, card: c, seat: o })), true);
+      const t = temptationTargets(s, seat);
+      const pick = yield* chooseOne(s, seat, 'temptation.turn', "Temptation: choose a card in another player's Choir to count as the opposite alignment this Day.", t.map(({ o, id }) => ({ id: `${o}|${id}`, label: `${cardName(id)} (${pname(s, o)})`, card: id, seat: o })), true);
       if (!pick) return;
-      const [c, os] = pick.split('|'); const o = Number(os);
+      const [os, id] = pick.split('|'); const o = Number(os);
       if (!payTribute(s, seat, o)) return;
-      if (!(yield* makeRoom(s, o, 'Temptation'))) return;
-      p.hand.splice(p.hand.indexOf(c), 1);
-      yield* enterChoir(s, o, c);
-      log(s, 'temptation', `${pname(s, seat)} played ${cardName(c)} into ${pname(s, o)}'s Choir (Temptation).`);
+      s.morningStar.push({ seat: o, card: id });
+      log(s, 'temptation', `${pname(s, seat)} tempted ${pname(s, o)}'s ${cardName(id)}: it counts as the opposite alignment this Day (Temptation).`);
     },
   },
   [H.serpent]: {
@@ -203,10 +201,10 @@ export const TURN: Record<string, TurnAbility> = {
     can: (s, seat) => hostCardsOf(s, seat).some((c) => c.id !== H.moloch && !s.turnUsed.includes(c.id)),
     *run(s, seat) {
       const opts = hostCardsOf(s, seat).filter((c) => c.id !== H.moloch && !s.turnUsed.includes(c.id));
-      const pick = yield* chooseOne(s, seat, 'moloch', 'Moloch: discard another Host card from your Choir (whose ability you have not used this turn) to gain 2 Glory.', opts.map((c) => cardOpt(c.id)), true);
+      const pick = yield* chooseOne(s, seat, 'moloch', 'Moloch: discard another Host card from your Choir (whose ability you have not used this turn) to gain 3 Glory.', opts.map((c) => cardOpt(c.id)), true);
       if (!pick) return;
       yield* discardFromChoir(s, seat, pick, 'Moloch');
-      yield* gain(s, seat, 2, H.moloch);
+      yield* gain(s, seat, 3, H.moloch);
     },
   },
   [H.envy]: {
@@ -464,13 +462,6 @@ function michaelTargets(s: GameState, seat: Seat) {
   return out;
 }
 
-function temptationPairs(s: GameState, seat: Seat) {
-  const out: { c: string; o: Seat }[] = [];
-  const hand = [...new Set(s.players[seat].hand)];
-  for (const o of others(s, seat)) {
-    if (protectedFrom(s, seat, o.seat, 'replace') || !canAffordTribute(s, seat, o.seat)) continue;
-    if (o.choir.length >= CHOIR_LIMIT && !discardableForRoom(s, o).length) continue;
-    for (const c of hand) out.push({ c, o: o.seat });
-  }
-  return out;
+function temptationTargets(s: GameState, seat: Seat) {
+  return others(s, seat).filter((o) => canAffordTribute(s, seat, o.seat)).flatMap((o) => o.choir.filter((c) => !c.facedown && c.id.startsWith('host-') && !s.morningStar.some((m) => m.seat === o.seat && m.card === c.id)).map((c) => ({ o: o.seat, id: c.id })));
 }

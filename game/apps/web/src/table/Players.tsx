@@ -62,7 +62,7 @@ function MyTokens(p: { view: GameView; seat: number }) {
   for (const x of p.view.tides) if (!x.void && x.dir !== 'neutral') won[x.dir]++;
   const worth = L * won.light + D * won.dark;
   return (
-    <span class="tokchip mine" data-tip={`Your secret tokens: ${L} Light, ${D} Dark. Each scores 1 for every Day its color wins: ${worth} so far. You have Offered ${pl.offers} time${pl.offers === 1 ? '' : 's'}; whoever Offers the fewest times loses 3 at the end`}>
+    <span class="tokchip mine" data-tip={`Your secret tokens: ${L} Light, ${D} Dark. Each scores 1 for every Day its color wins: ${worth} so far. Offer each Day, or your Choir will not score that Evening`}>
       <i />{Array.from({ length: L }, () => <b class="tok light" />)}{Array.from({ length: D }, () => <b class="tok dark" />)}
       <small>{worth} so far</small>
     </span>
@@ -99,7 +99,7 @@ export function PlayerPanel(p: { view: GameView; seat: number; waiting?: Waiting
         <div class="pp-glory" data-tip={`${pl.name} has ${pl.glory} Glory so far. Tokens are added at the end`}><b class="num" key={pl.glory}>{pl.glory}</b><small>Glory</small></div>
         <div class="pp-tags">
           <ChoirChip c={pl.colors} whose={`${pl.name}'s`} />
-          <span class="tokchip" data-tip={`${pl.name} holds ${pl.tokenCount} secret allegiance token${pl.tokenCount === 1 ? '' : 's'} and has Offered ${pl.offers} time${pl.offers === 1 ? '' : 's'}`}><i />{pl.tokenCount}</span>
+          <span class="tokchip" data-tip={`${pl.name} holds ${pl.tokenCount} secret allegiance token${pl.tokenCount === 1 ? '' : 's'}`}><i />{pl.tokenCount}</span>
           <span class="pp-handcount" id={`hand-${p.seat}`} data-tip={`${pl.name} holds ${pl.handCount} card${pl.handCount === 1 ? '' : 's'} in hand`}><i />{pl.handCount}</span>
         </div>
         <div class="pp-notes"><Notes view={p.view} seat={p.seat} /></div>

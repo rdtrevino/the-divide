@@ -53,6 +53,8 @@ export interface AltarCard {
 export interface AltarToken {
   side: Side;
   by: Seat;
+  /** Offered face up (Anathema): everyone sees its color. */
+  shown?: boolean;
 }
 
 export interface Player {
@@ -65,8 +67,8 @@ export interface Player {
   glory: number;
   /** Secret allegiance tokens (V45). */
   tokens: Side[];
-  /** Offers made this game (the Miser's Rule). */
-  offers: number;
+  /** Whether they Offered this Day (a card or a token): no offering, no harvest. */
+  offeredToday: boolean;
 }
 
 export interface Pact {
@@ -153,8 +155,6 @@ export interface Standing {
   tokens: { light: number; dark: number };
   /** Glory from tokens: each scores the Days its color won. */
   fromTokens: number;
-  /** The Miser's Rule: 3 lost by whoever Offered the fewest times. */
-  miser: number;
 }
 
 export interface GameResult {
@@ -224,7 +224,8 @@ export interface GameState {
   pacts: Pact[];
   bonds: { owner: Seat; bound: Seat }[];
   /** Anathema blocks Offer; Flaming Sword blocks Exalt and Gather. Each lasts until the start of its holder's next turn. */
-  anathema: { target: Seat; by: Seat; action?: 'offer' | 'gather' | 'exalt' }[];
+  /** Anathema (V45: other players' Offers go face up) and Flaming Sword (no Exalting): each lasts until the start of its holder's next turn. */
+  anathema: { target: Seat; by: Seat; action?: 'faceup' | 'gather' | 'exalt' }[];
   /** Silence (V42): a player whose Choir abilities do not work until the silencer's next turn. */
   silenced: { target: Seat; by: Seat }[];
   confession: { seat: Seat; turnsLeft: number }[];

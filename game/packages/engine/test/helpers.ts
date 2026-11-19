@@ -4,10 +4,11 @@ import type { Answer, Decision, GameState, Gen } from '../src/types';
 
 export const names = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
 
-/** A blank state: empty hands, Choirs, Altar and tokens, with chosen Celestials. */
+/** A blank state: empty hands, Choirs, Altar and tokens, with chosen Celestials. Everyone counts as having Offered
+ *  today, so their Choirs score (no offering, no harvest); tests of that rule set it themselves. */
 export function blank(n = 3, celestials: string[] = []): GameState {
   const s = createState({ seed: 7, mode: 'open', advanced: true, players: names.slice(0, n).map((name, i) => ({ name, isBot: true, celestial: celestials[i] ?? ['celestial-the-tempest', 'celestial-the-oracle', 'celestial-the-cantor', 'celestial-the-patron', 'celestial-the-echo', 'celestial-the-dominion'][i] })) });
-  for (const p of s.players) { s.hostDeck.push(...p.hand, ...p.choir.map((c) => c.id)); p.hand = []; p.choir = []; p.tokens = []; }
+  for (const p of s.players) { s.hostDeck.push(...p.hand, ...p.choir.map((c) => c.id)); p.hand = []; p.choir = []; p.tokens = []; p.offeredToday = true; }
   s.day = 1;
   s.firstPlayer = 0;
   return s;

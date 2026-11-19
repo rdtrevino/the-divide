@@ -18,6 +18,7 @@ Before the first dawn, the unfinished world rests on the Divide, the narrow span
 * **Your tokens pay at the end.** Every token is worth 1 Glory for each Day its side won.
 * **Your Choir pays every Day.** Your Choir is a row of up to four face-up cards. Each Evening, every card in it of the winning color scores 2 Glory.
 * **Help yourself or help your side.** Offering a card to the Altar pushes a side, but the card is gone from your hand. Building your Choir pays only you. You can even Offer one of your tokens: it is the strongest push there is, and it costs you your share in that side.
+* **No offering, no harvest.** Your Choir scores only on a Day you Offered.
 * **Seven Days, and a Judgment Day.** Every game lasts 7 Days. On the last, everyone chooses their action in secret before anyone acts. Then the tokens are revealed, and the most Glory wins.
 
 ---
@@ -109,7 +110,7 @@ Starting with the first player and moving clockwise, each player takes exactly o
 | **Gather** | Take 1 card from the Altar into your Choir, **or 1 token from the Altar** into your hidden tokens. | A new Choir card (discard one first if your Choir is full), and one push fewer on the Altar. A token needs no room. |
 | **Exalt** | Play 1 card from your hand into your Choir. | Exactly the card you want, without it touching the Altar. If your Choir is full, discard one of its cards first. |
 
-**Offer: the public good.** An Offer earns you nothing directly: it pushes the Day toward a side, and everyone who holds that side gains from it, whoever they are. The table sees that you Offered, and whether it was a card or a token, but not what. You may look at your own facedown cards at any time. Anyone acting after you can Gather your Offer away.
+**Offer: the public good.** An Offer earns you nothing directly: it pushes the Day toward a side, and everyone who holds that side gains from it, whoever they are. But **no offering, no harvest**: if you did not Offer this Day, your Choir does not score this Evening. The table sees that you Offered, and whether it was a card or a token, but not what. You may look at your own facedown cards at any time. Anyone acting after you can Gather your Offer away.
 
 **Gather: take from the middle.** You may Gather a facedown card or token without looking at it first. Taking a card off the Altar weakens its side.
 
@@ -121,7 +122,7 @@ Starting with the first player and moving clockwise, each player takes exactly o
 
 On the last Day, after First Fruits, **every player chooses their whole action in secret**: which action, and exactly which card or token (Offer *this* card, Exalt *that* one, Gather *that* card or token from the Altar). Write it down, or set the card facedown in front of you with a pointer.
 
-Then play the turns in order as usual, starting with the first player. On your turn, carry out the action you chose, then use your *On your turn* abilities as normal. **If your chosen action can no longer be done** (the card you meant to Gather was taken first, an Offer is now blocked by Anathema, the card left your hand), **you do nothing** for your action.
+Then play the turns in order as usual, starting with the first player. On your turn, carry out the action you chose, then use your *On your turn* abilities as normal. **If your chosen action can no longer be done** (the card you meant to Gather was taken first, the card left your hand), **you do nothing** for your action.
 
 No one acts last with the most knowledge on the Day that decides the game: everyone commits blind.
 
@@ -131,11 +132,11 @@ No one acts last with the most knowledge on the Day that decides the game: every
 
 1. **Reveal the Altar.** First, abilities marked *In the Evening* (Fig Leaves; in the Advanced game, the Eclipse). Then shuffle every facedown card and token on the Altar together and turn them face up, so no one learns whose Offer was whose.
 2. **The Day is won.** Total the Light on the Altar against the Dark (each token counts 2 for its color). The heavier side **wins the Day**; mark it on the Tide track. A tie, or an empty Altar, is **Neutral**: no one wins the Day. The difference is the **winning margin**.
-3. **The Reaping.** Every face-up Host card in every Choir **of the winning color scores 2 Glory** for its owner. Nothing is lost at the Reaping (Ordeal aside). On a Neutral Day, no Choir scores. Then resolve every ability marked *At the end of the Day*.
+3. **The Reaping.** Every face-up Host card in the Choir of **every player who Offered this Day**, **of the winning color, scores 2 Glory** (no offering, no harvest). Nothing is lost at the Reaping. On a Neutral Day, no Choir scores. Then resolve every ability marked *At the end of the Day*.
 4. **Tokens left on the Altar.** Shuffle them facedown and hand them out one at a time, each to the player who holds the fewest tokens at that moment (ties: the first of them in turn order). Only the receiver looks.
 5. **Refresh and Upkeep.** Discard every card on the Altar. Everyone draws back up to their hand limit (or discards down to it), and the first player marker passes left. If the Host deck is empty, shuffle the discard pile to form a new deck.
 
-> *Example: Light wins the Day. Ada's Choir holds two Light cards and a Dark one: she scores 4. Ben's Choir holds only Dark cards: he scores nothing today, but his Dark cards will score on Dark Days.*
+> *Example: Light wins the Day. Ada Offered today, and her Choir holds two Light cards and a Dark one: she scores 4. Ben's Choir holds only Dark cards: he scores nothing today. Cy's Choir is full of Light cards, but she spent her turn Exalting instead of Offering: no harvest.*
 
 ---
 
@@ -144,8 +145,7 @@ No one acts last with the most knowledge on the Day that decides the game: every
 After the Evening of Day 7, everyone reveals their tokens.
 
 1. **Tokens score.** Each token scores **1 Glory for every Day its color won** on the Tide track.
-2. **The Miser's Rule.** The player who Offered the **fewest times** loses 3 Glory (all of them, if tied). If everyone Offered equally often, nobody does.
-3. **The most Glory wins.** Players who tie share the win.
+2. **The most Glory wins.** Players who tie share the win.
 
 > *Example: Light won 4 Days and Dark won 2. Ada holds 4 Light and 2 Dark tokens: 4 × 4 + 2 × 2 = 20, added to the Glory her Choir earned.*
 
@@ -217,7 +217,9 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Tokens are not cards.** An allegiance token on the Altar counts 2 for its color, can be Gathered, and is shuffled into the reveal; no card ability flips, looks at, moves, protects or destroys it, and Ascension and Fall from Grace do not double it.
 
-**Scored.** A Choir *scored* at the Reaping if it gained Glory there (at least one card of the winning color, and no Scapegoat). Mercy, Council, Favor, Defiance, Raguel, Bounty, Parasite and the Arbiter all ask this.
+**No offering, no harvest.** You Offered this Day if you made an Offer action (a card or a token) or carried out an Offer on Judgment Day. Fig Leaves taking the card back does not undo it. First Fruits and Vessel's card are not Offers. A Free Will second action may be the Offer.
+
+**Scored.** A Choir *scored* at the Reaping if it gained Glory there (you Offered, at least one card of the winning color, and no Scapegoat). Mercy, Council, Favor, Defiance, Raguel, Bounty, Parasite and the Arbiter all ask this.
 
 **Activating.** To activate is to use an ability you choose to use. Always-on abilities are never activated. On your turn, each Choir card activates at most once.
 
@@ -239,11 +241,9 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Silence.** The chosen player's Choir abilities stop working, always-on ones included, until the start of your next turn.
 
-**Anathema and Flaming Sword.** From the end of your turn until the start of your next turn, no other player may Offer, cards or tokens (Anathema), or Exalt (Flaming Sword).
+**Anathema and Flaming Sword.** From the end of your turn until the start of your next turn, other players' Offers, cards and tokens, go face up (Anathema), and no other player may Exalt (Flaming Sword).
 
-**Judgment Day and Free Will.** Free Will's second action is chosen on your turn as usual; only your first action was chosen in secret. A secret action that does nothing (it could no longer be done) is not an Offer.
-
-**The Miser's Rule.** Every Offer action counts once, a card or a token. Fig Leaves taking a card back does not undo the Offer. First Fruits and Vessel's card are not Offers.
+**Judgment Day and Free Will.** Free Will's second action is chosen on your turn as usual; only your first action was chosen in secret. A secret Offer that could no longer be done does not count as Offering.
 
 ### **The Altar and Facedown Cards**
 
@@ -265,7 +265,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Eternity.** The kept card returns to the Altar, face up, next Morning and counts toward that Day; at the end of that Day it is cleared like any other card.
 
-**Fig Leaves.** In the Evening, before the reveal, you may take one facedown card you Offered this Day back into your hand. It still counts as an Offer for the Miser's Rule.
+**Fig Leaves.** In the Evening, before the reveal, you may take one facedown card you Offered this Day back into your hand. You still Offered this Day.
 
 ### **Scoring and the Reaping**
 
@@ -273,7 +273,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Acolyte.** Its color on any Day is the color of the most recent Day won (a Neutral Day does not change it), on the Altar and in your Choir. Before any Day is won, it is Light.
 
-**Heresy, Morning Star and Ordeal.** Decided on your turn, before the reveal, and they last until the end of the Day. With Heresy, your Choir scores its cards of the losing color instead of the winning one. Morning Star costs 1 Glory. Ordeal is discarded when invoked; its doubling still applies that Day, and if your Choir then scores nothing you lose 2 (not on a Neutral Day).
+**Heresy, Morning Star and Ordeal.** Decided on your turn, before the reveal, and they last until the end of the Day. With Heresy, your Choir scores its cards of the losing color instead of the winning one. Morning Star costs 1 Glory. Ordeal is discarded when invoked; its doubling still applies that Day.
 
 **The Eclipse.** Chosen in the Morning, before First Fruits: the chosen card counts as the other color, in your Choir, for the whole Day.
 
@@ -305,7 +305,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Protection.** Cherubim stops other players from Replacing or Discarding your Choir cards, and from playing cards into your Choir. Tribute makes any player Targeting your Choir pay you 1 Glory first.
 
-**Temptation and the Patron.** Playing a card into another player's Choir is Targeting: Cherubim blocks it and Tribute must be paid. For Temptation, if their Choir is full, they choose which card to discard. The Patron exchanges: you take one of their face-up cards into your hand and put a card from your hand in its place.
+**Temptation and the Patron.** Both Target another player's Choir, so Tribute must be paid. Temptation turns one of their cards to the opposite alignment for the Day (like Morning Star). The Patron exchanges: you take one of their face-up cards into your hand and put a card from your hand in its place; Cherubim blocks it.
 
 **Parasite.** It goes straight into another player's Choir when you Exalt or Gather it. Its holder cannot discard it, not even to make room. At the end of each Day, its planter gains 1 if its holder's Choir scored nothing, and Parasite is discarded if it scored.
 
@@ -357,7 +357,7 @@ These settle questions the card text leaves open. The card text is always the st
 
 **Glory.** The game's points and its currency. It never drops below 0.
 
-**Miser's Rule.** At the end, whoever Offered the fewest times loses 3 Glory.
+**No offering, no harvest.** Your Choir scores at the Reaping only on a Day you Offered.
 
 **Neutral Day.** A Day no one won: the Altar was tied or empty. No Choir scores, and nothing is marked on the Tide track.
 

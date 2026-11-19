@@ -1,0 +1,13 @@
+{
+ "version": "V45",
+ "date": "2026-11-19",
+ "previous": "V45",
+ "changes": {
+  "Favor": {
+   "text": "At the end of the Day: If your Choir scored more than every other player's, gain 1 Glory.",
+   "why": "Under 'no offering, no harvest', Choirs that score nothing are common, so the old condition paid too often (1.28)"
+  }
+ },
+ "celestials": {},
+ "events": {}
+}

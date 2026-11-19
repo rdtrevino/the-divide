@@ -128,7 +128,7 @@ const ACTIONS: Record<ActionKey, { title: string; icon: string; badge: string; t
       'It earns you nothing directly. It pushes the Day toward a side, and everyone who holds that side gains.',
       'Nobody sees what you Offered until the Evening, and anyone who acts after you can still Gather it away.',
     ],
-    why: 'The public good: your secret vote on who wins the Day. Whoever Offers the fewest times loses 3 at the end.',
+    why: 'The public good: your secret vote on who wins the Day. And no offering, no harvest: your Choir scores only on a Day you Offered.',
   },
   gather: {
     title: 'Gather', icon: '❖', badge: 'Free', tone: '',
@@ -367,7 +367,7 @@ const STEPS: Step[] = [
           <li><b>Gather</b> a card into your Choir, or a token from the Altar: it helps you.</li>
           <li><b>Exalt</b> a card from your hand into your Choir: it helps you.</li>
         </ul>
-        <p class="muted">An Offer helps everyone who holds that side. Building helps only you. That choice, every turn, is the game.</p>
+        <p class="muted">An Offer helps everyone who holds that side, and it is what lets your own Choir score tonight. Building helps only you. That choice, every turn, is the game.</p>
       </>
     ),
     side: <Actions />,
@@ -385,7 +385,7 @@ const STEPS: Step[] = [
     title: 'The Reaping',
     body: (
       <>
-        <p>Every Choir card of the winning color scores <b>2 Glory</b>.</p>
+        <p>Every Choir card of the winning color scores <b>2 Glory</b>, <b>if its owner Offered today</b>: no offering, no harvest.</p>
         <p>Then any tokens left on the Altar are handed out, one at a time, to whoever holds the fewest. The Altar is cleared, hands are refilled, and a new Day begins.</p>
         <p class="muted">An Offered token is gone from you, and may land in a rival's hand. That is its price.</p>
       </>
@@ -418,7 +418,7 @@ const STEPS: Step[] = [
     body: (
       <>
         <p>After the last Evening, everyone <b>reveals their tokens</b>. Each scores 1 for every Day its color won.</p>
-        <p>Whoever <b>Offered the fewest times loses 3</b>. Then <b>the most Glory wins</b>; a tie is shared.</p>
+        <p>Then <b>the most Glory wins</b>; a tie is shared.</p>
       </>
     ),
     side: (
@@ -433,7 +433,7 @@ const STEPS: Step[] = [
     title: 'Playing well',
     body: (
       <ul class="learn-list">
-        <li><b>Let others pay, but not too often.</b> Every Offer helps the whole side; the player who gives least keeps the most, until the Miser's Rule bites.</li>
+        <li><b>No offering, no harvest.</b> A Day you build instead of Offering, your Choir earns nothing. Choose those Days when your Choir's color looks likely to lose anyway.</li>
         <li><b>A token is your strongest push and your dearest.</b> Spend one when a Day truly hangs on it.</li>
         <li><b>Read the table.</b> Choirs are public, Offers are anonymous, and a Choir full of Light cards may hide a hand of Dark tokens.</li>
         <li><b>Make deals.</b> The Tide track gives everyone the same numbers to argue over. Promises aren't binding, so trust carefully.</li>

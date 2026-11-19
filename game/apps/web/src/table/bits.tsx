@@ -64,7 +64,8 @@ export function statusNotes(view: GameView, seat: number): { text: string; tone?
     if (b.bound === seat) out.push({ text: `Bound to ${name(b.owner)} (Raguel)` });
   }
   const blocked = (act: string) => view.anathema.some((a) => a.target === seat && (a.action ?? 'offer') === act);
-  if (blocked('offer')) out.push({ text: 'Anathema: cannot Offer', tone: 'bad' });
+  if (blocked('faceup')) out.push({ text: 'Anathema: Offers face up', tone: 'bad' });
+  if (p.offeredToday && view.phase !== 'ended') out.push({ text: 'Offered today' });
   const sword = ['exalt', 'gather'].filter(blocked).map((x) => x[0].toUpperCase() + x.slice(1));
   if (sword.length) out.push({ text: `Flaming Sword: cannot ${sword.join(' or ')}`, tone: 'bad' });
   return out;

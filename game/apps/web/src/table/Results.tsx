@@ -16,7 +16,7 @@ export function Results(p: { view: GameView; room: RoomPublic; isHost: boolean; 
         <div class="eyebrow">{p.view.tides.length} Days · Light won {res.daysWon.light}, Dark won {res.daysWon.dark}</div>
         <h2 class="result-title">{winners.length === 1 ? `${winners[0]} wins` : `${listNames(winners)} share the win`}</h2>
         <table class="result-table">
-          <thead><tr><th /><th>Player</th>{advanced && <th>Celestial</th>}<th class="r" title="Glory from the Choir and abilities during the game">Choir</th><th class="r" title="Light and Dark tokens: each scored 1 for every Day its color won">Tokens</th><th class="r" title="Whoever Offered the fewest times loses 3">Miser</th><th class="r">Glory</th></tr></thead>
+          <thead><tr><th /><th>Player</th>{advanced && <th>Celestial</th>}<th class="r" title="Glory from the Choir and abilities during the game">Choir</th><th class="r" title="Light and Dark tokens: each scored 1 for every Day its color won">Tokens</th><th class="r">Glory</th></tr></thead>
           <tbody>
             {rows.map((r, i) => {
               const pl = p.view.players[r.seat];
@@ -28,7 +28,6 @@ export function Results(p: { view: GameView; room: RoomPublic; isHost: boolean; 
                   {advanced && <td><Card id={pl.celestial} w={34} compact /></td>}
                   <td class="r num">{r.before}</td>
                   <td class="r num" title={`${r.tokens.light} Light × ${res.daysWon.light} + ${r.tokens.dark} Dark × ${res.daysWon.dark}`}><span class="light">☀{r.tokens.light}</span> <span class="dark">☾{r.tokens.dark}</span> +{r.fromTokens}</td>
-                  <td class="r num">{r.miser ? `−${r.miser}` : ''}</td>
                   <td class="r num big">{r.glory}</td>
                 </tr>
               );

@@ -39,7 +39,7 @@ One deck of 69 Host cards: **every card is Light or Dark** (V45, Robert): 34 Lig
 - **Glory moves between players only when a card says so** (V40). Talk and promises are open and non-binding.
 - **Ties on "most" or "least" Glory:** the player using the card chooses, unless the card says otherwise (Envy).
 - **Secret personal objectives** were considered and rejected: the allegiance tokens already are the secret objective.
-- **The public good stays public.** Offers earn nothing directly (V45); the Miser's Rule is the only thing that makes not contributing cost.
+- **The public good stays public.** Offers earn nothing directly (V45). What makes not contributing cost is **no offering, no harvest**: your Choir scores only on a Day you Offered. It is checked each Evening, so nothing is tracked across the game.
 
 ## Parked ideas
 
@@ -62,7 +62,8 @@ Bots cannot bluff, negotiate or betray, so these are the questions only people c
 
 - **Tokens:** do people Offer tokens (the strong lab bots: about 3 a game) or hoard them? Does the reveal feel like a satisfying climax?
 - **Reads:** with anonymous Offers and mixed tokens, a careful card-counter is right about half the time. Does that make talk sharper or vaguer?
-- **The Miser's Rule:** does it feel fair, or like a tax? Does anyone game it?
+- **No offering, no harvest:** does it feel natural or harsh? Do players build on Days their color looks lost, as the bots do?
+- **Card-shaped tokens:** do people read token Offers, and bluff with them?
 - **Length:** about 23 minutes at 3 players and 37 at 4 by the time model; real tables decide.
 - **Bluffing and political cards** (Mirage, Veil, Council, Covenant, Fig Leaves, Gabriel's read): where people should beat the bots.
 - **Mammon** sits at the bottom of the range (0.72 to 0.75); **the Whisper** at the top of the Celestials (1.2).

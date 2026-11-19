@@ -32,7 +32,7 @@ Earlier card spreadsheets, rulebook drafts, print sheets, design write-ups and s
 - **Modes:** the Base game (Host cards and tokens) and the Advanced game (adds Celestials and Events), both for 3 or 4 players. Hidden Roles was retired in V45.
 - **Setup:** a hand of 3 (the Dominion 5) and a Choir of 2 random face-up cards, with room for 4.
 - **The Day:** Morning (Event in Advanced, predictions, First Fruits: everyone gives one card, shuffled so no one knows whose), Noon (one turn each: Offer a card or a token facedown, Gather a card or token from the Altar, or Exalt a card from your hand), Evening (the anonymous reveal; the heavier side wins the Day; the Reaping).
-- **Scoring:** each Choir card of the winning color scores 2 Glory each Evening. After 7 Days (the last is Judgment Day: everyone chooses their action in secret), each token scores 1 for every Day its color won, and whoever Offered the fewest times loses 3. The most Glory wins.
+- **Scoring:** each Choir card of the winning color scores 2 Glory each Evening. After 7 Days (the last is Judgment Day: everyone chooses their action in secret), each token scores 1 for every Day its color won, and the most Glory wins. **No offering, no harvest:** your Choir scores only on a Day you Offered.
 - **Setup:** 6 secret allegiance tokens each, dealt from an even, shuffled pool.
 
 ## Online game

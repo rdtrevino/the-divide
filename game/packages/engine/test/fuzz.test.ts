@@ -28,7 +28,7 @@ describe('bot games run to completion', () => {
         const won = daysWon(s);
         for (const x of s.result!.standings) {
           expect(x.fromTokens).toBe(x.tokens.light * won.light + x.tokens.dark * won.dark);
-          expect(x.glory).toBe(x.before + x.fromTokens - x.miser);
+          expect(x.glory).toBe(x.before + x.fromTokens);
         }
         const best = Math.max(...s.players.map((p) => p.glory));
         expect(s.result!.winners.every((w) => s.players[w].glory === best)).toBe(true);

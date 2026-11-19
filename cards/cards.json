@@ -200,7 +200,7 @@
     {
       "id": "host-mercy",
       "name": "Mercy",
-      "text": "At the end of the Day: If your Choir scored nothing at the Reaping, gain 1 Glory.",
+      "text": "At the end of the Day: If you Offered this Day and your Choir scored nothing, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/16-mercy.jpg",
       "plate": "art/plates/host/16-mercy.jpg",
@@ -330,7 +330,7 @@
     {
       "id": "host-ordeal",
       "name": "Ordeal",
-      "text": "On your turn: You may invoke this card, then discard it. At this Reaping, your Choir scores double; if it scores nothing, lose 2 Glory.",
+      "text": "On your turn: You may invoke this card, then discard it. At this Reaping, your Choir scores double.",
       "openGame": true,
       "face": "art/faces/host/26-ordeal.jpg",
       "plate": "art/plates/host/26-ordeal.jpg",
@@ -603,7 +603,7 @@
     {
       "id": "host-anathema",
       "name": "Anathema",
-      "text": "On your turn: No other player may Offer until the start of your next turn.",
+      "text": "On your turn: Until the start of your next turn, other players' Offers go on the Altar face up.",
       "openGame": true,
       "face": "art/faces/host/47-anathema.jpg",
       "plate": "art/plates/host/47-anathema.jpg",
@@ -629,7 +629,7 @@
     {
       "id": "host-favor",
       "name": "Favor",
-      "text": "At the end of the Day: If 2 or more other players' Choirs scored nothing at the Reaping, gain 1 Glory.",
+      "text": "At the end of the Day: If your Choir scored more than every other player's, gain 1 Glory.",
       "openGame": true,
       "face": "art/faces/host/49-favor.jpg",
       "plate": "art/plates/host/49-favor.jpg",
@@ -642,7 +642,7 @@
     {
       "id": "host-temptation",
       "name": "Temptation",
-      "text": "On your turn: Play a card from your hand into another player's Choir. If their Choir is full, they discard one of its cards first.",
+      "text": "On your turn: Choose a card in another player's Choir. It counts as the opposite alignment this Day.",
       "openGame": true,
       "face": "art/faces/host/50-temptation.jpg",
       "plate": "art/plates/host/50-temptation.jpg",
@@ -694,7 +694,7 @@
     {
       "id": "host-moloch",
       "name": "Moloch",
-      "text": "On your turn: You may discard 1 other Host card from your Choir to gain 2 Glory. Its ability must not have been used this turn.",
+      "text": "On your turn: You may discard 1 other Host card from your Choir to gain 3 Glory. Its ability must not have been used this turn.",
       "openGame": true,
       "face": "art/faces/host/54-moloch.jpg",
       "plate": "art/plates/host/54-moloch.jpg",

@@ -6,7 +6,6 @@
 // what the other players read into Choirs and facedown Offers, and plays against that.
 import { botAnswer, choirCardValue, tokenWorth } from './bots';
 import { activeCards, choirColors } from './core';
-import { MISER } from './engine';
 import { Game } from './game';
 import type { Answer, Decision, GameState, Seat, Side } from './types';
 
@@ -58,9 +57,6 @@ function value(s: GameState, q: Seat): number {
   let v = p.glory;
   for (const t of p.tokens) v += tokenWorth(s, t);
   for (const c of activeCards(p)) v += choirCardValue(s, c.id) + (c.store ?? 0);
-  const fewest = Math.min(...s.players.filter((o) => o.seat !== q).map((o) => o.offers));
-  if (p.offers < fewest) v -= MISER * 0.6;
-  else if (p.offers === fewest) v -= MISER * 0.3;
   return v;
 }
 

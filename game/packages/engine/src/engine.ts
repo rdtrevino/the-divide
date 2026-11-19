@@ -21,8 +21,6 @@ export const TOKENS_EACH = 6;
 export const CHOIR_PAY = 2;
 /** An Offered allegiance token counts this much for its color (V45). */
 export const TOKEN_WEIGHT = 2;
-/** The Miser's Rule (V45): whoever Offered the fewest times loses this much at the end. */
-export const MISER = 3;
 /** V42: one deck of 69 cards, all with art. Ithuriel, Urim and Asmadai (no art) are retired; their abilities moved to Revelation, Knowledge and Belial. */
 export const OPEN_SET_ASIDE_HOSTS: readonly string[] = [H.ithuriel, H.urim, H.asmadai];
 /** The 3 Events that moved the Balance, retired with Hidden Roles (V45). */
@@ -56,7 +54,7 @@ export function createState(cfg: GameConfig): GameState {
   s.eventDeck = advanced ? shuffle(s, events) : [];
   const pool = advanced ? shuffle(s, CELESTIALS.map((c) => c.id).filter((id) => !cfg.players.some((p) => p.celestial === id))) : [];
   s.players = cfg.players.map((p, seat) => ({
-    seat, name: p.name, isBot: p.isBot, celestial: advanced ? p.celestial ?? pool.pop()! : '', hand: [], choir: [], glory: 0, tokens: [], offers: 0,
+    seat, name: p.name, isBot: p.isBot, celestial: advanced ? p.celestial ?? pool.pop()! : '', hand: [], choir: [], glory: 0, tokens: [], offeredToday: false,
   }));
   // V45: shuffle an even pool of allegiance tokens and deal each player 6, so mixes are uneven and secret.
   const half = (TOKENS_EACH * s.players.length) / 2;
@@ -87,6 +85,7 @@ export function* runGame(s: GameState): Gen<void> {
   for (let d = 1; d <= last; d++) {
     s.day = d;
     s.day_ = freshDay();
+    for (const p of s.players) p.offeredToday = false;
     s.turnUsed = [];
     yield* morning(s);
     yield* firstFruits(s);
@@ -289,7 +288,7 @@ type Action = 'offer' | 'gather' | 'exalt';
 export function legalActions(s: GameState, seat: Seat): Action[] {
   const p = s.players[seat];
   const out: Action[] = [];
-  if ((p.hand.length || p.tokens.length) && !s.anathema.some((a) => a.target === seat && (a.action ?? 'offer') === 'offer')) out.push('offer');
+  if (p.hand.length || p.tokens.length) out.push('offer');
   // Gather takes a card from the Altar (V42) or the discard pile (Forger), or a token from the Altar (V45: needs no room).
   const card = canRoom(s, seat) && (altarAvailable(s, seat).length > 0 || (hasActive(s, seat, H.forger) && s.discard.length > 0));
   if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && (card || s.altarTokens.length)) out.push('gather');
@@ -370,6 +369,9 @@ export function* judgmentDay(s: GameState): Gen<void> {
 
 const tokenName = (side: Side) => (side === 'light' ? 'Light' : 'Dark');
 
+/** Anathema (V45): until its holder's next turn, other players' Offers go face up. */
+const faceUp = (s: GameState, seat: Seat) => s.anathema.some((a) => a.target === seat && a.action === 'faceup');
+
 /** The Cantor (V45): when you Offer, draw a card. */
 function* cantorDraw(s: GameState, seat: Seat): Gen<void> {
   if (!isCelestial(s, seat, C.cantor) || !canActivate(s, seat, C.cantor)) return;
@@ -387,13 +389,14 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const p = s.players[seat];
   const first = yield* pick(s, seat, 'offer.card', 'Offer: choose a card or a token to place facedown on the Altar.', offerOptions(s, seat));
   if (!first) return;
-  p.offers++;
+  p.offeredToday = true;
   if (first.startsWith('token:')) {
     const side = first.slice(6) as Side;
     p.tokens.splice(p.tokens.indexOf(side), 1);
-    s.altarTokens.push({ side, by: seat });
+    const shown = faceUp(s, seat);
+    s.altarTokens.push({ side, by: seat, ...(shown ? { shown } : {}) });
     stat(s, { type: 'action', seat, source: 'offer', data: { token: side } });
-    log(s, 'offer', `${p.name} Offered an allegiance token facedown.`);
+    log(s, 'offer', shown ? `${p.name} Offered a ${tokenName(side)} token face up (Anathema).` : `${p.name} Offered an allegiance token facedown.`);
     log(s, 'offer', `You Offered a ${tokenName(side)} token.`, [seat]);
     yield* cantorDraw(s, seat);
     yield* wisdomPeek(s, seat);
@@ -402,8 +405,8 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const card = first;
   p.hand.splice(p.hand.indexOf(card), 1);
   const col = (id: string) => colorsOf(s, null, id);
-  // V35: Offers go facedown, except Hymn and Lamentation (V43), which go face up.
-  const facedown = card !== H.hymn && card !== H.lamentation;
+  // V35: Offers go facedown, except Hymn and Lamentation (V43), which go face up, and any Offer under Anathema (V45).
+  const facedown = card !== H.hymn && card !== H.lamentation && !faceUp(s, seat);
   s.altar.push({ id: card, facedown, offeredBy: seat, day: s.day, kind: 'offer' });
   noteOffer(s, seat, [card]);
   stat(s, { type: 'action', seat, source: 'offer', data: { cards: [card] } });
@@ -657,14 +660,15 @@ function scores(s: GameState, seat: Seat, id: string, side: Side): boolean {
 }
 
 export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<void> {
-  // V45: each face-up Host card in your Choir of the winning color scores 2 Glory. Nothing is lost here, except by
-  // Ordeal (double, or lose 2 if nothing scores). False Prophecy scores the other color; Heresy scores your cards of
-  // the losing color; Famine stops the Reaping.
+  // V45: each face-up Host card in your Choir of the winning color scores 2 Glory, if you Offered this Day (no offering,
+  // no harvest). Nothing is ever lost here. Ordeal doubles; False Prophecy scores the other color; Heresy scores your
+  // cards of the losing color; Famine stops the Reaping.
   const delta: Record<number, number> = {};
   for (const p of s.players) {
     const seat = p.seat;
     delta[seat] = 0;
     if (eventOn(s, E.famine) || tide.dir === 'neutral') continue;
+    if (!p.offeredToday) { if (activeCards(p).length) log(s, 'harvest', `${p.name} did not Offer today, so their Choir does not score.`); continue; }
     let side = (eventOn(s, E.falseProphecy) ? opposite(tide.dir) : tide.dir) as Side;
     if (s.day_.heresy.includes(seat)) side = opposite(side) as Side;
     const count = activeCards(p).filter((c) => scores(s, seat, c.id, side)).length;
@@ -698,11 +702,6 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (!hasActive(s, seat, H.bounty)) continue;
     if (!scored(t)) { yield* gain(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} scored nothing at the Reaping: ${pname(s, seat)} collects the Bounty.`); }
     else { yield* lose(s, seat, 1, H.bounty); log(s, 'bounty', `${pname(s, t)} scored at the Reaping: ${pname(s, seat)}'s Bounty costs them 1 Glory.`); }
-  }
-  // Ordeal (V45): a Choir that was put to the Ordeal and scored nothing loses 2.
-  for (const seat of order) if (s.day_.ordeal.includes(seat) && !scored(seat) && tide.dir !== 'neutral' && !eventOn(s, E.famine)) {
-    const l = yield* lose(s, seat, 2, H.ordeal);
-    if (l) log(s, 'ordeal', `${pname(s, seat)}'s Choir failed its Ordeal: -${l} Glory.`);
   }
   // Raguel (V45): 1 Glory each Reaping your Bound player's Choir scores more than yours.
   for (const b of s.bonds) {
@@ -742,8 +741,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (hasActive(s, seat, H.outcast) && p.glory === Math.min(...s.players.map((o) => o.glory))) yield* win(H.outcast, 1, 'Outcast')();
     // Apple (V45): 1 Glory if the Tide turned: today's winner is not yesterday's.
     if (hasActive(s, seat, H.apple) && tide.dir !== 'neutral' && prev && prev !== 'neutral' && prev !== tide.dir) yield* win(H.apple, 1, 'Apple')();
-    // Mercy (V45): 1 Glory if your Choir scored nothing at this Reaping.
-    if (hasActive(s, seat, H.mercy) && !scored(seat)) yield* win(H.mercy, 1, 'Mercy')();
+    // Mercy (V45): 1 Glory if you Offered this Day and your Choir scored nothing.
+    if (hasActive(s, seat, H.mercy) && p.offeredToday && !scored(seat)) yield* win(H.mercy, 1, 'Mercy')();
     // Uriel and Beelzebub (V45): 1 Glory if 3 or more other cards in your Choir are of their color.
     for (const [id, k] of [[H.uriel, 'light'], [H.beelzebub, 'dark']] as const) {
       const setN = activeCards(p).filter((c) => colorsOf(s, seat, c.id)[k] && c.id !== id).length;
@@ -754,8 +753,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
       const c = p.choir.find((x) => x.id === id && !x.facedown);
       if (c && hasActive(s, seat, id) && tide.dir === k) { c.store = (c.store ?? 0) + 1; log(s, id.replace('host-', ''), `1 Glory is stored on ${p.name}'s ${cardName(id)} (${c.store} in all).`); }
     }
-    // Favor (V45): 1 Glory if two or more other players scored nothing at this Reaping.
-    if (hasActive(s, seat, H.favor) && s.players.filter((o) => o.seat !== seat && !scored(o.seat)).length >= 2) yield* win(H.favor, 1, 'Favor')();
+    // Favor (V45): 1 Glory if your Choir scored more than every other player's at this Reaping.
+    if (hasActive(s, seat, H.favor) && s.players.every((o) => o.seat === seat || gained[o.seat] < gained[seat])) yield* win(H.favor, 1, 'Favor')();
     // Hubris (V45): if the player with the most Glory gained 8 or more this Day (from anything), they give 1 to you.
     if (hasActive(s, seat, H.hubris)) {
       const dayGain = (x: Seat) => s.stats.filter((e) => e.type === 'glory' && e.seat === x && e.day === s.day && (e.amount ?? 0) > 0).reduce((t, e) => t + (e.amount ?? 0), 0);
@@ -777,11 +776,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
 // ---------------------------------------------------------------- endgame
 
 export function* endGame(s: GameState): Gen<void> {
-  // V45: reveal the tokens. Each scores 1 for every Day its color won; whoever Offered the fewest times loses 3
-  // (nobody, if everyone Offered equally often). Most Glory wins; a tie is shared.
+  // V45: reveal the tokens. Each scores 1 for every Day its color won. Most Glory wins; a tie is shared.
   const won = daysWon(s);
-  const fewest = Math.min(...s.players.map((p) => p.offers));
-  const miserApplies = s.players.some((p) => p.offers !== fewest);
   const standings: Standing[] = [];
   log(s, 'reveal', `The tokens are revealed. Light won ${won.light} Day${won.light === 1 ? '' : 's'} and Dark won ${won.dark}.`);
   for (const p of s.players) {
@@ -789,9 +785,8 @@ export function* endGame(s: GameState): Gen<void> {
     const tokens = { light: p.tokens.filter((t) => t === 'light').length, dark: p.tokens.filter((t) => t === 'dark').length };
     const fromTokens = tokens.light * won.light + tokens.dark * won.dark;
     yield* gain(s, p.seat, fromTokens, 'tokens');
-    const miser = miserApplies && p.offers === fewest ? yield* lose(s, p.seat, MISER, 'miser') : 0;
-    standings.push({ seat: p.seat, glory: p.glory, before, tokens, fromTokens, miser });
-    log(s, 'tokens', `${p.name} held ${tokens.light} Light and ${tokens.dark} Dark: +${fromTokens}${miser ? `, and loses ${miser} for Offering the fewest times` : ''}.`);
+    standings.push({ seat: p.seat, glory: p.glory, before, tokens, fromTokens });
+    log(s, 'tokens', `${p.name} held ${tokens.light} Light and ${tokens.dark} Dark: +${fromTokens}.`);
   }
   const final = s.tides[s.tides.length - 1]?.dir ?? 'neutral';
   const best = Math.max(...standings.map((x) => x.glory));

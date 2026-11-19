@@ -27,14 +27,14 @@ Everyone secretly holds a mix of **Light** and **Dark** allegiance tokens. Each 
 
 | Action | What you do | Whom it helps |
 |---|---|---|
-| **Offer** | Put a card from your hand **facedown** on the Altar, **or one of your tokens** (it counts **2** for its color) | **A side**: everyone who holds that color. Nothing for you directly. |
+| **Offer** | Put a card from your hand **facedown** on the Altar, **or one of your tokens** (it counts **2** for its color) | **A side**: everyone who holds that color. And it lets your Choir score tonight (below). |
 | **Gather** | Take a card from the Altar into your Choir, or a token into your secret tokens | **You** (and it removes that push from the Altar) |
 | **Exalt** | Play a card from your hand into your Choir | **You** |
 
 **Evening.**
 1. Shuffle the facedown Offers and tokens together, then turn them face up. **No one learns who Offered what.**
 2. Add up Light and Dark. **The heavier side wins the Day.** Mark it on the Tide track. A tie means no one wins.
-3. **Choirs score:** each card in your Choir of the winning color gives you **2 Glory**.
+3. **Choirs score:** each card in your Choir of the winning color gives you **2 Glory**, **but only if you Offered today. No offering, no harvest.**
 4. Tokens left on the Altar go, one at a time, to whoever holds the fewest tokens.
 5. Clear the Altar and draw back to 3. The first player passes left.
 
@@ -46,11 +46,11 @@ After First Fruits, **everyone chooses their action in secret**: the action and 
 
 1. **Reveal tokens.** Each token scores **1 Glory for every Day its color won.**
    *Light won 4 Days and Dark won 2; you hold 4 Light and 2 Dark: 4 × 4 + 2 × 2 = 20.*
-2. **The Miser's Rule:** whoever **Offered the fewest times loses 3** (nobody, if everyone Offered equally).
-3. **Most Glory wins.** Ties share the win.
+2. **Most Glory wins.** Ties share the win.
 
 ## What to watch for in your first game
 
+- **Build or Offer?** A Day you build instead of Offering, your Choir earns nothing that night. Pick those Days when your Choir's color looks likely to lose anyway.
 - **Everyone is partly on your side.** A Light Day pays every Light token at the table. The question is never only "who wins the Day?" but "who paid for it?"
 - **A token is your strongest push and your dearest.** Offered, it counts double, but it's gone, and it may end up with a rival.
 - **Choirs are public; tokens are not.** A Choir full of Light cards might hide mostly Dark tokens.
@@ -68,6 +68,6 @@ After First Fruits, **everyone chooses their action in secret**: the action and 
 | 23 Light, 23 Neutral, 23 Dark | **Every card Light or Dark** |
 | First Fruits and Offers showed who played them | **Both anonymous** |
 | Hidden Roles for 5–6 players | **Retired**: the tokens do its job at 3 and 4 |
-| — | **The Miser's Rule**: fewest Offers loses 3 |
+| — | **No offering, no harvest**: your Choir scores only on a Day you Offered |
 
 **Advanced game:** add the 9 Celestials (one public power each) and the 17 Events (a new rule each Day). Cards whose text changed for the new scoring are listed in `CHANGELOG.md`.

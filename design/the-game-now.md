@@ -29,13 +29,12 @@ Three or four players share one Altar. Every Day, each of you either **Offers** 
 3. **Evening.**
    1. Shuffle the facedown Offers (and tokens) together and turn them face up, so nobody can tell whose was whose.
    2. **The heavier side wins the Day:** place a Day marker on the Tide track, that side up. On a tie, place no marker.
-   3. **Choirs score:** each player gains **2 Glory for each card of the winning color in their Choir.**
+   3. **Choirs score:** each player who **Offered this Day** gains **2 Glory for each card of the winning color in their Choir** (no offering, no harvest; Round 45).
    4. **Tokens left on the Altar** are shuffled facedown and handed out one at a time to whoever holds the fewest tokens.
    5. Discard the Altar, draw back to 3, and pass the first-player marker left.
 
 **End of the game.** After the last Day, everyone reveals their tokens.
 - **Each token scores 1 for every Day its color won.**
-- The player who **Offered the fewest times loses 3** (the Miser's Rule; if all are tied, nobody does).
 - Most Glory wins.
 
 > Example: Light won 4 Days and Dark won 2. Ada holds 4 Light and 2 Dark tokens: 4 × 4 + 2 × 2 = 20, added to the Glory her Choir earned during the game.
@@ -46,7 +45,7 @@ Three or four players share one Altar. Every Day, each of you either **Offers** 
 >
 > Each turn, do one thing. Offer a card to push the Altar your way, Gather a card off the Altar into your Choir, or Exalt a card from your hand into your Choir. Your Choir scores 2 for each card every time its color wins.
 >
-> You can also Offer one of your tokens: it counts double. But then it's gone, and so is your share in that side. And whoever Offers the least loses 3."
+> You can also Offer one of your tokens: it counts double. But then it's gone, and so is your share in that side. And no offering, no harvest: your Choir only scores on a Day you Offered."
 
 ## What changed from the published game (V44)
 
@@ -57,7 +56,7 @@ Three or four players share one Altar. Every Day, each of you either **Offers** 
 | End of the game | Race to 12 | **7 Days**, the last a secret-choice **Judgment Day**, then the token reveal | One number to learn; nobody acts last with the most knowledge on the deciding Day; a reveal at the end of every game |
 | Offer | Facedown, +1 Glory now | Facedown, **no Glory**: the Offer is a pure public good | 1. The public-goods dilemma (paying for Offers made them private goods) |
 | Who Offered what | Revealed card by card | **Shuffled before the reveal**; First Fruits shuffled too | 2. Reads, not certainties |
-| Free-riding | Nothing stopped it | **The Miser's Rule**: fewest Offers lose 3 | 1. Without it, Offers halve |
+| Free-riding | Nothing stopped it | **No offering, no harvest**: your Choir scores only on a Day you Offered | 1. Without it, Offers halve; checked each Evening, nothing to track (Round 45) |
 | Gather, Exalt, Choir of 4, hand of 3, First Fruits | — | Kept | 3, 5. Load-bearing |
 | The 69 cards | All in one deck | Plain cards for now; the **Starter Pantheon** (18 ability cards) is tested below; full Pantheons are the next step | 5, 6. The engine layer |
 | Celestials, Events, Hidden Roles (5–6p) | Optional | Untouched; not yet fitted to this core | — |
@@ -184,3 +183,11 @@ Strong lab bots, the current V45 rules with every card Light or Dark (600 games 
 Token mixes stay fair throughout (0.89 to 1.09). For comparison, the current rule (6 Days at 3 players, 8 at 4) measured 0.95–1.03 and 0.92–1.06. With 300 games at 5 players, about ±0.12 is noise.
 
 **What it means.** With Judgment Day, 7 Days works at every count from 3 to 6. It is a touch less even than 6 or 8 Days at 3 and 4 players, but it gives one number to teach, a climax that is itself a bluff (everyone commits blind), and a path back to 5 and 6 players. The cost is one rule. It passes the vision's test on the first and third questions: on the last Day, help-yourself and help-your-side are chosen blind, and the Altar becomes a contest nobody can watch. **Adopted by Robert (November 19):** in rulebook v15, the engine and the site. The game stays for 3 and 4 players for now; 5 and 6 are possible later on the same rule.
+
+## Tokens and the Offer (Rounds 44–45)
+
+Robert questioned three pieces: a token costing a whole action, where leftover tokens go, and a Miser's Rule that needs tracking. The full results are in `tokens-and-offering.md`. In short:
+- **The Miser's Rule is replaced by "no offering, no harvest"**: your Choir scores only on a Day you Offered. Offers rise to 67–68% of actions, play stays fair, strong play beats simple play 3.91× (the most of any version), and there is nothing to track across the game.
+- **Tokens stay an Offer**, and are best made card-shaped so a token Offer looks like any other. Making tokens cheaper to play (at dawn, or free alongside an action) gets them used more but makes the uneven mixes matter more.
+- **Leftover tokens still go to whoever holds the fewest.** It works as a refund in disguise, and every alternative makes players hoard.
+- **Cards reworked for the new rule:** Anathema (other players' Offers go face up, instead of being blocked), Temptation (turns a rival's card to the other color for the Day), Mercy (only if you Offered), Moloch (3), Ordeal (no penalty), Favor (your Choir outscored everyone else's).

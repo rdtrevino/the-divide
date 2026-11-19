@@ -1,7 +1,7 @@
 // Computer players. Heuristic, not perfect: they weigh what a Light or a Dark Day is worth to them (their Choir
 // and their secret tokens), read the Altar, and answer every kind of decision sensibly.
 import { CHOIR_LIMIT, baseValue, choirColors, dirOf, hasActive } from './core';
-import { CHOIR_PAY, DAYS, MISER, TOKEN_WEIGHT, daysWon } from './engine';
+import { CHOIR_PAY, DAYS, TOKEN_WEIGHT, daysWon } from './engine';
 import { E, H, HOST } from './data';
 import type { Answer, Decision, Dir, GameState, Option, Seat } from './types';
 
@@ -116,18 +116,6 @@ function engineRate(s: GameState, seat: Seat, id: string | undefined): number {
 const daysLeft = (s: GameState) => daysAfter(s) + 1;
 const engineVal = (s: GameState, seat: Seat, id: string | undefined) => engineRate(s, seat, id) * daysLeft(s);
 
-/** Temptation: what playing `card` into `o`'s Choir is worth to a player who wants `want`. */
-function corruptValue(s: GameState, want: number, card: string | undefined, o: Seat): number {
-  if (!card) return 0;
-  const on = alignment(s, o);
-  const nn = on + signed(s, card);
-  if (on === 0 || Math.sign(nn) === Math.sign(on)) return 0;
-  // Pull a partner off my side, so I lean alone (+3 instead of +1).
-  if (Math.sign(on) === Math.sign(want)) return 1.6;
-  // Push a rival over to my side only if that does not crowd it; push the leader off their side.
-  const lead = Math.max(...s.players.map((x) => x.glory));
-  return s.players[o].glory === lead ? 1.0 : 0.3;
-}
 /**
  * How much the Event would help `seat` against the table (positive: play it; negative: bury it).
  * Rough judgments a player would make: the leader wants quiet Days, a trailer wants swings, and an Event that
@@ -214,16 +202,16 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         const v = val(s, id), o = room || !worst ? { light: 0, dark: 0 } : val(s, worst.id);
         return { light: st.light + CHOIR_PAY * (Math.sign(v.light) - Math.sign(o.light)), dark: st.dark + CHOIR_PAY * (Math.sign(v.dark) - Math.sign(o.dark)) };
       };
-      // The Miser's Rule: Offering the fewest times costs 3 at the end, so a player behind on Offers leans toward them.
-      const fewest = Math.min(...s.players.filter((x) => x.seat !== seat).map((x) => x.offers));
-      const miser = p.offers <= fewest ? MISER / (daysAfter(s) + 1) : 0;
+      // No offering, no harvest: until you have Offered today, an Offer also lets your Choir score tonight.
+      const cc = choirColors(s, seat);
+      const harvest = p.offeredToday ? 0 : dayValue({ light: CHOIR_PAY * cc.light, dark: CHOIR_PAY * cc.dark }, altar, w);
       if (has('offer')) {
         const cards = p.hand.map((c) => dayValue(st, altar + signed(s, c), w) - now - 0.15 * choirCardValue(s, c));
         const tokens = (['light', 'dark'] as const).filter((k) => p.tokens.includes(k)).map((k) => {
           const less = { ...st, [k]: st[k] - 1 };
           return dayValue(less, altar + (k === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT), w) - now - tokenWorth(s, k) + 0.5;
         });
-        scores.offer = Math.max(...cards, ...tokens) + miser + 0.3;
+        scores.offer = Math.max(...cards, ...tokens) + harvest + 0.3;
       }
       if (has('gather')) {
         let best = -Infinity;
@@ -284,9 +272,11 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const o = byId((x) => x.seat !== undefined && leaders.includes(x.seat)) ?? d.options[0];
       return one(o.id);
     }
-    case 'temptation.give': {
-      const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => corruptValue(s, want, x.card, x.seat!) - 0.3 * engineVal(s, seat, x.card));
-      return one(o && corruptValue(s, want, o.card, o.seat!) > 0 ? o.id : 'none');
+    case 'temptation.turn': {
+      // Turn the leader's card of the color the Altar favors, so it will not score.
+      const lead = leaderSeats(s, seat);
+      const o = pickBest(d.options.filter((x) => x.seat !== undefined), (x) => (dirOf(signed(s, x.card)) === dirOf(altar) ? 2 : 0) + (lead.includes(x.seat!) ? 1 : 0) + r * 0.1);
+      return one(o && dirOf(altar) !== 'neutral' ? o.id : 'none');
     }
     case 'firstFruits':
     case 'offer.card':
@@ -359,11 +349,11 @@ export function botAnswer(s: GameState, d: Decision): Answer {
           return st >= 3 || daysAfter(s) === 0;
         }
         if (o.card === H.freeWill) return s.players[seat].hand.length >= 2 && r < 0.4;
-        if (o.card === H.anathema) return altar !== 0 && dirOf(altar) === wantDir && later >= 1;
+        if (o.card === H.anathema) return later >= 1 && r < 0.6;
         if (o.card === H.michael) return r < 0.6;
         if (o.card === H.silence) return leaders.some((l) => l !== seat) && r < 0.5;
         if (o.card === H.deliverance) return r < 0.25;
-        if (o.card === H.temptation) return s.players[seat].hand.some((c) => s.players.some((x) => x.seat !== seat && corruptValue(s, want, c, x.seat) > 0));
+        if (o.card === H.temptation) return altar !== 0 && later <= 1;
         if (o.card === H.ordeal) { const c = choirColors(s, seat); return later <= 1 && ((altar > 1 && c.light >= 2) || (altar < -1 && c.dark >= 2)); }
         return true;
       });

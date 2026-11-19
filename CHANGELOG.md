@@ -2,6 +2,14 @@
 
 Older entries name files that have since been removed (design write-ups, simulator reports, archived spreadsheets and rulebook drafts, the V28 print kit); every one of them is in the git history before November 18, 2026.
 
+## V45: no offering, no harvest (November 19, 2026)
+
+Robert's questions about tokens and the Miser's Rule, tested in lab Rounds 44 and 45 (`design/tokens-and-offering.md`).
+- **The Miser's Rule is replaced by "no offering, no harvest":** your Choir scores at the Reaping only on a Day you Offered (a card or a token). Offers rise to 67–68% of actions; strong play beats simple play 3.91×; nothing is tracked across the game.
+- **Kept:** tokens are played as an Offer; leftover tokens go to whoever holds the fewest. Tokens should be made card-shaped, so a token Offer looks like any other.
+- **Cards:** Anathema (other players' Offers go face up, instead of being blocked: 1.88 under the new rule), Temptation (a rival's Choir card counts as the opposite alignment this Day), Mercy (only if you Offered: 1.57), Moloch (3 Glory), Ordeal (no penalty), Favor (your Choir outscored everyone else's).
+- **Site:** the table notes who has Offered today; the results drop the Miser column.
+
 ## V45: 7 Days and Judgment Day (November 19, 2026)
 
 Robert's call, after lab Round 43 (`design/the-game-now.md`, "Seven Days at every table?").
