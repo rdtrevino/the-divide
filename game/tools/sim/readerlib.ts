@@ -31,8 +31,8 @@ export class ReaderLog {
 }
 
 /** Fit on `train`, score on `test`: the share of rows whose side the reader names, and the model. */
-export function fitReader(train: number[][], test: number[][]) {
-  const F = READER_FEATURES.length;
+/** `F`: how many leading columns are features (the side follows them); the standard reader uses READER_FEATURES. */
+export function fitReader(train: number[][], test: number[][], F = READER_FEATURES.length) {
   const mu = Array.from({ length: F }, (_, j) => train.reduce((t, r) => t + r[j], 0) / train.length);
   const sd = Array.from({ length: F }, (_, j) => Math.sqrt(train.reduce((t, r) => t + (r[j] - mu[j]) ** 2, 0) / train.length) || 1);
   const z = (r: number[]) => r.slice(0, F).map((x, j) => (x - mu[j]) / sd[j]);
@@ -45,5 +45,5 @@ export function fitReader(train: number[][], test: number[][]) {
   const predict = (r: number[]) => (b + z(r).reduce((t, v, j) => t + v * w[j], 0) > 0 ? 1 : 0);
   const accuracy = (rows: number[][]) => (rows.length ? rows.filter((r) => predict(r) === r[F]).length / rows.length : NaN);
   const l = test.filter((r) => r[F] === 1).length / test.length;
-  return { accuracy: accuracy(test), guessing: Math.max(l, 1 - l), accuracyOf: accuracy, weights: Object.fromEntries(READER_FEATURES.map((k, j) => [k, +(w[j] / sd[j]).toFixed(3)])) };
+  return { accuracy: accuracy(test), guessing: Math.max(l, 1 - l), accuracyOf: accuracy, weights: Object.fromEntries(w.map((x, j) => [READER_FEATURES[j] ?? `extra ${j - READER_FEATURES.length + 1}`, +(x / sd[j]).toFixed(3)])) };
 }
