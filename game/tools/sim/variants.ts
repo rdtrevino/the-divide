@@ -21,4 +21,8 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   carry: { ...none, carryover: true }, turnCarry: { ...none, decay: true, carryover: true },
   offTurn: { ...none, spoils: 'offerers', handMax: 5, decay: true }, offCarry: { ...none, spoils: 'offerers', handMax: 5, carryover: true },
   offTurnCarry: { ...none, spoils: 'offerers', handMax: 5, decay: true, carryover: true },
+  // Round 3: spoils drafted from the Day's last player (the first player's extra picks made seat 1 strong).
+  offRev: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5 },
+  offTurnRev: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true },
+  offTurnRevDraw1: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true, upkeepDraw: 1 },
 };

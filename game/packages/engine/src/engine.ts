@@ -696,7 +696,7 @@ function scores(s: GameState, seat: Seat, id: string, side: Side): boolean {
 function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
   const lost = opposite(won) as Side;
   const mode = rulesOf(s).spoils;
-  const eligible = order.filter((seat) => {
+  const eligible = (rulesOf(s).spoilsOrder === 'reverse' ? [...order].reverse() : order).filter((seat) => {
     if (mode === 'offerers') return s.players[seat].offeredToday;
     const c = choirColors(s, seat);
     return c[won] > c[lost];

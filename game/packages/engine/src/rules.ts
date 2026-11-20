@@ -25,6 +25,8 @@ export interface CoreRules {
    *  order. 'claim': players whose Choir holds more cards of the winning color than of the other; 'offerers': players
    *  who Offered today. Unclaimed tokens still go to whoever holds the fewest. */
   spoils: 'none' | 'claim' | 'offerers';
+  /** The spoils draft starts with the Day's first player ('turn') or its last ('reverse'). */
+  spoilsOrder: 'turn' | 'reverse';
   /** Most cards a hand may hold at the end of a Day (0: the hand size). */
   handMax: number;
   /** At the end of a Day: refill the hand to its size, or draw this many cards. */
@@ -39,7 +41,7 @@ export interface CoreRules {
 
 export const DEFAULT_RULES: CoreRules = {
   tokensEach: 6, devotion: 0, harvest: 'offer', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'none', handMax: 0,
-  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false,
+  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false, spoilsOrder: 'turn',
 };
 
 const cache = new WeakMap<object, CoreRules>();
