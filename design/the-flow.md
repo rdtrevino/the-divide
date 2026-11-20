@@ -27,17 +27,25 @@ Two **better versions** were added, from the risks above:
 - **A Choir Offer counts 2** (like a token), so the cost buys a real push (`rWeight2`).
 - **Offer from the hand (facedown) or the Choir (face up)** (`rBoth`), keeping the trusted-not-watched Offer while adding the costly one.
 
-How it was tested: every piece is a switch in the engine's `rules.ts` (`offerFrom`, `choirOfferWeight`, `fruits`, `fruitsToken`, `gatherTo`, `spoilsOrder`, `reap`, `endScore`); the strong (Monte Carlo) bot plays every seat (`tools/sim/core.ts`, the same 300 deals for every variant; noise about ±0.1 on a seat or a win rate); fixed strategies are checked with `exploits.ts`. The bots' value functions were taught each new scoring (`bots.ts`: `tokensValue`, `choirStake`), and the strong bot treats a First Fruits token as a coin flip, since no one knows who gave it. Results: `tools/sim/results/flow-r1.jsonl` to `flow-r3.jsonl`, `flow-final.jsonl`, `flow-exploits.jsonl`, `flow-final-exploits.jsonl`.
+How it was tested: every piece is a switch in the engine's `rules.ts` (`offerFrom`, `choirOfferWeight`, `fruits`, `fruitsToken`, `gatherTo`, `spoilsOrder`, `reap`, `endScore`); the strong (Monte Carlo) bot plays every seat (`tools/sim/core.ts`, the same 300 deals for every variant; noise about ±0.1 on a seat or a win rate); fixed strategies are checked with `exploits.ts`. The bots' value functions were taught each new scoring (`bots.ts`: `tokensValue`, `choirStake`), and the strong bot treats a First Fruits token as a coin flip, since its color says nothing about a Choir. The rejected switches were removed afterwards (Section 9). Results: `tools/sim/results/flow-r1.jsonl` to `flow-r3.jsonl`, `flow-final.jsonl`, `flow-exploits.jsonl`, `flow-final-exploits.jsonl`.
 
 ## 2. The answer in short
 
-**Recommended for a playtest: the Choir Offer + First Fruits tokens + tokens scoring only for your majority color** (`rMajUp`), on spoils to the Offerers. Or, if Robert wants every part of his flow, the same with **First Fruits facedown and Gathering into the hand** (`rMajGH`). Both are confirmed at 1,200 games (Section 6).
+**Recommended for a playtest (`rMajUp`): on spoils to the Offerers, Offer only from your Choir (face up) or a token (facedown); a token may be given as First Fruits; at the end, only the tokens of the color you hold more of score.** First Fruits stay face up and Gathering stays into the Choir. If Robert wants every part of his flow, the alternative is the same with **First Fruits facedown and Gathering into the hand** (`rMajGH`). Both are confirmed at 1,200 games (Section 6).
 
-- **It is the first rule set in this whole study that makes secret sides move**: a player's majority color changes 0.21–0.25 times a game (0.00 in every earlier version), while the table still reads sides only 60–65% of the time.
-- **It is fair**: seats 0.96–1.03 (4p) and 0.94–1.04 (3p) for `rMajUp`. The luck of the deal matters less (holding the side that wins: 1.24 against 0.61, from 1.60 against 0.47).
-- **Every fixed strategy loses**, including never Offering (0.97) and never Offering a token (0.71).
-- **What makes it work is not what it looked like.** The three pieces only work together: First Fruits tokens make tokens move; Offering only from the Choir makes the token the usual Offer, so tokens keep moving; scoring only your majority color makes a moving token change your side, and removes the 4-player seat skew the tokens caused.
-- **Pushback, with data:** strong players almost never Offer a Choir card (0.4–0.6 a game each). "Offer from the Choir" in practice means "Offer a token". Choirs do not change more (0.17–0.27 flips, as before). The pieces that did not earn a place: the spoils order (turn order is best), the Reaping variants (keep 2 a card), the "net" and "winner" end scores, a Choir Offer counting 2, and Offering from the hand or the Choir.
+- **The first rule set in this whole study that makes secret sides move.** A player's majority color changes 0.21–0.24 times a game, where every earlier version had 0.00. The table still names sides only 61–65% of the time (spoils alone: 60–63%).
+- **Fair.** Seats are 0.97–1.04 at 4 players and 0.95–1.08 at 3 (`rMajUp`). The luck of the deal matters less: holding the side that won more Days wins 1.44 and holding the other side 0.59, against 1.57 and 0.48 with spoils alone.
+- **Every fixed strategy loses**, the most successful being hedging (0.87), and never Offering (0.84) close behind. Never Offering a token is at 0.74; with spoils alone, never Offering a token wins (1.09).
+- **What makes it work is not what it looked like.** The three pieces only work together:
+  - First Fruits tokens make tokens move.
+  - Offering only from the Choir makes the token the usual Offer, so tokens keep moving.
+  - Scoring only your majority color means a token that moves can change your side. It also removes the 4-player seat skew that First Fruits tokens cause.
+- **Pushback, with data.** Strong players almost never Offer a Choir card: 0.4–0.6 times a game each. In practice "Offer from the Choir" means "Offer a token". Choirs do not change more than before (0.17–0.27 flips). The pieces that did not earn a place:
+  - the spoils order: turn order is best;
+  - the Reaping variants: keep 2 a card;
+  - the "net" and "winner" end scores;
+  - a Choir Offer counting 2;
+  - Offering from the hand or the Choir.
 
 ## 3. Round 1: the full idea, each piece left out, each piece alone, the variations
 
@@ -73,7 +81,7 @@ What the columns say, against the vision: **reader** = how often a fitted reader
 
 **A. Offer only from the Choir.** Strong players Offer a Choir card about once every two games each, in every variant. A Choir card brings about 1 Glory for each Day left, and a push of 1 is rarely worth that; even counting 2 (`rWeight2`) it stays at 0.6 a game and seats spread. Given the choice (`rBoth`), Choir Offers vanish (0.1) and token Offers with them (0.2). So the piece does not make Choirs change (flips 0.25, as before). **What it does do:** with no cards to Offer from the hand, the token becomes the usual Offer (0.6 → 1.9–2.4 a game each), and that keeps tokens moving. Round 3 proves it is needed: with Offers from the hand again, never Offering a token wins (1.21–1.23, Section 5). **Keep**, but for a different reason than expected. The worry from earlier results (a face-up Offer is "watched, not trusted") is real but small, because the token, the usual Offer, is still facedown.
 
-**B. First Fruits facedown.** Alone it hurts: skill falls (1.33) and seats spread (0.80–1.24), because Gathering blind is luck. In the finalists it is a close call (Section 6): face up is fairer and gives the "one honest card" read; facedown makes never Offering lose by more (0.88 against 0.97–1.01). **Optional; face up recommended** (principle 4, and one less change to the game people know).
+**B. First Fruits facedown.** Alone it hurts: skill falls (1.33) and seats spread (0.80–1.24), because Gathering blind is luck. In the finalists it is a close call (Section 6). Face up gives fairer seats and the "one honest card" read. Facedown makes sides a little harder to read (61% against 63–65%) and the deal less decisive. At 300 games facedown looked safer against never Offering (0.88 against 0.97–1.01), but at 600 games both lose (0.84 face up, 0.89 facedown). **Optional; face up recommended** (principle 4, and one less change to the game people know).
 
 **C. A token as First Fruits.** The piece that makes sides move: side flips 0.00 → 0.09 alone, and 0.11 in R; take it out of R and they fall to 0.01. It also cuts the luck of the deal (against the world 0.47 → 0.62–0.68). But with tokens scoring as now, it makes 4 players unfair (first seat 1.40, last 0.69 in R): the early seats end with more tokens (6.5 against 5.1, from the spoils draft and Gathering). Changing the spoils order does not fix it (reverse 0.60–1.57; lowest Glory first 0.68–1.22). **Keep, with H's majority scoring**, which fixes the seats.
 
@@ -118,3 +126,82 @@ What the columns say, against the vision: **reader** = how often a fitted reader
 | Offers from the hand, face up (`hMajUpGH`) | 0.83 | 0.82 | **1.21** | 0.31 | 1.02 | 1.00 |
 
 Each ±0.09–0.10. Two findings: with Offers from the hand, hoarding tokens wins again (the reason to keep the Choir Offer); and `rMajority` alone lets hedging and never Offering break even, which `rMajUp` and `rMajGH` do not.
+
+## 6. The finalists at 1,200 games
+
+Strong bots in every seat, the same 1,200 deals each (noise about ±0.05). Fixed strategies at 600 games each (±0.06–0.07).
+
+| Measure (4p / 3p) | Spoils to the Offerers (base) | **`rMajUp`** (recommended) | `rMajGH` (the whole flow) | `rMajUpGH` |
+|---|---|---|---|---|
+| Reader (50% = guessing) | 0.60 / 0.63 | 0.63 / 0.65 | **0.61 / 0.61** | 0.66 / 0.66 |
+| Alignment (+1 Choir matches tokens, −1 hedged) | +0.10 / +0.06 | −0.29 / −0.31 | −0.24 / −0.24 | −0.32 / −0.34 |
+| Seats | 0.90–1.05 / 0.95–1.09 | **0.97–1.04 / 0.95–1.08** | 0.95–1.08 / 0.89–1.10 | 0.84–1.10 / 0.93–1.11 |
+| Token mixes (4p: even, 4–2, 5–1 or more) | 0.96–1.12 | 0.95–1.18 | 0.96–1.14 | 0.94–1.06 |
+| Holding the side that won more Days / the other (4p) | 1.57 / 0.48 | 1.44 / 0.59 | **1.29 / 0.69** | 1.27 / 0.63 |
+| Skill (strong among heuristic bots) | 1.65 | 1.78 | 1.88 | 2.26 |
+| **Side flips** (majority token color changes, per player) | 0.00 / 0.00 | 0.21 / 0.23 | **0.23 / 0.24** | 0.24 / 0.24 |
+| Choir flips (per player) | 0.24 / 0.24 | **0.26 / 0.25** | 0.17 / 0.18 | 0.17 / 0.18 |
+| Offer / Gather / Exalt (4p) | 42 / 35 / 23% | 38 / 39 / 23% | 40 / 28 / 33% | 40 / 28 / 32% |
+| Per player: token Offers / Choir Offers / First Fruits tokens | 0.6 / 0 / 0 | 2.2 / 0.5 / 2.4 | 2.4 / 0.4 / 2.5 | 2.4 / 0.4 / 2.3 |
+| Close Days / Days no one wins (4p) | 0.33 / 0.29 | 0.23 / 0.22 | 0.22 / 0.17 | 0.23 / 0.20 |
+| Winner's Glory from tokens / Choir (4p) | 40 / 49% | 39 / 50% | 40 / 48% | 40 / 49% |
+| Winning margin (4p) | 2.6 | 3.7 | 4.4 | 3.9 |
+| Spoils taken per player (4p) | 5.7 | 5.8 | 6.8 | 6.5 |
+| *Fixed strategies (4p):* align / hedge | 0.75 / 0.80 | 0.78 / 0.87 | 0.84 / 0.81 | 0.92 / 0.68 |
+| never Offer a token / always Offer | **1.09** / 0.05 | 0.74 / 0.17 | 0.52 / 0.22 | 0.57 / 0.19 |
+| never Offer / never Gather | 0.96 / 0.69 | 0.84 / 0.61 | 0.89 / 0.79 | 0.95 / 0.94 |
+
+The base's fixed strategies are from 300 games (`flow-exploits.jsonl`).
+
+**Reading the table:**
+- **Both finalists keep everything the base does well, and add moving sides.**
+- **`rMajUp`** has the fairest seats, and Choirs change as often as before. It also changes the least: three rules on top of the base.
+- **`rMajGH`** hides the whole Altar until the Evening and cuts the luck of the deal the most (1.29 / 0.69). It makes sides slightly the hardest to read (61%). It costs Gathering (28%), Choir changes (0.17), and some fairness at 3 players (0.89–1.10).
+- **`rMajUpGH` is out:** sides are the most readable (66%) and the last seat at 4 players is weak (0.84).
+
+**What gets worse:**
+- Fewer close Days (0.23, from 0.33).
+- Wider winning margins (3.7–4.4 from 2.6).
+- Hedging comes back in a mild form (alignment −0.29). Strong players keep a Choir partly of the other color, since their own side may change. Here it does not make sides readable: the reader stays at 61–65%, against 70–72% when V45's hedge did.
+- At 4 players, a lopsided deal (5–1 or more) is worth a little more (1.14–1.18), because a big majority is hard to lose.
+
+## 7. Against the vision
+
+**The test for any new rule** (`vision.md`), for `rMajUp`:
+- **Does it sharpen self against side? Yes, more than any version so far.** Your usual Offer is now a token, which is your side itself. Offer one and your majority, and so your side, may change; keep it and the Day may be lost. The rare Choir Offer costs your own engine, in public.
+- **Does it keep allegiance uncertain? Yes, and for the first time it shifts.** Readers stay near 60–65%. A First Fruits token is anonymous, any token Offered may end up with a rival through the spoils, and majorities change 0.2 times a game per player. Principle 2 asks for this ("allegiance can shift"); no earlier version achieved it.
+- **Is the Altar still the contest? Yes.** The Altar is the prize: what is Offered tonight goes home with the Offerers, tokens included. Whoever drafts a token can take a side, or a rival's.
+- **Is an ally still a rival? Yes.** Two players Offering Light both fight over the same spoils. Under majority scoring, an ally's token can also tip your own count the other way.
+- **Can it be checked on the table? Yes.** Everything is counted from what is in front of you. The only new end-of-game step is "count your colors; score only the bigger one".
+
+**Core change or patch?** Majority scoring and First Fruits tokens are core changes: they change what your side *is* (whichever color you hold more of) and how it moves. The Choir-only Offer is a core change to the turn. Nothing here is a cap, a catch-up or a tiebreak. The tie rule ("tied: the better of the two") only says what to do at 3–3.
+
+**Rules a new player learns** (counted as in `core-validation.md`: V45 about 16 points; spoils to the Offerers swaps one rule for another and adds a hand limit, about 17):
+- `rMajUp` adds about 3:
+  - First Fruits may be a token, and whoever gives a token draws nothing;
+  - Offer from your Choir, face up, or a token, facedown, instead of from your hand;
+  - only your majority color scores, a tie scoring the better.
+  - That is **about 20 points**. In return, "draw back to 3" now matters more: the hand is only for First Fruits, Exalting and abilities.
+- `rMajGH` changes two more without adding any: First Fruits facedown (one reveal for the whole Altar), and a Gathered card goes to the hand (no "make room"). It is also about 20, but more of the game people already know changes.
+
+## 8. What the bots cannot show, and what needs people
+
+- **Talk and promises around face-up Offers.** "I gave up my Hymn for Light" is now provable. Does that make it a currency for deals ("I paid, now you pay"), or does it read as "watched, not trusted"? Bots cannot negotiate.
+- **Whether people feel their side change.** The bots count a flip; people might find it thrilling ("I'm Dark now") or confusing. Majority scoring also invites a new bluff: "I'm nearly even, my side could go either way". Does anyone believe it?
+- **Tracking the draw.** Whoever gives a token as First Fruits draws nothing, so the table sees who gave a token, though not its color. A careful player will notice; the bots treat that token as a coin flip. If it matters in play, the fix is simple: everyone draws 1 regardless.
+- **Counting.** Majority scoring asks each player to keep a running count of their own colors. That is easy with 6 tokens, but people may misjudge it near a tie.
+- **Hoarding feel.** Strong bots almost never Offer from the Choir. People may value their Choir differently, Offer from it more, and make Choirs move more than the bots show, or less.
+- **The draft at the end of the Day.** About 6 spoils per player per game (one or two each Evening); is it quick and fun, or a chore?
+- **Skill numbers are biased for variants:** the heuristic bots misread every new rule a little, so 1.78–1.88 overstates the gain against people who learn the rule.
+
+## 9. Recommendation and next steps
+
+1. **Robert to decide:** `rMajUp` (recommended: three rule changes, the fairest), `rMajGH` (his whole flow: also confirmed, slightly less readable, Choirs move less), or neither.
+2. If one is chosen, then:
+   - write the rules (rulebook, Quick Guide, Learn page);
+   - retrain the learned bot (`game/tools/distill/README.md`);
+   - re-measure the cards: several cards reference First Fruits, the hand and Offering from the hand, and will need new text through `cards/changes/*.json`.
+3. **Playtest questions:** the face-up Choir Offer as a promise, how a side change feels, whether the token-giver who draws nothing is noticed, and whether the draft drags.
+4. **Later (Robert's note):** the Turn (swap a token) as a Host card ability. Under majority scoring, swapping one token can flip a side outright, so it would be a strong card.
+
+The switches kept for this decision: `offerFrom`, `fruits`, `fruitsToken`, `endScore` (plus `gatherTo` from before). The rejected ones were removed: the spoils order, the Reaping variants, a Choir Offer's weight, Offering from the hand or the Choir, and the "winner" and "net" end scores.
