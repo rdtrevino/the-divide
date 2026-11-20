@@ -49,8 +49,6 @@ export interface AltarCard {
   sanctuary?: Seat;
   /** Revealed in the Evening among the shuffled facedown cards (V45): who placed it is no longer shown. */
   anon?: boolean;
-  /** Counts this many times its value for the Tide (a variant: an Offer from the Choir). */
-  weight?: number;
 }
 
 /** An allegiance token Offered onto the Altar (V45). Not a card: only Gather and the Evening touch it. */

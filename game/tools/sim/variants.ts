@@ -23,18 +23,12 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   carry: { ...none, carryover: true }, turnCarry: { ...none, decay: true, carryover: true },
   offTurn: { ...none, spoils: 'offerers', handMax: 5, decay: true }, offCarry: { ...none, spoils: 'offerers', handMax: 5, carryover: true },
   offTurnCarry: { ...none, spoils: 'offerers', handMax: 5, decay: true, carryover: true },
-  // Round 3: spoils drafted from the Day's last player (the first player's extra picks made seat 1 strong).
-  offRev: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5 },
-  offTurnRev: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true },
-  offTurnRevDraw1: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true, upkeepDraw: 1 },
   // Round 4: each Offerer takes one spoil (a draft until empty gave the first pickers extra).
   // Round 5 (Robert, November 20: spoils to the Offerers as the base): Choirs that move without rewarding free-riders.
-  sOfferChoir: { ...none, spoils: 'offerers', handMax: 5, offerFrom: 'both' },
   sReplaceHand: { ...none, spoils: 'offerers', handMax: 5, replacedToHand: true },
-  sBoth: { ...none, spoils: 'offerers', handMax: 5, offerFrom: 'both', replacedToHand: true },
   sWither: { ...none, spoils: 'offerers', handMax: 5, witherIdle: true },
   sChoir3: { ...none, spoils: 'offerers', handMax: 5, choirLimit: 3 },
-  off1: { ...none, spoils: 'offerers', spoilsEach: 1, handMax: 5 }, off1Rev: { ...none, spoils: 'offerers', spoilsEach: 1, spoilsOrder: 'reverse', handMax: 5 },
+  off1: { ...none, spoils: 'offerers', spoilsEach: 1, handMax: 5 },
   // Round 6 (Robert, November 20): his flow. S is spoils to the Offerers (his assumed direction); R adds the three
   // pieces that change the turn: Offers only from the Choir (face up), First Fruits facedown, and a token allowed as First Fruits.
   rFull: R,
@@ -43,17 +37,13 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   rNoFruitToken: { ...S, offerFrom: 'choir', fruits: 'down' }, rNoSpoils: { ...none, offerFrom: 'choir', fruits: 'down', fruitsToken: true },
   // Each piece alone, on S.
   sChoirOnly: { ...S, offerFrom: 'choir' }, sFruitsDown: { ...S, fruits: 'down' }, sFruitToken: { ...S, fruitsToken: true }, sGatherHand: { ...S, gatherTo: 'hand' },
-  // R with Robert's open questions: where a Gathered card goes, the spoils order, the Reaping, the end score.
-  rGatherHand: { ...R, gatherTo: 'hand' }, rRev: { ...R, spoilsOrder: 'reverse' }, rGlory: { ...R, spoilsOrder: 'glory' },
-  rPay1: { ...R, choirPay: 1 }, rNet: { ...R, reap: 'net' }, rCrowd: { ...R, reap: 'crowd' },
-  rMajority: { ...R, endScore: 'majority' }, rWinner: { ...R, endScore: 'winner' }, rEndNet: { ...R, endScore: 'net' },
-  // Better versions to try: a Choir Offer counts 2 (worth its cost), or Offers from the hand or the Choir.
-  rWeight2: { ...R, choirOfferWeight: 2 }, rBoth: { ...R, offerFrom: 'both' },
+  // R with Robert's open questions (the spoils order, the Reaping variants, the 'winner' and 'net' end scores, a Choir
+  // Offer counting 2 and Offers from the hand or the Choir were rejected and their switches removed: design/the-flow.md).
+  rGatherHand: { ...R, gatherTo: 'hand' }, rPay1: { ...R, choirPay: 1 }, rMajority: { ...R, endScore: 'majority' },
   // Round 7: the end score by majority looked best in round 1 (seats even, sides moving); combined with the others.
   sMajority: { ...S, endScore: 'majority' }, rMajNoFT: { ...R, fruitsToken: false, endScore: 'majority' },
-  rMajGH: { ...R, endScore: 'majority', gatherTo: 'hand' }, rMajW2: { ...R, endScore: 'majority', choirOfferWeight: 2 },
-  rMajBoth: { ...R, endScore: 'majority', offerFrom: 'both' }, rMajUp: { ...R, endScore: 'majority', fruits: 'up' },
-  rMajPay1: { ...R, endScore: 'majority', choirPay: 1 }, rWinGH: { ...R, endScore: 'winner', gatherTo: 'hand' },
+  rMajGH: { ...R, endScore: 'majority', gatherTo: 'hand' }, rMajUp: { ...R, endScore: 'majority', fruits: 'up' },
+  rMajPay1: { ...R, endScore: 'majority', choirPay: 1 },
   // Round 8: the leader (rMajGH) with Offers from the hand again, or First Fruits face up: are they needed?
   rMajUpGH: { ...R, endScore: 'majority', gatherTo: 'hand', fruits: 'up' },
   hMajGH: { ...S, fruits: 'down', fruitsToken: true, endScore: 'majority', gatherTo: 'hand' },

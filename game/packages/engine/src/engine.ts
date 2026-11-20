@@ -435,8 +435,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   // V35: Offers go facedown, except Hymn and Lamentation (V43), which go face up, and any Offer under Anathema (V45).
   // Variant: a card Offered from the Choir goes face up (everyone saw it leave), and may count more.
   const facedown = !fromChoir && card !== H.hymn && card !== H.lamentation && !faceUp(s, seat);
-  const weight = fromChoir ? rulesOf(s).choirOfferWeight : 1;
-  s.altar.push({ id: card, facedown, offeredBy: seat, day: s.day, kind: 'offer', ...(weight !== 1 ? { weight } : {}) });
+  s.altar.push({ id: card, facedown, offeredBy: seat, day: s.day, kind: 'offer' });
   noteOffer(s, seat, [card]);
   stat(s, { type: 'action', seat, source: 'offer', data: { cards: [card], ...(fromChoir ? { choir: true } : {}) } });
   stat(s, { type: 'action', seat, card, source: 'offer.card' });
@@ -697,14 +696,14 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
 }
 
 /** The Tide from the cards (and tokens) on the Altar. Takes only what it reads, so the site can tally the face-up cards. */
-export function setTide(s: TideHistory & { altar: { id: string; weight?: number }[]; altarTokens?: { side: Side }[]; currentEvent: string | null }): TideRecord {
+export function setTide(s: TideHistory & { altar: { id: string }[]; altarTokens?: { side: Side }[]; currentEvent: string | null }): TideRecord {
   let light = 0;
   let dark = 0;
   const dbl = (ev: string) => (s.currentEvent === ev ? 2 : 1);
   for (const a of s.altar) {
-    const v = baseValue(s, a.id), k = a.weight ?? 1;
-    light += k * v.light * dbl(E.ascension);
-    dark += k * v.dark * dbl(E.fallFromGrace);
+    const v = baseValue(s, a.id);
+    light += v.light * dbl(E.ascension);
+    dark += v.dark * dbl(E.fallFromGrace);
   }
   // Tokens are not cards: Ascension and Fall from Grace do not double them.
   for (const t of s.altarTokens ?? []) if (t.side === 'light') light += TOKEN_WEIGHT; else dark += TOKEN_WEIGHT;
@@ -726,9 +725,7 @@ function scores(s: GameState, seat: Seat, id: string, side: Side): boolean {
 function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
   const lost = opposite(won) as Side;
   const mode = rulesOf(s).spoils;
-  const by = rulesOf(s).spoilsOrder;
-  const draft = by === 'reverse' ? [...order].reverse() : by === 'glory' ? [...order].sort((a, b) => s.players[a].glory - s.players[b].glory) : order;
-  const eligible = draft.filter((seat) => {
+  const eligible = order.filter((seat) => {
     if (mode === 'offerers') return s.players[seat].offeredToday;
     const c = choirColors(s, seat);
     return c[won] > c[lost];
@@ -754,24 +751,10 @@ function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
   }
 }
 
-/** What a Choir scores when `side` wins, under the game's Reaping rule (the `reap` switch; 'card' is V45). */
-export function reapOf(s: GameState, seat: Seat, side: Side): number {
-  const R = rulesOf(s);
-  const cards = activeCards(s.players[seat]);
-  const count = cards.filter((c) => scores(s, seat, c.id, side)).length;
-  if (R.reap === 'card') return R.choirPay * count;
-  const other = (x: Seat) => activeCards(s.players[x]).filter((c) => scores(s, x, c.id, opposite(side) as Side)).length;
-  if (R.reap === 'net') return R.choirPay * Math.max(0, count - other(seat));
-  return count > other(seat) ? choirPayCrowd(R.choirPay, s.players.filter((o) => { const n = activeCards(o).filter((c) => scores(s, o.seat, c.id, side)).length; return n > other(o.seat); }).length) * count : 0;
-}
-/** The crowd Reaping: a card scores choirPay + 1 if yours is the only Choir leaning that color, choirPay - 1 if shared. */
-export const choirPayCrowd = (pay: number, leaning: number) => (leaning <= 1 ? pay + 1 : Math.max(0, pay - 1));
 
 /** End of the game: what a hand of tokens scores against the Days won (the `endScore` switch; 'each' is V45). */
 export function tokenScore(mode: string, tl: number, td: number, wl: number, wd: number): number {
   if (mode === 'majority') return tl > td ? tl * wl : td > tl ? td * wd : Math.max(tl * wl, td * wd);
-  if (mode === 'winner') return wl > wd ? tl * wl : wd > wl ? td * wd : tl * wl + td * wd;
-  if (mode === 'net') return (tl - td) * (wl - wd);
   return tl * wl + td * wd;
 }
 
@@ -788,7 +771,8 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (!p.offeredToday && harvest === 'offer') { if (activeCards(p).length) log(s, 'harvest', `${p.name} did not Offer today, so their Choir does not score.`); continue; }
     let side = (eventOn(s, E.falseProphecy) ? opposite(tide.dir) : tide.dir) as Side;
     if (s.day_.heresy.includes(seat)) side = opposite(side) as Side;
-    const full = reapOf(s, seat, side) * (s.day_.ordeal.includes(seat) ? 2 : 1);
+    const count = activeCards(p).filter((c) => scores(s, seat, c.id, side)).length;
+    const full = rulesOf(s).choirPay * count * (s.day_.ordeal.includes(seat) ? 2 : 1);
     delta[seat] = !p.offeredToday && harvest === 'half' ? Math.floor(full / 2) : full;
   }
   // Scapegoat (V45): pay 2 Glory so another player who would score at this Reaping scores nothing.
@@ -902,7 +886,7 @@ export function* endGame(s: GameState): Gen<void> {
     const tokens = { light: p.tokens.filter((t) => t === 'light').length, dark: p.tokens.filter((t) => t === 'dark').length };
     const R = rulesOf(s);
     const fromTokens = tokenScore(R.endScore, tokens.light, tokens.dark, won.light, won.dark);
-    if (fromTokens >= 0) yield* gain(s, p.seat, fromTokens, 'tokens'); else yield* lose(s, p.seat, -fromTokens, 'tokens');
+    yield* gain(s, p.seat, fromTokens, 'tokens');
     if (R.devotion && tokens.light !== tokens.dark) {
       // Variant (Devotion): each Choir card of the color you hold more tokens of scores again.
       const k = tokens.light > tokens.dark ? 'light' : 'dark', n = choirColors(s, p.seat)[k];

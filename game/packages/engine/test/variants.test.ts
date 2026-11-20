@@ -10,10 +10,10 @@ const VARIANTS: Partial<CoreRules>[] = [
   { devotion: 1 }, { tokensEach: 8 }, { devotion: 1, tokensEach: 8 }, { harvest: 'always' }, { harvest: 'half' },
   { harvest: 'always', miser: 3 }, { harvest: 'always', generous: 3 }, { handSize: 2 }, { handSize: 4 }, { choirLimit: 3 }, { choirLimit: 6 },
   { choirPay: 1 }, { harvest: 'always', spoils: 'claim', handMax: 5 }, { spoils: 'offerers', handMax: 5, choirPay: 0 },
-  { gatherTo: 'hand', handMax: 5, upkeepDraw: 1 }, { decay: true }, { harvest: 'always', carryover: true }, { spoils: 'claim', handMax: 5, carryover: true }, { harvest: 'always', spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true, upkeepDraw: 1 }, { harvest: 'always', spoils: 'offerers', spoilsEach: 1, handMax: 5 }, { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'both', replacedToHand: true, witherIdle: true }, { spoils: 'claim', gatherTo: 'hand', upkeepDraw: 1, handMax: 5, decay: true },
-  // Robert's flow (November 20): Offers only from the Choir (face up), facedown First Fruits that may be a token, and the scoring variants.
-  { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruits: 'down', fruitsToken: true }, { offerFrom: 'choir', choirOfferWeight: 2, gatherTo: 'hand' },
-  { harvest: 'always', spoils: 'offerers', spoilsOrder: 'glory', handMax: 5, reap: 'net' }, { reap: 'crowd', endScore: 'majority' }, { endScore: 'winner' }, { endScore: 'net', fruitsToken: true },
+  { gatherTo: 'hand', handMax: 5, upkeepDraw: 1 }, { decay: true }, { harvest: 'always', carryover: true }, { spoils: 'claim', handMax: 5, carryover: true }, { harvest: 'always', spoils: 'offerers', handMax: 5, decay: true, upkeepDraw: 1 }, { harvest: 'always', spoils: 'offerers', spoilsEach: 1, handMax: 5 }, { harvest: 'always', spoils: 'offerers', handMax: 5, replacedToHand: true, witherIdle: true }, { spoils: 'claim', gatherTo: 'hand', upkeepDraw: 1, handMax: 5, decay: true },
+  // Robert's flow (November 20): Offers only from the Choir (face up), facedown First Fruits that may be a token, majority end score.
+  { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruits: 'down', fruitsToken: true }, { offerFrom: 'choir', gatherTo: 'hand', endScore: 'majority' },
+  { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruitsToken: true, endScore: 'majority' }, { endScore: 'majority', fruitsToken: true },
 ];
 
 describe('core rule switches', () => {
@@ -95,7 +95,5 @@ describe('core rule switches', () => {
     expect(tokenScore('each', 4, 2, 3, 2)).toBe(16);
     expect(tokenScore('majority', 4, 2, 3, 2)).toBe(12);
     expect(tokenScore('majority', 3, 3, 1, 4)).toBe(12);
-    expect(tokenScore('winner', 4, 2, 2, 3)).toBe(6);
-    expect(tokenScore('net', 2, 4, 4, 2)).toBe(-4);
   });
 });

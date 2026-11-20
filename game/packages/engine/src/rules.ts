@@ -25,29 +25,19 @@ export interface CoreRules {
    *  order. 'claim': players whose Choir holds more cards of the winning color than of the other; 'offerers': players
    *  who Offered today. Unclaimed tokens still go to whoever holds the fewest. */
   spoils: 'none' | 'claim' | 'offerers';
-  /** The spoils draft starts with the Day's first player ('turn'), its last ('reverse'), or whoever has the least Glory
-   *  ('glory': lowest first, ties in turn order). */
-  spoilsOrder: 'turn' | 'reverse' | 'glory';
   /** Spoils each eligible player may take in a Day (0: take turns until the Altar is empty). Cards left are discarded
    *  as usual; tokens left go to whoever holds the fewest. */
   spoilsEach: number;
-  /** Where an Offered card comes from: the hand (facedown), 'both', or only the Choir. A card Offered from the Choir goes
-   *  face up: everyone saw it leave (Robert's flow, November 20). Tokens are Offered facedown either way. */
-  offerFrom: 'hand' | 'both' | 'choir';
-  /** A card Offered from the Choir counts this much for its color. */
-  choirOfferWeight: number;
+  /** Where an Offered card comes from: the hand (facedown, now) or only the Choir ('choir': face up, since everyone saw
+   *  it leave; Robert's flow, November 20). Tokens are Offered facedown either way. */
+  offerFrom: 'hand' | 'choir';
   /** First Fruits go face up (now) or stay facedown until the Evening reveal ('down'); either way shuffled, so anonymous. */
   fruits: 'up' | 'down';
   /** A token (facedown, counts 2) may be given as First Fruits instead of a card. */
   fruitsToken: boolean;
-  /** How a Choir scores on a won Day: 'card' (choirPay per card of the winning color), 'net' (choirPay per card of the
-   *  winning color beyond those of the losing color), 'crowd' (only Choirs leaning the winning color score: choirPay + 1
-   *  a card if yours is the only one, choirPay - 1 if others lean that way too). */
-  reap: 'card' | 'net' | 'crowd';
-  /** End of the game, with tl / td your tokens and wl / wd the Days won: 'each' (tl·wl + td·wd), 'majority' (only your
-   *  majority color: tl·wl or td·wd; tied, the better), 'winner' (only the color that won more Days pays; tied, both),
-   *  'net' ((tl − td)·(wl − wd), which can be negative). */
-  endScore: 'each' | 'majority' | 'winner' | 'net';
+  /** End of the game, with tl / td your tokens and wl / wd the Days won: 'each' (tl·wl + td·wd, now) or 'majority'
+   *  (only your majority color scores: tl·wl or td·wd; tied, the better). */
+  endScore: 'each' | 'majority';
   /** A card that leaves a full Choir to make room goes to its owner's hand instead of the discard pile. */
   replacedToHand: boolean;
   /** On a Day you did not Offer, a full Choir loses its oldest card. */
@@ -66,7 +56,7 @@ export interface CoreRules {
 
 export const DEFAULT_RULES: CoreRules = {
   tokensEach: 6, devotion: 0, harvest: 'offer', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'none', handMax: 0,
-  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false, spoilsOrder: 'turn', spoilsEach: 0, offerFrom: 'hand', choirOfferWeight: 1, fruits: 'up', fruitsToken: false, reap: 'card', endScore: 'each', replacedToHand: false, witherIdle: false,
+  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false, spoilsEach: 0, offerFrom: 'hand', fruits: 'up', fruitsToken: false, endScore: 'each', replacedToHand: false, witherIdle: false,
 };
 
 const cache = new WeakMap<object, CoreRules>();

@@ -2,7 +2,7 @@
 // and their secret tokens), read the Altar, and answer every kind of decision sensibly.
 import { choirLimit, rulesOf } from './rules';
 import { activeCards, baseValue, choirColors, dirOf, hasActive } from './core';
-import { DAYS, TOKEN_WEIGHT, choirPayCrowd, daysWon, tokenScore } from './engine';
+import { DAYS, TOKEN_WEIGHT, daysWon, tokenScore } from './engine';
 import { E, H, HOST } from './data';
 import type { Answer, Decision, Dir, GameState, Option, Seat } from './types';
 
@@ -42,15 +42,8 @@ const tokenGuess = (s: GameState, t: GameState['altarTokens'][number], viewer?: 
 /** What a Light Day and a Dark Day are worth to a player today: their Choir cards of that color, plus their tokens. */
 interface Stake { light: number; dark: number }
 const addStake = (a: Stake, b: Stake): Stake => ({ light: a.light + b.light, dark: a.dark + b.dark });
-/** What a Choir of these colors scores tonight if Light wins, and if Dark wins (the game's Reaping rule). */
-function choirStake(s: GameState, seat: Seat, c: Stake): Stake {
-  const R = rulesOf(s), pay = R.choirPay;
-  if (R.reap === 'card') return { light: pay * c.light, dark: pay * c.dark };
-  if (R.reap === 'net') return { light: pay * Math.max(0, c.light - c.dark), dark: pay * Math.max(0, c.dark - c.light) };
-  // The crowd Reaping: only a Choir leaning the winning color scores, more if it is the only one.
-  const lean = (k: 'light' | 'dark') => 1 + s.players.filter((o) => o.seat !== seat && (k === 'light' ? alignment(s, o.seat) > 0 : alignment(s, o.seat) < 0)).length;
-  return { light: c.light > c.dark ? choirPayCrowd(pay, lean('light')) * c.light : 0, dark: c.dark > c.light ? choirPayCrowd(pay, lean('dark')) * c.dark : 0 };
-}
+/** What a Choir of these colors scores tonight if Light wins, and if Dark wins. */
+const choirStake = (s: GameState, c: Stake): Stake => ({ light: rulesOf(s).choirPay * c.light, dark: rulesOf(s).choirPay * c.dark });
 const count = (t: readonly string[], k: string) => t.filter((x) => x === k).length;
 /** What these tokens gain at the end from a Light Day today, and from a Dark Day (V45: one each). */
 function tokenStake(s: GameState, held: readonly string[]): Stake {
@@ -60,7 +53,7 @@ function tokenStake(s: GameState, held: readonly string[]): Stake {
   return { light: expectTokens(mode, tl, td, w.light + 1, w.dark, left), dark: expectTokens(mode, tl, td, w.light, w.dark + 1, left) };
 }
 function stakeOf(s: GameState, seat: Seat): Stake {
-  return addStake(choirStake(s, seat, choirColors(s, seat)), tokenStake(s, s.players[seat].tokens));
+  return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, s.players[seat].tokens));
 }
 /** A Day goes to each side this often, and to nobody the rest (for the end-score variants' expectations). */
 const P_SIDE = 0.4;
@@ -214,14 +207,14 @@ export function botAnswer(s: GameState, d: Decision): Answer {
   const w = later === 0 ? 1 : later === 1 ? 0.75 : 0.55;
   /** Offering (or giving as First Fruits) one of my tokens: its push today, against its worth at the end. */
   const offerToken = (k: 'light' | 'dark') => {
-    const less = rulesOf(s).endScore === 'each' ? { ...st, [k]: st[k] - 1 } : (() => { const h = [...s.players[seat].tokens]; h.splice(h.indexOf(k), 1); return addStake(choirStake(s, seat, choirColors(s, seat)), tokenStake(s, h)); })();
+    const less = rulesOf(s).endScore === 'each' ? { ...st, [k]: st[k] - 1 } : (() => { const h = [...s.players[seat].tokens]; h.splice(h.indexOf(k), 1); return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, h)); })();
     return dayValue(less, altar + (k === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT), w) - dayValue(st, altar, w) - tokenWorth(s, k, seat, false) + 0.5;
   };
   /** Offering a card from my Choir (a variant): its push today, against what it would have scored tonight and later. */
   const offerFromChoir = (id: string) => {
     const v = val(s, id), cc = choirColors(s, seat);
-    const less = addStake(choirStake(s, seat, { light: cc.light - Math.sign(v.light), dark: cc.dark - Math.sign(v.dark) }), tokenStake(s, s.players[seat].tokens));
-    return dayValue(less, altar + rulesOf(s).choirOfferWeight * signed(s, id), w) - dayValue(st, altar, w) - choirCardValue(s, id) - engineVal(s, seat, id);
+    const less = addStake(choirStake(s, { light: cc.light - Math.sign(v.light), dark: cc.dark - Math.sign(v.dark) }), tokenStake(s, s.players[seat].tokens));
+    return dayValue(less, altar + signed(s, id), w) - dayValue(st, altar, w) - choirCardValue(s, id) - engineVal(s, seat, id);
   };
 
   // Multi-select decisions.
@@ -261,11 +254,11 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const toks = tokenStake(s, p.tokens);
       const withCard = (id: string | undefined): Stake => {
         const v = val(s, id), o = room || !worst ? { light: 0, dark: 0 } : val(s, worst.id);
-        return addStake(choirStake(s, seat, { light: cc.light + Math.sign(v.light) - Math.sign(o.light), dark: cc.dark + Math.sign(v.dark) - Math.sign(o.dark) }), toks);
+        return addStake(choirStake(s, { light: cc.light + Math.sign(v.light) - Math.sign(o.light), dark: cc.dark + Math.sign(v.dark) - Math.sign(o.dark) }), toks);
       };
       // No offering, no harvest: until you have Offered today, an Offer also lets your Choir score tonight.
       const unlock = rulesOf(s).harvest === 'offer' ? 1 : rulesOf(s).harvest === 'half' ? 0.5 : 0;
-      const harvest = p.offeredToday ? 0 : unlock * dayValue(choirStake(s, seat, cc), altar, w);
+      const harvest = p.offeredToday ? 0 : unlock * dayValue(choirStake(s, cc), altar, w);
       if (has('offer')) {
         const from = rulesOf(s).offerFrom;
         const cards = from === 'choir' ? [] : p.hand.map((c) => dayValue(st, altar + signed(s, c), w) - now - 0.15 * choirCardValue(s, c));
