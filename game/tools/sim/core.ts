@@ -6,12 +6,11 @@
 import { DAYS, Game, STRONG, botAnswer, choirColors, isSearched, searchScores, strongAnswer, type Decision, type GameState } from '@divide/engine';
 import { pmap } from '../par';
 import { ReaderLog, fitReader } from './readerlib';
-import { VARIANTS } from './variants';
+import { variant } from './variants';
 
 
 const [name, mode = 'main4', gStr = '300'] = process.argv.slice(2);
-const rules = VARIANTS[name];
-if (!rules) throw new Error(`unknown variant ${name}; one of ${Object.keys(VARIANTS).join(', ')}`);
+const rules = variant(name);
 const G = Number(gStr), n = mode === 'main3' ? 3 : 4;
 
 const t0 = performance.now();

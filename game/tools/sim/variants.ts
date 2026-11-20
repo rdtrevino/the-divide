@@ -13,3 +13,10 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   // Balance: everyone draws after First Fruits (a token giver cannot be spotted); odd or more tokens; one spoil each.
   drawAll: { fruitsDraw: 'all' }, tokens5: { tokensEach: 5 }, tokens7: { tokensEach: 7 }, tokens8: { tokensEach: 8 }, spoils1: { spoilsEach: 1 },
 };
+
+/** A variant by name; `a+b` combines variants (later ones win). */
+export function variant(name: string): Partial<CoreRules> {
+  const parts = name.split('+').map((k) => VARIANTS[k]);
+  if (parts.some((p) => !p)) throw new Error(`unknown variant ${name}; one of ${Object.keys(VARIANTS).join(', ')} (join with +)`);
+  return Object.assign({}, ...parts);
+}
