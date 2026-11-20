@@ -17,4 +17,8 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   market: { ...none, gatherTo: 'hand', handMax: 5, upkeepDraw: 1 },
   marketSpoils: { ...spoils, gatherTo: 'hand', upkeepDraw: 1, choirPay: 1 },
   turnover: { ...none, decay: true }, spoilsTurnover: { ...spoils, choirPay: 1, decay: true },
+  // Round 2: the winners combined, with carryover (a tied Altar stays for the next Day).
+  carry: { ...none, carryover: true }, turnCarry: { ...none, decay: true, carryover: true },
+  offTurn: { ...none, spoils: 'offerers', handMax: 5, decay: true }, offCarry: { ...none, spoils: 'offerers', handMax: 5, carryover: true },
+  offTurnCarry: { ...none, spoils: 'offerers', handMax: 5, decay: true, carryover: true },
 };
