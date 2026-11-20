@@ -93,7 +93,28 @@ What each package showed:
 >
 > **No offering, no harvest is gone:** your Choir scores every Day its color wins.
 
-Confirmed at 1,200 games: *(see below)*.
+Confirmed at 1,200 games, against the current rule, no rule, and the Miser (Robert asked to hold the Miser):
+
+| 1,200 games each | Current | No rule | Miser 3 | **Spoils to Offerers** |
+|---|---|---|---|---|
+| Offer / Gather / Exalt (4p) | 60 / 24 / 16% | 30 / 39 / 32% | 45 / 30 / 25% | **42 / 35 / 23%** |
+| Even use of the actions (max 1.58) / close-call choices | 1.36 / 38% | 1.58 / 46% | 1.54 / 41% | **1.54 / 45%** |
+| Reader, 4p / 3p (guessing 50%) | 70 / 72% | 64 / 66% | 60 / 63% | **60 / 63%** |
+| Alignment (−1 hedged) | −0.49 | +0.07 | +0.01 | +0.10 |
+| Side won / lost (4p) | 1.35 / 0.65 | 1.56 / 0.44 | 1.61 / 0.47 | 1.57 / 0.48 |
+| Seats, 4p / 3p | 0.92–1.08 / 0.96–1.07 | 0.88–1.09 / 0.91–1.09 | 0.85–1.10 / 0.95–1.05 | **0.90–1.05 / 0.95–1.09** |
+| Token mixes (4p) | 0.91–1.04 | 0.97–1.01 | 0.95–1.06 | 0.96–1.12 |
+| Days nobody wins | 19% | 32% | 29% | 29% |
+| The reveal changes the winner (4p) | 38% | 18% | 29% | 30% |
+| Never Offering (exploit, 300 games) | 0.28 | 1.11 | 0.40 | **0.96** |
+| Spoils per player per game | | | | 5.7 |
+| Skill (strong among heuristic) | 1.98× | 1.94× | 2.23× | **1.65×** |
+
+- **Spoils and the Miser end up in nearly the same place** on readability, the action mix and fairness, by opposite routes: a share of the Altar for contributing, against a penalty for not contributing.
+- **The differences:**
+  - The Miser punishes never Offering (0.40); spoils make it a fair temptation (0.96).
+  - The Miser needs a count of Offers kept all game; spoils need a short draft each Evening.
+  - The Miser measures more skill (2.23× against 1.65×). The skill test plays the strong bot against heuristic bots, which draft spoils crudely. That accounts for part of the drop, but not necessarily all of it, so **watch it in playtests**.
 
 Measured against `vision.md`:
 - **1. Self versus side:** sharper and in balance. Offering gives up a card to push a side, and earns a share of the spoils only if *some* side wins. Never Offering is a fair temptation (0.96), no longer a winning one (1.11) or a doomed one (0.28). Always Offering loses badly (0.05). Your side matters a lot (1.60 against 0.47).
