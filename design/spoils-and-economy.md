@@ -49,7 +49,8 @@ November 20, 2026. Robert's direction after the harvest study:
 | Reader (guessing 50%) | 68% | 62% | 60% | **59%** |
 
 - **Robert's instinct is right that Choirs stick.** Today a Choir changes color once in ten games: the hedge holds it in place. Without a harvest rule, more Choirs end up one color.
-- **But sticking no longer gives a side away.** Without the harvest rule, Choirs follow tactics rather than the hidden side (the reader drops to 59–62%). And with spoils, tokens move every Day, so the secret side shifts even while the Choir holds (principle 2: "not even permanent").
+- **But sticking no longer gives a side away.** Without the harvest rule, Choirs follow tactics rather than the hidden side (the reader drops to 59–62%).
+- *Corrected (Section 4):* spoils move a token here and there, but a player's token majority essentially never changes during a game (0.00 flips). The secret side does **not** shift.
 - **Turnover is the only rule that makes Choirs move,** more than once a game, with fair seats and a good reader (60%). But it rewards building over contributing: never Offering wins 1.16, and 1.50 with spoils.
 - **So Choirs should keep their cards** (principle 5).
 
@@ -141,3 +142,21 @@ Measured against `vision.md`:
 - Whether the Evening draft feels like a reward or a chore.
 - Whether people read "who Offered" as "who is on the winning side". The bots cannot act on reads, and Offerers of both sides share.
 - Whether spoils feel like the rich getting richer. The bots show fair seats, and the spoils go to contributors, not to the leader.
+
+## 4. Choirs that move, with spoils as the base (Robert: "people would stick with their Choir the entire game")
+
+| Spoils to Offerers, plus… (300 games) | Choir color flips (per game) | Secret-side flips | Never Offering (exploit) | Seats 4p / 3p | Reader 4p / 3p |
+|---|---|---|---|---|---|
+| (nothing) | 0.26 | 0.00 | 0.96 | 0.84–1.09 / 0.93–1.05 | 59 / 62% |
+| Offer from your Choir (a Choir card may be Offered) | 0.29 | 0.00 | 0.94 | 0.78–1.14 / 0.94–1.11 | 61 / 67% |
+| Replaced cards go to your hand (not the discard) | 0.23 | 0.00 | 0.90 | **0.94–1.05 / 0.95–1.07** | 61 / 65% |
+| Both | 0.29 | 0.00 | 1.02 | 0.81–1.09 / 0.83–1.15 | 64 / 67% |
+| An idle Choir withers (a full Choir loses its oldest card on a Day you did not Offer) | **0.83** | 0.01 | **1.46** | 0.88–1.27 / 0.87–1.19 | 59 / 64% |
+| A Choir of 3 | 0.25 | 0.00 | 1.08 | 0.87–1.08 / 0.92–1.12 | 61 / 69% |
+
+- **Making switching cheap does not make players switch.** Choirs move only when forced (turnover, withering), and every forcing rule lets free-riders win.
+- **The real cause:** a player's secret side never changes (0.00 flips), so their interests are fixed from the deal, and staying with one color is simply correct.
+- **Choirs will move only if allegiance itself can shift during a game.** That is principle 2 ("not even permanent") and the Turn of the original design. **Next to test.**
+- **A side finding:** replaced cards going to the hand gave the fairest seats of anything measured, with no new decision to learn.
+- **Offering from the Choir** made token Offers nearly vanish (0.05 a player): Choir cards became the strong Offer instead.
+
