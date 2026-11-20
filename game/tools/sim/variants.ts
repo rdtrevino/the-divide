@@ -54,4 +54,8 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   rMajGH: { ...R, endScore: 'majority', gatherTo: 'hand' }, rMajW2: { ...R, endScore: 'majority', choirOfferWeight: 2 },
   rMajBoth: { ...R, endScore: 'majority', offerFrom: 'both' }, rMajUp: { ...R, endScore: 'majority', fruits: 'up' },
   rMajPay1: { ...R, endScore: 'majority', choirPay: 1 }, rWinGH: { ...R, endScore: 'winner', gatherTo: 'hand' },
+  // Round 8: the leader (rMajGH) with Offers from the hand again, or First Fruits face up: are they needed?
+  rMajUpGH: { ...R, endScore: 'majority', gatherTo: 'hand', fruits: 'up' },
+  hMajGH: { ...S, fruits: 'down', fruitsToken: true, endScore: 'majority', gatherTo: 'hand' },
+  hMajUpGH: { ...S, fruitsToken: true, endScore: 'majority', gatherTo: 'hand' },
 };
