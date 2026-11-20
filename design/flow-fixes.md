@@ -78,4 +78,38 @@ Noise is about ±0.1 on the ratios at 300 games. The base is `current` (rMajGH).
   - One spoil each spreads the 3-player seats.
   - Draw-for-all has no clear effect on balance. It still closes the leak (Section 4 weighs that).
 
-Next: exploits on turnover, the swap and five tokens, and round 2 combinations built around turnover (`results/fix-exploits.jsonl`, `results/fix-r2.jsonl`).
+
+## 3. Exploits and round 2
+
+**Exploits** (300 games; a fixed strategy against strong bots, above 1 means it wins; ±0.1):
+
+| Variant | Align | Hedge | No token | Always Offer | Never Offer | Never Gather |
+|---|---|---|---|---|---|---|
+| base (rMajGH, 600 games) | 0.84 | 0.81 | 0.52 | 0.22 | 0.89 | 0.79 |
+| `decay` | 0.98 | 0.87 | 0.55 | 0.29 | 0.91 | 1.08 |
+| `offerSwap` | 0.91 | 0.81 | **1.27** | 0.35 | 0.82 | 0.90 |
+| `tokensEach: 5` | 0.91 | 0.94 | 0.54 | 0.19 | 0.76 | 0.99 |
+| `decay` + `gatherTo: 'either'` | 0.81 | 0.93 | 0.52 | 0.26 | 0.83 | 0.87 |
+| `decay` + `offerSwap` + 5 tokens | 0.95 | 0.87 | **1.27** | 0.54 | 0.65 | 1.04 |
+| `decay` + 5 tokens | 1.03 | 0.85 | 0.56 | 0.26 | 0.97 | 0.91 |
+| `decay` + `offerSwap` | 0.89 | 0.89 | **1.40** | 0.64 | 0.80 | 1.02 |
+
+- **Turnover no longer rewards sitting out** (never Offering 0.91). It was rejected twice because never Offering won. The Choir-only Offer fixed that: a Choir that will lose its oldest card anyway is cheap to Offer from.
+- **The swap breaks the tokens.** With a free Exalt attached, a Choir Offer beats a token Offer, so never Offering a token wins (1.27–1.40) in every combination. A core that runs on tokens changing hands cannot have that.
+
+**Round 2** (300 games a mode):
+
+| Combination | Choir flips | Choir Offers / pl | Side flips | Seats 4p / 3p | Mixes 4p | With / against 4p | Reader 4p / 3p | Skill |
+|---|---|---|---|---|---|---|---|---|
+| `decay` + `gatherTo: 'either'` | **0.48** | 0.31 | 0.30 | 0.93–1.03 / 0.93–1.13 | 0.93–1.02 | 1.37 / 0.70 | 0.63 / 0.65 | 2.16 |
+| `decay` + `offerSwap` | 0.45 | 1.69 | 0.26 | 0.80–1.12 / 0.93–1.10 | 0.79–1.09 | 1.11 / 0.81 | 0.66 / 0.70 | 2.45 |
+| `decay` + `offerSwap` + 5 tokens | 0.43 | 1.78 | 0.21 | 0.92–1.13 / 0.86–1.12 | 0.95–1.10 | 1.10 / 0.90 | 0.66 / 0.64 | 2.58 |
+| `decay` + 5 tokens | 0.31 | 0.29 | 0.22 | 0.88–1.25 / 0.85–1.14 | 0.98–1.26 | 1.11 / 0.89 | 0.67 / 0.64 | 2.30 |
+| `decay` + `fruitsDraw: 'all'` | 0.30 | 0.26 | 0.27 | 0.88–1.18 / 0.92–1.05 | 0.93–1.04 | 1.21 / 0.78 | 0.64 / 0.68 | 2.30 |
+| `offerSwap` + 5 tokens | 0.31 | 1.95 | 0.15 | 0.83–1.08 / 0.95–1.03 | 0.95–1.01 | 1.25 / 0.73 | 0.65 / 0.65 | 2.07 |
+
+- **Turnover with Gather into either nearly triples Choir changes** (0.48 against 0.17) and passes every exploit. Gather into either spread the seats on its own; with turnover the 4-player seats are the tightest of the study (0.93–1.03). The likely reason: a Choir that loses a card each Day needs refilling, and the Altar now refills it, so Gathering a card into your Choir is no longer a lead that compounds.
+- **Five tokens with turnover** evens the dealt side best but spreads the seats (1.25) and lets always aligning reach 1.03. Not taken further.
+- **Draw-for-all with turnover** adds nothing measurable. It stays a question for people (Section 5): the leak is about reads, which bots do not make.
+
+**Finalists** at 1,200 games: `decay` and `decay` + `gatherTo: 'either'` (`results/fix-final.jsonl`).
