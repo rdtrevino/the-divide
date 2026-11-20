@@ -59,8 +59,9 @@ export function createState(cfg: GameConfig): GameState {
   }));
   // V45: shuffle an even pool of allegiance tokens and deal each player 6, so mixes are uneven and secret.
   const R = rulesOf(s);
-  const half = (R.tokensEach * s.players.length) / 2;
-  const tokens = shuffle(s, [...Array<Side>(half).fill('light'), ...Array<Side>(half).fill('dark')]);
+  // An odd total (a variant: 5 or 7 each with 3 players) has one extra token of a random color.
+  const total = R.tokensEach * s.players.length, light = Math.floor(total / 2) + (total % 2 && randInt(s, 2) ? 1 : 0);
+  const tokens = shuffle(s, [...Array<Side>(light).fill('light'), ...Array<Side>(total - light).fill('dark')]);
   for (const p of s.players) p.tokens = tokens.splice(0, R.tokensEach);
   for (const p of s.players) {
     // Each player is dealt a hidden hand and 2 random face-up Choir cards (room for 4).
@@ -140,8 +141,8 @@ function* firstFruits(s: GameState): Gen<void> {
   });
   // A facedown First Fruit is known to the player who gave it (not where it lies after the shuffle).
   for (const f of shuffle(s, fruits)) s.altar.push({ id: f.c, facedown: dark, offeredBy: null, day: s.day, kind: 'fruits', ...(dark && R.fruits === 'down' ? { seenBy: [f.seat] } : {}) });
-  // Then each player who gave a card draws 1 card, so First Fruits never shrinks a hand.
-  for (const seat of gave) yield* drawTo(s, seat, 1);
+  // Then each player who gave a card draws 1 card, so First Fruits never shrinks a hand (variant: everyone who gave).
+  for (const seat of R.fruitsDraw === 'all' ? ps.map((p) => p.seat) : gave) yield* drawTo(s, seat, 1);
   log(s, 'fruits', dark ? 'Every player placed First Fruits facedown.' : `First Fruits: ${fruits.map((f) => cardName(f.c)).sort().join(', ')}.`);
 }
 
@@ -314,7 +315,7 @@ export function legalActions(s: GameState, seat: Seat): Action[] {
   const out: Action[] = [];
   if ((rulesOf(s).offerFrom !== 'choir' && p.hand.length) || p.tokens.length || (rulesOf(s).offerFrom !== 'hand' && activeCards(p).length)) out.push('offer');
   // Gather takes a card from the Altar (V42) or the discard pile (Forger), or a token from the Altar (V45: needs no room).
-  const card = (rulesOf(s).gatherTo === 'hand' || canRoom(s, seat)) && (altarAvailable(s, seat).length > 0 || (hasActive(s, seat, H.forger) && s.discard.length > 0));
+  const card = (rulesOf(s).gatherTo !== 'choir' || canRoom(s, seat)) && (altarAvailable(s, seat).length > 0 || (hasActive(s, seat, H.forger) && s.discard.length > 0));
   if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && (card || s.altarTokens.length)) out.push('gather');
   // Exalt is free (V42); with Forger it may take a card from the discard pile (V43).
   const forgeable = hasActive(s, seat, H.forger) && s.discard.some((x) => x.startsWith('host-'));
@@ -431,6 +432,12 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const card = fromChoir ? first.slice(6) : first;
   if (fromChoir) { removeFromChoir(s, seat, card); log(s, 'offer', `${p.name} takes ${cardName(card)} from their Choir to Offer it.`); }
   else p.hand.splice(p.hand.indexOf(card), 1);
+  if (fromChoir && rulesOf(s).offerSwap) {
+    // Variant: a card from the hand may take the Offered card's place in the Choir (a free Exalt; no Exalt abilities).
+    const opts = p.hand.filter((c) => c !== H.parasite).map((c) => cardOpt(c));
+    const put = opts.length && canRoom(s, seat) ? yield* chooseOne(s, seat, 'offer.swap', `Put a card from your hand into your Choir in place of ${cardName(card)}?`, opts, true) : null;
+    if (put) { p.hand.splice(p.hand.indexOf(put), 1); yield* enterChoir(s, seat, put); stat(s, { type: 'action', seat, card: put, source: 'swap' }); log(s, 'offer', `${p.name} put ${cardName(put)} into their Choir in its place.`); }
+  }
   const col = (id: string) => colorsOf(s, null, id);
   // V35: Offers go facedown, except Hymn and Lamentation (V43), which go face up, and any Offer under Anathema (V45).
   // Variant: a card Offered from the Choir goes face up (everyone saw it leave), and may count more.
@@ -467,7 +474,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
 }
 
 function gatherOptions(s: GameState, seat: Seat): Option[] {
-  const room = rulesOf(s).gatherTo === 'hand' || canRoom(s, seat);
+  const room = rulesOf(s).gatherTo !== 'choir' || canRoom(s, seat);
   const opts: Option[] = room ? altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id })) : [];
   // V45: an allegiance token on the Altar can always be taken; it joins your hidden tokens.
   s.altarTokens.forEach((t, i) => opts.push({ id: 'token:' + i, label: t.by === seat ? `Your ${tokenName(t.side)} token` : t.anon ? 'An allegiance token (First Fruits)' : `An allegiance token (Offered by ${pname(s, t.by)})` }));
@@ -488,8 +495,9 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
     log(s, 'gather', `It was a ${tokenName(t.side)} token.`, [seat]);
     return;
   }
-  const toHand = rulesOf(s).gatherTo === 'hand';
-  if (!toHand && !(yield* makeRoom(s, seat, 'Gather'))) return;
+  const to = rulesOf(s).gatherTo;
+  let toHand = to === 'hand';
+  if (to === 'choir' && !(yield* makeRoom(s, seat, 'Gather'))) return;
 
   let card: string | null = null;
   let fromAltar: { offeredBy: Seat | null; day: number; kind?: string } | null = null;
@@ -505,6 +513,11 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
   }
   if (!card) return;
   if (fromAltar) yield* snareHit(s, seat, fromAltar);
+  if (to === 'either') {
+    // Variant: the player chooses where the Gathered card goes (a full Choir makes room first).
+    const where = canRoom(s, seat) ? yield* chooseOne(s, seat, 'gather.to', `Gather: put ${cardName(card)} into your hand or your Choir?`, [{ id: 'hand', label: 'Into your hand' }, { id: 'choir', label: 'Into your Choir', card }]) : 'hand';
+    toHand = where !== 'choir' || !(yield* makeRoom(s, seat, 'Gather'));
+  }
   if (toHand) {
     // Variant (the Altar as a market): the card joins your hand.
     p.hand.push(card);

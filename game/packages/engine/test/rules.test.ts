@@ -3,6 +3,7 @@ import { baseValue, choirColors } from '../src/core';
 import { C, E, H } from '../src/data';
 import { activationPhase, endGame, evening, judgmentDay, legalActions, reaping, setTide, takeTurn, morning } from '../src/engine';
 import { Game, RuleError } from '../src/game';
+import { V45 } from '../src/rules';
 import { viewFor } from '../src/view';
 import { botAnswer } from '../src/bots';
 import { altar, blank, choir, drive, hand, type Script } from './helpers';
@@ -341,7 +342,7 @@ describe('Morning', () => {
     expect(s.altar).toHaveLength(3);
   });
   it('the Base game has no Events and no Celestials', () => {
-    const g = new Game({ seed: 4, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+    const g = new Game({ rules: V45, seed: 4, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
     expect(g.state.players.every((p) => p.celestial === '')).toBe(true);
     expect(g.state.eventDeck).toHaveLength(0);
     expect(g.state.currentEvent).toBe(null);
@@ -455,7 +456,7 @@ describe('V35: First Fruits and facedown Offers', () => {
     expect(s.players[0].hand).toHaveLength(0);
   });
   it('a full game runs First Fruits every Morning, with no Glory for it', () => {
-    const g = new Game({ seed: 5, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+    const g = new Game({ rules: V45, seed: 5, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
     let n = 0;
     while (g.pending.length) {
       for (const d of g.pending) {
@@ -472,10 +473,10 @@ describe('V35: First Fruits and facedown Offers', () => {
 });
 
 describe('V45: allegiance tokens and the Tide track', () => {
-  const four = () => new Game({ seed: 11, mode: 'open', players: ['A', 'B', 'C', 'D'].map((name) => ({ name, isBot: true })) }).state;
+  const four = () => new Game({ rules: V45, seed: 11, mode: 'open', players: ['A', 'B', 'C', 'D'].map((name) => ({ name, isBot: true })) }).state;
   it('7 Days at 3 and 4 players; each player is dealt 6 tokens from an even pool', () => {
     for (const n of [3, 4]) {
-      const g = new Game({ seed: 9, mode: 'open', players: ['A', 'B', 'C', 'D'].slice(0, n).map((name) => ({ name, isBot: true })) });
+      const g = new Game({ rules: V45, seed: 9, mode: 'open', players: ['A', 'B', 'C', 'D'].slice(0, n).map((name) => ({ name, isBot: true })) });
       const all = g.state.players.flatMap((p) => p.tokens);
       expect(g.state.players.every((p) => p.tokens.length === 6)).toBe(true);
       expect(all.filter((t) => t === 'light')).toHaveLength(3 * n);
@@ -545,7 +546,7 @@ describe('V45: allegiance tokens and the Tide track', () => {
     expect(v.altar.filter((a) => a.offeredBy !== null).map((a) => a.id)).toEqual([H.moloch]);
   });
   it('First Fruits are shuffled onto the Altar with no owner', () => {
-    const g = new Game({ seed: 4, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+    const g = new Game({ rules: V45, seed: 4, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
     while (g.state.phase !== 'noon') for (const d of [...g.pending]) g.answer(d.seat, d.id, botAnswer(g.state, d));
     const fruits = g.state.altar.filter((a) => a.kind === 'fruits');
     expect(fruits).toHaveLength(3);
@@ -684,7 +685,7 @@ describe('V38 balance changes', () => {
 
 describe('starting deal', () => {
   it('V41: deals a hand of 3 (the Dominion 5, V44) and 2 random face-up Choir cards, with room for 4', () => {
-    const g = new Game({ seed: 21, mode: 'open', advanced: true, players: ['A', 'B', 'C', 'D'].map((name) => ({ name, isBot: false })) });
+    const g = new Game({ rules: V45, seed: 21, mode: 'open', advanced: true, players: ['A', 'B', 'C', 'D'].map((name) => ({ name, isBot: false })) });
     expect(g.pending.some((d) => d.tag === 'choir.pick')).toBe(false);
     for (const p of g.state.players) {
       expect(p.choir).toHaveLength(2);
@@ -838,7 +839,7 @@ describe('V42 reworked cards', () => {
 describe('V42 one deck: no once-per-game cards', () => {
   const act = (id: string) => (d: any) => [d.options.find((o: any) => o.card === id)?.id ?? 'end'];
   it('every Light or Dark card is worth 1, except Hymn and Lamentation (2); the deck is 69 cards, all with art', () => {
-    const g = new Game({ seed: 9, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
+    const g = new Game({ rules: V45, seed: 9, mode: 'open', players: ['A', 'B', 'C'].map((name) => ({ name, isBot: true })) });
     const all = [...g.state.hostDeck, ...g.state.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
     expect(all).toHaveLength(69);
     for (const id of [H.ithuriel, H.urim, H.asmadai]) expect(all).not.toContain(id);

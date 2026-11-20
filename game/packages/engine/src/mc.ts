@@ -11,7 +11,7 @@ import { rulesOf } from './rules';
 import type { Answer, Decision, GameState, Seat, Side } from './types';
 
 /** Decisions worth searching; everything else is answered by the heuristic. */
-const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment']);
+const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment', 'offer.swap', 'gather.to']);
 
 /**
  * `policy` plays everyone's choices inside the playouts (default: the heuristic bot). `rank` orders the options to
@@ -67,7 +67,7 @@ function value(s: GameState, q: Seat): number {
   v += tokensValue(s, p.tokens);
   for (const c of activeCards(p)) v += choirCardValue(s, c.id) + (c.store ?? 0);
   const R = rulesOf(s);
-  if (R.spoils !== 'none' || R.gatherTo === 'hand' || R.upkeepDraw !== 'refill') {
+  if (R.spoils !== 'none' || R.gatherTo !== 'choir' || R.upkeepDraw !== 'refill') {
     // Variants where cards in hand are scarce: each is worth something (a future Offer, Exalt or ability).
     for (const c of p.hand) v += 0.5 + 0.4 * choirCardValue(s, c);
   }

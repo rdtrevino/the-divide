@@ -14,6 +14,8 @@ const VARIANTS: Partial<CoreRules>[] = [
   // Robert's flow (November 20): Offers only from the Choir (face up), facedown First Fruits that may be a token, majority end score.
   { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruits: 'down', fruitsToken: true }, { offerFrom: 'choir', gatherTo: 'hand', endScore: 'majority' },
   { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruitsToken: true, endScore: 'majority' }, { endScore: 'majority', fruitsToken: true },
+  // Fixes under test (November 20): Offer a Choir card and put a hand card in its place; Gather to hand or Choir; everyone draws after First Fruits.
+  { offerSwap: true }, { gatherTo: 'either' }, { fruitsDraw: 'all', offerSwap: true, gatherTo: 'either' },
 ];
 
 describe('core rule switches', () => {

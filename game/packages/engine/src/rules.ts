@@ -46,8 +46,13 @@ export interface CoreRules {
   handMax: number;
   /** At the end of a Day: refill the hand to its size, or draw this many cards. */
   upkeepDraw: 'refill' | number;
-  /** A Gathered card goes into the Choir, or into the hand (the Altar as a market). */
-  gatherTo: 'choir' | 'hand';
+  /** A Gathered card goes into the Choir, into the hand (now), or either, as the player chooses. */
+  gatherTo: 'choir' | 'hand' | 'either';
+  /** Offering a Choir card lets you put a card from your hand into its place (a free Exalt). */
+  offerSwap: boolean;
+  /** After First Fruits, who draws 1: those who gave a card ('card'), or everyone who gave anything ('all'), so a
+   *  token given as First Fruits cannot be spotted by who did not draw. */
+  fruitsDraw: 'card' | 'all';
   /** Turnover: after the Reaping, a full Choir loses its oldest card. */
   decay: boolean;
   /** Carryover: on a tied Day, the Altar is not cleared; its cards and tokens stay for the next Day. */
@@ -55,9 +60,16 @@ export interface CoreRules {
 }
 
 export const DEFAULT_RULES: CoreRules = {
-  tokensEach: 6, devotion: 0, harvest: 'offer', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'none', handMax: 0,
-  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false, spoilsEach: 0, offerFrom: 'hand', fruits: 'up', fruitsToken: false, endScore: 'each', replacedToHand: false, witherIdle: false,
+  // Robert's flow (adopted November 20, design/the-flow.md): no harvest rule, spoils to the Offerers (hand limit 5),
+  // Offers only from the Choir (face up) or a token, First Fruits facedown and possibly a token, Gather into the hand,
+  // and only your majority color's tokens score.
+  tokensEach: 6, devotion: 0, harvest: 'always', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'offerers', handMax: 5,
+  upkeepDraw: 'refill', gatherTo: 'hand', decay: false, carryover: false, spoilsEach: 0, offerFrom: 'choir', fruits: 'down', fruitsToken: true, endScore: 'majority', replacedToHand: false, witherIdle: false, offerSwap: false, fruitsDraw: 'card',
 };
+
+/** The previous core (V45: no offering, no harvest; Offers from the hand; tokens each score the Days their color won).
+ *  For comparisons, and for the card tests until the cards are reworked for the current core. */
+export const V45: Partial<CoreRules> = { harvest: 'offer', spoils: 'none', handMax: 0, gatherTo: 'choir', offerFrom: 'hand', fruits: 'up', fruitsToken: false, endScore: 'each' };
 
 const cache = new WeakMap<object, CoreRules>();
 /** The rules this game is played under. */

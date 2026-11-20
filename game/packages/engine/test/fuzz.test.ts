@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DAYS, TOKENS_EACH, Game, daysWon, playBotGame, viewFor } from '../src';
+import { tokenScore } from '../src/engine';
 
 const names = ['Ada', 'Ben', 'Cy', 'Dee', 'Eve', 'Fin'];
 const cfg = (seed: number, n: number) => ({ seed, mode: 'open' as const, players: names.slice(0, n).map((name) => ({ name, isBot: true })) });
@@ -21,13 +22,13 @@ describe('bot games run to completion', () => {
         const zones = [...s.hostDeck, ...s.discard, ...s.altar.map((a) => a.id), ...s.players.flatMap((p) => [...p.hand, ...p.choir.map((c) => c.id)])];
         expect(new Set(zones).size).toBe(zones.length);
         expect(zones.length).toBe(69);
-        // V45: a fixed number of Days; every token is still held by someone; each scores the Days its color won.
+        // A fixed number of Days; every token is still held by someone; only the majority color's tokens score.
         expect(s.day).toBe(DAYS);
         expect(s.log.some((l) => l.kind === 'judgment')).toBe(true);
         expect(s.players.reduce((t, p) => t + p.tokens.length, 0) + s.altarTokens.length).toBe(TOKENS_EACH * n);
         const won = daysWon(s);
         for (const x of s.result!.standings) {
-          expect(x.fromTokens).toBe(x.tokens.light * won.light + x.tokens.dark * won.dark);
+          expect(x.fromTokens).toBe(tokenScore('majority', x.tokens.light, x.tokens.dark, won.light, won.dark));
           expect(x.glory).toBe(x.before + x.fromTokens);
         }
         const best = Math.max(...s.players.map((p) => p.glory));
