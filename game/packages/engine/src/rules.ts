@@ -27,7 +27,25 @@ export interface CoreRules {
   spoils: 'none' | 'claim' | 'offerers';
   /** Where an Offered card comes from: the hand (facedown, now) or only the Choir ('choir': face up, since everyone saw
    *  it leave; Robert's flow, November 20). Tokens are Offered facedown either way. */
-  offerFrom: 'hand' | 'choir';
+  offerFrom: 'hand' | 'choir' | 'both';
+  /** Whether a token may be Offered (false: tokens reach the Altar only as First Fruits). */
+  offerTokens: boolean;
+  /** Glory gained at once for Offering a Choir card. */
+  choirOfferGlory: number;
+  /** Glory gained at once for any Offer (a card or a token). */
+  offerGlory: number;
+  /** Cards drawn for Offering a Choir card. */
+  choirOfferDraw: number;
+  /** A card Offered from your Choir still scores for you at tonight's Reaping, as if it were still there. */
+  choirOfferReaps: boolean;
+  /** What a card Offered from the Choir counts on the Altar, times its value. */
+  choirOfferWeight: number;
+  /** What an Offered token counts for its color on the Altar. */
+  tokenWeight: number;
+  /** Spoils go first ('first') or only ('only') to the players who Offered a Choir card today ('': all Offerers alike). */
+  choirSpoils: '' | 'first' | 'only';
+  /** Once on your turn, after your action, a full Choir may also Offer its oldest card (the one turnover would take). */
+  oldestFree: boolean;
   /** First Fruits go face up (now) or stay facedown until the Evening reveal ('down'); either way shuffled, so anonymous. */
   fruits: 'up' | 'down';
   /** A token (facedown, counts 2) may be given as First Fruits instead of a card. */
@@ -52,15 +70,16 @@ export interface CoreRules {
 
 export const DEFAULT_RULES: CoreRules = {
   // Robert's flow (adopted November 20, design/the-flow.md): no harvest rule, spoils to the Offerers (hand limit 5),
-  // Offers only from the Choir (face up) or a token, First Fruits facedown and possibly a token, Gather into the hand,
-  // and only your majority color's tokens score.
+  // Offers only from the Choir (face up) or a token, First Fruits facedown and possibly a token, and only your
+  // majority color's tokens score. With turnover and Gather into the hand or the Choir (adopted November 20,
+  // design/flow-fixes.md).
   tokensEach: 6, devotion: 0, harvest: 'always', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'offerers', handMax: 5,
-  upkeepDraw: 'refill', gatherTo: 'hand', decay: false, carryover: false, offerFrom: 'choir', fruits: 'down', fruitsToken: true, endScore: 'majority', fruitsDraw: 'card',
+  upkeepDraw: 'refill', gatherTo: 'either', decay: true, carryover: false, offerFrom: 'choir', offerTokens: true, choirOfferGlory: 0, offerGlory: 0, choirOfferDraw: 0, choirOfferReaps: false, choirOfferWeight: 1, tokenWeight: 2, choirSpoils: '', oldestFree: false, fruits: 'down', fruitsToken: true, endScore: 'majority', fruitsDraw: 'card',
 };
 
 /** The previous core (V45: no offering, no harvest; Offers from the hand; tokens each score the Days their color won).
  *  For comparisons, and for the card tests until the cards are reworked for the current core. */
-export const V45: Partial<CoreRules> = { harvest: 'offer', spoils: 'none', handMax: 0, gatherTo: 'choir', offerFrom: 'hand', fruits: 'up', fruitsToken: false, endScore: 'each' };
+export const V45: Partial<CoreRules> = { harvest: 'offer', spoils: 'none', handMax: 0, gatherTo: 'choir', decay: false, offerFrom: 'hand', fruits: 'up', fruitsToken: false, endScore: 'each' };
 
 const cache = new WeakMap<object, CoreRules>();
 /** The rules this game is played under. */

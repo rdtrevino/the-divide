@@ -15,7 +15,8 @@ const VARIANTS: Partial<CoreRules>[] = [
   { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruits: 'down', fruitsToken: true }, { offerFrom: 'choir', gatherTo: 'hand', endScore: 'majority' },
   { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruitsToken: true, endScore: 'majority' }, { endScore: 'majority', fruitsToken: true },
   // Fixes under test (November 20): Offer a Choir card and put a hand card in its place; Gather to hand or Choir; everyone draws after First Fruits.
-  { gatherTo: 'either' }, { decay: true, gatherTo: 'either' }, { fruitsDraw: 'all', decay: true, gatherTo: 'either' },
+  { gatherTo: 'hand', decay: false }, { fruitsDraw: 'all' }, { offerFrom: 'hand' }, { offerFrom: 'both', offerTokens: false }, { choirOfferGlory: 2, offerGlory: 1, choirOfferDraw: 1 },
+  { choirOfferReaps: true, choirOfferWeight: 2, tokenWeight: 1 }, { choirSpoils: 'first' }, { choirSpoils: 'only', oldestFree: true },
 ];
 
 describe('core rule switches', () => {

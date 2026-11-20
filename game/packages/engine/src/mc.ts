@@ -11,7 +11,7 @@ import { rulesOf } from './rules';
 import type { Answer, Decision, GameState, Seat, Side } from './types';
 
 /** Decisions worth searching; everything else is answered by the heuristic. */
-const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment', 'gather.to']);
+const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment', 'gather.to', 'offer.oldest']);
 
 /**
  * `policy` plays everyone's choices inside the playouts (default: the heuristic bot). `rank` orders the options to
@@ -65,11 +65,11 @@ function value(s: GameState, q: Seat): number {
   if (s.phase === 'ended') return p.glory;
   let v = p.glory;
   v += tokensValue(s, p.tokens);
-  for (const c of activeCards(p)) v += choirCardValue(s, c.id) + (c.store ?? 0);
+  for (const c of activeCards(p)) v += choirCardValue(s, c.id, q) + (c.store ?? 0);
   const R = rulesOf(s);
   if (R.spoils !== 'none' || R.gatherTo !== 'choir' || R.upkeepDraw !== 'refill') {
     // Variants where cards in hand are scarce: each is worth something (a future Offer, Exalt or ability).
-    for (const c of p.hand) v += 0.5 + 0.4 * choirCardValue(s, c);
+    for (const c of p.hand) v += 0.5 + 0.4 * choirCardValue(s, c, q);
   }
   if (R.miser || R.generous) {
     // The Miser / the Generous (variants): the risk of ending with the fewest Offers, or the chance of the most,
