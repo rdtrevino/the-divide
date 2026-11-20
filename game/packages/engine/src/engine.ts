@@ -4,7 +4,7 @@ import { endOfDayTriggers, keepRelics, morningTriggers, noteOffer, parasitePlant
 import {
   activation, activeCards, altarAvailable, altarLabel, altarShielded, ask, askAll, baseHandLimit, handMaxOf,
   baseValue, canActivate, canSpend, cardOpt, choirColors, chooseOne, colorOf, colorsOf, dirOf, discardableForRoom,
-  discardFromChoir, drawHost, drawTo, enterChoir, eventOn, gain, hasActive, isCelestial, log, lose, makeRoom,
+  discardFromChoir, removeFromChoir, drawHost, drawTo, enterChoir, eventOn, gain, hasActive, isCelestial, log, lose, makeRoom,
   markToday, opposite, others, pay, pname, sanctuaryAllows, seatFromOpt, seatOpt, snareHit, stat, transfer,
   usedToday, yesNo,
 } from './core';
@@ -296,7 +296,7 @@ type Action = 'offer' | 'gather' | 'exalt';
 export function legalActions(s: GameState, seat: Seat): Action[] {
   const p = s.players[seat];
   const out: Action[] = [];
-  if (p.hand.length || p.tokens.length) out.push('offer');
+  if (p.hand.length || p.tokens.length || (rulesOf(s).offerFromChoir && activeCards(p).length)) out.push('offer');
   // Gather takes a card from the Altar (V42) or the discard pile (Forger), or a token from the Altar (V45: needs no room).
   const card = (rulesOf(s).gatherTo === 'hand' || canRoom(s, seat)) && (altarAvailable(s, seat).length > 0 || (hasActive(s, seat, H.forger) && s.discard.length > 0));
   if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && (card || s.altarTokens.length)) out.push('gather');
@@ -388,7 +388,9 @@ function* cantorDraw(s: GameState, seat: Seat): Gen<void> {
 function offerOptions(s: GameState, seat: Seat): Option[] {
   const p = s.players[seat];
   const sides = (['light', 'dark'] as const).filter((k) => p.tokens.includes(k));
-  return [...p.hand.map((c) => cardOpt(c)), ...sides.map((k) => ({ id: 'token:' + k, label: `a ${tokenName(k)} token (counts ${TOKEN_WEIGHT})` }))];
+  // Variant: a Choir card may be Offered too.
+  const choir = rulesOf(s).offerFromChoir ? activeCards(p).map((c) => cardOpt(c.id, 'choir:')) : [];
+  return [...p.hand.map((c) => cardOpt(c)), ...choir, ...sides.map((k) => ({ id: 'token:' + k, label: `a ${tokenName(k)} token (counts ${TOKEN_WEIGHT})` }))];
 }
 
 function* doOffer(s: GameState, seat: Seat): Gen<void> {
@@ -408,8 +410,10 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
     yield* wisdomPeek(s, seat);
     return;
   }
-  const card = first;
-  p.hand.splice(p.hand.indexOf(card), 1);
+  const fromChoir = first.startsWith('choir:');
+  const card = fromChoir ? first.slice(6) : first;
+  if (fromChoir) { removeFromChoir(s, seat, card); log(s, 'offer', `${p.name} takes ${cardName(card)} from their Choir to Offer it.`); }
+  else p.hand.splice(p.hand.indexOf(card), 1);
   const col = (id: string) => colorsOf(s, null, id);
   // V35: Offers go facedown, except Hymn and Lamentation (V43), which go face up, and any Offer under Anathema (V45).
   const facedown = card !== H.hymn && card !== H.lamentation && !faceUp(s, seat);
@@ -635,6 +639,13 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
     s.players[to].tokens.push(t.side);
     log(s, 'tokens', `${pname(s, to)} receives a token left on the Altar (they hold the fewest).`);
     log(s, 'tokens', `It is a ${tokenName(t.side)} token.`, [to]);
+  }
+  if (rulesOf(s).witherIdle) {
+    // Variant: on a Day you did not Offer, a full Choir loses its oldest card.
+    for (const seat of order) {
+      const p = s.players[seat];
+      if (!p.offeredToday && p.choir.length >= choirLimit(s)) yield* discardFromChoir(s, seat, p.choir[0].id, 'withering');
+    }
   }
   if (rulesOf(s).decay) {
     // Variant (turnover): a full Choir loses its oldest card.

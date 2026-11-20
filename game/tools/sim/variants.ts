@@ -26,5 +26,11 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   offTurnRev: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true },
   offTurnRevDraw1: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true, upkeepDraw: 1 },
   // Round 4: each Offerer takes one spoil (a draft until empty gave the first pickers extra).
+  // Round 5 (Robert, November 20: spoils to the Offerers as the base): Choirs that move without rewarding free-riders.
+  sOfferChoir: { ...none, spoils: 'offerers', handMax: 5, offerFromChoir: true },
+  sReplaceHand: { ...none, spoils: 'offerers', handMax: 5, replacedToHand: true },
+  sBoth: { ...none, spoils: 'offerers', handMax: 5, offerFromChoir: true, replacedToHand: true },
+  sWither: { ...none, spoils: 'offerers', handMax: 5, witherIdle: true },
+  sChoir3: { ...none, spoils: 'offerers', handMax: 5, choirLimit: 3 },
   off1: { ...none, spoils: 'offerers', spoilsEach: 1, handMax: 5 }, off1Rev: { ...none, spoils: 'offerers', spoilsEach: 1, spoilsOrder: 'reverse', handMax: 5 },
 };

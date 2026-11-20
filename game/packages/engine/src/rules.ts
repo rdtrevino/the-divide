@@ -30,6 +30,12 @@ export interface CoreRules {
   /** Spoils each eligible player may take in a Day (0: take turns until the Altar is empty). Cards left are discarded
    *  as usual; tokens left go to whoever holds the fewest. */
   spoilsEach: number;
+  /** A Choir card may be Offered (taken from the Choir, placed facedown), as well as a hand card. */
+  offerFromChoir: boolean;
+  /** A card that leaves a full Choir to make room goes to its owner's hand instead of the discard pile. */
+  replacedToHand: boolean;
+  /** On a Day you did not Offer, a full Choir loses its oldest card. */
+  witherIdle: boolean;
   /** Most cards a hand may hold at the end of a Day (0: the hand size). */
   handMax: number;
   /** At the end of a Day: refill the hand to its size, or draw this many cards. */
@@ -44,7 +50,7 @@ export interface CoreRules {
 
 export const DEFAULT_RULES: CoreRules = {
   tokensEach: 6, devotion: 0, harvest: 'offer', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'none', handMax: 0,
-  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false, spoilsOrder: 'turn', spoilsEach: 0,
+  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false, spoilsOrder: 'turn', spoilsEach: 0, offerFromChoir: false, replacedToHand: false, witherIdle: false,
 };
 
 const cache = new WeakMap<object, CoreRules>();

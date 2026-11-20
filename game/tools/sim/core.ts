@@ -33,12 +33,12 @@ const games = await pmap(G, (i) => {
     return [ids[b]];
   };
   // Choir stickiness: each player's Choir lean (more Light or more Dark cards) at every Evening.
-  const leans: number[][] = Array.from({ length: n }, () => []);
+  const leans: number[][] = Array.from({ length: n }, () => []), sides: number[][] = Array.from({ length: n }, () => []);
   let lastDay = 1;
   while (!g.over) {
     for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, strong.has(d.seat) ? strongPlay(d) : botAnswer(g.state, d));
     if (mode !== 'skill4') reader.update(g.state);
-    if (g.state.day !== lastDay || g.over) { lastDay = g.state.day; for (const p of g.state.players) { const c = choirColors(g.state, p.seat); leans[p.seat].push(Math.sign(c.light - c.dark)); } }
+    if (g.state.day !== lastDay || g.over) { lastDay = g.state.day; for (const p of g.state.players) { const c = choirColors(g.state, p.seat); leans[p.seat].push(Math.sign(c.light - c.dark)); const l = p.tokens.filter((t) => t === 'light').length; sides[p.seat].push(Math.sign(2 * l - p.tokens.length)); } }
   }
   const s: GameState = g.state, r = s.result!;
   const first = (((s.firstPlayer - DAYS) % n) + n) % n;
@@ -60,6 +60,8 @@ const games = await pmap(G, (i) => {
       acts, offers, gathers, exalts, tokOff,
       // How often the Choir's lean flipped from one color to the other; whether it ended full and one-colored.
       flips: leans[p.seat].filter((x) => x !== 0).reduce((t, x, k, a) => t + (k > 0 && x !== a[k - 1] ? 1 : 0), 0),
+      // How often the player's secret side (their token majority) changed during the game.
+      sideFlips: sides[p.seat].filter((x) => x !== 0).reduce((t, x, k, a) => t + (k > 0 && x !== a[k - 1] ? 1 : 0), 0),
       oneColor: cc.light + cc.dark >= 3 && (cc.light === 0 || cc.dark === 0) ? 1 : 0,
       spoils: s.stats.filter((e) => e.seat === p.seat && e.source === 'spoils').length,
     };
@@ -106,7 +108,7 @@ if (mode === 'skill4') {
     // Real decisions: the share of action choices whose two best options were within 1 Glory, and how evenly the three
     // actions are used (entropy in bits; 1.58 is all three equally).
     closeChoices: r2(mean(games.flatMap((g) => g.gaps).map((x) => (x < 1 ? 1 : 0)))),
-    choirFlipsPerPlayer: r2(mean(all.map((p) => p.flips))), oneColorChoirs: r2(mean(all.map((p) => p.oneColor))), spoilsPerPlayer: r2(mean(all.map((p) => p.spoils))),
+    choirFlipsPerPlayer: r2(mean(all.map((p) => p.flips))), sideFlipsPerPlayer: r2(mean(all.map((p) => p.sideFlips))), oneColorChoirs: r2(mean(all.map((p) => p.oneColor))), spoilsPerPlayer: r2(mean(all.map((p) => p.spoils))),
     actionEntropy: r2(entropy([all.reduce((t, p) => t + p.offers, 0), all.reduce((t, p) => t + p.gathers, 0), all.reduce((t, p) => t + p.exalts, 0)])),
   });
 }
