@@ -27,6 +27,9 @@ export interface CoreRules {
   spoils: 'none' | 'claim' | 'offerers';
   /** The spoils draft starts with the Day's first player ('turn') or its last ('reverse'). */
   spoilsOrder: 'turn' | 'reverse';
+  /** Spoils each eligible player may take in a Day (0: take turns until the Altar is empty). Cards left are discarded
+   *  as usual; tokens left go to whoever holds the fewest. */
+  spoilsEach: number;
   /** Most cards a hand may hold at the end of a Day (0: the hand size). */
   handMax: number;
   /** At the end of a Day: refill the hand to its size, or draw this many cards. */
@@ -41,7 +44,7 @@ export interface CoreRules {
 
 export const DEFAULT_RULES: CoreRules = {
   tokensEach: 6, devotion: 0, harvest: 'offer', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'none', handMax: 0,
-  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false, spoilsOrder: 'turn',
+  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false, spoilsOrder: 'turn', spoilsEach: 0,
 };
 
 const cache = new WeakMap<object, CoreRules>();

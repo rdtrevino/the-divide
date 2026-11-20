@@ -703,7 +703,8 @@ function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
   });
   if (!eligible.length) return;
   log(s, 'spoils', `Spoils to ${eligible.map((x) => pname(s, x)).join(', ')}.`);
-  for (let k = 0; s.altar.length + s.altarTokens.length > 0 && k < 200; k++) {
+  const each = rulesOf(s).spoilsEach, picks = each ? each * eligible.length : 200;
+  for (let k = 0; s.altar.length + s.altarTokens.length > 0 && k < picks; k++) {
     const seat = eligible[k % eligible.length];
     const opts: Option[] = [...s.altar.map((a, i) => ({ id: 'altar:' + i, label: cardName(a.id), card: a.id })), ...s.altarTokens.map((t, i) => ({ id: 'token:' + i, label: `A ${tokenName(t.side)} token` }))];
     const pick = (yield* chooseOne(s, seat, 'spoils.pick', 'Spoils: take a card (into your hand) or a token from the Altar.', opts))!;

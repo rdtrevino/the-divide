@@ -25,4 +25,6 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   offRev: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5 },
   offTurnRev: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true },
   offTurnRevDraw1: { ...none, spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true, upkeepDraw: 1 },
+  // Round 4: each Offerer takes one spoil (a draft until empty gave the first pickers extra).
+  off1: { ...none, spoils: 'offerers', spoilsEach: 1, handMax: 5 }, off1Rev: { ...none, spoils: 'offerers', spoilsEach: 1, spoilsOrder: 'reverse', handMax: 5 },
 };
