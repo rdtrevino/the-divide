@@ -49,4 +49,9 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   rMajority: { ...R, endScore: 'majority' }, rWinner: { ...R, endScore: 'winner' }, rEndNet: { ...R, endScore: 'net' },
   // Better versions to try: a Choir Offer counts 2 (worth its cost), or Offers from the hand or the Choir.
   rWeight2: { ...R, choirOfferWeight: 2 }, rBoth: { ...R, offerFrom: 'both' },
+  // Round 7: the end score by majority looked best in round 1 (seats even, sides moving); combined with the others.
+  sMajority: { ...S, endScore: 'majority' }, rMajNoFT: { ...R, fruitsToken: false, endScore: 'majority' },
+  rMajGH: { ...R, endScore: 'majority', gatherTo: 'hand' }, rMajW2: { ...R, endScore: 'majority', choirOfferWeight: 2 },
+  rMajBoth: { ...R, endScore: 'majority', offerFrom: 'both' }, rMajUp: { ...R, endScore: 'majority', fruits: 'up' },
+  rMajPay1: { ...R, endScore: 'majority', choirPay: 1 }, rWinGH: { ...R, endScore: 'winner', gatherTo: 'hand' },
 };
