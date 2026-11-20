@@ -626,7 +626,10 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
 
   // Allegiance tokens left on the Altar are shuffled and handed out, one at a time, to whoever holds the fewest
   // (ties in turn order from the first player). Only the receiver sees what they got.
-  for (const t of shuffle(s, s.altarTokens.splice(0))) {
+  // Variant (carryover): on a tied Day, the Altar stays for tomorrow, tokens included (their colors are now known).
+  const carry = rulesOf(s).carryover && tide.dir === 'neutral' && !finalDay;
+  if (carry) for (const t of s.altarTokens) t.shown = true;
+  for (const t of carry ? [] : shuffle(s, s.altarTokens.splice(0))) {
     const fewest = Math.min(...s.players.map((p) => p.tokens.length));
     const to = order.find((x) => s.players[x].tokens.length === fewest)!;
     s.players[to].tokens.push(t.side);
@@ -644,7 +647,10 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
 
   // Refresh the Altar: Eternity keeps its cards, the rest are discarded.
   const relics = yield* keepRelics(s, order);
-  for (const a of s.altar) if (!relics.has(a)) s.discard.push(a.id);
+  if (carry) {
+    for (const a of s.altar) if (!relics.has(a)) (s.relics ??= []).push({ id: a.id, by: null });
+    log(s, 'carryover', 'The Altar is tied: its cards and tokens stay for the next Day.');
+  } else for (const a of s.altar) if (!relics.has(a)) s.discard.push(a.id);
   s.altar = [];
 
   // Upkeep.

@@ -33,11 +33,13 @@ export interface CoreRules {
   gatherTo: 'choir' | 'hand';
   /** Turnover: after the Reaping, a full Choir loses its oldest card. */
   decay: boolean;
+  /** Carryover: on a tied Day, the Altar is not cleared; its cards and tokens stay for the next Day. */
+  carryover: boolean;
 }
 
 export const DEFAULT_RULES: CoreRules = {
   tokensEach: 6, devotion: 0, harvest: 'offer', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'none', handMax: 0,
-  upkeepDraw: 'refill', gatherTo: 'choir', decay: false,
+  upkeepDraw: 'refill', gatherTo: 'choir', decay: false, carryover: false,
 };
 
 const cache = new WeakMap<object, CoreRules>();
