@@ -4,12 +4,16 @@ import { botAnswer } from '../src/bots';
 import { Game } from '../src/game';
 import { choirColors } from '../src/core';
 import { DEFAULT_RULES, type CoreRules } from '../src/rules';
+import { tokenScore } from '../src/engine';
 
 const VARIANTS: Partial<CoreRules>[] = [
   { devotion: 1 }, { tokensEach: 8 }, { devotion: 1, tokensEach: 8 }, { harvest: 'always' }, { harvest: 'half' },
   { harvest: 'always', miser: 3 }, { harvest: 'always', generous: 3 }, { handSize: 2 }, { handSize: 4 }, { choirLimit: 3 }, { choirLimit: 6 },
   { choirPay: 1 }, { harvest: 'always', spoils: 'claim', handMax: 5 }, { spoils: 'offerers', handMax: 5, choirPay: 0 },
-  { gatherTo: 'hand', handMax: 5, upkeepDraw: 1 }, { decay: true }, { harvest: 'always', carryover: true }, { spoils: 'claim', handMax: 5, carryover: true }, { harvest: 'always', spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true, upkeepDraw: 1 }, { harvest: 'always', spoils: 'offerers', spoilsEach: 1, handMax: 5 }, { harvest: 'always', spoils: 'offerers', handMax: 5, offerFromChoir: true, replacedToHand: true, witherIdle: true }, { spoils: 'claim', gatherTo: 'hand', upkeepDraw: 1, handMax: 5, decay: true },
+  { gatherTo: 'hand', handMax: 5, upkeepDraw: 1 }, { decay: true }, { harvest: 'always', carryover: true }, { spoils: 'claim', handMax: 5, carryover: true }, { harvest: 'always', spoils: 'offerers', spoilsOrder: 'reverse', handMax: 5, decay: true, upkeepDraw: 1 }, { harvest: 'always', spoils: 'offerers', spoilsEach: 1, handMax: 5 }, { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'both', replacedToHand: true, witherIdle: true }, { spoils: 'claim', gatherTo: 'hand', upkeepDraw: 1, handMax: 5, decay: true },
+  // Robert's flow (November 20): Offers only from the Choir (face up), facedown First Fruits that may be a token, and the scoring variants.
+  { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruits: 'down', fruitsToken: true }, { offerFrom: 'choir', choirOfferWeight: 2, gatherTo: 'hand' },
+  { harvest: 'always', spoils: 'offerers', spoilsOrder: 'glory', handMax: 5, reap: 'net' }, { reap: 'crowd', endScore: 'majority' }, { endScore: 'winner' }, { endScore: 'net', fruitsToken: true },
 ];
 
 describe('core rule switches', () => {
@@ -73,5 +77,25 @@ describe('core rule switches', () => {
     }
     expect(spoils).toBeGreaterThan(10);
   });
-});
 
+  it("Robert's flow: Offers come only from the Choir; First Fruits go facedown", () => {
+    let n = 0;
+    for (const seed of [31, 32, 33, 34, 35, 36, 37, 38]) {
+      const g = new Game({ seed, mode: 'open', rules: { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruits: 'down', fruitsToken: true }, players: [0, 1, 2, 3].map((j) => ({ name: 'P' + j, isBot: true })) });
+      while (!g.over) for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, botAnswer(g.state, d));
+      expect(g.state.log.filter((e) => e.text.startsWith('Every player placed First Fruits facedown')).length).toBe(7);
+      const offers = g.state.stats.filter((e) => e.type === 'action' && e.source === 'offer' && e.data?.cards);
+      n += offers.length;
+      for (const e of offers) expect(e.data?.choir).toBe(true);
+    }
+    expect(n).toBeGreaterThan(0);
+  });
+
+  it('end-score variants', () => {
+    expect(tokenScore('each', 4, 2, 3, 2)).toBe(16);
+    expect(tokenScore('majority', 4, 2, 3, 2)).toBe(12);
+    expect(tokenScore('majority', 3, 3, 1, 4)).toBe(12);
+    expect(tokenScore('winner', 4, 2, 2, 3)).toBe(6);
+    expect(tokenScore('net', 2, 4, 4, 2)).toBe(-4);
+  });
+});

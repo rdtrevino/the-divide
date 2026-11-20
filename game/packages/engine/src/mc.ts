@@ -4,7 +4,7 @@
 // best placed against the strongest rival. Reads come from how it reshuffles: a player's secret tokens are dealt
 // leaning toward their Choir's colors, as a careful person would guess. Bluffs come from the search itself: it learns
 // what the other players read into Choirs and facedown Offers, and plays against that.
-import { botAnswer, choirCardValue, tokenWorth } from './bots';
+import { botAnswer, choirCardValue, tokensValue } from './bots';
 import { activeCards, choirColors } from './core';
 import { Game } from './game';
 import { rulesOf } from './rules';
@@ -47,7 +47,7 @@ function determinize(s: GameState, seat: Seat) {
   const holders = s.players.filter((p) => p.seat !== seat);
   const theirAltar = s.altarTokens.filter((t) => t.by !== seat);
   const sides: Side[] = [...holders.flatMap((p) => p.tokens), ...theirAltar.map((t) => t.side)];
-  const lean = (x: Seat) => { const c = choirColors(s, x); return Math.max(0.25, Math.min(0.75, 0.5 + 0.08 * (c.light - c.dark))); };
+  const lean = (x: Seat, anon?: boolean) => { if (anon) return 0.5; const c = choirColors(s, x); return Math.max(0.25, Math.min(0.75, 0.5 + 0.08 * (c.light - c.dark))); };
   const deal = (want: number) => {
     const L = sides.filter((x) => x === 'light').length;
     if (!L) return sides.splice(sides.indexOf('dark'), 1)[0];
@@ -56,7 +56,7 @@ function determinize(s: GameState, seat: Seat) {
     return sides.splice(sides.indexOf(rand() < pL ? 'light' : 'dark'), 1)[0];
   };
   for (const p of holders) for (let i = 0; i < p.tokens.length; i++) p.tokens[i] = deal(lean(p.seat));
-  for (const t of theirAltar) t.side = deal(lean(t.by));
+  for (const t of theirAltar) t.side = deal(lean(t.by, t.anon));
 }
 
 /** What a position is worth to a player: Glory, plus what their tokens, Choir and stores should still bring. */
@@ -64,7 +64,7 @@ function value(s: GameState, q: Seat): number {
   const p = s.players[q];
   if (s.phase === 'ended') return p.glory;
   let v = p.glory;
-  for (const t of p.tokens) v += tokenWorth(s, t);
+  v += tokensValue(s, p.tokens);
   for (const c of activeCards(p)) v += choirCardValue(s, c.id) + (c.store ?? 0);
   const R = rulesOf(s);
   if (R.spoils !== 'none' || R.gatherTo === 'hand' || R.upkeepDraw !== 'refill') {

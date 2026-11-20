@@ -45,10 +45,11 @@ const games = await pmap(G, (i) => {
   const won = r.daysWon;
   const players = s.players.map((p) => {
     const st = r.standings.find((x) => x.seat === p.seat)!;
-    let acts = 0, offers = 0, gathers = 0, exalts = 0, tokOff = 0, reap = 0;
+    let acts = 0, offers = 0, gathers = 0, exalts = 0, tokOff = 0, choirOff = 0, fruitTok = 0, reap = 0;
     for (const e of s.stats) {
       if (e.seat !== p.seat) continue;
-      if (e.type === 'action' && e.source !== 'fruits' && e.source !== 'offer.card' && e.source !== 'spoils') { acts++; if (e.source === 'offer') { offers++; if (e.data?.token) tokOff++; } if (e.source === 'gather') gathers++; if (e.source === 'exalt') exalts++; }
+      if (e.type === 'action' && e.source !== 'fruits' && e.source !== 'offer.card' && e.source !== 'spoils') { acts++; if (e.source === 'offer') { offers++; if (e.data?.token) tokOff++; if (e.data?.choir) choirOff++; } if (e.source === 'gather') gathers++; if (e.source === 'exalt') exalts++; }
+      if (e.type === 'action' && e.source === 'fruits' && e.data?.token) fruitTok++;
       if (e.type === 'reaping') reap += e.amount ?? 0;
     }
     const tl = st.tokens.light - st.tokens.dark, cc = choirColors(s, p.seat);
@@ -57,7 +58,7 @@ const games = await pmap(G, (i) => {
       // With the world: the side the player was dealt more of won more Days.
       world: dealt[p.seat] === 0 || won.light === won.dark ? 0 : Math.sign(dealt[p.seat]) === Math.sign(won.light - won.dark) ? 1 : -1,
       tokenLean: Math.sign(tl), choirLean: Math.sign(cc.light - cc.dark), glory: p.glory, fromTokens: st.fromTokens, reap, before: st.before,
-      acts, offers, gathers, exalts, tokOff,
+      acts, offers, gathers, exalts, tokOff, choirOff, fruitTok,
       // How often the Choir's lean flipped from one color to the other; whether it ended full and one-colored.
       flips: leans[p.seat].filter((x) => x !== 0).reduce((t, x, k, a) => t + (k > 0 && x !== a[k - 1] ? 1 : 0), 0),
       // How often the player's secret side (their token majority) changed during the game.
@@ -100,7 +101,7 @@ if (mode === 'skill4') {
     seats: Object.values(seats), seatRange: [Math.min(...Object.values(seats)), Math.max(...Object.values(seats))],
     mixes, withWorld: world['1'], againstWorld: world['-1'],
     offers: r2(all.reduce((t, p) => t + p.offers, 0) / acts), gathers: r2(all.reduce((t, p) => t + p.gathers, 0) / acts), exalts: r2(all.reduce((t, p) => t + p.exalts, 0) / acts),
-    tokenOffersPerPlayer: r2(mean(all.map((p) => p.tokOff))),
+    tokenOffersPerPlayer: r2(mean(all.map((p) => p.tokOff))), choirOffersPerPlayer: r2(mean(all.map((p) => p.choirOff))), fruitTokensPerPlayer: r2(mean(all.map((p) => p.fruitTok))),
     closeDays: r2(mean(games.map((g) => g.close / g.days))), neutralDays: r2(mean(games.map((g) => g.neutral / g.days))),
     revealFlips: r2(mean(games.map((g) => g.flip))),
     winnerGloryFromTokens: r2(mean(winners.map((p) => p.fromTokens / Math.max(1, p.glory)))), winnerGloryFromChoir: r2(mean(winners.map((p) => p.reap / Math.max(1, p.glory)))),

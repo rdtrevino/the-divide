@@ -1,8 +1,8 @@
 // Computer players. Heuristic, not perfect: they weigh what a Light or a Dark Day is worth to them (their Choir
 // and their secret tokens), read the Altar, and answer every kind of decision sensibly.
 import { choirLimit, rulesOf } from './rules';
-import { baseValue, choirColors, dirOf, hasActive } from './core';
-import { CHOIR_PAY, DAYS, TOKEN_WEIGHT, daysWon } from './engine';
+import { activeCards, baseValue, choirColors, dirOf, hasActive } from './core';
+import { DAYS, TOKEN_WEIGHT, choirPayCrowd, daysWon, tokenScore } from './engine';
 import { E, H, HOST } from './data';
 import type { Answer, Decision, Dir, GameState, Option, Seat } from './types';
 
@@ -32,16 +32,56 @@ function altarNet(s: GameState, viewer?: Seat) {
     if (knows(a, viewer)) n += signed(s, a.id);
     else if (a.offeredBy !== null && a.offeredBy >= 0) n += 0.6 * Math.sign(alignment(s, a.offeredBy));
   }
-  for (const t of s.altarTokens) n += t.by === viewer ? (t.side === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT) : 0.8 * Math.sign(alignment(s, t.by));
+  for (const t of s.altarTokens) n += tokenGuess(s, t, viewer);
   return n;
 }
+/** The viewer's read of a token on the Altar: its own exactly; another's leans like its Offerer's Choir (a First Fruits token: unknown). */
+const tokenGuess = (s: GameState, t: GameState['altarTokens'][number], viewer?: Seat) =>
+  t.by === viewer ? (t.side === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT) : t.anon ? 0 : 0.8 * Math.sign(alignment(s, t.by));
 
 /** What a Light Day and a Dark Day are worth to a player today: their Choir cards of that color, plus their tokens. */
 interface Stake { light: number; dark: number }
+const addStake = (a: Stake, b: Stake): Stake => ({ light: a.light + b.light, dark: a.dark + b.dark });
+/** What a Choir of these colors scores tonight if Light wins, and if Dark wins (the game's Reaping rule). */
+function choirStake(s: GameState, seat: Seat, c: Stake): Stake {
+  const R = rulesOf(s), pay = R.choirPay;
+  if (R.reap === 'card') return { light: pay * c.light, dark: pay * c.dark };
+  if (R.reap === 'net') return { light: pay * Math.max(0, c.light - c.dark), dark: pay * Math.max(0, c.dark - c.light) };
+  // The crowd Reaping: only a Choir leaning the winning color scores, more if it is the only one.
+  const lean = (k: 'light' | 'dark') => 1 + s.players.filter((o) => o.seat !== seat && (k === 'light' ? alignment(s, o.seat) > 0 : alignment(s, o.seat) < 0)).length;
+  return { light: c.light > c.dark ? choirPayCrowd(pay, lean('light')) * c.light : 0, dark: c.dark > c.light ? choirPayCrowd(pay, lean('dark')) * c.dark : 0 };
+}
+const count = (t: readonly string[], k: string) => t.filter((x) => x === k).length;
+/** What these tokens gain at the end from a Light Day today, and from a Dark Day (V45: one each). */
+function tokenStake(s: GameState, held: readonly string[]): Stake {
+  const mode = rulesOf(s).endScore, tl = count(held, 'light'), td = count(held, 'dark');
+  if (mode === 'each') return { light: tl, dark: td };
+  const w = daysWon(s), left = daysAfter(s);
+  return { light: expectTokens(mode, tl, td, w.light + 1, w.dark, left), dark: expectTokens(mode, tl, td, w.light, w.dark + 1, left) };
+}
 function stakeOf(s: GameState, seat: Seat): Stake {
-  const c = choirColors(s, seat);
-  const t = s.players[seat].tokens;
-  return { light: CHOIR_PAY * c.light + t.filter((x) => x === 'light').length, dark: CHOIR_PAY * c.dark + t.filter((x) => x === 'dark').length };
+  return addStake(choirStake(s, seat, choirColors(s, seat)), tokenStake(s, s.players[seat].tokens));
+}
+/** A Day goes to each side this often, and to nobody the rest (for the end-score variants' expectations). */
+const P_SIDE = 0.4;
+const memo = new Map<string, number>();
+/** The expected end score of a hand of tokens with `left` Days still to play (the `endScore` variants). */
+export function expectTokens(mode: string, tl: number, td: number, wl: number, wd: number, left: number): number {
+  if (left <= 0) return tokenScore(mode, tl, td, wl, wd);
+  const key = `${mode} ${tl} ${td} ${wl} ${wd} ${left}`;
+  let v = memo.get(key);
+  if (v === undefined) {
+    v = P_SIDE * expectTokens(mode, tl, td, wl + 1, wd, left - 1) + P_SIDE * expectTokens(mode, tl, td, wl, wd + 1, left - 1) + (1 - 2 * P_SIDE) * expectTokens(mode, tl, td, wl, wd, left - 1);
+    memo.set(key, v);
+  }
+  return v;
+}
+/** What a hand of tokens should still bring by the end. */
+export function tokensValue(s: GameState, held: readonly string[]): number {
+  const mode = rulesOf(s).endScore;
+  if (mode === 'each') return held.reduce((t, k) => t + tokenWorth(s, k as 'light' | 'dark'), 0);
+  const w = daysWon(s);
+  return expectTokens(mode, count(held, 'light'), count(held, 'dark'), w.light, w.dark, daysAfter(s));
 }
 /** Expected value of today's Day from an estimated Altar; `w` < 1 when players still to act can swing it. */
 function dayValue(st: Stake, est: number, w = 0.7) {
@@ -54,10 +94,17 @@ export const daysAfter = (s: GameState) => Math.max(0, DAYS - s.day);
 export const choirCardValue = (s: GameState, id: string | undefined) => {
   if (!id) return 0;
   const v = val(s, id);
-  return CHOIR_PAY * 0.5 * daysAfter(s) * ((v.light > 0 ? 1 : 0) + (v.dark > 0 ? 1 : 0));
+  return rulesOf(s).choirPay * 0.5 * daysAfter(s) * ((v.light > 0 ? 1 : 0) + (v.dark > 0 ? 1 : 0));
 };
 /** What holding a token of a side is worth by the end: the Days it has won, and about half of those to come. */
-export const tokenWorth = (s: GameState, side: 'light' | 'dark') => daysWon(s)[side] + 0.5 * daysAfter(s);
+/** For the end-score variants, the token's worth to `seat` given what it holds: one more (`more`), or one fewer. */
+export const tokenWorth = (s: GameState, side: 'light' | 'dark', seat?: Seat, more = true): number => {
+  if (rulesOf(s).endScore === 'each') return daysWon(s)[side] + 0.5 * daysAfter(s);
+  const held = seat === undefined ? [] : s.players[seat].tokens;
+  if (more) return tokensValue(s, [...held, side]) - tokensValue(s, held);
+  const less = [...held]; less.splice(less.indexOf(side), 1);
+  return tokensValue(s, held) - tokensValue(s, less);
+};
 
 /** Players acting after `seat` this Day can still swing the Tide; discount accordingly. */
 function laterPlayers(s: GameState, seat: Seat) {
@@ -165,6 +212,17 @@ export function botAnswer(s: GameState, d: Decision): Answer {
   const altar = altarNet(s, seat);
   const later = laterPlayers(s, seat);
   const w = later === 0 ? 1 : later === 1 ? 0.75 : 0.55;
+  /** Offering (or giving as First Fruits) one of my tokens: its push today, against its worth at the end. */
+  const offerToken = (k: 'light' | 'dark') => {
+    const less = rulesOf(s).endScore === 'each' ? { ...st, [k]: st[k] - 1 } : (() => { const h = [...s.players[seat].tokens]; h.splice(h.indexOf(k), 1); return addStake(choirStake(s, seat, choirColors(s, seat)), tokenStake(s, h)); })();
+    return dayValue(less, altar + (k === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT), w) - dayValue(st, altar, w) - tokenWorth(s, k, seat, false) + 0.5;
+  };
+  /** Offering a card from my Choir (a variant): its push today, against what it would have scored tonight and later. */
+  const offerFromChoir = (id: string) => {
+    const v = val(s, id), cc = choirColors(s, seat);
+    const less = addStake(choirStake(s, seat, { light: cc.light - Math.sign(v.light), dark: cc.dark - Math.sign(v.dark) }), tokenStake(s, s.players[seat].tokens));
+    return dayValue(less, altar + rulesOf(s).choirOfferWeight * signed(s, id), w) - dayValue(st, altar, w) - choirCardValue(s, id) - engineVal(s, seat, id);
+  };
 
   // Multi-select decisions.
   if (d.max > 1 || d.min !== 1) {
@@ -199,21 +257,21 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const worst = worstChoirCard(s, seat, want);
       const replaced = room ? 0 : choirCardValue(s, worst?.id) + engineVal(s, seat, worst?.id);
       /** My stake if `id` joins my Choir (and the worst card leaves a full one). */
+      const cc = choirColors(s, seat);
+      const toks = tokenStake(s, p.tokens);
       const withCard = (id: string | undefined): Stake => {
         const v = val(s, id), o = room || !worst ? { light: 0, dark: 0 } : val(s, worst.id);
-        return { light: st.light + CHOIR_PAY * (Math.sign(v.light) - Math.sign(o.light)), dark: st.dark + CHOIR_PAY * (Math.sign(v.dark) - Math.sign(o.dark)) };
+        return addStake(choirStake(s, seat, { light: cc.light + Math.sign(v.light) - Math.sign(o.light), dark: cc.dark + Math.sign(v.dark) - Math.sign(o.dark) }), toks);
       };
       // No offering, no harvest: until you have Offered today, an Offer also lets your Choir score tonight.
-      const cc = choirColors(s, seat);
       const unlock = rulesOf(s).harvest === 'offer' ? 1 : rulesOf(s).harvest === 'half' ? 0.5 : 0;
-      const harvest = p.offeredToday ? 0 : unlock * dayValue({ light: CHOIR_PAY * cc.light, dark: CHOIR_PAY * cc.dark }, altar, w);
+      const harvest = p.offeredToday ? 0 : unlock * dayValue(choirStake(s, seat, cc), altar, w);
       if (has('offer')) {
-        const cards = p.hand.map((c) => dayValue(st, altar + signed(s, c), w) - now - 0.15 * choirCardValue(s, c));
-        const tokens = (['light', 'dark'] as const).filter((k) => p.tokens.includes(k)).map((k) => {
-          const less = { ...st, [k]: st[k] - 1 };
-          return dayValue(less, altar + (k === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT), w) - now - tokenWorth(s, k) + 0.5;
-        });
-        scores.offer = Math.max(...cards, ...tokens) + harvest + 0.3;
+        const from = rulesOf(s).offerFrom;
+        const cards = from === 'choir' ? [] : p.hand.map((c) => dayValue(st, altar + signed(s, c), w) - now - 0.15 * choirCardValue(s, c));
+        const choir = from === 'hand' ? [] : activeCards(p).map((c) => offerFromChoir(c.id));
+        const tokens = (['light', 'dark'] as const).filter((k) => p.tokens.includes(k)).map((k) => offerToken(k));
+        scores.offer = Math.max(...cards, ...choir, ...tokens) + harvest + 0.3;
       }
       if (has('gather')) {
         let best = -Infinity;
@@ -224,8 +282,8 @@ export function botAnswer(s: GameState, d: Decision): Answer {
         }
         // A token from the Altar: worth about the average of the two sides, and its push leaves the Altar.
         for (const t of s.altarTokens) {
-          const guess = t.by === seat ? (t.side === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT) : 0.8 * Math.sign(alignment(s, t.by));
-          const worth = t.by === seat ? tokenWorth(s, t.side) : 0.5 * (tokenWorth(s, 'light') + tokenWorth(s, 'dark'));
+          const guess = tokenGuess(s, t, seat);
+          const worth = t.by === seat ? tokenWorth(s, t.side, seat) : 0.5 * (tokenWorth(s, 'light', seat) + tokenWorth(s, 'dark', seat));
           best = Math.max(best, dayValue(st, altar - guess, w) - now + worth);
         }
         if (p.choir.some((c) => c.id === H.forger && !c.facedown)) for (const c of new Set(s.discard)) best = Math.max(best, choirCardValue(s, c) + engineVal(s, seat, c) - replaced);
@@ -285,10 +343,8 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     case 'exalt.card': {
       const now = dayValue(st, altar, w);
       const o = pickBest(d.options, (o) => {
-        if (o.id.startsWith('token:')) {
-          const k = o.id.slice(6) as 'light' | 'dark';
-          return dayValue({ ...st, [k]: st[k] - 1 }, altar + (k === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT), w) - now - tokenWorth(s, k) + 0.5;
-        }
+        if (o.id.startsWith('token:')) return offerToken(o.id.slice(6) as 'light' | 'dark');
+        if (o.id.startsWith('choir:')) return offerFromChoir(o.id.slice(6));
         const v = signed(s, o.card);
         if (d.tag === 'offer.card' || d.tag === 'firstFruits') return dayValue(st, altar + v, w) - now - 0.15 * choirCardValue(s, o.card) + (dirOf(v) === wantDir ? 0.2 : 0);
         return (want >= 0 ? v : -v) + engineVal(s, seat, o.card);
@@ -303,21 +359,21 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const o = pickBest(d.options, (o) => {
         if (o.id.startsWith('token:')) {
           const t = s.altarTokens[Number(o.id.slice(6))];
-          const guess = t.by === seat ? (t.side === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT) : 0.8 * Math.sign(alignment(s, t.by));
-          return dayValue(st, altar - guess, w) - now + (t.by === seat ? tokenWorth(s, t.side) : 0.5 * (tokenWorth(s, 'light') + tokenWorth(s, 'dark')));
+          const guess = tokenGuess(s, t, seat);
+          return dayValue(st, altar - guess, w) - now + (t.by === seat ? tokenWorth(s, t.side, seat) : 0.5 * (tokenWorth(s, 'light', seat) + tokenWorth(s, 'dark', seat)));
         }
         const fromAltar = o.id.startsWith('altar');
         const ac = fromAltar ? s.altar[Number(o.id.slice(6))] : undefined;
         // A facedown card we have not seen: estimate it from who Offered it.
         const v = o.card !== undefined ? signed(s, o.card) : ac && ac.offeredBy !== null && ac.offeredBy >= 0 ? 0.6 * Math.sign(alignment(s, ac.offeredBy)) : 0;
-        return dayValue(st, fromAltar ? altar - v : altar, w) - now + (o.card ? choirCardValue(s, o.card) : CHOIR_PAY * 0.4 * daysAfter(s)) + engineVal(s, seat, o.card) - (room ? 0 : choirCardValue(s, worst?.id) + engineVal(s, seat, worst?.id));
+        return dayValue(st, fromAltar ? altar - v : altar, w) - now + (o.card ? choirCardValue(s, o.card) : rulesOf(s).choirPay * 0.4 * daysAfter(s)) + engineVal(s, seat, o.card) - (room ? 0 : choirCardValue(s, worst?.id) + engineVal(s, seat, worst?.id));
       });
       return one(o.id);
     }
     case 'spoils.pick': {
       // Spoils: a token of the side I hold more of, else the card most worth having (its ability, its Choir value, its push).
       const o = pickBest(d.options, (o) => {
-        if (o.id.startsWith('token:')) { const t = s.altarTokens[Number(o.id.slice(6))]; return tokenWorth(s, t.side) + (Math.sign(net) === (t.side === 'light' ? 1 : -1) ? 1 : 0); }
+        if (o.id.startsWith('token:')) { const t = s.altarTokens[Number(o.id.slice(6))]; return tokenWorth(s, t.side, seat) + (Math.sign(net) === (t.side === 'light' ? 1 : -1) ? 1 : 0); }
         return engineVal(s, seat, o.card) + choirCardValue(s, o.card) + 0.5 * (want >= 0 ? signed(s, o.card) : -signed(s, o.card));
       });
       return one(o.id);

@@ -3,7 +3,7 @@
 // Usage: [TABLE=heuristic|strong] npx tsx reader.ts <games> [persona for one seat: a LEVELS or STYLES name; the rest Expert]
 import { Game, LEVELS, STYLES, botAnswer, personaAnswer, strongAnswer } from '@divide/engine';
 import { pmap } from '../par';
-import { ReaderLog, fitReader } from './readerlib';
+import { READER_FEATURES, ReaderLog, fitReader } from './readerlib';
 const G = Number(process.argv[2] ?? 1000), who = process.argv[3], TABLE = process.env.TABLE;
 const tested = who ? { ...LEVELS, ...STYLES }[who] : undefined;
 
@@ -19,7 +19,7 @@ const games = await pmap(G, (i) => {
   return { rows: logs.rows, testedSeat: tested ? i % n : -1 };
 });
 const train = games.filter((_, i) => i % 2 === 0).flatMap((g) => g.rows), testGames = games.filter((_, i) => i % 2 === 1);
-const test = testGames.flatMap((g) => g.rows), SEAT = 8; // readerlib rows: 7 facts, the side, the seat
+const test = testGames.flatMap((g) => g.rows), SEAT = READER_FEATURES.length + 1; // readerlib rows: the facts, the side, the seat
 const fit = fitReader(train, test);
 const out: Record<string, unknown> = { table: TABLE ?? 'expert', games: G, rows: test.length, readerAccuracy: +fit.accuracy.toFixed(3), guessing: +fit.guessing.toFixed(3), weights: fit.weights };
 if (tested) Object.assign(out, {

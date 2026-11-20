@@ -1,21 +1,23 @@
 // The reader shared by reader.ts and core.ts: what the table can see of each player, and a logistic model that
 // guesses their side from it (vision principle 2). Public facts only: their Choir's Light and Dark cards, the Light and
-// Dark cards they have put in it all game, tokens they have Offered and Gathered, and the Day.
+// Dark cards they have put in it all game, tokens they have Offered and Gathered, the Light and Dark cards everyone saw them
+// Offer (a variant: Offers from the Choir go face up), and the Day (kept last: exposure.ts reads it there).
 import { HOST, type GameState } from '@divide/engine';
 
-export const READER_FEATURES = ['choir Light', 'choir Dark', 'put in Light', 'put in Dark', 'tokens Offered', 'tokens Gathered', 'Day'];
+export const READER_FEATURES = ['choir Light', 'choir Dark', 'put in Light', 'put in Dark', 'tokens Offered', 'tokens Gathered', 'Offered Light, seen', 'Offered Dark, seen', 'Day'];
 const color = (id?: string) => (id && HOST[id]?.alignment === 'dark' ? -1 : id && HOST[id] ? 1 : 0);
 
 /** Follows a game and records a row per player (not evenly split) at every Evening: facts, 1 if Light-heavy, seat. */
 export class ReaderLog {
   rows: number[][] = [];
-  private put: number[][]; private seen = 0; private day = 1;
-  constructor(n: number) { this.put = Array.from({ length: n }, () => [0, 0]); }
+  private put: number[][]; private shown: number[][]; private seen = 0; private day = 1;
+  constructor(n: number) { this.put = Array.from({ length: n }, () => [0, 0]); this.shown = Array.from({ length: n }, () => [0, 0]); }
   /** Call after every answer. */
   update(s: GameState) {
     for (; this.seen < s.stats.length; this.seen++) {
       const e = s.stats[this.seen];
       if (e.type === 'action' && (e.source === 'exalt' || e.source === 'gather') && e.card) { const c = color(e.card); if (c) this.put[e.seat!][c > 0 ? 0 : 1]++; }
+      if (e.type === 'action' && e.source === 'offer' && e.data?.choir) { const c = color((e.data.cards as string[])[0]); if (c) this.shown[e.seat!][c > 0 ? 0 : 1]++; }
     }
     if (s.day === this.day && s.phase !== 'ended') return;
     this.day = s.day;
@@ -25,7 +27,7 @@ export class ReaderLog {
       let off = 0, got = 0;
       for (const e of s.stats) if (e.seat === p.seat && e.type === 'action') { if (e.source === 'offer' && e.data?.token) off++; if (e.source === 'gather' && e.data?.token) got++; }
       const c = p.choir.filter((x) => !x.facedown);
-      this.rows.push([c.filter((x) => color(x.id) > 0).length, c.filter((x) => color(x.id) < 0).length, this.put[p.seat][0], this.put[p.seat][1], off, got, s.day, l > d ? 1 : 0, p.seat]);
+      this.rows.push([c.filter((x) => color(x.id) > 0).length, c.filter((x) => color(x.id) < 0).length, this.put[p.seat][0], this.put[p.seat][1], off, got, this.shown[p.seat][0], this.shown[p.seat][1], s.day, l > d ? 1 : 0, p.seat]);
     }
   }
 }

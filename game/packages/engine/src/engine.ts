@@ -115,18 +115,34 @@ export function* runGame(s: GameState, from?: number, onDayStart?: (s: GameState
  * Not the Offer action, so no Offer abilities trigger.
  */
 function* firstFruits(s: GameState): Gen<void> {
-  const ps = s.players.filter((p) => p.hand.length);
-  const dark = s.currentEvent === E.pandemonium;
-  const picks = yield* askAll(s, ps.map((p) => ({ seat: p.seat, tag: 'firstFruits', prompt: dark ? 'First Fruits (Pandemonium): place 1 card from your hand facedown on the Altar.' : 'First Fruits: choose 1 card from your hand. They are shuffled together and placed face up on the Altar, so no one knows whose is whose.', options: p.hand.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: 1, max: 1 })));
-  const fruits = ps.map((p, k) => {
-    const [c] = p.hand.splice(Number(picks[k][0]), 1);
+  const R = rulesOf(s);
+  // Variant: a token may be given instead of a card (facedown, anonymous).
+  const tokenOpts = (p: GameState['players'][number]) => (R.fruitsToken ? (['light', 'dark'] as const).filter((k) => p.tokens.includes(k)).map((k) => ({ id: 'token:' + k, label: `a ${tokenName(k)} token (counts ${TOKEN_WEIGHT})` })) : []);
+  const ps = s.players.filter((p) => p.hand.length || tokenOpts(p).length);
+  // Variant: First Fruits stay facedown until the Evening reveal.
+  const dark = s.currentEvent === E.pandemonium || R.fruits === 'down';
+  const picks = yield* askAll(s, ps.map((p) => ({ seat: p.seat, tag: 'firstFruits', prompt: dark ? 'First Fruits: place 1 card from your hand facedown on the Altar.' : 'First Fruits: choose 1 card from your hand. They are shuffled together and placed face up on the Altar, so no one knows whose is whose.', options: [...p.hand.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), ...tokenOpts(p)], min: 1, max: 1 })));
+  const fruits: { c: string; seat: Seat }[] = [];
+  const gave: Seat[] = [];
+  ps.forEach((p, k) => {
+    const id = picks[k][0];
+    if (id.startsWith('token:')) {
+      const side = id.slice(6) as Side;
+      p.tokens.splice(p.tokens.indexOf(side), 1);
+      s.altarTokens.push({ side, by: p.seat, anon: true });
+      stat(s, { type: 'action', seat: p.seat, source: 'fruits', data: { token: side } });
+      return;
+    }
+    const [c] = p.hand.splice(Number(id), 1);
     stat(s, { type: 'action', seat: p.seat, card: c, source: 'fruits' });
-    return c;
+    fruits.push({ c, seat: p.seat });
+    gave.push(p.seat);
   });
-  for (const c of shuffle(s, fruits)) s.altar.push({ id: c, facedown: dark, offeredBy: null, day: s.day, kind: 'fruits' });
-  // Then each player draws 1 card, so First Fruits never shrinks a hand.
-  for (const p of ps) yield* drawTo(s, p.seat, 1);
-  log(s, 'fruits', dark ? 'Every player placed First Fruits facedown.' : `First Fruits: ${fruits.map(cardName).sort().join(', ')}.`);
+  // A facedown First Fruit is known to the player who gave it (not where it lies after the shuffle).
+  for (const f of shuffle(s, fruits)) s.altar.push({ id: f.c, facedown: dark, offeredBy: null, day: s.day, kind: 'fruits', ...(dark && R.fruits === 'down' ? { seenBy: [f.seat] } : {}) });
+  // Then each player who gave a card draws 1 card, so First Fruits never shrinks a hand.
+  for (const seat of gave) yield* drawTo(s, seat, 1);
+  log(s, 'fruits', dark ? 'Every player placed First Fruits facedown.' : `First Fruits: ${fruits.map((f) => cardName(f.c)).sort().join(', ')}.`);
 }
 
 // ---------------------------------------------------------------- Morning
@@ -296,7 +312,7 @@ type Action = 'offer' | 'gather' | 'exalt';
 export function legalActions(s: GameState, seat: Seat): Action[] {
   const p = s.players[seat];
   const out: Action[] = [];
-  if (p.hand.length || p.tokens.length || (rulesOf(s).offerFromChoir && activeCards(p).length)) out.push('offer');
+  if ((rulesOf(s).offerFrom !== 'choir' && p.hand.length) || p.tokens.length || (rulesOf(s).offerFrom !== 'hand' && activeCards(p).length)) out.push('offer');
   // Gather takes a card from the Altar (V42) or the discard pile (Forger), or a token from the Altar (V45: needs no room).
   const card = (rulesOf(s).gatherTo === 'hand' || canRoom(s, seat)) && (altarAvailable(s, seat).length > 0 || (hasActive(s, seat, H.forger) && s.discard.length > 0));
   if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && (card || s.altarTokens.length)) out.push('gather');
@@ -388,9 +404,10 @@ function* cantorDraw(s: GameState, seat: Seat): Gen<void> {
 function offerOptions(s: GameState, seat: Seat): Option[] {
   const p = s.players[seat];
   const sides = (['light', 'dark'] as const).filter((k) => p.tokens.includes(k));
-  // Variant: a Choir card may be Offered too.
-  const choir = rulesOf(s).offerFromChoir ? activeCards(p).map((c) => cardOpt(c.id, 'choir:')) : [];
-  return [...p.hand.map((c) => cardOpt(c)), ...choir, ...sides.map((k) => ({ id: 'token:' + k, label: `a ${tokenName(k)} token (counts ${TOKEN_WEIGHT})` }))];
+  // Variants: a Choir card may be Offered too, or only a Choir card.
+  const from = rulesOf(s).offerFrom;
+  const choir = from !== 'hand' ? activeCards(p).map((c) => cardOpt(c.id, 'choir:')) : [];
+  return [...(from !== 'choir' ? p.hand.map((c) => cardOpt(c)) : []), ...choir, ...sides.map((k) => ({ id: 'token:' + k, label: `a ${tokenName(k)} token (counts ${TOKEN_WEIGHT})` }))];
 }
 
 function* doOffer(s: GameState, seat: Seat): Gen<void> {
@@ -416,10 +433,12 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   else p.hand.splice(p.hand.indexOf(card), 1);
   const col = (id: string) => colorsOf(s, null, id);
   // V35: Offers go facedown, except Hymn and Lamentation (V43), which go face up, and any Offer under Anathema (V45).
-  const facedown = card !== H.hymn && card !== H.lamentation && !faceUp(s, seat);
-  s.altar.push({ id: card, facedown, offeredBy: seat, day: s.day, kind: 'offer' });
+  // Variant: a card Offered from the Choir goes face up (everyone saw it leave), and may count more.
+  const facedown = !fromChoir && card !== H.hymn && card !== H.lamentation && !faceUp(s, seat);
+  const weight = fromChoir ? rulesOf(s).choirOfferWeight : 1;
+  s.altar.push({ id: card, facedown, offeredBy: seat, day: s.day, kind: 'offer', ...(weight !== 1 ? { weight } : {}) });
   noteOffer(s, seat, [card]);
-  stat(s, { type: 'action', seat, source: 'offer', data: { cards: [card] } });
+  stat(s, { type: 'action', seat, source: 'offer', data: { cards: [card], ...(fromChoir ? { choir: true } : {}) } });
   stat(s, { type: 'action', seat, card, source: 'offer.card' });
   log(s, 'offer', facedown ? `${p.name} Offered a card facedown.` : `${p.name} Offered ${cardName(card)} face up.`);
   if (facedown) log(s, 'offer', `You Offered ${cardName(card)} facedown.`, [seat]);
@@ -452,7 +471,7 @@ function gatherOptions(s: GameState, seat: Seat): Option[] {
   const room = rulesOf(s).gatherTo === 'hand' || canRoom(s, seat);
   const opts: Option[] = room ? altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id })) : [];
   // V45: an allegiance token on the Altar can always be taken; it joins your hidden tokens.
-  s.altarTokens.forEach((t, i) => opts.push({ id: 'token:' + i, label: t.by === seat ? `Your ${tokenName(t.side)} token` : `An allegiance token (Offered by ${pname(s, t.by)})` }));
+  s.altarTokens.forEach((t, i) => opts.push({ id: 'token:' + i, label: t.by === seat ? `Your ${tokenName(t.side)} token` : t.anon ? 'An allegiance token (First Fruits)' : `An allegiance token (Offered by ${pname(s, t.by)})` }));
   // Forger (V37): may take any Host card from the discard pile.
   if (room && hasActive(s, seat, H.forger) && s.discard.length && canActivate(s, seat, H.forger)) for (const c of [...new Set(s.discard.filter((x) => x.startsWith('host-')))]) opts.push({ id: 'discard:' + c, label: `From the discard pile (Forger): ${cardName(c)}`, card: c });
   return opts;
@@ -678,14 +697,14 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
 }
 
 /** The Tide from the cards (and tokens) on the Altar. Takes only what it reads, so the site can tally the face-up cards. */
-export function setTide(s: TideHistory & { altar: { id: string }[]; altarTokens?: { side: Side }[]; currentEvent: string | null }): TideRecord {
+export function setTide(s: TideHistory & { altar: { id: string; weight?: number }[]; altarTokens?: { side: Side }[]; currentEvent: string | null }): TideRecord {
   let light = 0;
   let dark = 0;
   const dbl = (ev: string) => (s.currentEvent === ev ? 2 : 1);
   for (const a of s.altar) {
-    const v = baseValue(s, a.id);
-    light += v.light * dbl(E.ascension);
-    dark += v.dark * dbl(E.fallFromGrace);
+    const v = baseValue(s, a.id), k = a.weight ?? 1;
+    light += k * v.light * dbl(E.ascension);
+    dark += k * v.dark * dbl(E.fallFromGrace);
   }
   // Tokens are not cards: Ascension and Fall from Grace do not double them.
   for (const t of s.altarTokens ?? []) if (t.side === 'light') light += TOKEN_WEIGHT; else dark += TOKEN_WEIGHT;
@@ -707,7 +726,9 @@ function scores(s: GameState, seat: Seat, id: string, side: Side): boolean {
 function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
   const lost = opposite(won) as Side;
   const mode = rulesOf(s).spoils;
-  const eligible = (rulesOf(s).spoilsOrder === 'reverse' ? [...order].reverse() : order).filter((seat) => {
+  const by = rulesOf(s).spoilsOrder;
+  const draft = by === 'reverse' ? [...order].reverse() : by === 'glory' ? [...order].sort((a, b) => s.players[a].glory - s.players[b].glory) : order;
+  const eligible = draft.filter((seat) => {
     if (mode === 'offerers') return s.players[seat].offeredToday;
     const c = choirColors(s, seat);
     return c[won] > c[lost];
@@ -733,6 +754,27 @@ function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
   }
 }
 
+/** What a Choir scores when `side` wins, under the game's Reaping rule (the `reap` switch; 'card' is V45). */
+export function reapOf(s: GameState, seat: Seat, side: Side): number {
+  const R = rulesOf(s);
+  const cards = activeCards(s.players[seat]);
+  const count = cards.filter((c) => scores(s, seat, c.id, side)).length;
+  if (R.reap === 'card') return R.choirPay * count;
+  const other = (x: Seat) => activeCards(s.players[x]).filter((c) => scores(s, x, c.id, opposite(side) as Side)).length;
+  if (R.reap === 'net') return R.choirPay * Math.max(0, count - other(seat));
+  return count > other(seat) ? choirPayCrowd(R.choirPay, s.players.filter((o) => { const n = activeCards(o).filter((c) => scores(s, o.seat, c.id, side)).length; return n > other(o.seat); }).length) * count : 0;
+}
+/** The crowd Reaping: a card scores choirPay + 1 if yours is the only Choir leaning that color, choirPay - 1 if shared. */
+export const choirPayCrowd = (pay: number, leaning: number) => (leaning <= 1 ? pay + 1 : Math.max(0, pay - 1));
+
+/** End of the game: what a hand of tokens scores against the Days won (the `endScore` switch; 'each' is V45). */
+export function tokenScore(mode: string, tl: number, td: number, wl: number, wd: number): number {
+  if (mode === 'majority') return tl > td ? tl * wl : td > tl ? td * wd : Math.max(tl * wl, td * wd);
+  if (mode === 'winner') return wl > wd ? tl * wl : wd > wl ? td * wd : tl * wl + td * wd;
+  if (mode === 'net') return (tl - td) * (wl - wd);
+  return tl * wl + td * wd;
+}
+
 export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<void> {
   // V45: each face-up Host card in your Choir of the winning color scores 2 Glory, if you Offered this Day (no offering,
   // no harvest). Nothing is ever lost here. Ordeal doubles; False Prophecy scores the other color; Heresy scores your
@@ -746,8 +788,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     if (!p.offeredToday && harvest === 'offer') { if (activeCards(p).length) log(s, 'harvest', `${p.name} did not Offer today, so their Choir does not score.`); continue; }
     let side = (eventOn(s, E.falseProphecy) ? opposite(tide.dir) : tide.dir) as Side;
     if (s.day_.heresy.includes(seat)) side = opposite(side) as Side;
-    const count = activeCards(p).filter((c) => scores(s, seat, c.id, side)).length;
-    const full = rulesOf(s).choirPay * count * (s.day_.ordeal.includes(seat) ? 2 : 1);
+    const full = reapOf(s, seat, side) * (s.day_.ordeal.includes(seat) ? 2 : 1);
     delta[seat] = !p.offeredToday && harvest === 'half' ? Math.floor(full / 2) : full;
   }
   // Scapegoat (V45): pay 2 Glory so another player who would score at this Reaping scores nothing.
@@ -860,8 +901,8 @@ export function* endGame(s: GameState): Gen<void> {
     const before = p.glory;
     const tokens = { light: p.tokens.filter((t) => t === 'light').length, dark: p.tokens.filter((t) => t === 'dark').length };
     const R = rulesOf(s);
-    const fromTokens = tokens.light * won.light + tokens.dark * won.dark;
-    yield* gain(s, p.seat, fromTokens, 'tokens');
+    const fromTokens = tokenScore(R.endScore, tokens.light, tokens.dark, won.light, won.dark);
+    if (fromTokens >= 0) yield* gain(s, p.seat, fromTokens, 'tokens'); else yield* lose(s, p.seat, -fromTokens, 'tokens');
     if (R.devotion && tokens.light !== tokens.dark) {
       // Variant (Devotion): each Choir card of the color you hold more tokens of scores again.
       const k = tokens.light > tokens.dark ? 'light' : 'dark', n = choirColors(s, p.seat)[k];
