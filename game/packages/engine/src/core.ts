@@ -103,6 +103,8 @@ export function handLimit(s: GameState, seat: Seat): number {
 }
 /** The hand limit: 3, or 5 for the Dominion (V44). */
 export const baseHandLimit = (s: GameState, seat: Seat) => rulesOf(s).handSize + (isCelestial(s, seat, C.dominion) ? 2 : 0);
+/** The most cards a hand may keep at the end of a Day (the hand size, unless a variant allows more). */
+export const handMaxOf = (s: GameState, seat: Seat) => (rulesOf(s).handMax || rulesOf(s).handSize) + (isCelestial(s, seat, C.dominion) ? 2 : 0);
 
 /** What a card's value depends on: the Day and the Tides so far (Acolyte follows the most recent Day won). */
 export type TideHistory = Pick<GameState, 'day' | 'tides'>;

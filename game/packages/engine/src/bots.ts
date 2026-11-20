@@ -314,6 +314,14 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       });
       return one(o.id);
     }
+    case 'spoils.pick': {
+      // Spoils: a token of the side I hold more of, else the card most worth having (its ability, its Choir value, its push).
+      const o = pickBest(d.options, (o) => {
+        if (o.id.startsWith('token:')) { const t = s.altarTokens[Number(o.id.slice(6))]; return tokenWorth(s, t.side) + (Math.sign(net) === (t.side === 'light' ? 1 : -1) ? 1 : 0); }
+        return engineVal(s, seat, o.card) + choirCardValue(s, o.card) + 0.5 * (want >= 0 ? signed(s, o.card) : -signed(s, o.card));
+      });
+      return one(o.id);
+    }
     case 'choir.discard':
     case 'plague':
     case 'absolution.discard':

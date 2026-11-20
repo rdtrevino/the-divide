@@ -2,7 +2,7 @@
 import { TURN } from './abilities';
 import { endOfDayTriggers, keepRelics, morningTriggers, noteOffer, parasitePlant, placeRelics, wisdomPeek } from './triggers';
 import {
-  activation, activeCards, altarAvailable, altarLabel, altarShielded, ask, askAll, baseHandLimit,
+  activation, activeCards, altarAvailable, altarLabel, altarShielded, ask, askAll, baseHandLimit, handMaxOf,
   baseValue, canActivate, canSpend, cardOpt, choirColors, chooseOne, colorOf, colorsOf, dirOf, discardableForRoom,
   discardFromChoir, drawHost, drawTo, enterChoir, eventOn, gain, hasActive, isCelestial, log, lose, makeRoom,
   markToday, opposite, others, pay, pname, sanctuaryAllows, seatFromOpt, seatOpt, snareHit, stat, transfer,
@@ -298,7 +298,7 @@ export function legalActions(s: GameState, seat: Seat): Action[] {
   const out: Action[] = [];
   if (p.hand.length || p.tokens.length) out.push('offer');
   // Gather takes a card from the Altar (V42) or the discard pile (Forger), or a token from the Altar (V45: needs no room).
-  const card = canRoom(s, seat) && (altarAvailable(s, seat).length > 0 || (hasActive(s, seat, H.forger) && s.discard.length > 0));
+  const card = (rulesOf(s).gatherTo === 'hand' || canRoom(s, seat)) && (altarAvailable(s, seat).length > 0 || (hasActive(s, seat, H.forger) && s.discard.length > 0));
   if (!s.anathema.some((a) => a.target === seat && a.action === 'gather') && (card || s.altarTokens.length)) out.push('gather');
   // Exalt is free (V42); with Forger it may take a card from the discard pile (V43).
   const forgeable = hasActive(s, seat, H.forger) && s.discard.some((x) => x.startsWith('host-'));
@@ -445,7 +445,7 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
 }
 
 function gatherOptions(s: GameState, seat: Seat): Option[] {
-  const room = canRoom(s, seat);
+  const room = rulesOf(s).gatherTo === 'hand' || canRoom(s, seat);
   const opts: Option[] = room ? altarAvailable(s, seat).map((a) => ({ id: 'altar:' + s.altar.indexOf(a), label: `From the Altar: ${altarLabel(s, a, seat)}`, card: a.facedown && a.offeredBy !== seat ? undefined : a.id })) : [];
   // V45: an allegiance token on the Altar can always be taken; it joins your hidden tokens.
   s.altarTokens.forEach((t, i) => opts.push({ id: 'token:' + i, label: t.by === seat ? `Your ${tokenName(t.side)} token` : `An allegiance token (Offered by ${pname(s, t.by)})` }));
@@ -466,7 +466,8 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
     log(s, 'gather', `It was a ${tokenName(t.side)} token.`, [seat]);
     return;
   }
-  if (!(yield* makeRoom(s, seat, 'Gather'))) return;
+  const toHand = rulesOf(s).gatherTo === 'hand';
+  if (!toHand && !(yield* makeRoom(s, seat, 'Gather'))) return;
 
   let card: string | null = null;
   let fromAltar: { offeredBy: Seat | null; day: number; kind?: string } | null = null;
@@ -482,6 +483,13 @@ function* doGather(s: GameState, seat: Seat): Gen<void> {
   }
   if (!card) return;
   if (fromAltar) yield* snareHit(s, seat, fromAltar);
+  if (toHand) {
+    // Variant (the Altar as a market): the card joins your hand.
+    p.hand.push(card);
+    stat(s, { type: 'action', seat, card, source: 'gather', data: { from: src.split(':')[0], toHand: true } });
+    log(s, 'gather', `${p.name} Gathered ${cardName(card)} into their hand.`);
+    return;
+  }
   if (card === H.parasite && (yield* parasitePlant(s, seat))) { stat(s, { type: 'action', seat, card, source: 'gather', data: { from: src.split(':')[0] } }); return; }
   yield* enterChoir(s, seat, card);
   stat(s, { type: 'action', seat, card, source: 'gather', data: { from: src.split(':')[0] } });
@@ -614,6 +622,7 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
   }
   // The Reaping.
   yield* reaping(s, tide, order);
+  if (rulesOf(s).spoils !== 'none' && tide.dir !== 'neutral' && !tide.void) yield* takeSpoils(s, tide.dir as Side, order);
 
   // Allegiance tokens left on the Altar are shuffled and handed out, one at a time, to whoever holds the fewest
   // (ties in turn order from the first player). Only the receiver sees what they got.
@@ -624,6 +633,13 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
     log(s, 'tokens', `${pname(s, to)} receives a token left on the Altar (they hold the fewest).`);
     log(s, 'tokens', `It is a ${tokenName(t.side)} token.`, [to]);
   }
+  if (rulesOf(s).decay) {
+    // Variant (turnover): a full Choir loses its oldest card.
+    for (const seat of order) {
+      const p = s.players[seat];
+      if (p.choir.length >= choirLimit(s)) { const old = p.choir[0]; yield* discardFromChoir(s, seat, old.id, 'turnover'); }
+    }
+  }
   if (finalDay) return;
 
   // Refresh the Altar: Eternity keeps its cards, the rest are discarded.
@@ -632,15 +648,16 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
   s.altar = [];
 
   // Upkeep.
-  const over = s.players.filter((p) => p.hand.length > baseHandLimit(s, p.seat));
+  const over = s.players.filter((p) => p.hand.length > handMaxOf(s, p.seat));
   if (over.length) {
-    const picks = yield* askAll(s, over.map((p) => ({ seat: p.seat, tag: 'upkeep.discard', prompt: `Upkeep: discard down to your hand limit (${baseHandLimit(s, p.seat)}).`, options: p.hand.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: p.hand.length - baseHandLimit(s, p.seat), max: p.hand.length - baseHandLimit(s, p.seat) })));
+    const picks = yield* askAll(s, over.map((p) => ({ seat: p.seat, tag: 'upkeep.discard', prompt: `Upkeep: discard down to your hand limit (${handMaxOf(s, p.seat)}).`, options: p.hand.map((c, i) => ({ id: String(i), label: cardName(c), card: c })), min: p.hand.length - handMaxOf(s, p.seat), max: p.hand.length - handMaxOf(s, p.seat) })));
     over.forEach((p, k) => {
       const idx = picks[k].map(Number).sort((a, b) => b - a);
       for (const i of idx) s.discard.push(...p.hand.splice(i, 1));
     });
   }
-  for (const p of s.players) yield* drawTo(s, p.seat, Math.max(0, baseHandLimit(s, p.seat) - p.hand.length));
+  const draw = rulesOf(s).upkeepDraw;
+  for (const p of s.players) yield* drawTo(s, p.seat, draw === 'refill' ? Math.max(0, baseHandLimit(s, p.seat) - p.hand.length) : Math.max(0, Math.min(draw, handMaxOf(s, p.seat) - p.hand.length)));
 }
 
 /** The Tide from the cards (and tokens) on the Altar. Takes only what it reads, so the site can tally the face-up cards. */
@@ -665,6 +682,39 @@ function scores(s: GameState, seat: Seat, id: string, side: Side): boolean {
   return (s.day_.eclipsed[seat] === id ? (c && opposite(c)) : c) === side;
 }
 
+/**
+ * Variant (spoils): after a won Day, the eligible players take the Altar's cards (into their hands) and tokens, one at a
+ * time in turn order, until it is empty. 'claim': Choirs holding more cards of the winning color than of the other;
+ * 'offerers': players who Offered today.
+ */
+function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
+  const lost = opposite(won) as Side;
+  const mode = rulesOf(s).spoils;
+  const eligible = order.filter((seat) => {
+    if (mode === 'offerers') return s.players[seat].offeredToday;
+    const c = choirColors(s, seat);
+    return c[won] > c[lost];
+  });
+  if (!eligible.length) return;
+  log(s, 'spoils', `Spoils to ${eligible.map((x) => pname(s, x)).join(', ')}.`);
+  for (let k = 0; s.altar.length + s.altarTokens.length > 0 && k < 200; k++) {
+    const seat = eligible[k % eligible.length];
+    const opts: Option[] = [...s.altar.map((a, i) => ({ id: 'altar:' + i, label: cardName(a.id), card: a.id })), ...s.altarTokens.map((t, i) => ({ id: 'token:' + i, label: `A ${tokenName(t.side)} token` }))];
+    const pick = (yield* chooseOne(s, seat, 'spoils.pick', 'Spoils: take a card (into your hand) or a token from the Altar.', opts))!;
+    if (pick.startsWith('token:')) {
+      const [t] = s.altarTokens.splice(Number(pick.slice(6)), 1);
+      s.players[seat].tokens.push(t.side);
+      stat(s, { type: 'action', seat, source: 'spoils', data: { token: t.side } });
+      log(s, 'spoils', `${pname(s, seat)} takes a token.`);
+    } else {
+      const [a] = s.altar.splice(Number(pick.slice(6)), 1);
+      s.players[seat].hand.push(a.id);
+      stat(s, { type: 'action', seat, card: a.id, source: 'spoils' });
+      log(s, 'spoils', `${pname(s, seat)} takes ${cardName(a.id)}.`);
+    }
+  }
+}
+
 export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<void> {
   // V45: each face-up Host card in your Choir of the winning color scores 2 Glory, if you Offered this Day (no offering,
   // no harvest). Nothing is ever lost here. Ordeal doubles; False Prophecy scores the other color; Heresy scores your
@@ -679,7 +729,7 @@ export function* reaping(s: GameState, tide: TideRecord, order: Seat[]): Gen<voi
     let side = (eventOn(s, E.falseProphecy) ? opposite(tide.dir) : tide.dir) as Side;
     if (s.day_.heresy.includes(seat)) side = opposite(side) as Side;
     const count = activeCards(p).filter((c) => scores(s, seat, c.id, side)).length;
-    const full = CHOIR_PAY * count * (s.day_.ordeal.includes(seat) ? 2 : 1);
+    const full = rulesOf(s).choirPay * count * (s.day_.ordeal.includes(seat) ? 2 : 1);
     delta[seat] = !p.offeredToday && harvest === 'half' ? Math.floor(full / 2) : full;
   }
   // Scapegoat (V45): pay 2 Glory so another player who would score at this Reaping scores nothing.

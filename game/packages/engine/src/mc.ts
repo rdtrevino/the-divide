@@ -67,6 +67,10 @@ function value(s: GameState, q: Seat): number {
   for (const t of p.tokens) v += tokenWorth(s, t);
   for (const c of activeCards(p)) v += choirCardValue(s, c.id) + (c.store ?? 0);
   const R = rulesOf(s);
+  if (R.spoils !== 'none' || R.gatherTo === 'hand' || R.upkeepDraw !== 'refill') {
+    // Variants where cards in hand are scarce: each is worth something (a future Offer, Exalt or ability).
+    for (const c of p.hand) v += 0.5 + 0.4 * choirCardValue(s, c);
+  }
   if (R.miser || R.generous) {
     // The Miser / the Generous (variants): the risk of ending with the fewest Offers, or the chance of the most,
     // surer as the game goes on.

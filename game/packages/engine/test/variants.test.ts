@@ -8,6 +8,8 @@ import { DEFAULT_RULES, type CoreRules } from '../src/rules';
 const VARIANTS: Partial<CoreRules>[] = [
   { devotion: 1 }, { tokensEach: 8 }, { devotion: 1, tokensEach: 8 }, { harvest: 'always' }, { harvest: 'half' },
   { harvest: 'always', miser: 3 }, { harvest: 'always', generous: 3 }, { handSize: 2 }, { handSize: 4 }, { choirLimit: 3 }, { choirLimit: 6 },
+  { choirPay: 1 }, { harvest: 'always', spoils: 'claim', handMax: 5 }, { spoils: 'offerers', handMax: 5, choirPay: 0 },
+  { gatherTo: 'hand', handMax: 5, upkeepDraw: 1 }, { decay: true }, { spoils: 'claim', gatherTo: 'hand', upkeepDraw: 1, handMax: 5, decay: true },
 ];
 
 describe('core rule switches', () => {
@@ -56,6 +58,20 @@ describe('core rule switches', () => {
         expect(st.glory).toBe(p.glory);
       }
     }
+  });
+
+  it('spoils hand out the Altar after won Days, and hands stay within their limit', () => {
+    let spoils = 0;
+    for (const seed of [31, 32, 33]) {
+      const g = new Game({ seed, mode: 'open', rules: { harvest: 'always', spoils: 'claim', handMax: 5 }, players: [0, 1, 2, 3].map((j) => ({ name: 'P' + j, isBot: true })) });
+      while (!g.over) {
+        for (const d of [...g.pending]) if (g.pending.includes(d)) g.answer(d.seat, d.id, botAnswer(g.state, d));
+        // The limit applies at the end of a Day: when the next Morning's First Fruits are chosen, no hand holds more than 5.
+        if (g.pending.some((d) => d.tag === 'firstFruits')) for (const p of g.state.players) expect(p.hand.length).toBeLessThanOrEqual(5);
+      }
+      spoils += g.state.stats.filter((e) => e.source === 'spoils').length;
+    }
+    expect(spoils).toBeGreaterThan(10);
   });
 });
 

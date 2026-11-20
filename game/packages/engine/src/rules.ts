@@ -19,9 +19,26 @@ export interface CoreRules {
   handSize: number;
   /** How many cards a Choir holds. */
   choirLimit: number;
+  /** Glory per Choir card of the winning color at the Reaping. */
+  choirPay: number;
+  /** Spoils: after a won Day, eligible players take the Altar's cards (into hand) and tokens, one at a time in turn
+   *  order. 'claim': players whose Choir holds more cards of the winning color than of the other; 'offerers': players
+   *  who Offered today. Unclaimed tokens still go to whoever holds the fewest. */
+  spoils: 'none' | 'claim' | 'offerers';
+  /** Most cards a hand may hold at the end of a Day (0: the hand size). */
+  handMax: number;
+  /** At the end of a Day: refill the hand to its size, or draw this many cards. */
+  upkeepDraw: 'refill' | number;
+  /** A Gathered card goes into the Choir, or into the hand (the Altar as a market). */
+  gatherTo: 'choir' | 'hand';
+  /** Turnover: after the Reaping, a full Choir loses its oldest card. */
+  decay: boolean;
 }
 
-export const DEFAULT_RULES: CoreRules = { tokensEach: 6, devotion: 0, harvest: 'offer', miser: 0, generous: 0, handSize: 3, choirLimit: 4 };
+export const DEFAULT_RULES: CoreRules = {
+  tokensEach: 6, devotion: 0, harvest: 'offer', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'none', handMax: 0,
+  upkeepDraw: 'refill', gatherTo: 'choir', decay: false,
+};
 
 const cache = new WeakMap<object, CoreRules>();
 /** The rules this game is played under. */
