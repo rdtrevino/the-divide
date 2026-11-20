@@ -12,7 +12,7 @@ November 20, 2026. Robert adopted turnover with Gather into the hand or the Choi
 
 **Why it matters for the vision.** The face-up Choir Offer is where principle 1 is most visible: you give up your own engine, in public, for a side. If nobody makes it, the flow's "Offer from your Choir" is a rule that does nothing; the token does all the work.
 
-**Why players do not do it** (the bots' arithmetic): a Choir card scores 2 Glory on each Day its color wins, for as long as it stays. A token pushes 2 and is easy to get back (spoils). A Choir card pushes 1–2 and costs tonight's Reaping and its later Days. So the token is almost always the cheaper Offer.
+**Why players do not do it** (the bots' arithmetic): a Choir card scores 2 Glory on each Day its color wins, for as long as it stays. A token pushes 2 and is easy to get back (spoils). Nearly every Choir card pushes only 1 (69 of 72 cards), half a token, and costs tonight's Reaping and its later Days. So the token is almost always the cheaper Offer.
 
 **A bot fix first.** The bots valued a Choir card as if it stayed to the end of the game, ignoring turnover, which made them Offer from the Choir too rarely. They now count only the Days it has left before turnover takes it (`choirLife` in `bots.ts`). Every result below uses the fixed bots, including the new base.
 
