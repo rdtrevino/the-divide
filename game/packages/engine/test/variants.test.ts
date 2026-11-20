@@ -10,12 +10,12 @@ const VARIANTS: Partial<CoreRules>[] = [
   { devotion: 1 }, { tokensEach: 8 }, { devotion: 1, tokensEach: 8 }, { harvest: 'always' }, { harvest: 'half' },
   { harvest: 'always', miser: 3 }, { harvest: 'always', generous: 3 }, { handSize: 2 }, { handSize: 4 }, { choirLimit: 3 }, { choirLimit: 6 },
   { choirPay: 1 }, { harvest: 'always', spoils: 'claim', handMax: 5 }, { spoils: 'offerers', handMax: 5, choirPay: 0 },
-  { gatherTo: 'hand', handMax: 5, upkeepDraw: 1 }, { decay: true }, { harvest: 'always', carryover: true }, { spoils: 'claim', handMax: 5, carryover: true }, { harvest: 'always', spoils: 'offerers', handMax: 5, decay: true, upkeepDraw: 1 }, { harvest: 'always', spoils: 'offerers', spoilsEach: 1, handMax: 5 }, { harvest: 'always', spoils: 'offerers', handMax: 5, replacedToHand: true, witherIdle: true }, { spoils: 'claim', gatherTo: 'hand', upkeepDraw: 1, handMax: 5, decay: true },
+  { gatherTo: 'hand', handMax: 5, upkeepDraw: 1 }, { decay: true }, { harvest: 'always', carryover: true }, { spoils: 'claim', handMax: 5, carryover: true }, { harvest: 'always', spoils: 'offerers', handMax: 5, decay: true, upkeepDraw: 1 }, { spoils: 'claim', gatherTo: 'hand', upkeepDraw: 1, handMax: 5, decay: true },
   // Robert's flow (November 20): Offers only from the Choir (face up), facedown First Fruits that may be a token, majority end score.
   { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruits: 'down', fruitsToken: true }, { offerFrom: 'choir', gatherTo: 'hand', endScore: 'majority' },
   { harvest: 'always', spoils: 'offerers', handMax: 5, offerFrom: 'choir', fruitsToken: true, endScore: 'majority' }, { endScore: 'majority', fruitsToken: true },
   // Fixes under test (November 20): Offer a Choir card and put a hand card in its place; Gather to hand or Choir; everyone draws after First Fruits.
-  { offerSwap: true }, { gatherTo: 'either' }, { fruitsDraw: 'all', offerSwap: true, gatherTo: 'either' },
+  { gatherTo: 'either' }, { decay: true, gatherTo: 'either' }, { fruitsDraw: 'all', decay: true, gatherTo: 'either' },
 ];
 
 describe('core rule switches', () => {

@@ -307,11 +307,6 @@ export function* makeRoom(s: GameState, seat: Seat, why: string): Gen<boolean> {
   const pick = yield* chooseOne(s, seat, 'choir.discard', `Your Choir is full. Choose a card to discard (${why}).`, opts.map((c) => cardOpt(c.id)));
   if (!pick) return false;
   yield* discardFromChoir(s, seat, pick, why);
-  if (rulesOf(s).replacedToHand) {
-    // Variant: the replaced card goes back to its owner's hand (unless an ability already took it).
-    const i = s.discard.lastIndexOf(pick);
-    if (i >= 0) { s.discard.splice(i, 1); p.hand.push(pick); }
-  }
   return true;
 }
 

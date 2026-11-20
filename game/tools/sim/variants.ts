@@ -6,12 +6,11 @@ import { V45, type CoreRules } from '@divide/engine';
 export const VARIANTS: Record<string, Partial<CoreRules>> = {
   current: {},
   v45: V45,
-  // Round 1 of the fixes (design/flow-fixes.md). Choirs that change: a Choir Offer lets a hand card take its place;
-  // Gather into the hand or the Choir; Devotion; a Choir of 3; a replaced card returns to hand; turnover; withering.
-  swap: { offerSwap: true }, gatherEither: { gatherTo: 'either' }, devotion1: { devotion: 1 }, choir3: { choirLimit: 3 },
-  replHand: { replacedToHand: true }, decay: { decay: true }, wither: { witherIdle: true },
-  // Balance: everyone draws after First Fruits (a token giver cannot be spotted); odd or more tokens; one spoil each.
-  drawAll: { fruitsDraw: 'all' }, tokens5: { tokensEach: 5 }, tokens7: { tokensEach: 7 }, tokens8: { tokensEach: 8 }, spoils1: { spoilsEach: 1 },
+  // The fixes (design/flow-fixes.md). Kept: turnover, Gather into the hand or the Choir, Devotion, a Choir of 3, everyone
+  // draws after First Fruits, other token counts. The swap, a replaced card to the hand, withering and one spoil each
+  // were rejected and removed (their definitions are in the git history).
+  decay: { decay: true }, gatherEither: { gatherTo: 'either' }, devotion1: { devotion: 1 }, choir3: { choirLimit: 3 },
+  drawAll: { fruitsDraw: 'all' }, tokens5: { tokensEach: 5 }, tokens7: { tokensEach: 7 }, tokens8: { tokensEach: 8 },
 };
 
 /** A variant by name; `a+b` combines variants (later ones win). */

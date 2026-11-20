@@ -25,9 +25,6 @@ export interface CoreRules {
    *  order. 'claim': players whose Choir holds more cards of the winning color than of the other; 'offerers': players
    *  who Offered today. Unclaimed tokens still go to whoever holds the fewest. */
   spoils: 'none' | 'claim' | 'offerers';
-  /** Spoils each eligible player may take in a Day (0: take turns until the Altar is empty). Cards left are discarded
-   *  as usual; tokens left go to whoever holds the fewest. */
-  spoilsEach: number;
   /** Where an Offered card comes from: the hand (facedown, now) or only the Choir ('choir': face up, since everyone saw
    *  it leave; Robert's flow, November 20). Tokens are Offered facedown either way. */
   offerFrom: 'hand' | 'choir';
@@ -38,18 +35,12 @@ export interface CoreRules {
   /** End of the game, with tl / td your tokens and wl / wd the Days won: 'each' (tl·wl + td·wd, now) or 'majority'
    *  (only your majority color scores: tl·wl or td·wd; tied, the better). */
   endScore: 'each' | 'majority';
-  /** A card that leaves a full Choir to make room goes to its owner's hand instead of the discard pile. */
-  replacedToHand: boolean;
-  /** On a Day you did not Offer, a full Choir loses its oldest card. */
-  witherIdle: boolean;
   /** Most cards a hand may hold at the end of a Day (0: the hand size). */
   handMax: number;
   /** At the end of a Day: refill the hand to its size, or draw this many cards. */
   upkeepDraw: 'refill' | number;
   /** A Gathered card goes into the Choir, into the hand (now), or either, as the player chooses. */
   gatherTo: 'choir' | 'hand' | 'either';
-  /** Offering a Choir card lets you put a card from your hand into its place (a free Exalt). */
-  offerSwap: boolean;
   /** After First Fruits, who draws 1: those who gave a card ('card'), or everyone who gave anything ('all'), so a
    *  token given as First Fruits cannot be spotted by who did not draw. */
   fruitsDraw: 'card' | 'all';
@@ -64,7 +55,7 @@ export const DEFAULT_RULES: CoreRules = {
   // Offers only from the Choir (face up) or a token, First Fruits facedown and possibly a token, Gather into the hand,
   // and only your majority color's tokens score.
   tokensEach: 6, devotion: 0, harvest: 'always', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'offerers', handMax: 5,
-  upkeepDraw: 'refill', gatherTo: 'hand', decay: false, carryover: false, spoilsEach: 0, offerFrom: 'choir', fruits: 'down', fruitsToken: true, endScore: 'majority', replacedToHand: false, witherIdle: false, offerSwap: false, fruitsDraw: 'card',
+  upkeepDraw: 'refill', gatherTo: 'hand', decay: false, carryover: false, offerFrom: 'choir', fruits: 'down', fruitsToken: true, endScore: 'majority', fruitsDraw: 'card',
 };
 
 /** The previous core (V45: no offering, no harvest; Offers from the hand; tokens each score the Days their color won).

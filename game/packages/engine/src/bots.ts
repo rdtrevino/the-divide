@@ -91,16 +91,6 @@ export const choirCardValue = (s: GameState, id: string | undefined) => {
 };
 /** What a card in hand is worth (a future First Fruits, Exalt or ability): as the strong bot's value() counts it. */
 const handCardValue = (s: GameState, id: string | undefined) => 0.5 + 0.4 * choirCardValue(s, id);
-/** The card in hand that would do the most in the Choir (for the offerSwap variant). */
-function swapCard(s: GameState, seat: Seat, want: number): string | undefined {
-  let best: string | undefined, bv = -Infinity;
-  for (const c of s.players[seat].hand) {
-    if (c === H.parasite) continue;
-    const v = choirCardValue(s, c) + engineVal(s, seat, c) + 0.3 * (want >= 0 ? signed(s, c) : -signed(s, c));
-    if (v > bv) { bv = v; best = c; }
-  }
-  return best;
-}
 /** What holding a token of a side is worth by the end: the Days it has won, and about half of those to come. */
 /** For the end-score variants, the token's worth to `seat` given what it holds: one more (`more`), or one fewer. */
 export const tokenWorth = (s: GameState, side: 'light' | 'dark', seat?: Seat, more = true): number => {
@@ -222,14 +212,11 @@ export function botAnswer(s: GameState, d: Decision): Answer {
     const less = rulesOf(s).endScore === 'each' ? { ...st, [k]: st[k] - 1 } : (() => { const h = [...s.players[seat].tokens]; h.splice(h.indexOf(k), 1); return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, h)); })();
     return dayValue(less, altar + (k === 'light' ? TOKEN_WEIGHT : -TOKEN_WEIGHT), w) - dayValue(st, altar, w) - tokenWorth(s, k, seat, false) + 0.5;
   };
-  /** Offering a card from my Choir (a variant): its push today, against what it would have scored tonight and later. */
+  /** Offering a card from my Choir: its push today, against what it would have scored tonight and later. */
   const offerFromChoir = (id: string) => {
     const v = val(s, id), cc = choirColors(s, seat);
-    // Variant (offerSwap): the best card in hand takes its place.
-    const sw = rulesOf(s).offerSwap ? swapCard(s, seat, want) : undefined, u = val(s, sw);
-    const less = addStake(choirStake(s, { light: cc.light - Math.sign(v.light) + Math.sign(u.light), dark: cc.dark - Math.sign(v.dark) + Math.sign(u.dark) }), tokenStake(s, s.players[seat].tokens));
-    const gain = sw ? choirCardValue(s, sw) + engineVal(s, seat, sw) - handCardValue(s, sw) : 0;
-    return dayValue(less, altar + signed(s, id), w) - dayValue(st, altar, w) - choirCardValue(s, id) - engineVal(s, seat, id) + gain;
+    const less = addStake(choirStake(s, { light: cc.light - Math.sign(v.light), dark: cc.dark - Math.sign(v.dark) }), tokenStake(s, s.players[seat].tokens));
+    return dayValue(less, altar + signed(s, id), w) - dayValue(st, altar, w) - choirCardValue(s, id) - engineVal(s, seat, id);
   };
 
   // Multi-select decisions.
@@ -378,13 +365,8 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       });
       return one(o.id);
     }
-    case 'offer.swap': {
-      // Variant: the card from hand that will do the most in the Choir.
-      const c = swapCard(s, seat, want);
-      return one(d.options.find((o) => o.card === c)?.id ?? 'none');
-    }
     case 'gather.to': {
-      // Variant: into the Choir if it is worth more there than in hand (after any card it would replace).
+      // Into the Choir if it is worth more there than in hand (after any card it would replace).
       const c = d.options.find((o) => o.id === 'choir')?.card;
       const p = s.players[seat], worst = p.choir.length < choirLimit(s) ? undefined : worstChoirCard(s, seat, want);
       const there = choirCardValue(s, c) + engineVal(s, seat, c) + 0.3 * (want >= 0 ? signed(s, c) : -signed(s, c)) - (worst ? choirCardValue(s, worst.id) + engineVal(s, seat, worst.id) : 0);

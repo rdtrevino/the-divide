@@ -432,12 +432,6 @@ function* doOffer(s: GameState, seat: Seat): Gen<void> {
   const card = fromChoir ? first.slice(6) : first;
   if (fromChoir) { removeFromChoir(s, seat, card); log(s, 'offer', `${p.name} takes ${cardName(card)} from their Choir to Offer it.`); }
   else p.hand.splice(p.hand.indexOf(card), 1);
-  if (fromChoir && rulesOf(s).offerSwap) {
-    // Variant: a card from the hand may take the Offered card's place in the Choir (a free Exalt; no Exalt abilities).
-    const opts = p.hand.filter((c) => c !== H.parasite).map((c) => cardOpt(c));
-    const put = opts.length && canRoom(s, seat) ? yield* chooseOne(s, seat, 'offer.swap', `Put a card from your hand into your Choir in place of ${cardName(card)}?`, opts, true) : null;
-    if (put) { p.hand.splice(p.hand.indexOf(put), 1); yield* enterChoir(s, seat, put); stat(s, { type: 'action', seat, card: put, source: 'swap' }); log(s, 'offer', `${p.name} put ${cardName(put)} into their Choir in its place.`); }
-  }
   const col = (id: string) => colorsOf(s, null, id);
   // V35: Offers go facedown, except Hymn and Lamentation (V43), which go face up, and any Offer under Anathema (V45).
   // Variant: a card Offered from the Choir goes face up (everyone saw it leave), and may count more.
@@ -671,13 +665,6 @@ export function* evening(s: GameState, finalDay: boolean): Gen<void> {
     log(s, 'tokens', `${pname(s, to)} receives a token left on the Altar (they hold the fewest).`);
     log(s, 'tokens', `It is a ${tokenName(t.side)} token.`, [to]);
   }
-  if (rulesOf(s).witherIdle) {
-    // Variant: on a Day you did not Offer, a full Choir loses its oldest card.
-    for (const seat of order) {
-      const p = s.players[seat];
-      if (!p.offeredToday && p.choir.length >= choirLimit(s)) yield* discardFromChoir(s, seat, p.choir[0].id, 'withering');
-    }
-  }
   if (rulesOf(s).decay) {
     // Variant (turnover): a full Choir loses its oldest card.
     for (const seat of order) {
@@ -745,8 +732,7 @@ function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
   });
   if (!eligible.length) return;
   log(s, 'spoils', `Spoils to ${eligible.map((x) => pname(s, x)).join(', ')}.`);
-  const each = rulesOf(s).spoilsEach, picks = each ? each * eligible.length : 200;
-  for (let k = 0; s.altar.length + s.altarTokens.length > 0 && k < picks; k++) {
+  for (let k = 0; s.altar.length + s.altarTokens.length > 0; k++) {
     const seat = eligible[k % eligible.length];
     const opts: Option[] = [...s.altar.map((a, i) => ({ id: 'altar:' + i, label: cardName(a.id), card: a.id })), ...s.altarTokens.map((t, i) => ({ id: 'token:' + i, label: `A ${tokenName(t.side)} token` }))];
     const pick = (yield* chooseOne(s, seat, 'spoils.pick', 'Spoils: take a card (into your hand) or a token from the Altar.', opts))!;

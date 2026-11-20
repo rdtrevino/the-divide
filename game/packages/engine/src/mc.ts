@@ -11,7 +11,7 @@ import { rulesOf } from './rules';
 import type { Answer, Decision, GameState, Seat, Side } from './types';
 
 /** Decisions worth searching; everything else is answered by the heuristic. */
-const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment', 'offer.swap', 'gather.to']);
+const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment', 'gather.to']);
 
 /**
  * `policy` plays everyone's choices inside the playouts (default: the heuristic bot). `rank` orders the options to

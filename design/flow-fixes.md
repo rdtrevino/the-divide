@@ -113,3 +113,80 @@ Noise is about ±0.1 on the ratios at 300 games. The base is `current` (rMajGH).
 - **Draw-for-all with turnover** adds nothing measurable. It stays a question for people (Section 5): the leak is about reads, which bots do not make.
 
 **Finalists** at 1,200 games: `decay` and `decay` + `gatherTo: 'either'` (`results/fix-final.jsonl`).
+
+## 4. Finalists at 1,200 games
+
+Noise is about ±0.05 on the ratios. Exploits at 600 games.
+
+| | Base (rMajGH) | `decay` | **`decay` + `gatherTo: 'either'`** |
+|---|---|---|---|
+| Choir flips (lean changes a game per player) | 0.17 | 0.28 | **0.46** |
+| Side flips | 0.23 | 0.30 | 0.29 |
+| Choir Offers / player | 0.4 | 0.3 | 0.3 |
+| Seats 4p | 0.95–1.08 | **0.85–1.18** | 0.90–1.05 |
+| Seats 3p | 0.89–1.10 | 0.90–1.10 | **0.94–1.04** |
+| Mixes 4p (lopsided deals) | 0.96–1.14 | 0.98–1.03 | **0.99–1.00** |
+| With / against the world 4p | 1.29 / 0.69 | 1.23 / 0.74 | 1.28 / 0.74 |
+| Reader 4p / 3p | 0.61 / 0.61 | 0.65 / 0.65 | 0.63 / 0.65 |
+| Skill (strong against heuristic) | 1.88 | 2.24 | 2.15 |
+| Close Days 4p | 0.22 | 0.19 | 0.19 |
+| Margin 4p | 4.35 | 4.59 | 4.13 |
+| Best fixed strategy (exploits) | 0.89 | 1.08 (300 games) | **0.90** (hedge) |
+
+Exploits for the finalist, 600 games: align 0.81, hedge 0.90, no token 0.53, always Offer 0.28, never Offer 0.88, never Gather 0.78.
+
+- **Turnover alone fails the 1,200-game check.** The first 4-player seat wins too often (1.18) and the third too rarely (0.85).
+- **Turnover with Gather into either is the finalist:**
+  - Choirs change nearly three times as often.
+  - Sides move a little more.
+  - 3-player seats and lopsided deals are the fairest of any version.
+  - Skill rises.
+  - Every fixed strategy loses.
+  - Costs: the weakest 4-player seat drops a little (0.90 from 0.95); the side you are dealt still matters as much (1.28 / 0.74); sides are a little easier to read (63–65%, from 61%).
+- **Why the pair works.** Turnover empties a Choir slot every Day, and Gather into the Choir refills it from the Altar.
+  - Alone, turnover makes Choirs shrink and leaves the first player's early Exalts ahead.
+  - Alone, Gather into the Choir lets an early lead compound (the reason Gather moved to the hand).
+  - Together, a Choir is a lineup that turns over, refilled from the Altar.
+- **What it does not do: Choir Offers stay rare** (0.3 a game). Choirs now change through turnover and Gathering, not through Offering. The swap was the one fix that made Choir Offers common, and it broke the tokens. If Robert wants the face-up Choir Offer itself to be common, it needs a reward that does not beat a token Offer. That is a new idea to test, not something here.
+
+## 5. Against the vision
+
+**The test for any new rule** (`vision.md`), for turnover with Gather into either:
+- **Self against side: a little sharper.**
+  - The card about to leave your Choir is the cheapest one to Offer face up for your side. Strong bots still rarely do it, but the choice exists every Day.
+  - Gathering is now a choice: into your Choir (Glory for you tonight, and your Choir's colors) or your hand (a future First Fruits, Exalt or ability).
+- **Allegiance stays uncertain, and Choirs stop pinning it down.**
+  - A Choir that changes every Day shows less of where you stand for good.
+  - Sides move a little more (0.29).
+  - Readers move from 61% to 63–65%, still far from certain. That is the main cost against principle 2, and it is small.
+- **The Altar is still the contest, and more so.** The Altar now feeds Choirs again: what one player Offers, another can Gather straight into their Choir.
+- **An ally is still a rival.** Unchanged.
+- **Checkable on the table: yes,** if Choirs are laid out in a row with new cards added on the right. The leftmost card leaves after the Reaping. No memory is needed.
+
+**Core change or patch?** Both are core changes to what a Choir is: a lineup that turns over and is refilled from the Altar, instead of an engine that sits. Neither is a cap, a catch-up or a tiebreak.
+
+**Rules a new player learns** (rMajGH about 20 points):
+- one more rule: "after the Reaping, a full Choir loses its leftmost card";
+- one rule changed: "a Gathered card goes into your hand or your Choir (making room)", which brings back "make room";
+- **about 21 points.**
+
+## 6. What the bots cannot show, and what needs people
+
+- **Whether losing a card each Day feels like loss or like rhythm.** The bots count Glory; people may resent watching their best card leave, or enjoy the churn. Either way, the leftmost card is known in advance, so people can plan for it.
+- **Cards built to stay.** Some cards' value comes from sitting in a Choir for many Days. Under turnover they last at most four Days unless Offered first. The cards need a pass (`cards/changes/*.json`) once the core settles, with `card-value.ts` to show which lose most.
+- **Reading a moving Choir.** The bots read colors by number. People may read a Choir that changes for forced reasons as less meaningful, or may read the Gather choice ("they put a Dark card into their Choir") as a strong tell.
+- **Whether the face-up Choir Offer matters to people.** Robert's aim was Choir switching through Offers. People may value the dramatic public Offer more than the bots do, and make it more often than 0.3 a game.
+- **The dealt side.** Neither finalist changes how much the side you are dealt matters (1.28 / 0.74). Bots cannot bluff or bargain their way out of a bad deal; people might, so this may matter less at a table.
+- **Skill numbers are biased for variants:** the heuristic bots misread every new rule a little, so 2.15 overstates the gain against people who learn it.
+- **The First Fruits leak is still open.** Draw-for-all closes it at no measurable cost to bots; whether people use the leak needs a table.
+
+## 7. Recommendation and next steps
+
+1. **Robert to decide:** adopt turnover with Gather into either (`decay: true, gatherTo: 'either'`) on rMajGH, or not.
+2. If yes: make them the engine defaults; then the rulebook, Quick Guide and Learn page; the card pass; retrain the learned bot (`game/tools/distill/README.md`). Then the merge to main.
+3. Open questions for later:
+   - a reward for the face-up Choir Offer that does not beat a token Offer;
+   - the dealt side (1.28 / 0.74);
+   - draw-for-all, at a table.
+
+Removed with this study (definitions in the git history): `offerSwap`, `replacedToHand`, `witherIdle`, `spoilsEach`. The default bots' moves are unchanged (bench fingerprints `5e0f30a8b72ccf9c`, `d8aa8a9ee120ebed`).
