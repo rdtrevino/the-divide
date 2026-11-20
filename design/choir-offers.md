@@ -32,4 +32,4 @@ November 20, 2026. Robert adopted turnover with Gather into the hand or the Choi
 | `choirSpoils: 'first'`, `'only'` | Spoils go first, or only, to whoever Offered a Choir card | 3: the Choir Offer buys the Altar | `'only'`: a token Offer earns nothing |
 | `oldestFree` | **After your action, a full Choir may also Offer its oldest card** (the one turnover will take tonight) | 1 and 6: turnover's loss becomes a choice: let the card go, or give it to a side, in public | New. Risk: an extra Offer every Day makes Days lopsided |
 
-Results: `tools/sim/results/choir-r1.jsonl` (300 games a mode), exploits in `results/choir-exploits.jsonl`, which add two strategies: never Offer a Choir card (`noChoir`) and always Offer a Choir card when Offering (`choirFirst`).
+Results: `tools/sim/results/offers-r1.jsonl` (300 games a mode), exploits in `results/offers-exploits.jsonl`, which add two strategies: never Offer a Choir card (`noChoir`) and always Offer a Choir card when Offering (`choirFirst`).
