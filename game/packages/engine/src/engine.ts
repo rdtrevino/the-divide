@@ -781,6 +781,8 @@ function* takeSpoils(s: GameState, won: Side, order: Seat[]): Gen<void> {
 
 /** End of the game: what a hand of tokens scores against the Days won (the `endScore` switch; 'each' is V45). */
 export function tokenScore(mode: string, tl: number, td: number, wl: number, wd: number): number {
+  // 'eligible': 1 if these tokens make you eligible to win (your majority side won more Days; tied tokens, tied Days).
+  if (mode === 'eligible') return Math.sign(tl - td) === Math.sign(wl - wd) ? 1 : 0;
   if (mode === 'majority') return tl > td ? tl * wl : td > tl ? td * wd : Math.max(tl * wl, td * wd);
   return tl * wl + td * wd;
 }
@@ -914,7 +916,7 @@ export function* endGame(s: GameState): Gen<void> {
     const before = p.glory;
     const tokens = { light: p.tokens.filter((t) => t === 'light').length, dark: p.tokens.filter((t) => t === 'dark').length };
     const R = rulesOf(s);
-    const fromTokens = tokenScore(R.endScore, tokens.light, tokens.dark, won.light, won.dark);
+    const fromTokens = R.endScore === 'eligible' ? 0 : tokenScore(R.endScore, tokens.light, tokens.dark, won.light, won.dark);
     yield* gain(s, p.seat, fromTokens, 'tokens');
     if (R.devotion && tokens.light !== tokens.dark) {
       // Variant (Devotion): each Choir card of the color you hold more tokens of scores again.
@@ -922,7 +924,7 @@ export function* endGame(s: GameState): Gen<void> {
       if (n) { yield* gain(s, p.seat, R.devotion * n, 'devotion'); log(s, 'devotion', `${p.name}'s Choir holds ${n} ${k === 'light' ? 'Light' : 'Dark'} card${n > 1 ? 's' : ''} of their side: +${R.devotion * n}.`); }
     }
     standings.push({ seat: p.seat, glory: p.glory, before, tokens, fromTokens });
-    log(s, 'tokens', `${p.name} held ${tokens.light} Light and ${tokens.dark} Dark: +${fromTokens}.`);
+    log(s, 'tokens', R.endScore === 'eligible' ? `${p.name} held ${tokens.light} Light and ${tokens.dark} Dark.` : `${p.name} held ${tokens.light} Light and ${tokens.dark} Dark: +${fromTokens}.`);
   }
   const R = rulesOf(s);
   if (R.miser || R.generous) {
@@ -936,8 +938,12 @@ export function* endGame(s: GameState): Gen<void> {
     for (const st of standings) st.glory = s.players[st.seat].glory;
   }
   const final = s.tides[s.tides.length - 1]?.dir ?? 'neutral';
-  const best = Math.max(...standings.map((x) => x.glory));
-  const top = standings.filter((x) => x.glory === best);
+  // Variant (eligible): only the players on the world's side (or, on tied Days, with tied tokens) may win.
+  const ok = R.endScore === 'eligible' ? standings.filter((x) => tokenScore('eligible', x.tokens.light, x.tokens.dark, won.light, won.dark)) : standings;
+  if (R.endScore === 'eligible') log(s, 'eligible', ok.length ? `Eligible to win: ${ok.map((x) => pname(s, x.seat)).join(', ')}.` : 'Nobody is on the side of the world, so everyone is eligible.');
+  const pool = ok.length ? ok : standings;
+  const best = Math.max(...pool.map((x) => x.glory));
+  const top = pool.filter((x) => x.glory === best);
   s.result = { winners: top.map((x) => x.seat), finalTide: final, daysWon: won, standings };
   s.phase = 'ended';
   stat(s, { type: 'game_end', data: { winners: s.result.winners, standings, daysWon: won } });

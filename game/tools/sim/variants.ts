@@ -17,6 +17,13 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   glory1: { choirOfferGlory: 1 }, glory2: { choirOfferGlory: 2 }, offerGlory1: { offerGlory: 1 }, draw1: { choirOfferDraw: 1 },
   reaps: { choirOfferReaps: true }, weight2: { choirOfferWeight: 2 }, tokenW1: { tokenWeight: 1 },
   spoilsFirst: { choirSpoils: 'first' }, spoilsOnly: { choirSpoils: 'only' }, oldest: { oldestFree: true },
+  // The World (design/the-world.md): back to the vision's turn (Offer from the hand facedown, First Fruits face up,
+  // Gather into the Choir, no harvest rule, no spoils), with the first rulebook's win: tokens score nothing; the side
+  // that won more Days is the world's, and only its players (by token majority) may win, by most Glory.
+  world: { ...V45, harvest: 'always', endScore: 'eligible' },
+  worldH: { ...V45, endScore: 'eligible' }, world7: { ...V45, harvest: 'always', endScore: 'eligible', tokensEach: 7 },
+  worldFT: { ...V45, harvest: 'always', endScore: 'eligible', fruitsToken: true }, worldTurn: { ...V45, harvest: 'always', endScore: 'eligible', decay: true },
+  worldSpoils: { ...V45, harvest: 'always', endScore: 'eligible', spoils: 'offerers', handMax: 5 },
 };
 
 /** A variant by name; `a+b` combines variants (later ones win). */

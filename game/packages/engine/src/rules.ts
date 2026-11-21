@@ -51,8 +51,11 @@ export interface CoreRules {
   /** A token (facedown, counts 2) may be given as First Fruits instead of a card. */
   fruitsToken: boolean;
   /** End of the game, with tl / td your tokens and wl / wd the Days won: 'each' (tl·wl + td·wd, now) or 'majority'
-   *  (only your majority color scores: tl·wl or td·wd; tied, the better). */
-  endScore: 'each' | 'majority';
+   *  (only your majority color scores: tl·wl or td·wd; tied, the better), or 'eligible' (the first rulebook's "faction
+   *  victory makes you eligible, Glory makes you the winner": tokens score nothing; the side that won more Days is the
+   *  world's, and only players whose token majority is that side may win, by most Glory; with tied tokens you are
+   *  eligible only if the Days are tied; if nobody is eligible, everyone is). */
+  endScore: 'each' | 'majority' | 'eligible';
   /** Most cards a hand may hold at the end of a Day (0: the hand size). */
   handMax: number;
   /** At the end of a Day: refill the hand to its size, or draw this many cards. */

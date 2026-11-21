@@ -17,6 +17,7 @@ const VARIANTS: Partial<CoreRules>[] = [
   // Fixes under test (November 20): Offer a Choir card and put a hand card in its place; Gather to hand or Choir; everyone draws after First Fruits.
   { gatherTo: 'hand', decay: false }, { fruitsDraw: 'all' }, { offerFrom: 'hand' }, { offerFrom: 'both', offerTokens: false }, { choirOfferGlory: 2, offerGlory: 1, choirOfferDraw: 1 },
   { choirOfferReaps: true, choirOfferWeight: 2, tokenWeight: 1 }, { choirSpoils: 'first' }, { choirSpoils: 'only', oldestFree: true },
+  { endScore: 'eligible', offerFrom: 'hand', gatherTo: 'choir', decay: false, spoils: 'none', handMax: 0, fruits: 'up', fruitsToken: false }, { endScore: 'eligible', tokensEach: 7 },
 ];
 
 describe('core rule switches', () => {
@@ -98,5 +99,6 @@ describe('core rule switches', () => {
     expect(tokenScore('each', 4, 2, 3, 2)).toBe(16);
     expect(tokenScore('majority', 4, 2, 3, 2)).toBe(12);
     expect(tokenScore('majority', 3, 3, 1, 4)).toBe(12);
+    expect([tokenScore('eligible', 4, 2, 3, 2), tokenScore('eligible', 4, 2, 2, 3), tokenScore('eligible', 3, 3, 2, 2), tokenScore('eligible', 3, 3, 3, 2)]).toEqual([1, 0, 1, 0]);
   });
 });

@@ -46,14 +46,20 @@ const addStake = (a: Stake, b: Stake): Stake => ({ light: a.light + b.light, dar
 const choirStake = (s: GameState, c: Stake): Stake => ({ light: rulesOf(s).choirPay * c.light, dark: rulesOf(s).choirPay * c.dark });
 const count = (t: readonly string[], k: string) => t.filter((x) => x === k).length;
 /** What these tokens gain at the end from a Light Day today, and from a Dark Day (V45: one each). */
-function tokenStake(s: GameState, held: readonly string[]): Stake {
+function tokenStake(s: GameState, held: readonly string[], seat?: Seat): Stake {
   const mode = rulesOf(s).endScore, tl = count(held, 'light'), td = count(held, 'dark');
   if (mode === 'each') return { light: tl, dark: td };
-  const w = daysWon(s), left = daysAfter(s);
-  return { light: expectTokens(mode, tl, td, w.light + 1, w.dark, left), dark: expectTokens(mode, tl, td, w.light, w.dark + 1, left) };
+  const w = daysWon(s), left = daysAfter(s), k = mode === 'eligible' ? prize(s, seat) : 1;
+  return { light: k * expectTokens(mode, tl, td, w.light + 1, w.dark, left), dark: k * expectTokens(mode, tl, td, w.light, w.dark + 1, left) };
+}
+/** Variant (eligible): what being eligible is worth to a player, about the Glory they should end with. */
+function prize(s: GameState, seat: Seat | undefined): number {
+  if (seat === undefined) return 8;
+  const p = s.players[seat];
+  return Math.max(8, p.glory + activeCards(p).reduce((t, c) => t + choirCardValue(s, c.id, seat), 0));
 }
 function stakeOf(s: GameState, seat: Seat): Stake {
-  return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, s.players[seat].tokens));
+  return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, s.players[seat].tokens, seat));
 }
 /** A Day goes to each side this often, and to nobody the rest (for the end-score variants' expectations). */
 const P_SIDE = 0.4;
@@ -70,11 +76,16 @@ export function expectTokens(mode: string, tl: number, td: number, wl: number, w
   return v;
 }
 /** What a hand of tokens should still bring by the end. */
-export function tokensValue(s: GameState, held: readonly string[]): number {
+export function tokensValue(s: GameState, held: readonly string[], seat?: Seat): number {
   const mode = rulesOf(s).endScore;
   if (mode === 'each') return held.reduce((t, k) => t + tokenWorth(s, k as 'light' | 'dark'), 0);
   const w = daysWon(s);
-  return expectTokens(mode, count(held, 'light'), count(held, 'dark'), w.light, w.dark, daysAfter(s));
+  return (mode === 'eligible' ? prize(s, seat) : 1) * expectTokens(mode, count(held, 'light'), count(held, 'dark'), w.light, w.dark, daysAfter(s));
+}
+/** Variant (eligible): the chance these tokens leave a player eligible to win, from the Days so far. */
+export function eligibleChance(s: GameState, held: readonly string[]): number {
+  const w = daysWon(s);
+  return expectTokens('eligible', count(held, 'light'), count(held, 'dark'), w.light, w.dark, daysAfter(s));
 }
 /** Expected value of today's Day from an estimated Altar; `w` < 1 when players still to act can swing it. */
 function dayValue(st: Stake, est: number, w = 0.7) {
@@ -104,9 +115,9 @@ const handCardValue = (s: GameState, id: string | undefined, seat?: Seat) => 0.5
 export const tokenWorth = (s: GameState, side: 'light' | 'dark', seat?: Seat, more = true): number => {
   if (rulesOf(s).endScore === 'each') return daysWon(s)[side] + 0.5 * daysAfter(s);
   const held = seat === undefined ? [] : s.players[seat].tokens;
-  if (more) return tokensValue(s, [...held, side]) - tokensValue(s, held);
+  if (more) return tokensValue(s, [...held, side], seat) - tokensValue(s, held, seat);
   const less = [...held]; less.splice(less.indexOf(side), 1);
-  return tokensValue(s, held) - tokensValue(s, less);
+  return tokensValue(s, held, seat) - tokensValue(s, less, seat);
 };
 
 /** Players acting after `seat` this Day can still swing the Tide; discount accordingly. */
@@ -218,14 +229,14 @@ export function botAnswer(s: GameState, d: Decision): Answer {
   const w = later === 0 ? 1 : later === 1 ? 0.75 : 0.55;
   /** Offering (or giving as First Fruits) one of my tokens: its push today, against its worth at the end. */
   const offerToken = (k: 'light' | 'dark') => {
-    const less = rulesOf(s).endScore === 'each' ? { ...st, [k]: st[k] - 1 } : (() => { const h = [...s.players[seat].tokens]; h.splice(h.indexOf(k), 1); return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, h)); })();
+    const less = rulesOf(s).endScore === 'each' ? { ...st, [k]: st[k] - 1 } : (() => { const h = [...s.players[seat].tokens]; h.splice(h.indexOf(k), 1); return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, h, seat)); })();
     return dayValue(less, altar + (k === 'light' ? 1 : -1) * R.tokenWeight, w) - dayValue(st, altar, w) - tokenWorth(s, k, seat, false) + 0.5 + R.offerGlory;
   };
   /** Offering a card from my Choir: its push today, against what it would have scored tonight and later, plus any
    *  reward a variant gives for it. */
   const offerFromChoir = (id: string) => {
     const v = val(s, id), cc = choirColors(s, seat);
-    const less = R.choirOfferReaps ? st : addStake(choirStake(s, { light: cc.light - Math.sign(v.light), dark: cc.dark - Math.sign(v.dark) }), tokenStake(s, s.players[seat].tokens));
+    const less = R.choirOfferReaps ? st : addStake(choirStake(s, { light: cc.light - Math.sign(v.light), dark: cc.dark - Math.sign(v.dark) }), tokenStake(s, s.players[seat].tokens, seat));
     const reward = R.choirOfferGlory + R.offerGlory + R.choirOfferDraw * handCardValue(s, undefined, seat) + (R.choirSpoils ? 0.5 : 0);
     return dayValue(less, altar + signed(s, id) * R.choirOfferWeight, w) - dayValue(st, altar, w) - choirCardValue(s, id, seat) - engineVal(s, seat, id) + reward;
   };
@@ -264,7 +275,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
       const replaced = room ? 0 : choirCardValue(s, worst?.id, seat) + engineVal(s, seat, worst?.id);
       /** My stake if `id` joins my Choir (and the worst card leaves a full one). */
       const cc = choirColors(s, seat);
-      const toks = tokenStake(s, p.tokens);
+      const toks = tokenStake(s, p.tokens, seat);
       const withCard = (id: string | undefined): Stake => {
         const v = val(s, id), o = room || !worst ? { light: 0, dark: 0 } : val(s, worst.id);
         return addStake(choirStake(s, { light: cc.light + Math.sign(v.light) - Math.sign(o.light), dark: cc.dark + Math.sign(v.dark) - Math.sign(o.dark) }), toks);
