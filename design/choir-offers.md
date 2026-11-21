@@ -123,3 +123,22 @@ Exploits (300 games, ±0.1):
   - Spoils first gives the fairest deal, but never Offering a Choir card wins (1.08): the Choir Offer is still optional there.
 
 **Finalists** at 1,200 games: `offerGlory: 1` + `choirOfferGlory: 1`, and the base, whose never-Offer result (1.07) needs confirming (`results/offers-final.jsonl`).
+
+## 5. Finals (1,200 games; exploits at 600)
+
+| | Current core | **`offerGlory: 1` + `choirOfferGlory: 1`** |
+|---|---|---|
+| Choir Offers / player | 0.40 | **1.27** |
+| Choir flips / side flips | 0.37 / 0.24 | 0.30 / 0.24 |
+| Seats 4p / 3p | 0.91–1.09 / 0.94–1.05 | 0.93–1.11 / 0.88–1.09 |
+| Mixes 4p | 0.98–1.03 | 0.97–1.09 |
+| With / against | 1.22 / 0.71 | 1.30 / 0.73 |
+| Reader 4p / 3p | 0.65 / 0.65 | 0.66 / 0.65 |
+| Skill | 2.03 | **2.45** |
+| Exploits | never Offer **1.02**, never a Choir card **1.04**, hedge 0.94, align 0.89 | all ≤ 0.96 (align 0.96, never a Choir card 0.96, never Offer 0.94, hedge 0.91, never Gather 0.71, never a token 0.59, always a Choir card 0.57, always Offer 0.36) |
+
+- **The base confirms the problem:** never Offering breaks even, and never Offering a Choir card does slightly better than strong play. "Offer only from the Choir" is a rule players can ignore.
+- **The finalist holds:** Choir Offers triple, skill rises, and every fixed strategy loses.
+- Without spoils, the reward does not hold (skill 1.41; never a Choir card 1.03, align 1.06), so spoils stay.
+
+Whether this reward is faithful to the vision, given that V45 removed a Glory reward for Offering, is argued in `the-world.md` (Section 6), which compares it with every other route.
