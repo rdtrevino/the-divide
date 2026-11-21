@@ -70,4 +70,27 @@ Noise is about ±0.1 on the ratios. "Choir Offers" is per player per game; "Choi
 - **+1 Glory for any Offer** mostly makes players Offer tokens (3.6 a game), so Choirs change less (0.26). It gives the highest skill measured (2.69) and very even seats, which is worth noting for balance, but it does not answer the Choir question.
 - **Making a Choir card count double, or a token count 1, changes nothing:** the push was never the problem. The cost is: tonight's Reaping and the card's future Days.
 
-Next: exploit checks on the leaders (`results/offers-exploits.jsonl`), with the strategies that matter here: never Offer a Choir card, always Offer one, never Offer a token, never Offer, always Offer.
+
+## 3. Exploits: free-riding comes back
+
+300 games a strategy, ±0.1. Above 1, the fixed strategy beats the strong bots.
+
+| Variant | Never a Choir card | Always a Choir card | Never a token | **Never Offer** | Always Offer |
+|---|---|---|---|---|---|
+| current (base) | 0.92 | 0.56 | 0.62 | 1.07 | 0.21 |
+| `oldestFree` | 1.02 | 0.55 | 0.71 | **1.24** | 0.20 |
+| `choirOfferGlory: 1` | 0.98 | 0.70 | 0.66 | **1.26** | 0.17 |
+| `choirOfferGlory: 2` | 0.77 | 0.90 | 0.90 | **1.24** | 0.10 |
+| `choirOfferReaps` | 0.84 | 0.63 | 0.61 | 1.09 | 0.20 |
+| `choirOfferDraw: 1` | 1.02 | 0.63 | 0.62 | **1.28** | 0.15 |
+| `offerGlory: 1` (any Offer) | 1.00 | 0.48 | 0.46 | **0.81** | 0.51 |
+
+- **Never Offering wins as soon as the others Offer more.**
+  - A player who never Offers keeps every token for the end and spends each turn Gathering or Exalting, often taking what the others put on the Altar.
+  - Every idea that makes Choir Offers more common feeds that player.
+  - This is free-riding on the public good, the one thing principle 1 must not let win.
+- **The base itself is at the edge** (1.07, within noise). It was 0.88 before the bots learned turnover: the fixed bots Offer Choir cards a little more, which feeds the free-rider. The 1,200-game finals will settle it.
+- **Only a reward for every Offer pushes free-riding down** (`offerGlory: 1`, never Offering 0.81). It pays the act of contributing, whatever is given. Alone it moves Choir Offers only a little (0.57).
+- **The Glory reward makes Choir Offers a real option** (always Offering a Choir card: 0.90 with +2, from 0.56).
+
+So the fix has two jobs: make the Choir Offer worth making, and keep never Offering a losing line. Round 2 pairs `offerGlory: 1` with each Choir Offer idea (`results/offers-r2.jsonl`).
