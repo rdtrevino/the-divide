@@ -7,3 +7,5 @@
 {"variant":"currentGate","games":160,"far":true,"strongEligible":0.44,"heurEligible":0.44,"strongWinIfEligible":0.69,"heurWinIfEligible":0.42,"strongGlory":36.7,"heurGlory":36,"skill":1.48}
 {"variant":"vt","games":160,"far":false,"strongEligible":0.64,"heurEligible":0.28,"strongWinIfEligible":0.5,"heurWinIfEligible":0.33,"strongGlory":37.1,"heurGlory":33.3,"skill":1.69}
 {"variant":"vtSpoils","games":160,"far":false,"strongEligible":0.55,"heurEligible":0.37,"strongWinIfEligible":0.6,"heurWinIfEligible":0.32,"strongGlory":46.5,"heurGlory":40.9,"skill":1.9}
+{"variant":"offerGlory1+glory1","games":160,"far":false,"strongEligible":0.65,"heurEligible":0.35,"strongWinIfEligible":0.72,"heurWinIfEligible":0.22,"strongGlory":49.5,"heurGlory":39.9,"skill":2.5}
+{"variant":"leadUp","games":160,"far":false,"strongEligible":0.63,"heurEligible":0.35,"strongWinIfEligible":0.75,"heurWinIfEligible":0.18,"strongGlory":49.1,"heurGlory":39.1,"skill":2.6}

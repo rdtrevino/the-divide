@@ -37,6 +37,8 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   // The leader with the honest card back (First Fruits face up), and with everyone drawing after First Fruits.
   leadUp: { offerGlory: 1, choirOfferGlory: 1, fruits: 'up' }, leadDraw: { offerGlory: 1, choirOfferGlory: 1, fruitsDraw: 'all' },
   leadUpDraw: { offerGlory: 1, choirOfferGlory: 1, fruits: 'up', fruitsDraw: 'all' },
+  // The leader without spoils (the reward for Offering may make them unnecessary): no draft, no hand limit.
+  leadNoSpoils: { offerGlory: 1, choirOfferGlory: 1, spoils: 'none', handMax: 0 },
   vtDevotion: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', devotion: 1 },
 };
 
