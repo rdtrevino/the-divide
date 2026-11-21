@@ -95,3 +95,47 @@ Variants tested alongside (`tools/sim/variants.ts`):
 The comparisons are V45 and the current branch core (the flow with turnover and Gather into either).
 
 Results: `tools/sim/results/world-r1.jsonl` (200 games a mode, ±0.12).
+
+## 4. Results: the World hides sides best, but it does not hold
+
+200 games a mode (±0.12), strong bots in every seat. Skill is one strong bot among three heuristic bots. "With / against" is your win share when the side you were dealt more of won more Days, and when it lost.
+
+| | Reader 4p / 3p | Seats 4p / 3p | Mixes 4p | With / against | Side flips | Skill |
+|---|---|---|---|---|---|---|
+| Current core (1,200 games) | 0.65 / 0.65 | 0.91–1.09 / 0.94–1.05 | 0.98–1.03 | 1.22 / 0.71 | 0.24 | 2.03 |
+| V45 | 0.69 / 0.72 | 0.97–1.05 / 0.96–1.04 | 0.73–1.05 | 1.22 / 0.75 | 0.05 | 1.73 |
+| **World** | 0.59 / 0.63 | 0.82–1.28 / 0.88–1.22 | 0.88–1.08 | **1.84 / 0.24** | 0.07 | **1.11** |
+| World, no offering, no harvest | 0.60 / 0.66 | 0.83–1.24 / 0.89–1.19 | 0.77–1.13 | 1.60 / 0.45 | 0.09 | 1.09 |
+| World, 7 tokens | 0.65 / 0.69 | 0.81–1.21 / 0.73–1.16 | 0.55–1.14 | 1.55 / 0.36 | 0.21 | 1.33 |
+| **World, tokens as First Fruits** | **0.53 / 0.49** | 0.88–1.14 / 0.98–1.04 | 0.96–1.14 | 1.26 / 0.78 | 0.25 | 1.12 |
+| World, turnover | 0.55 / 0.57 | 0.84–1.35 / 0.89–1.16 | 0.78–1.10 | 1.67 / 0.33 | 0.06 | 1.53 |
+| World, spoils | 0.60 / 0.58 | 0.95–1.10 / 0.83–1.10 | 0.92–1.02 | 1.45 / 0.27 | 0.14 | 0.89 |
+| The world's gate on majority scoring (V45 turn, tokens as First Fruits) | 0.56 / 0.51 | 0.82–1.16 / 0.89–1.13 | 0.89–1.07 | 1.09 / 0.99 | 0.33 | 1.27 |
+| The same, without First Fruits tokens | 0.78 / 0.77 | 0.85–1.12 / 0.78–1.33 | 0.81–1.08 | 2.09 / 0.11 | 0.05 | 1.25 |
+| The gate on V45 scoring (tokens as First Fruits) | 0.54 / 0.58 | 0.84–1.15 / 0.75–1.32 | 0.94–1.03 | 1.24 / 0.84 | 0.38 | 1.43 |
+| The current core with the gate | 0.54 / 0.50 | 0.85–1.16 / 0.79–1.15 | 0.89–1.07 | 1.47 / 0.76 | 0.53 | 1.76 |
+
+Exploits (200 games, ±0.12): World: never Offer **1.16**. World with tokens as First Fruits: never Gather **1.25** (a blind token can flip your side, so staying off the Altar is safe), hedge 1.07. The gate on V45 scoring: never Offer 1.07, hedge 1.09.
+
+**Where the skill went** (`tools/sim/skill-split.ts`: how often a strong bot ends on the world's side, against heuristic bots, and its Glory):
+
+| 160 skill games | On the world's side, strong / heuristic | Glory, strong / heuristic | Skill (rollouts to the end of the Day) | Skill (rollouts to the end of the game) |
+|---|---|---|---|---|
+| Current core | **60% / 33%** | 44 / 38 | 2.00 | 1.86 |
+| V45 | 41% / 32% | 39 / 36 | 1.76 | **2.06** |
+| World | — | — | 1.11 | 1.22 |
+| World, tokens as First Fruits | 38% / 35% | 23 / 24 | 1.16 | 1.06 |
+| Gate on V45 scoring | 59% / 45% | 40 / 40 | 1.43 | 1.27 |
+| Gate on majority scoring | 56% / 37% | 36 / 36 | 1.35 | 1.19 |
+| Current core with the gate | 66% / 39% | 37 / 35 | 1.69 | 1.48 |
+
+**What it says:**
+- **The World hides sides better than anything measured in the engine** (49–58%, where guessing is 50%), when tokens can be First Fruits. The gap does what the vision says about secrecy.
+- **But it turns the game toward luck.**
+  - Being on the world's side is all or nothing, and one Day can swing it.
+  - With fixed sides, the deal decides (1.84 / 0.24).
+  - With moving sides, skill collapses (1.1–1.4): the strong bot cannot steer onto the winning side much better than a simple one, and Choir Glory takes little skill.
+- **It is not the bot's short sight.** Given rollouts to the end of the game, the strong bot gains skill in V45 (2.06) but not in any World variant (1.06–1.48).
+- **Free-riding is not solved either** (never Offering 1.07–1.16 without First Fruits tokens), and the 3-player seats spread.
+
+**Verdict: the World is rejected.** The vision's sentence is right about the gap, but a hard gate puts the gap in the wrong place: it makes the side decide too much, or chance decide too much. The first rulebook had 4–6 players and hidden Fates, where a side is a team of several; at 3–4 players, with tokens, the smooth score was right all along. What carries over is the evidence that **moving tokens (tokens as First Fruits) hide sides best**.
