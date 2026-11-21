@@ -94,3 +94,32 @@ Noise is about ±0.1 on the ratios. "Choir Offers" is per player per game; "Choi
 - **The Glory reward makes Choir Offers a real option** (always Offering a Choir card: 0.90 with +2, from 0.56).
 
 So the fix has two jobs: make the Choir Offer worth making, and keep never Offering a losing line. Round 2 pairs `offerGlory: 1` with each Choir Offer idea (`results/offers-r2.jsonl`).
+
+## 4. Round 2: a reward for every Offer, plus one for the Choir
+
+`offerGlory: 1` with each Choir Offer idea (300 games a mode; `results/offers-r2.jsonl`):
+
+| `offerGlory: 1` plus | Choir Offers | Token Offers | Choir flips | Seats 4p / 3p | Mixes 4p | With / against 4p | Reader 4p / 3p | Skill |
+|---|---|---|---|---|---|---|---|---|
+| (base, neither) | 0.40 | 2.79 | 0.38 | 0.90–1.10 / 0.88–1.09 | 0.95–1.04 | 1.34 / 0.80 | 0.64 / 0.64 | 1.97 |
+| `choirOfferGlory: 1` (a Choir Offer pays 2 in all) | **1.27** | 2.97 | 0.30 | **0.93–1.06** / 0.86–1.09 | 0.86–1.08 | 1.36 / 0.68 | 0.66 / 0.66 | 2.62 |
+| `choirOfferReaps` | 1.20 | 3.03 | 0.33 | 0.90–1.12 / **0.97–1.04** | 0.83–1.08 | 1.28 / 0.60 | 0.66 / 0.67 | 2.51 |
+| `choirSpoils: 'first'` | 1.04 | 2.95 | 0.33 | 0.87–1.08 / 0.91–1.07 | **0.98–1.07** | **1.26 / 0.82** | 0.64 / 0.67 | **2.63** |
+| `oldestFree` | 1.38 | 3.11 | 0.36 | **0.79–1.23** / 0.95–1.05 | 0.96–1.23 | 1.47 / 0.61 | 0.62 / 0.66 | 1.90 |
+
+Exploits (300 games, ±0.1):
+
+| Variant | Align | Hedge | No token | Always Offer | **Never Offer** | Never Gather | Never a Choir card | Always a Choir card |
+|---|---|---|---|---|---|---|---|---|
+| + `choirOfferGlory: 1` | 0.93 | 1.04 | 0.69 | 0.31 | **0.91** | 0.67 | 0.91 | 0.68 |
+| + `choirOfferReaps` | 0.90 | 0.78 | 0.51 | 0.34 | 1.00 | 0.94 | 0.85 | 0.51 |
+| + `choirSpoils: 'first'` | 1.01 | 1.02 | 0.42 | 0.45 | 0.99 | 0.90 | 1.08 | 0.44 |
+
+- **Choir Offers triple** (1.0–1.4 a game, from 0.40) in every pairing, and skill rises to 2.5–2.6. The point for every Offer seems to reward reading the Day.
+- **Choir colors change a little less** (0.30–0.36 against 0.38). Players now Offer from the Choir and refill it from the Altar or the hand, often with the same color, so the mix holds.
+- **The free oldest-card Offer drops out:** a seat at 1.23 and skill back at 1.90.
+- **The Glory pairing is the leader.** Every fixed strategy is at or below even within noise (hedge 1.04, never Offer 0.91), and the 4-player seats are the tightest (0.93–1.06).
+  - The pairing with the card still reaping tonight is close, with the best 3-player seats, but never Offering sits at 1.00.
+  - Spoils first gives the fairest deal, but never Offering a Choir card wins (1.08): the Choir Offer is still optional there.
+
+**Finalists** at 1,200 games: `offerGlory: 1` + `choirOfferGlory: 1`, and the base, whose never-Offer result (1.07) needs confirming (`results/offers-final.jsonl`).
