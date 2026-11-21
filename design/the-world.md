@@ -139,3 +139,77 @@ Exploits (200 games, ±0.12): World: never Offer **1.16**. World with tokens as 
 - **Free-riding is not solved either** (never Offering 1.07–1.16 without First Fruits tokens), and the 3-player seats spread.
 
 **Verdict: the World is rejected.** The vision's sentence is right about the gap, but a hard gate puts the gap in the wrong place: it makes the side decide too much, or chance decide too much. The first rulebook had 4–6 players and hidden Fates, where a side is a team of several; at 3–4 players, with tokens, the smooth score was right all along. What carries over is the evidence that **moving tokens (tokens as First Fruits) hide sides best**.
+
+## 5. The vision's own turn, with what the studies proved
+
+The V45 turn (Offers from the hand facedown, First Fruits face up, Gather into the Choir), plus the two pieces proven to move and hide sides: a token may be First Fruits (everyone draws, so nobody is spotted), and majority scoring. Three answers to free-riding (200 games a mode):
+
+| | Reader 4p / 3p | Seats 4p / 3p | With / against | Side flips | Skill |
+|---|---|---|---|---|---|
+| with no offering, no harvest | 0.64 / 0.63 | 0.86–1.19 / 0.95–1.03 | 1.09 / 0.77 | 0.24 | 1.62 |
+| with no rule | 0.59 / 0.67 | 0.79–1.12 / 0.78–1.14 | 1.36 / 0.64 | 0.16 | 1.44 |
+| with spoils to the Offerers | 0.64 / 0.65 | 0.86–1.14 / 0.94–1.07 | 1.42 / 0.51 | 0.21 | 1.88 |
+| with Devotion | 0.57 / 0.55 | 0.85–1.17 / 0.93–1.08 | 1.09 / 0.95 | 0.30 | 1.42 |
+
+None beats the current core (skill 2.03, seats 0.91–1.09 / 0.94–1.05).
+- **Going back to hidden Offers from the hand costs skill and fairness** every time it has been tried: here, in `choir-offers.md` (seats to 0.76–1.22) and in the flow study.
+- In the current core the hidden contribution survives anyway: it is the token, Offered facedown about 3 times a game each.
+
+## 6. The answer
+
+After every route above, the evidence points to **the current core with one change: every Offer earns 1 Glory, and an Offer from your Choir earns 2** (`offerGlory: 1`, `choirOfferGlory: 1`; `choir-offers.md`).
+
+At 1,200 games, with exploits at 600:
+
+| | Current core | **With the Offer reward** |
+|---|---|---|
+| Choir Offers / player | 0.40 | **1.27** |
+| Sides move (side flips) | 0.24 | 0.24 |
+| Reader 4p / 3p (guessing 50%; the vision's target 60–75%) | 0.65 / 0.65 | 0.66 / 0.65 |
+| Seats 4p / 3p | 0.91–1.09 / 0.94–1.05 | 0.93–1.11 / 0.88–1.09 |
+| Mixes 4p | 0.98–1.03 | 0.97–1.09 |
+| With / against the world | 1.22 / 0.71 | 1.30 / 0.73 |
+| **Skill** | 2.03 | **2.45** |
+| Never Offer | **1.02** | **0.94** |
+| Never Offer a Choir card | **1.04** | 0.96 |
+| Always Offer | 0.21 | 0.36 |
+| Best fixed strategy | 1.04 | 0.96 (align, never a Choir card) |
+
+**Why this is faithful, and not the V44 mistake I first took it for:**
+- **V44 paid +1 Glory for an Offer from the hand,** where cards refill for free, so Offering cost almost nothing and always Offering came close to a fair share (0.83). The dilemma was gone.
+- **Here an Offer costs something real:** a token (part of your side and your score) or a Choir card (part of your engine, in public). The point repays part of that price, but not all of it: always Offering loses (0.36), and so does never Offering (0.94). The decision is *when*, which is principle 1's "the best players are the ones who know when to switch".
+- The reward sets the price of contributing; it does not turn the contribution into a private good.
+- **The Choir Offer becomes the act the flow wanted:** a public, provable sacrifice, made more than once a game, beside the hidden token Offer.
+
+**What I tried and rejected on the way** (all in this file or `choir-offers.md`):
+- the World and its gate (luck);
+- the vision's turn with hidden hand Offers (less skill, less fair);
+- First Fruits face up: the honest card gives the fairest seats (0.94–1.06 / 0.95–1.03) and more skill (2.63), but it brings hedging back (alignment −0.55), makes sides easier to read (0.68) and lets lopsided deals pay (1.25);
+- the reward without spoils (skill 1.41; never a Choir card 1.03, align 1.06);
+- the swap, the free oldest-card Offer, the card that still reaps, spoils first to Choir Offerers, a drawn card, no token Offers, weights.
+
+### Against the vision
+
+- **1. Self versus side:** sharper.
+  - An Offer gives up a piece of your side (a token) or your engine (a Choir card) for the Day.
+  - The point makes the trade close, not free.
+  - Every simple plan loses.
+- **2. Uncertain allegiance:**
+  - sides move (0.24 a game per player, against 0.00 before the flow);
+  - the reader is at 65–66%, inside the target, though not as low as the World (50%).
+- **3. The Altar as a contest:**
+  - tokens Offered facedown and drafted as spoils;
+  - Choir cards Offered face up, provable and open to doubt ("I gave my Hymn for Light: was it the card turnover would have taken anyway?").
+- **4. Allies are rivals:** spoils go to every Offerer, whatever they gave, so your ally's token may go home with your rival.
+- **5. Checkable:** the Glory is taken the moment you Offer.
+- **Core or patch?** It changes the payoff of the core action, not a cap, a catch-up or a tiebreak. It is a reward, the kind the vision warns about, and the case for it rests on the measured fact that the dilemma survives it.
+
+**Rules a new player learns:** about 22 points, one more than the current core ("an Offer earns 1 Glory, 2 from your Choir").
+
+### What the bots cannot show
+
+- **Whether people feel the point as "paid to vote".** The numbers say the dilemma survives; the feeling is a question for a table.
+- **Talk around face-up sacrifices.** A Choir Offer is now common and provable: does it become a currency for deals, or a bluff ("I gave a card that was leaving anyway")?
+- **Reading sides by eye.** The reader is a card-counter; people read faces and draft choices.
+- **The World at 5–6 players.** The gate failed at 3–4, where a side is one or two people. With 5–6 players and teams of three, the first rulebook's gate might be right again. That is worth a test if the game grows.
+- **Skill numbers are biased for variants:** the heuristic bots learn each new rule imperfectly.
