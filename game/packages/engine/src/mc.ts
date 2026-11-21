@@ -21,6 +21,8 @@ export interface Strength {
   rollouts: number; maxOptions: number; policy?: (s: GameState, d: Decision) => Answer; rank?: (s: GameState, d: Decision) => string[];
   /** A fixed lean added to each option's estimate (for testing fixed strategies played well otherwise). */
   bias?: (s: GameState, d: Decision, id: string) => number;
+  /** Play each rollout to the end of the game instead of the end of the Day (slower; for testing what a longer view finds). */
+  toEnd?: boolean;
 }
 export const STRONG: Strength = { rollouts: 8, maxOptions: 6 };
 
@@ -102,16 +104,17 @@ function utility(s: GameState, q: Seat): number {
 }
 
 /** Copy the game at this decision, reshuffle the unseen, answer it with `choice`, and play out the rest of the Day. */
-function rollout(g: Game, d: Decision, choice: Answer, policy: (s: GameState, d: Decision) => Answer = botAnswer): number {
+function rollout(g: Game, d: Decision, choice: Answer, policy: (s: GameState, d: Decision) => Answer = botAnswer, toEnd = false): number {
   const r = g.fork();
   determinize(r.state, d.seat);
   const day = r.state.day;
   const open = () => r.pending.filter((p) => r.waitingOn(p.seat).includes(p));
   for (const p of open()) r.answer(p.seat, p.id, p.id === d.id ? choice : policy(r.state, p));
   let guard = 0;
-  while (!r.over && r.state.day === day && r.pending.length) {
+  const cap = toEnd ? 40000 : 4000;
+  while (!r.over && (toEnd || r.state.day === day) && r.pending.length) {
     for (const p of open()) if (r.pending.includes(p)) r.answer(p.seat, p.id, policy(r.state, p));
-    if (++guard > 4000) break;
+    if (++guard > cap) break;
   }
   return utility(r.state, d.seat);
 }
@@ -130,7 +133,7 @@ export function searchScores(g: Game, d: Decision, k: Strength = STRONG, quick =
   const base = (g.state.config.seed ^ (d.id * 2654435761)) | 0;
   const scores = ids.map((id) => {
     let total = 0;
-    for (let i = 0; i < k.rollouts; i++) { seq = base + i * 7919; total += rollout(g, d, [id], k.policy); }
+    for (let i = 0; i < k.rollouts; i++) { seq = base + i * 7919; total += rollout(g, d, [id], k.policy, k.toEnd); }
     return total / k.rollouts + (k.bias ? k.bias(g.state, d, id) : 0);
   });
   return { ids, scores };
