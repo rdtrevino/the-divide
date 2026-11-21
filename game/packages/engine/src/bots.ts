@@ -48,9 +48,8 @@ const count = (t: readonly string[], k: string) => t.filter((x) => x === k).leng
 /** What these tokens gain at the end from a Light Day today, and from a Dark Day (V45: one each). */
 function tokenStake(s: GameState, held: readonly string[], seat?: Seat): Stake {
   const mode = rulesOf(s).endScore, tl = count(held, 'light'), td = count(held, 'dark');
-  if (mode === 'each') return { light: tl, dark: td };
   const w = daysWon(s), left = daysAfter(s), k = mode === 'eligible' ? prize(s, seat) : 1;
-  const st = { light: k * expectTokens(mode, tl, td, w.light + 1, w.dark, left), dark: k * expectTokens(mode, tl, td, w.light, w.dark + 1, left) };
+  const st = mode === 'each' ? { light: tl, dark: td } : { light: k * expectTokens(mode, tl, td, w.light + 1, w.dark, left), dark: k * expectTokens(mode, tl, td, w.light, w.dark + 1, left) };
   if (!rulesOf(s).worldGate || mode === 'eligible') return st;
   // The world's gate: being on the world's side at the end is worth about the Glory this player should end with.
   const g = prize(s, seat);
@@ -82,9 +81,8 @@ export function expectTokens(mode: string, tl: number, td: number, wl: number, w
 /** What a hand of tokens should still bring by the end. */
 export function tokensValue(s: GameState, held: readonly string[], seat?: Seat): number {
   const mode = rulesOf(s).endScore;
-  if (mode === 'each') return held.reduce((t, k) => t + tokenWorth(s, k as 'light' | 'dark'), 0);
   const w = daysWon(s), tl = count(held, 'light'), td = count(held, 'dark');
-  const v = (mode === 'eligible' ? prize(s, seat) : 1) * expectTokens(mode, tl, td, w.light, w.dark, daysAfter(s));
+  const v = mode === 'each' ? held.reduce((t, k) => t + w[k as 'light' | 'dark'] + 0.5 * daysAfter(s), 0) : (mode === 'eligible' ? prize(s, seat) : 1) * expectTokens(mode, tl, td, w.light, w.dark, daysAfter(s));
   return rulesOf(s).worldGate && mode !== 'eligible' ? v + prize(s, seat) * expectTokens('eligible', tl, td, w.light, w.dark, daysAfter(s)) : v;
 }
 /** What tokens score at the end by `endScore` alone (without the world's gate). */
@@ -124,7 +122,7 @@ const handCardValue = (s: GameState, id: string | undefined, seat?: Seat) => 0.5
 /** What holding a token of a side is worth by the end: the Days it has won, and about half of those to come. */
 /** For the end-score variants, the token's worth to `seat` given what it holds: one more (`more`), or one fewer. */
 export const tokenWorth = (s: GameState, side: 'light' | 'dark', seat?: Seat, more = true): number => {
-  if (rulesOf(s).endScore === 'each') return daysWon(s)[side] + 0.5 * daysAfter(s);
+  if (rulesOf(s).endScore === 'each' && !rulesOf(s).worldGate) return daysWon(s)[side] + 0.5 * daysAfter(s);
   const held = seat === undefined ? [] : s.players[seat].tokens;
   if (more) return tokensValue(s, [...held, side], seat) - tokensValue(s, held, seat);
   const less = [...held]; less.splice(less.indexOf(side), 1);
@@ -240,7 +238,7 @@ export function botAnswer(s: GameState, d: Decision): Answer {
   const w = later === 0 ? 1 : later === 1 ? 0.75 : 0.55;
   /** Offering (or giving as First Fruits) one of my tokens: its push today, against its worth at the end. */
   const offerToken = (k: 'light' | 'dark') => {
-    const less = rulesOf(s).endScore === 'each' ? { ...st, [k]: st[k] - 1 } : (() => { const h = [...s.players[seat].tokens]; h.splice(h.indexOf(k), 1); return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, h, seat)); })();
+    const less = rulesOf(s).endScore === 'each' && !R.worldGate ? { ...st, [k]: st[k] - 1 } : (() => { const h = [...s.players[seat].tokens]; h.splice(h.indexOf(k), 1); return addStake(choirStake(s, choirColors(s, seat)), tokenStake(s, h, seat)); })();
     return dayValue(less, altar + (k === 'light' ? 1 : -1) * R.tokenWeight, w) - dayValue(st, altar, w) - tokenWorth(s, k, seat, false) + 0.5 + R.offerGlory;
   };
   /** Offering a card from my Choir: its push today, against what it would have scored tonight and later, plus any
