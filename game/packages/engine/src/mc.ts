@@ -4,14 +4,14 @@
 // best placed against the strongest rival. Reads come from how it reshuffles: a player's secret tokens are dealt
 // leaning toward their Choir's colors, as a careful person would guess. Bluffs come from the search itself: it learns
 // what the other players read into Choirs and facedown Offers, and plays against that.
-import { botAnswer, choirCardValue, eligibleChance, tokensValue, tokensValueRaw } from './bots';
+import { botAnswer, choirCardValue, tokensValue } from './bots';
 import { activeCards, choirColors } from './core';
 import { Game } from './game';
 import { rulesOf } from './rules';
 import type { Answer, Decision, GameState, Seat, Side } from './types';
 
 /** Decisions worth searching; everything else is answered by the heuristic. */
-const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment', 'gather.to', 'offer.oldest']);
+const SEARCHED = new Set(['action', 'offer.card', 'gather.source', 'exalt.card', 'firstFruits', 'judgment', 'gather.to']);
 
 /**
  * `policy` plays everyone's choices inside the playouts (default: the heuristic bot). `rank` orders the options to
@@ -66,9 +66,7 @@ function value(s: GameState, q: Seat): number {
   const p = s.players[q];
   if (s.phase === 'ended') return p.glory;
   let v = p.glory;
-  // Variant (eligible): Glory counts only if this player ends on the world's side, so it is weighed by that chance.
-  const elig = rulesOf(s).endScore === 'eligible' || rulesOf(s).worldGate;
-  if (rulesOf(s).endScore !== 'eligible') v += elig ? tokensValueRaw(s, p.tokens) : tokensValue(s, p.tokens, q);
+  v += tokensValue(s, p.tokens);
   for (const c of activeCards(p)) v += choirCardValue(s, c.id, q) + (c.store ?? 0);
   const R = rulesOf(s);
   if (R.spoils !== 'none' || R.gatherTo !== 'choir' || R.upkeepDraw !== 'refill') {
@@ -88,7 +86,7 @@ function value(s: GameState, q: Seat): number {
     const l = p.tokens.filter((t) => t === 'light').length, d = p.tokens.length - l, cc = choirColors(s, q);
     if (l !== d) v += R.devotion * (l > d ? cc.light : cc.dark);
   }
-  return elig ? v * (0.1 + 0.9 * eligibleChance(s, p.tokens)) : v;
+  return v;
 }
 
 /** The lab's utility: my value against the strongest rival and the table. */

@@ -27,38 +27,19 @@ export interface CoreRules {
   spoils: 'none' | 'claim' | 'offerers';
   /** Where an Offered card comes from: the hand (facedown, now) or only the Choir ('choir': face up, since everyone saw
    *  it leave; Robert's flow, November 20). Tokens are Offered facedown either way. */
-  offerFrom: 'hand' | 'choir' | 'both';
-  /** Whether a token may be Offered (false: tokens reach the Altar only as First Fruits). */
-  offerTokens: boolean;
+  offerFrom: 'hand' | 'choir';
   /** Glory gained at once for Offering a Choir card. */
   choirOfferGlory: number;
   /** Glory gained at once for any Offer (a card or a token). */
   offerGlory: number;
-  /** Cards drawn for Offering a Choir card. */
-  choirOfferDraw: number;
-  /** A card Offered from your Choir still scores for you at tonight's Reaping, as if it were still there. */
-  choirOfferReaps: boolean;
-  /** What a card Offered from the Choir counts on the Altar, times its value. */
-  choirOfferWeight: number;
-  /** What an Offered token counts for its color on the Altar. */
-  tokenWeight: number;
-  /** Spoils go first ('first') or only ('only') to the players who Offered a Choir card today ('': all Offerers alike). */
-  choirSpoils: '' | 'first' | 'only';
-  /** Once on your turn, after your action, a full Choir may also Offer its oldest card (the one turnover would take). */
-  oldestFree: boolean;
+
   /** First Fruits go face up (now) or stay facedown until the Evening reveal ('down'); either way shuffled, so anonymous. */
   fruits: 'up' | 'down';
   /** A token (facedown, counts 2) may be given as First Fruits instead of a card. */
   fruitsToken: boolean;
-  /** End of the game, with tl / td your tokens and wl / wd the Days won: 'each' (tl·wl + td·wd, now) or 'majority'
-   *  (only your majority color scores: tl·wl or td·wd; tied, the better), or 'eligible' (the first rulebook's "faction
-   *  victory makes you eligible, Glory makes you the winner": tokens score nothing; the side that won more Days is the
-   *  world's, and only players whose token majority is that side may win, by most Glory; with tied tokens you are
-   *  eligible only if the Days are tied; if nobody is eligible, everyone is). */
-  endScore: 'each' | 'majority' | 'eligible';
-  /** The world's gate on any end score: only players whose token majority is the side that won more Days (tied
-   *  tokens: tied Days) may win; tokens still score as `endScore` says. */
-  worldGate: boolean;
+  /** End of the game, with tl / td your tokens and wl / wd the Days won: 'each' (tl·wl + td·wd, V45) or 'majority'
+   *  (only your majority color scores: tl·wl or td·wd; tied, the better). */
+  endScore: 'each' | 'majority';
   /** Most cards a hand may hold at the end of a Day (0: the hand size). */
   handMax: number;
   /** At the end of a Day: refill the hand to its size, or draw this many cards. */
@@ -80,7 +61,7 @@ export const DEFAULT_RULES: CoreRules = {
   // majority color's tokens score. With turnover and Gather into the hand or the Choir (adopted November 20,
   // design/flow-fixes.md).
   tokensEach: 6, devotion: 0, harvest: 'always', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'offerers', handMax: 5,
-  upkeepDraw: 'refill', gatherTo: 'either', decay: true, carryover: false, offerFrom: 'choir', offerTokens: true, choirOfferGlory: 0, offerGlory: 0, choirOfferDraw: 0, choirOfferReaps: false, choirOfferWeight: 1, tokenWeight: 2, choirSpoils: '', oldestFree: false, fruits: 'down', fruitsToken: true, endScore: 'majority', worldGate: false, fruitsDraw: 'card',
+  upkeepDraw: 'refill', gatherTo: 'either', decay: true, carryover: false, offerFrom: 'choir', choirOfferGlory: 0, offerGlory: 0, fruits: 'down', fruitsToken: true, endScore: 'majority', fruitsDraw: 'card',
 };
 
 /** The previous core (V45: no offering, no harvest; Offers from the hand; tokens each score the Days their color won).

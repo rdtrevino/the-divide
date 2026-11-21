@@ -1,6 +1,6 @@
 // Core rule variants for core.ts and exploits.ts (engine rules.ts holds the switches and their defaults). The defaults
-// are the current core: Robert's flow as rMajGH (adopted November 20, design/the-flow.md). Earlier rounds were defined
-// against the V45 core; their results stay in results/ and their definitions in the git history.
+// are the current core: Robert's flow as rMajGH with turnover and Gather into either (design/flow-fixes.md). Earlier
+// rounds' results stay in results/ and their definitions in the git history.
 import { V45, type CoreRules } from '@divide/engine';
 
 export const VARIANTS: Record<string, Partial<CoreRules>> = {
@@ -10,36 +10,10 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   rMajGH: { decay: false, gatherTo: 'hand' },
   // Kept from the fixes: Devotion, a Choir of 3, everyone draws after First Fruits, other token counts.
   devotion1: { devotion: 1 }, choir3: { choirLimit: 3 }, drawAll: { fruitsDraw: 'all' }, tokens5: { tokensEach: 5 },
-  // Choir Offers (design/choir-offers.md): Offer from the hand, or from either; no token Offers; rewards for a Choir
-  // Offer (Glory, a card, it still reaps tonight, it counts double); any Offer pays 1; tokens count 1; spoils first or
-  // only to Choir Offerers; a full Choir may also Offer its oldest card after the action.
-  hand: { offerFrom: 'hand' }, both: { offerFrom: 'both' }, noTokenOffer: { offerTokens: false }, bothNoToken: { offerFrom: 'both', offerTokens: false },
-  glory1: { choirOfferGlory: 1 }, glory2: { choirOfferGlory: 2 }, offerGlory1: { offerGlory: 1 }, draw1: { choirOfferDraw: 1 },
-  reaps: { choirOfferReaps: true }, weight2: { choirOfferWeight: 2 }, tokenW1: { tokenWeight: 1 },
-  spoilsFirst: { choirSpoils: 'first' }, spoilsOnly: { choirSpoils: 'only' }, oldest: { oldestFree: true },
-  // The World (design/the-world.md): back to the vision's turn (Offer from the hand facedown, First Fruits face up,
-  // Gather into the Choir, no harvest rule, no spoils), with the first rulebook's win: tokens score nothing; the side
-  // that won more Days is the world's, and only its players (by token majority) may win, by most Glory.
-  world: { ...V45, harvest: 'always', endScore: 'eligible' },
-  worldH: { ...V45, endScore: 'eligible' }, world7: { ...V45, harvest: 'always', endScore: 'eligible', tokensEach: 7 },
-  worldFT: { ...V45, harvest: 'always', endScore: 'eligible', fruitsToken: true }, worldTurn: { ...V45, harvest: 'always', endScore: 'eligible', decay: true },
-  worldSpoils: { ...V45, harvest: 'always', endScore: 'eligible', spoils: 'offerers', handMax: 5 },
-  // The world's gate on token scores: eligible by side, then Glory and tokens decide (tokens may be First Fruits).
-  gateMaj: { ...V45, harvest: 'always', endScore: 'majority', worldGate: true, fruitsToken: true },
-  gateMajNoFT: { ...V45, harvest: 'always', endScore: 'majority', worldGate: true },
-  gateEach: { ...V45, harvest: 'always', worldGate: true, fruitsToken: true },
-  currentGate: { worldGate: true },
-  // The vision's turn (V45: Offers from the hand facedown, First Fruits face up, Gather into the Choir) with only what the
-  // studies proved: a token may be First Fruits (everyone draws) and majority scoring; three answers to free-riding.
-  vt: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority' },
-  vtFree: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', harvest: 'always' },
-  vtSpoils: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', harvest: 'always', spoils: 'offerers', handMax: 5 },
-  // The leader with the honest card back (First Fruits face up), and with everyone drawing after First Fruits.
-  leadUp: { offerGlory: 1, choirOfferGlory: 1, fruits: 'up' }, leadDraw: { offerGlory: 1, choirOfferGlory: 1, fruitsDraw: 'all' },
-  leadUpDraw: { offerGlory: 1, choirOfferGlory: 1, fruits: 'up', fruitsDraw: 'all' },
-  // The leader without spoils (the reward for Offering may make them unnecessary): no draft, no hand limit.
-  leadNoSpoils: { offerGlory: 1, choirOfferGlory: 1, spoils: 'none', handMax: 0 },
-  vtDevotion: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', devotion: 1 },
+  // Choir Offers (design/choir-offers.md, design/the-world.md): Offer from the hand; the Offer reward (open: every Offer
+  // earns 1 Glory, a Choir Offer 2, as `offerGlory1+glory1`). The other ideas, the World and its gate were rejected and
+  // removed (definitions in the git history).
+  hand: { offerFrom: 'hand' }, glory1: { choirOfferGlory: 1 }, offerGlory1: { offerGlory: 1 },
 };
 
 /** A variant by name; `a+b` combines variants (later ones win). */

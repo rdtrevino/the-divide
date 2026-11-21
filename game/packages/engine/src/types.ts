@@ -49,10 +49,6 @@ export interface AltarCard {
   sanctuary?: Seat;
   /** Revealed in the Evening among the shuffled facedown cards (V45): who placed it is no longer shown. */
   anon?: boolean;
-  /** Offered from its owner's Choir (face up). */
-  fromChoir?: boolean;
-  /** Counts this many times its value for the Tide (a variant: `choirOfferWeight`). */
-  weight?: number;
 }
 
 /** An allegiance token Offered onto the Altar (V45). Not a card: only Gather and the Evening touch it. */
@@ -63,8 +59,6 @@ export interface AltarToken {
   shown?: boolean;
   /** Given as First Fruits (a variant): nobody else knows whose it is. */
   anon?: boolean;
-  /** What it counts for its color (a variant: `tokenWeight`; otherwise TOKEN_WEIGHT). */
-  weight?: number;
 }
 
 export interface Player {
@@ -187,8 +181,6 @@ export interface Plan {
 export interface DayFlags {
   /** `${seat}:${key}` -> true for once-per-Day usage this Day. */
   usedToday: Record<string, true>;
-  /** Players who Offered a Choir card today (for `choirSpoils`). */
-  choirOffers?: Seat[];
   ordeal: Seat[];
   whisperCall?: Dir;
   prophecy: Record<number, Dir>;
