@@ -34,6 +34,9 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   vt: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority' },
   vtFree: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', harvest: 'always' },
   vtSpoils: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', harvest: 'always', spoils: 'offerers', handMax: 5 },
+  // The leader with the honest card back (First Fruits face up), and with everyone drawing after First Fruits.
+  leadUp: { offerGlory: 1, choirOfferGlory: 1, fruits: 'up' }, leadDraw: { offerGlory: 1, choirOfferGlory: 1, fruitsDraw: 'all' },
+  leadUpDraw: { offerGlory: 1, choirOfferGlory: 1, fruits: 'up', fruitsDraw: 'all' },
   vtDevotion: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', devotion: 1 },
 };
 
