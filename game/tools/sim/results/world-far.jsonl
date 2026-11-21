@@ -1,0 +1,7 @@
+{"variant":"current","games":160,"far":true,"strongEligible":0.61,"heurEligible":0.35,"strongWinIfEligible":0.55,"heurWinIfEligible":0.27,"strongGlory":41,"heurGlory":38.1,"skill":1.86}
+{"variant":"v45","games":160,"far":true,"strongEligible":0.35,"heurEligible":0.3,"strongWinIfEligible":0.72,"heurWinIfEligible":0.32,"strongGlory":38.4,"heurGlory":35.7,"skill":2.06}
+{"variant":"world","games":160,"far":true,"strongEligible":0.38,"heurEligible":0.47,"strongWinIfEligible":0.57,"heurWinIfEligible":0.43,"strongGlory":25,"heurGlory":24.5,"skill":1.22}
+{"variant":"worldFT","games":160,"far":true,"strongEligible":0.21,"heurEligible":0.38,"strongWinIfEligible":0.64,"heurWinIfEligible":0.51,"strongGlory":26.3,"heurGlory":25.5,"skill":1.06}
+{"variant":"gateEach","games":160,"far":true,"strongEligible":0.39,"heurEligible":0.53,"strongWinIfEligible":0.73,"heurWinIfEligible":0.39,"strongGlory":40.2,"heurGlory":41.1,"skill":1.27}
+{"variant":"gateMaj","games":160,"far":true,"strongEligible":0.5,"heurEligible":0.47,"strongWinIfEligible":0.53,"heurWinIfEligible":0.43,"strongGlory":36.2,"heurGlory":37.3,"skill":1.19}
+{"variant":"currentGate","games":160,"far":true,"strongEligible":0.44,"heurEligible":0.44,"strongWinIfEligible":0.69,"heurWinIfEligible":0.42,"strongGlory":36.7,"heurGlory":36,"skill":1.48}

@@ -29,6 +29,12 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   gateMajNoFT: { ...V45, harvest: 'always', endScore: 'majority', worldGate: true },
   gateEach: { ...V45, harvest: 'always', worldGate: true, fruitsToken: true },
   currentGate: { worldGate: true },
+  // The vision's turn (V45: Offers from the hand facedown, First Fruits face up, Gather into the Choir) with only what the
+  // studies proved: a token may be First Fruits (everyone draws) and majority scoring; three answers to free-riding.
+  vt: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority' },
+  vtFree: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', harvest: 'always' },
+  vtSpoils: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', harvest: 'always', spoils: 'offerers', handMax: 5 },
+  vtDevotion: { ...V45, fruitsToken: true, fruitsDraw: 'all', endScore: 'majority', devotion: 1 },
 };
 
 /** A variant by name; `a+b` combines variants (later ones win). */
