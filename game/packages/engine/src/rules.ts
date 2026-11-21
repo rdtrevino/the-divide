@@ -56,6 +56,9 @@ export interface CoreRules {
    *  world's, and only players whose token majority is that side may win, by most Glory; with tied tokens you are
    *  eligible only if the Days are tied; if nobody is eligible, everyone is). */
   endScore: 'each' | 'majority' | 'eligible';
+  /** The world's gate on any end score: only players whose token majority is the side that won more Days (tied
+   *  tokens: tied Days) may win; tokens still score as `endScore` says. */
+  worldGate: boolean;
   /** Most cards a hand may hold at the end of a Day (0: the hand size). */
   handMax: number;
   /** At the end of a Day: refill the hand to its size, or draw this many cards. */
@@ -77,7 +80,7 @@ export const DEFAULT_RULES: CoreRules = {
   // majority color's tokens score. With turnover and Gather into the hand or the Choir (adopted November 20,
   // design/flow-fixes.md).
   tokensEach: 6, devotion: 0, harvest: 'always', miser: 0, generous: 0, handSize: 3, choirLimit: 4, choirPay: 2, spoils: 'offerers', handMax: 5,
-  upkeepDraw: 'refill', gatherTo: 'either', decay: true, carryover: false, offerFrom: 'choir', offerTokens: true, choirOfferGlory: 0, offerGlory: 0, choirOfferDraw: 0, choirOfferReaps: false, choirOfferWeight: 1, tokenWeight: 2, choirSpoils: '', oldestFree: false, fruits: 'down', fruitsToken: true, endScore: 'majority', fruitsDraw: 'card',
+  upkeepDraw: 'refill', gatherTo: 'either', decay: true, carryover: false, offerFrom: 'choir', offerTokens: true, choirOfferGlory: 0, offerGlory: 0, choirOfferDraw: 0, choirOfferReaps: false, choirOfferWeight: 1, tokenWeight: 2, choirSpoils: '', oldestFree: false, fruits: 'down', fruitsToken: true, endScore: 'majority', worldGate: false, fruitsDraw: 'card',
 };
 
 /** The previous core (V45: no offering, no harvest; Offers from the hand; tokens each score the Days their color won).

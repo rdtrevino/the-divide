@@ -50,7 +50,11 @@ function tokenStake(s: GameState, held: readonly string[], seat?: Seat): Stake {
   const mode = rulesOf(s).endScore, tl = count(held, 'light'), td = count(held, 'dark');
   if (mode === 'each') return { light: tl, dark: td };
   const w = daysWon(s), left = daysAfter(s), k = mode === 'eligible' ? prize(s, seat) : 1;
-  return { light: k * expectTokens(mode, tl, td, w.light + 1, w.dark, left), dark: k * expectTokens(mode, tl, td, w.light, w.dark + 1, left) };
+  const st = { light: k * expectTokens(mode, tl, td, w.light + 1, w.dark, left), dark: k * expectTokens(mode, tl, td, w.light, w.dark + 1, left) };
+  if (!rulesOf(s).worldGate || mode === 'eligible') return st;
+  // The world's gate: being on the world's side at the end is worth about the Glory this player should end with.
+  const g = prize(s, seat);
+  return { light: st.light + g * expectTokens('eligible', tl, td, w.light + 1, w.dark, left), dark: st.dark + g * expectTokens('eligible', tl, td, w.light, w.dark + 1, left) };
 }
 /** Variant (eligible): what being eligible is worth to a player, about the Glory they should end with. */
 function prize(s: GameState, seat: Seat | undefined): number {
@@ -79,8 +83,15 @@ export function expectTokens(mode: string, tl: number, td: number, wl: number, w
 export function tokensValue(s: GameState, held: readonly string[], seat?: Seat): number {
   const mode = rulesOf(s).endScore;
   if (mode === 'each') return held.reduce((t, k) => t + tokenWorth(s, k as 'light' | 'dark'), 0);
-  const w = daysWon(s);
-  return (mode === 'eligible' ? prize(s, seat) : 1) * expectTokens(mode, count(held, 'light'), count(held, 'dark'), w.light, w.dark, daysAfter(s));
+  const w = daysWon(s), tl = count(held, 'light'), td = count(held, 'dark');
+  const v = (mode === 'eligible' ? prize(s, seat) : 1) * expectTokens(mode, tl, td, w.light, w.dark, daysAfter(s));
+  return rulesOf(s).worldGate && mode !== 'eligible' ? v + prize(s, seat) * expectTokens('eligible', tl, td, w.light, w.dark, daysAfter(s)) : v;
+}
+/** What tokens score at the end by `endScore` alone (without the world's gate). */
+export function tokensValueRaw(s: GameState, held: readonly string[]): number {
+  const mode = rulesOf(s).endScore, w = daysWon(s);
+  if (mode === 'each') return held.reduce((t, k) => t + daysWon(s)[k as 'light' | 'dark'] + 0.5 * daysAfter(s), 0);
+  return expectTokens(mode, count(held, 'light'), count(held, 'dark'), w.light, w.dark, daysAfter(s));
 }
 /** Variant (eligible): the chance these tokens leave a player eligible to win, from the Days so far. */
 export function eligibleChance(s: GameState, held: readonly string[]): number {

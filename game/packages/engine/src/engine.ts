@@ -939,8 +939,9 @@ export function* endGame(s: GameState): Gen<void> {
   }
   const final = s.tides[s.tides.length - 1]?.dir ?? 'neutral';
   // Variant (eligible): only the players on the world's side (or, on tied Days, with tied tokens) may win.
-  const ok = R.endScore === 'eligible' ? standings.filter((x) => tokenScore('eligible', x.tokens.light, x.tokens.dark, won.light, won.dark)) : standings;
-  if (R.endScore === 'eligible') log(s, 'eligible', ok.length ? `Eligible to win: ${ok.map((x) => pname(s, x.seat)).join(', ')}.` : 'Nobody is on the side of the world, so everyone is eligible.');
+  const gate = R.endScore === 'eligible' || R.worldGate;
+  const ok = gate ? standings.filter((x) => tokenScore('eligible', x.tokens.light, x.tokens.dark, won.light, won.dark)) : standings;
+  if (gate) log(s, 'eligible', ok.length ? `Eligible to win: ${ok.map((x) => pname(s, x.seat)).join(', ')}.` : 'Nobody is on the side of the world, so everyone is eligible.');
   const pool = ok.length ? ok : standings;
   const best = Math.max(...pool.map((x) => x.glory));
   const top = pool.filter((x) => x.glory === best);

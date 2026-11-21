@@ -24,6 +24,11 @@ export const VARIANTS: Record<string, Partial<CoreRules>> = {
   worldH: { ...V45, endScore: 'eligible' }, world7: { ...V45, harvest: 'always', endScore: 'eligible', tokensEach: 7 },
   worldFT: { ...V45, harvest: 'always', endScore: 'eligible', fruitsToken: true }, worldTurn: { ...V45, harvest: 'always', endScore: 'eligible', decay: true },
   worldSpoils: { ...V45, harvest: 'always', endScore: 'eligible', spoils: 'offerers', handMax: 5 },
+  // The world's gate on token scores: eligible by side, then Glory and tokens decide (tokens may be First Fruits).
+  gateMaj: { ...V45, harvest: 'always', endScore: 'majority', worldGate: true, fruitsToken: true },
+  gateMajNoFT: { ...V45, harvest: 'always', endScore: 'majority', worldGate: true },
+  gateEach: { ...V45, harvest: 'always', worldGate: true, fruitsToken: true },
+  currentGate: { worldGate: true },
 };
 
 /** A variant by name; `a+b` combines variants (later ones win). */
