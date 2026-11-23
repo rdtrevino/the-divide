@@ -6,3 +6,5 @@ dist/
 *.tar
 *.tar.gz
 sim-report.*
+ledger/hook-events.log
+.claude/worktrees/
